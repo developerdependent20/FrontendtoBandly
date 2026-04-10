@@ -1073,9 +1073,9 @@ function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, pr
 
                   if (!canViewDetails) {
                     return (
-                      <div style={{ width: '100%', padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px dashed rgba(59, 130, 246, 0.3)', textAlign: 'center', marginBottom: '1.5rem' }}>
+                      <div style={{ width: '100%', padding: '1.5rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px dashed rgba(239, 68, 68, 0.2)', textAlign: 'center', marginBottom: '1.5rem' }}>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                          🎸 <strong style={{ color: 'var(--primary)' }}>Has sido convocado a este evento</strong>, pero aún no has sido agendado para un rol específico. Consulta con tu director.
+                          🚫 <strong style={{ color: '#ef4444' }}>Usted no ha sido agendado para este evento</strong>
                         </p>
                       </div>
                     );
