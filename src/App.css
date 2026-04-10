@@ -319,6 +319,15 @@ h1, h2, h3, h4 {
   font-size: 3rem;
   margin-bottom: 1rem;
   font-weight: 800;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+@media (max-width: 480px) {
+  .landing-cta-box h2 {
+    font-size: 2.2rem;
+  }
 }
 
 .landing-cta-box p {
@@ -522,7 +531,26 @@ input[type="datetime-local"] {
   top: 0;
   bottom: 0;
   left: 0;
-  z-index: 10;
+  z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: 70px;
+    flex-direction: row;
+    top: auto;
+    bottom: 0;
+    padding: 0 1rem;
+    border-right: none;
+    border-top: 1px solid var(--border-light);
+    justify-content: space-around;
+  }
+  
+  .sidebar > div:first-child {
+    display: none !important;
+  }
 }
 
 .sidebar .nav-item {
@@ -548,6 +576,14 @@ input[type="datetime-local"] {
   padding: 3rem 4rem;
   margin-left: 110px; /* Offset for fixed sidebar */
   max-width: 1600px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1.5rem;
+    margin-left: 0;
+    margin-bottom: 80px; /* Offset for bottom navbar */
+  }
 }
 
 .dashboard-header {
@@ -677,10 +713,12 @@ input[type="datetime-local"] {
   }
 
   .hero-main-title-large {
-    font-size: 2.8rem;
-    letter-spacing: -1.5px;
+    font-size: clamp(2.2rem, 8vw, 2.8rem);
+    letter-spacing: -1px;
     line-height: 1.1;
     margin-bottom: 1.5rem;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   .hero-description-large {
