@@ -68,8 +68,10 @@ export default function App() {
 
   if (loading) return <LoadingScreen />;
   if (!session) {
-    if (view === 'landing') return <LandingPage onGetStarted={() => setView('auth')} />;
-    return <AuthScreen onBack={() => setView('landing')} />;
+    if (view === 'landing' || typeof view === 'string' && view.startsWith('landing')) {
+      return <LandingPage onGetStarted={(mode) => setView(mode === 'login' ? 'auth_login' : 'auth_signup')} />;
+    }
+    return <AuthScreen initialMode={view === 'auth_signup' ? 'signup' : 'login'} onBack={() => setView('landing')} />;
   }
   if (!profile) return <OnboardingScreen session={session} fetchProfile={fetchProfile} />;
 
@@ -108,8 +110,8 @@ function LandingPage({ onGetStarted }) {
           <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" alt="Bandly Logotipo" className="landing-logo" />
         </div>
         <div className="landing-nav-links">
-          <button onClick={onGetStarted} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Ingresar</button>
-          <button onClick={onGetStarted} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>Comenzar Gratis</button>
+          <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Ingresar</button>
+          <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>Comenzar Gratis</button>
         </div>
       </nav>
 
@@ -124,9 +126,9 @@ function LandingPage({ onGetStarted }) {
           <p className="hero-description-large">
             Planifica tus ensayos con el mayor control, gestiona tus multitracks con nuestro <strong>reproductor nativo</strong> y ensaya con la mejor <strong>sala de previsualización de secuencias</strong>.
           </p>
-          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3rem', justifyContent: 'center' }}>
-            <button onClick={onGetStarted} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem' }}>Comenzar Gratis</button>
-            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)' }}>Ver Planes</button>
+          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem', width: 'auto' }}>Comenzar Gratis</button>
+            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver Planes</button>
           </div>
           
           <div className="compatibility-badges-centered">
@@ -232,8 +234,10 @@ function LandingPage({ onGetStarted }) {
   );
 }
 
-function AuthScreen({ onBack }) {
+function AuthScreen({ onBack, initialMode }) {
   const [isSignUp, setIsSignUp] = useState(() => {
+    if (initialMode === 'signup') return true;
+    if (initialMode === 'login') return false;
     return window.location.search.includes('join=');
   });
   const [fullName, setFullName] = useState('');
@@ -285,7 +289,7 @@ function AuthScreen({ onBack }) {
           {errorMsg && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{errorMsg}</p>}
           
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? <Loader2 className="spin" size={20}/> : (isSignUp ? 'Registrar' : 'Autenticar')}
+            {loading ? <Loader2 className="spin" size={20}/> : (isSignUp ? 'Registrar' : 'Iniciar Sesión')}
           </button>
         </form>
         
@@ -522,37 +526,6 @@ function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, fetch
               </div>
             )}
           </div>
-
-          {/* Role Switcher (Dev) — only for admin */}
-          {profile.id && fetchProfile && (
-            <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              {['director', 'staff', 'musico'].map(role => (
-                <button
-                  key={role}
-                  onClick={async () => {
-                    await supabase.from('profiles').update({ role }).eq('id', profile.id);
-                    await fetchProfile(profile.id);
-                  }}
-                  style={{
-                    padding: '5px 14px',
-                    fontSize: '0.7rem',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    fontFamily: 'inherit',
-                    background: profile.role === role ? 'var(--primary)' : 'transparent',
-                    color: profile.role === role ? 'white' : '#64748b',
-                  }}
-                >
-                  {role === 'musico' ? 'Músico' : role.charAt(0).toUpperCase() + role.slice(1)}
-                </button>
-              ))}
-            </div>
-          )}
         </header>
 
         {children}
@@ -614,7 +587,7 @@ function MusicianView({ profile, session, activeTab }) {
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <EventPlanner readOnly={true} events={events} members={members} songs={songs} />
+          <EventPlanner readOnly={true} events={events} members={members} songs={songs} profile={profile} session={session} />
           <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} />
         </div>
       )}
@@ -963,7 +936,7 @@ function SongLibrary({ songs, orgId, readOnly, refreshData }) {
   );
 }
 
-function EventPlanner({ readOnly, events, members, orgId, refreshData, songs }) {
+function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -1091,39 +1064,61 @@ function EventPlanner({ readOnly, events, members, orgId, refreshData, songs }) 
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem', width: '100%', marginBottom: '1.5rem' }}>
-                  {ev.event_roster?.map((slot, i) => slot.profile_id && (
-                    <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.6rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.03)' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{slot.instrument}</span>
-                      <strong style={{ color: 'white' }}>{members?.find(m => m.id === slot.profile_id)?.full_name.split(' ')[0]}</strong>
-                    </div>
-                  ))}
-                </div>
 
-                {ev.event_songs && ev.event_songs.length > 0 && (
-                  <div style={{ width: '100%', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h5 style={{ fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '1px' }}>🎵 Repertorio Seleccionado</h5>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {ev.event_songs.sort((a,b) => a.order_index - b.order_index).map((song, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                            <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '0.9rem' }}>{song.songs?.title}</span>
-                            {song.lead_id && (
-                              <span style={{ fontSize: '0.7rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
-                                🎙️ {members?.find(m => m.id === song.lead_id)?.full_name.split(' ')[0]}
-                              </span>
-                            )}
+                {(() => {
+                  const currentUserId = session?.user?.id || profile?.id;
+                  const isScheduled = ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId));
+                  const userRole = (profile?.role || '').toLowerCase();
+                  const canViewDetails = userRole === 'director' || userRole === 'staff' || isScheduled;
+
+                  if (!canViewDetails) {
+                    return (
+                      <div style={{ width: '100%', padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px dashed rgba(59, 130, 246, 0.3)', textAlign: 'center', marginBottom: '1.5rem' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                          🎸 <strong style={{ color: 'var(--primary)' }}>Has sido convocado a este evento</strong>, pero aún no has sido agendado para un rol específico. Consulta con tu director.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem', width: '100%', marginBottom: '1.5rem' }}>
+                        {ev.event_roster?.map((slot, i) => slot.profile_id && (
+                          <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.6rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.03)' }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{slot.instrument}</span>
+                            <strong style={{ color: 'white' }}>{members?.find(m => m.id === slot.profile_id)?.full_name.split(' ')[0]}</strong>
                           </div>
-                          {song.selected_key && (
-                            <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                              {song.selected_key}
-                            </span>
-                          )}
+                        ))}
+                      </div>
+
+                      {ev.event_songs && ev.event_songs.length > 0 && (
+                        <div style={{ width: '100%', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <h5 style={{ fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '1px' }}>🎵 Repertorio Seleccionado</h5>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {ev.event_songs.sort((a,b) => a.order_index - b.order_index).map((song, i) => (
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+                                  <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '0.9rem' }}>{song.songs?.title}</span>
+                                  {song.lead_id && (
+                                    <span style={{ fontSize: '0.7rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                                      🎙️ {members?.find(m => m.id === song.lead_id)?.full_name.split(' ')[0]}
+                                    </span>
+                                  )}
+                                </div>
+                                {song.selected_key && (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                    {song.selected_key}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             ))
           )}
