@@ -493,36 +493,35 @@ function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, fetch
 
       <main className="main-content">
         <header className="dashboard-header">
-          <div>
-            <div style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Modo {profile.role}
-            </div>
-            <h1>{profile.full_name}</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.2rem', display: 'block' }}>
+              {profile.role === 'director' ? 'Modo Director' : profile.role === 'staff' ? 'Modo Staff' : 'Panel Músico'}
+            </span>
+            <h1 className="hero-main-title-large" style={{ margin: 0, textAlign: 'left', background: 'none', color: 'white', WebkitTextFillColor: 'initial', letterSpacing: '-1px' }}>
+              {profile.full_name}
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
               Banda: <strong style={{ color: 'var(--text-main)' }}>{profile.organizations?.name || '---'}</strong>
             </p>
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div className="header-actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div 
               className="badge" 
-              style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.05)', transition: 'background 0.2s', border: '1px dashed rgba(255,255,255,0.2)' }} 
               onClick={handleJoinTeam} 
-              title="Cambiar a otra banda existente"
+              style={{ cursor: 'pointer' }}
             >
-              <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: '600', letterSpacing: '0.5px' }}>🔗 UNIRSE A BANDA</span>
+              <Plus size={14} /> <span>Cambiar Banda</span>
             </div>
 
             {profile.role === 'director' && (
               <div 
                 className="badge" 
-                style={{ cursor: 'pointer', transition: 'background 0.2s' }} 
                 onClick={handleCopyLink} 
-                title="Hacer clic para Copiar Link Mágico"
+                style={{ cursor: 'pointer', border: '1px solid var(--primary)', background: 'rgba(139, 92, 246, 0.1)' }}
               >
-                <span style={{ color: 'var(--text-muted)' }}>CÓDIGO:</span>
-                <strong style={{ letterSpacing: '1px' }}>{profile.organizations?.invite_code}</strong>
-                <span style={{ marginLeft: '10px', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold' }}>COPIAR LINK</span>
+                <code style={{ color: 'white', fontWeight: '800' }}>{profile.organizations?.invite_code}</code>
+                <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem' }}>COPIAR</span>
               </div>
             )}
           </div>
@@ -1011,12 +1010,30 @@ function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, pr
         const { data: evt } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description }]).select().single();
         evtId = evt.id;
       }
-      const validRoster = roster.filter(r => r.instrument && r.profile_id).map(r => ({ event_id: evtId, instrument: r.instrument, category: r.category, profile_id: r.profile_id }));
+      const validRoster = roster.filter(r => r.instrument && r.profile_id).map(r => ({ 
+        event_id: evtId, 
+        instrument: r.instrument, 
+        category: r.category, 
+        profile_id: r.profile_id,
+        status: 'pending' 
+      }));
       if (validRoster.length > 0) await supabase.from('event_roster').insert(validRoster);
       const validSongs = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx }));
       if (validSongs.length > 0) await supabase.from('event_songs').insert(validSongs);
       closeModal(); refreshData();
     } catch (e) { alert('Error al guardar.'); } finally { setSaving(false); }
+  };
+
+  const updateRosterStatus = async (eventId, roleId, status) => {
+    try {
+      const { error } = await supabase
+        .from('event_roster')
+        .update({ status })
+        .eq('event_id', eventId)
+        .eq('profile_id', roleId);
+      if (error) throw error;
+      if (refreshData) refreshData();
+    } catch (e) { alert("Error al confirmar posición."); }
   };
 
   const closeModal = () => {
@@ -1067,7 +1084,8 @@ function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, pr
 
                 {(() => {
                   const currentUserId = session?.user?.id || profile?.id;
-                  const isScheduled = ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId));
+                  const userSlots = ev.event_roster?.filter(r => String(r.profile_id) === String(currentUserId)) || [];
+                  const isScheduled = userSlots.length > 0;
                   const userRole = (profile?.role || '').toLowerCase();
                   const canViewDetails = userRole === 'director' || userRole === 'staff' || isScheduled;
 
@@ -1083,11 +1101,42 @@ function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, pr
 
                   return (
                     <>
+                      {/* Banner de RSVP para el usuario logueado */}
+                      {isScheduled && userSlots.map((slot, idx) => (
+                        <div key={idx} style={{ width: '100%', padding: '1.25rem', background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>Tu Posición</span>
+                               <h5 style={{ fontSize: '1.1rem', margin: 0, color: 'white' }}>🎸 {slot.instrument}</h5>
+                            </div>
+                            <div style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', background: slot.status === 'confirmed' ? 'rgba(16, 185, 129, 0.1)' : slot.status === 'declined' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: slot.status === 'confirmed' ? '#10b981' : slot.status === 'declined' ? '#f43f5e' : '#f59e0b', border: `1px solid ${slot.status === 'confirmed' ? 'rgba(16,185,129,0.2)' : slot.status === 'declined' ? 'rgba(244,63,94,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+                               {slot.status === 'confirmed' ? 'Confirmado' : slot.status === 'declined' ? 'Declinado' : 'Pendiente'}
+                            </div>
+                          </div>
+                          
+                          {slot.status === 'pending' && (
+                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                              <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')} className="btn-primary" style={{ padding: '0.6rem', fontSize: '0.85rem' }}>Aceptar</button>
+                              <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')} className="btn-secondary" style={{ padding: '0.6rem', fontSize: '0.85rem' }}>Declinar</button>
+                            </div>
+                          )}
+                          {slot.status !== 'pending' && (
+                            <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'pending')} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline', width: 'fit-content' }}>Cambiar Respuesta</button>
+                          )}
+                        </div>
+                      ))}
+
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem', width: '100%', marginBottom: '1.5rem' }}>
                         {ev.event_roster?.map((slot, i) => slot.profile_id && (
-                          <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.6rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.03)' }}>
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{slot.instrument}</span>
-                            <strong style={{ color: 'white' }}>{members?.find(m => m.id === slot.profile_id)?.full_name.split(' ')[0]}</strong>
+                          <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.6rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px solid rgba(255,255,255,0.03)', position: 'relative' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{slot.instrument}</span>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: slot.status === 'confirmed' ? '#10b981' : slot.status === 'declined' ? '#f43f5e' : '#f59e0b', boxShadow: `0 0 10px ${slot.status === 'confirmed' ? 'rgba(16,185,129,0.5)' : slot.status === 'declined' ? 'rgba(244,63,94,0.5)' : 'rgba(245,158,11,0.5)'}` }}></div>
+                            </div>
+                            <strong style={{ color: slot.status === 'declined' ? 'var(--text-muted)' : 'white' }}>
+                               {members?.find(m => m.id === slot.profile_id)?.full_name.split(' ')[0]}
+                               {slot.status === 'declined' && <span style={{fontSize:'0.6rem', marginLeft:'4px'}}>(X)</span>}
+                            </strong>
                           </div>
                         ))}
                       </div>
