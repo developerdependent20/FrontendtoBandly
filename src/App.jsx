@@ -539,7 +539,7 @@ function DirectorView({ profile, session, activeTab }) {
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <EventPlanner readOnly={false} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} />
+          <EventPlanner readOnly={false} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
           <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} />
         </div>
       )}
@@ -558,11 +558,12 @@ function DirectorView({ profile, session, activeTab }) {
 }
 
 function StaffView({ profile, session, activeTab }) {
-  const { sequences, songs, uploading, handleFileUpload, handleDelete, fetchData } = useOrgData(profile, session);
+  const { sequences, members, events, songs, uploading, handleFileUpload, handleDelete, fetchData } = useOrgData(profile, session);
   return (
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <EventPlanner readOnly={true} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
           <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} />
         </div>
       )}
