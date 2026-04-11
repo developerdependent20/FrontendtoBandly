@@ -131,15 +131,15 @@ function LandingPage({ onGetStarted }) {
             <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver planes</button>
           </div>
           
-          <div className="compatibility-badges-centered" style={{ marginTop: '3.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem', display: 'block', width: '100%' }}>Disponible en</span>
-            <div className="comp-item">macOS</div>
-            <div className="comp-item">Windows</div>
-            <div className="comp-item">Android</div>
-            <div className="comp-item">Web</div>
+          <div className="compatibility-badges-centered" style={{ marginTop: '4rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem', display: 'block', width: '100%', opacity: 0.8 }}>Disponible en</span>
+            <div className="comp-item-badge"><span></span> macOS</div>
+            <div className="comp-item-badge"><span>⊞</span> Windows</div>
+            <div className="comp-item-badge"><span>🤖</span> Android</div>
+            <div className="comp-item-badge"><span>🌐</span> Web</div>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '1rem' }}>
-            Apps de escritorio y móvil disponibles según plan y etapa de acceso.
+          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '1.5rem', fontStyle: 'italic' }}>
+            Apps nativas disponibles según plan y etapa de acceso.
           </p>
         </div>
       </header>

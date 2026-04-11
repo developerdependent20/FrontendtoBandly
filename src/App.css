@@ -92,7 +92,7 @@ h1, h2, h3, h4 {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 10rem 8% 6rem 8%;
+  padding: 6rem 8% 6rem 8%;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -133,18 +133,28 @@ h1, h2, h3, h4 {
   align-items: center;
 }
 
-.comp-item {
+.comp-item-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  font-weight: 500;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s;
 }
 
-.comp-item span {
-  font-size: 1.2rem;
-  color: white;
+.comp-item-badge span {
+  font-size: 1.1rem;
+}
+
+.comp-item-badge:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--primary);
+  transform: translateY(-2px);
 }
 
 /* Pricing Table Styles */
@@ -843,7 +853,12 @@ input[type="datetime-local"] {
   }
 
   .landing-hero-centered {
-    padding: 6rem 6% 4rem 6%;
+    padding: 3rem 6% 4rem 6%;
+  }
+
+  .comp-item-badge {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
   }
 
   .floating-icon-subtle {
