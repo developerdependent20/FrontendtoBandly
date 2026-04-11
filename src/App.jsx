@@ -99,138 +99,181 @@ function LoadingScreen() {
 function LandingPage({ onGetStarted }) {
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* Tripleten-style Subtle Aesthetic Elements */}
       <div className="hero-decorations">
         <Sparkles className="floating-icon-subtle top-right" size={48} style={{ top: '120px', right: '10%' }} />
         <Waves className="floating-icon-subtle mid-left" size={60} style={{ top: '300px', left: '5%' }} />
         <Zap className="floating-icon-subtle bot-right" size={32} style={{ bottom: '80px', right: '15%' }} />
       </div>
       
-      {/* Navbar */}
       <nav className="landing-nav">
         <div style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
           <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" alt="Bandly Logotipo" className="landing-logo" />
         </div>
         <div className="landing-nav-links">
           <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Ingresar</button>
-          <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>Comenzar Gratis</button>
+          <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>Comenzar gratis</button>
         </div>
       </nav>
 
-      {/* Hero Section */}
       <header className="landing-hero-centered">
         <div className="hero-content-full">
-          <div className="badge-promo">⚡️ LA PLATAFORMA DEFINITIVA PARA LA ESCENA MUSICAL</div>
+          <div className="badge-promo">LA PLATAFORMA TODO-EN-UNO PARA BANDAS Y EQUIPOS MUSICALES</div>
           <h1 className="hero-main-title-large">
-            Tu Show, Bajo Control. <br/>
-            <span>Donde Sea, Como Sea.</span>
+            Organiza tus shows, repertorios <br/>
+            <span>y ensayos en un solo lugar</span>
           </h1>
           <p className="hero-description-large">
-            Planifica tus ensayos con el mayor control, gestiona tus multitracks con nuestro <strong>reproductor nativo</strong> y ensaya con la mejor <strong>sala de previsualización de secuencias</strong>.
+            Bandly te ayuda a planificar eventos, gestionar charts y letras, compartir recursos, organizar multitracks y ensayar con secuencias desde una sola plataforma.
           </p>
+          <p style={{ color: 'var(--text-muted)', marginTop: '1rem', fontSize: '0.95rem', maxWidth: '700px', margin: '1rem auto 0 auto' }}>
+            Pensado para bandas, artistas, equipos de iglesia y proyectos musicales que quieren trabajar con más orden, menos caos y mejores herramientas.
+          </p>
+          
           <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem', width: 'auto' }}>Comenzar Gratis</button>
-            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver Planes</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem', width: 'auto' }}>Comenzar gratis</button>
+            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver planes</button>
           </div>
           
-          <div className="compatibility-badges-centered">
-            <div className="comp-item"><span></span> macOS</div>
-            <div className="comp-item"><span>⊞</span> Windows</div>
-            <div className="comp-item"><span>▶</span> Android / Play Store</div>
+          <div className="compatibility-badges-centered" style={{ marginTop: '3.5rem' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem', display: 'block', width: '100%' }}>Disponible en</span>
+            <div className="comp-item">macOS</div>
+            <div className="comp-item">Windows</div>
+            <div className="comp-item">Android</div>
+            <div className="comp-item">Web</div>
           </div>
+          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '1rem' }}>
+            Apps de escritorio y móvil disponibles según plan y etapa de acceso.
+          </p>
         </div>
       </header>
+
+      {/* Bloque Diferencial */}
+      <section className="landing-differentiator" style={{ background: 'rgba(139, 92, 246, 0.05)', padding: '6rem 2rem', borderTop: '1px solid rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.02)', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '1.5rem', letterSpacing: '-1px' }}>Más que una app de reproducción. Más que una agenda.</h2>
+          <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+            Bandly conecta la planificación del show, los repertorios, los recursos y el ensayo en una sola plataforma para que tu equipo trabaje mejor antes de subir al escenario.
+          </p>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="landing-features" style={{ padding: '8rem 2rem' }}>
+        <div className="pricing-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+          <div className="feature-card">
+            <div className="feature-icon"><Speaker size={32} /></div>
+            <h3>Reproductor Nativo</h3>
+            <p>Reproduce multitracks y secuencias con control total desde una experiencia diseñada para músicos.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon"><Activity size={32} /></div>
+            <h3>Sala de Previsualización</h3>
+            <p>Ensaya y revisa tus secuencias antes del show con una vista clara para preparar cada detalle.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon"><Cloud size={32} /></div>
+            <h3>Central de Multitracks</h3>
+            <p>Sube, organiza y accede a tus pistas, stems y recursos desde un solo lugar.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon"><CalendarIcon size={32} /></div>
+            <h3>Eventos y Shows</h3>
+            <p>Organiza fechas, ensayos y presentaciones para que todo tu equipo esté alineado.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon"><Music size={32} /></div>
+            <h3>Repertorios y Recursos</h3>
+            <p>Centraliza canciones, charts, letras, links y materiales clave para cada presentación.</p>
+          </div>
+        </div>
+      </section>
 
       {/* Pricing Section */}
       <section id="pricing" className="landing-pricing-section">
         <div className="section-header-centered">
-          <h2 className="section-title-large">Los mejores planes calidad-precio</h2>
-          <p className="section-subtitle">Potencia real para tu música, sin complicaciones.</p>
+          <h2 className="section-title-large">Planes simples para cada etapa de tu equipo</h2>
+          <p className="section-subtitle">Empieza gratis y escala cuando necesites más usuarios, más almacenamiento y herramientas avanzadas para preparar cada presentación.</p>
         </div>
 
         <div className="pricing-grid">
-          {/* Plan Gratis */}
+          {/* Plan Básico */}
           <div className="pricing-card">
             <div className="pricing-badge">BÁSICO</div>
             <h3>Gratis</h3>
-            <div className="price">0<span>/año</span></div>
+            <div className="price">0<span>/mes</span></div>
             <ul className="pricing-features">
-              <li><ShieldCheck size={16} /> 1 Banda / Organización</li>
-              <li><ShieldCheck size={16} /> 20 Usuarios por Equipo</li>
-              <li><ShieldCheck size={16} /> 400MB Almacenamiento</li>
-              <li><ShieldCheck size={16} /> Calendario de Eventos</li>
+              <li><ShieldCheck size={16} /> 1 banda u organización</li>
+              <li><ShieldCheck size={16} /> Hasta 10 usuarios</li>
+              <li><ShieldCheck size={16} /> 400 MB almacenamiento</li>
+              <li><ShieldCheck size={16} /> Calendario de eventos</li>
+              <li><ShieldCheck size={16} /> Repertorios básicos</li>
+              <li><ShieldCheck size={16} /> Letras</li>
+              <li><ShieldCheck size={16} /> Enlaces de YouTube</li>
             </ul>
-            <button onClick={onGetStarted} className="btn-secondary-outline">Empezar Gratis</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">Empezar gratis</button>
           </div>
 
           {/* Plan Starter */}
           <div className="pricing-card featured">
-            <div className="pricing-badge-popular">POPULAR</div>
+            <div className="pricing-badge-popular">RECOMENDADO</div>
             <h3>Starter</h3>
-            <div className="price">$20<span>/año</span></div>
+            <div className="price">$59<span>/semestre</span></div>
+            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>o $12 / mes</p>
             <ul className="pricing-features">
-              <li><Crown size={16} color="var(--primary)" /> Hasta 3 Bandas</li>
-              <li><Crown size={16} color="var(--primary)" /> 50 Usuarios por Equipo</li>
-              <li><Crown size={16} color="var(--primary)" /> 10GB Almacenamiento</li>
-              <li><Crown size={16} color="var(--primary)" /> PDF Charts Ilimitados</li>
+              <li><Crown size={16} color="var(--primary)" /> Hasta 3 bandas</li>
+              <li><Crown size={16} color="var(--primary)" /> Hasta 25 usuarios</li>
+              <li><Crown size={16} color="var(--primary)" /> 10 GB almacenamiento</li>
+              <li><Crown size={16} color="var(--primary)" /> Charts en PDF</li>
+              <li><Crown size={16} color="var(--primary)" /> Gestión de repertorios</li>
+              <li><Crown size={16} color="var(--primary)" /> Recursos por canción</li>
+              <li><Crown size={16} color="var(--primary)" /> Multitracks</li>
+              <li><Crown size={16} color="var(--primary)" /> Reproductor en la app</li>
             </ul>
-            <button onClick={onGetStarted} className="btn-primary">Elegir Starter</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary">Elegir Starter</button>
           </div>
 
           {/* Plan Pro */}
           <div className="pricing-card">
             <div className="pricing-badge">PRO</div>
             <h3>Pro</h3>
-            <div className="price">$50<span>/año</span></div>
+            <div className="price">$99<span>/semestre</span></div>
+            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>o $19 / mes</p>
             <ul className="pricing-features">
-              <li><Crown size={16} color="var(--accent)" /> 10 Bandas Incluidas</li>
-              <li><Crown size={16} color="var(--accent)" /> Usuarios Ilimitados</li>
-              <li><Crown size={16} color="var(--accent)" /> 50GB Almacenamiento</li>
-              <li><Crown size={16} color="var(--accent)" /> Reproductor Multitrack Pro</li>
+              <li><Crown size={16} color="var(--accent)" /> Hasta 10 bandas</li>
+              <li><Crown size={16} color="var(--accent)" /> Hasta 50 usuarios</li>
+              <li><Crown size={16} color="var(--accent)" /> 30 GB almacenamiento</li>
+              <li><Crown size={16} color="var(--accent)" /> Todo lo de Starter</li>
+              <li><Crown size={16} color="var(--accent)" /> Sala de previsualización</li>
+              <li><Crown size={16} color="var(--accent)" /> Player de secuencias</li>
             </ul>
-            <button onClick={onGetStarted} className="btn-secondary-outline">Elegir Pro</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">Elegir Pro</button>
           </div>
 
           {/* Plan Elite */}
           <div className="pricing-card">
             <div className="pricing-badge">ELITE</div>
             <h3>Elite</h3>
-            <div className="price">$100<span>/año</span></div>
+            <div className="price">$179<span>/semestre</span></div>
+            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>o $34 / mes</p>
             <ul className="pricing-features">
-              <li><Crown size={16} color="var(--accent)" /> Bandas Ilimitadas</li>
-              <li><Crown size={16} color="var(--accent)" /> 200GB Almacenamiento</li>
-              <li><Crown size={16} color="var(--accent)" /> Funciones de Charts VIP</li>
-              <li><Crown size={16} color="var(--accent)" /> Acceso Anticipado a Apps</li>
+              <li><Crown size={16} color="var(--accent)" /> Bandas ilimitadas</li>
+              <li><Crown size={16} color="var(--accent)" /> Hasta 100 usuarios</li>
+              <li><Crown size={16} color="var(--accent)" /> 50 GB almacenamiento</li>
+              <li><Crown size={16} color="var(--accent)" /> Todo lo de Pro</li>
+              <li><Crown size={16} color="var(--accent)" /> Roles y permisos</li>
+              <li><Crown size={16} color="var(--accent)" /> Prioridad en soporte</li>
+              <li><Crown size={16} color="var(--accent)" /> Acceso anticipado</li>
             </ul>
-            <button onClick={onGetStarted} className="btn-secondary-outline">Elegir Elite</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">Elegir Elite</button>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="landing-features">
-        <div className="feature-card">
-          <div className="feature-icon"><Play size={32} /></div>
-          <h3>Reproductor Nativo</h3>
-          <p>Lanza tus secuencias con baja latencia y control total de mezcla. Disponible para Mac y Windows.</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon"><Activity size={32} /></div>
-          <h3>Sala de Previsualización</h3>
-          <p>Ensaya tus secuencias desde la web antes de ir al escenario. Escucha y aprueba cada track.</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon"><Cloud size={32} /></div>
-          <h3>Central de Multitracks</h3>
-          <p>Sube tus pistas, organiza tus stems y tenlas listas para el show. Sincronización total.</p>
-        </div>
-      </section>
-
-      {/* Pricing Teaser */}
-      <section className="landing-cta-box">
-        <h2>¿Listo para profesionalizar tu banda?</h2>
-        <p>No pagues de más por herramientas complejas. Bandly es la opción más potente y accesible del mundo.</p>
-        <button onClick={onGetStarted} className="btn-primary" style={{ padding: '1rem 3rem', marginTop: '1rem' }}>Únete a Bandly</button>
+      {/* CTA Final */}
+      <section className="landing-cta-box" style={{ padding: '8rem 2rem' }}>
+        <h2 style={{ fontSize: '3rem', letterSpacing: '-2px' }}>¿Listo para llevar tu banda a otro nivel?</h2>
+        <p style={{ fontSize: '1.2rem', marginBottom: '2.5rem' }}>Organiza mejor cada show, centraliza tus recursos y ensaya con más control desde una sola plataforma.</p>
+        <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 4rem', fontSize: '1.1rem', borderRadius: '50px' }}>Comenzar gratis</button>
       </section>
     </div>
   );
@@ -470,15 +513,7 @@ function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, fetch
           <CalendarIcon size={22} />
         </div>
 
-        {(profile.role === 'director' || profile.role === 'staff') && (
-          <div 
-            className={`nav-item ${activeTab === 'audio' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('audio')}
-            title="Pistas & Multitracks"
-          >
-            <Upload size={22} />
-          </div>
-        )}
+
 
         <div 
           className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} 
@@ -536,7 +571,7 @@ function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, fetch
 }
 
 function DirectorView({ profile, session, activeTab }) {
-  const { sequences, members, events, songs, uploading, handleFileUpload, handleDelete, fetchData } = useOrgData(profile, session);
+  const { members, events, songs, fetchData } = useOrgData(profile, session);
   return (
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
@@ -550,17 +585,13 @@ function DirectorView({ profile, session, activeTab }) {
           <TeamList members={members} isDirector={true} refreshData={fetchData} />
         </div>
       )}
-      {activeTab === 'audio' && (
-        <div style={{ gridColumn: '1 / -1' }}>
-          <DataCenter sequences={sequences} uploading={uploading} onUpload={handleFileUpload} onDelete={handleDelete} allowUpload={true} />
-        </div>
-      )}
+
     </div>
   );
 }
 
 function StaffView({ profile, session, activeTab }) {
-  const { sequences, members, events, songs, uploading, handleFileUpload, handleDelete, fetchData } = useOrgData(profile, session);
+  const { members, events, songs, fetchData } = useOrgData(profile, session);
   return (
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
@@ -574,17 +605,13 @@ function StaffView({ profile, session, activeTab }) {
           <TeamList members={members} isDirector={false} refreshData={fetchData} />
         </div>
       )}
-      {activeTab === 'audio' && (
-        <div style={{ gridColumn: '1 / -1' }}>
-          <DataCenter sequences={sequences} uploading={uploading} onUpload={handleFileUpload} onDelete={handleDelete} allowUpload={true} />
-        </div>
-      )}
+
     </div>
   );
 }
 
 function MusicianView({ profile, session, activeTab }) {
-  const { sequences, events, members, songs } = useOrgData(profile, session);
+  const { events, members, songs } = useOrgData(profile, session);
   return (
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
@@ -608,20 +635,15 @@ function MusicianView({ profile, session, activeTab }) {
 }
 
 function useOrgData(profile, session) {
-  const [sequences, setSequences] = useState([]);
   const [members, setMembers] = useState([]);
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (profile?.org_id) fetchData();
   }, [profile?.org_id]);
 
   const fetchData = async () => {
-    const resSeq = await supabase.from('sequence_files').select('*').order('created_at', { ascending: false });
-    if (!resSeq.error) setSequences(resSeq.data);
-
     const resMem = await supabase.from('profiles').select('*').eq('org_id', profile.org_id);
     if (!resMem.error) setMembers(resMem.data);
 
@@ -634,60 +656,10 @@ function useOrgData(profile, session) {
     } catch(e) { console.log('Events table might not exist yet'); }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { data: { uploadUrl, key } } = await axios.post(`${API_URL}/api/storage/upload-url`, {
-        fileName: file.name, fileType: file.type, fileSize: file.size, orgId: profile.org_id
-      }, { headers: { Authorization: `Bearer ${session.access_token}` } });
-      await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
-      await axios.post(`${API_URL}/api/storage/confirm-upload`, {
-        fileMetadata: { orgId: profile.org_id, fileName: file.name, fileType: file.type, fileSize: file.size, key }
-      }, { headers: { Authorization: `Bearer ${session.access_token}` } });
-      await fetchData();
-    } catch (e) { alert('Error al subir.'); } finally { setUploading(false); }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Esta acción removerá el archivo. ¿Continuar?')) return;
-    try {
-      await axios.delete(`${API_URL}/api/storage/delete/${id}`, { headers: { Authorization: `Bearer ${session.access_token}` } });
-      await fetchData();
-    } catch (e) { alert('Error al borrar'); }
-  };
-
-  return { sequences, members, events, songs, uploading, handleFileUpload, handleDelete, fetchData };
+  return { members, events, songs, fetchData };
 }
 
-function DataCenter({ sequences, uploading, onUpload, onDelete, allowUpload }) {
-  return (
-    <section className="glass-panel" style={{ padding: '2rem' }}>
-      <h3 className="section-title"><Upload size={20} color="var(--primary)" /> Pistas & Multitracks</h3>
-      {allowUpload && (
-        <label className="upload-zone" style={{ display: 'block', marginBottom: '2rem' }}>
-          <input type="file" onChange={onUpload} style={{ display: 'none' }} disabled={uploading} />
-          {uploading ? <Loader2 className="spin-slow" size={32} style={{ margin: '0 auto' }} color="var(--primary)" /> : <FileAudio size={40} style={{ margin: '0 auto 1rem auto', color: 'var(--primary)' }} />}
-          <div style={{ fontWeight: '500', marginTop: '1rem' }}>{uploading ? 'Transfiriendo...' : 'Seleccionar Stems (.wav, .zip)'}</div>
-        </label>
-      )}
-      <div>
-        {sequences?.length === 0 ? ( <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', padding: '1rem' }}>Repositorio vacío.</p> ) : (
-          sequences?.map(s => (
-            <div key={s.id} className="list-item">
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <Play size={16} style={{ color: 'var(--primary)', cursor: 'pointer' }} />
-                <span style={{ fontSize: '0.95rem' }}>{s.original_name}</span>
-              </div>
-              {allowUpload && <Trash2 size={16} style={{ color: '#ef4444', cursor: 'pointer', opacity: 0.7 }} onClick={() => onDelete(s.id)} />}
-            </div>
-          ))
-        )}
-      </div>
-    </section>
-  );
-}
+
 
 function VisualCalendar({ events, onEventClick, onDayClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
