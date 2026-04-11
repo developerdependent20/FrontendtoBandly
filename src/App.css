@@ -74,7 +74,16 @@ h1, h2, h3, h4 {
 
 .landing-nav-links {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .landing-nav {
+    padding: 0 4%;
+  }
+  .landing-nav-links .btn-secondary {
+    display: none; /* Ocultar el 'Ingresar' secundario para dejar espacio al botón principal */
+  }
 }
 
 .landing-hero-centered {
@@ -105,6 +114,7 @@ h1, h2, h3, h4 {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
 }
 
 .hero-description-large {
@@ -272,10 +282,16 @@ h1, h2, h3, h4 {
   border-color: white;
 }
 
-.landing-features {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.features-flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.landing-features {
   padding: 6rem 8%;
   max-width: 1600px;
   margin: 0 auto;
@@ -287,13 +303,16 @@ h1, h2, h3, h4 {
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
-  transition: transform 0.3s, background 0.3s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1 1 320px;
+  max-width: 400px;
 }
 
 .feature-card:hover {
-  transform: translateY(-10px);
-  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-8px);
+  background: rgba(139, 92, 246, 0.04);
   border-color: var(--primary);
+  box-shadow: 0 20px 40px -15px rgba(139, 92, 246, 0.2);
 }
 
 .feature-icon {
@@ -855,7 +874,56 @@ input[type="datetime-local"] {
   }
 
   .section-title-large {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
+    line-height: 1.1;
+  }
+
+  .landing-cta-box {
+    padding: 3rem 1.5rem;
+    margin: 2rem 5% 4rem 5%;
+    border-radius: 24px;
+  }
+
+  .landing-cta-box h2 {
+    font-size: 1.8rem;
+  }
+
+  .landing-cta-box button {
+    width: 100%;
+    padding: 1.2rem;
+  }
+
+  .features-flex-container {
+    padding: 0 1rem;
+  }
+
+  .feature-card {
+    padding: 2rem 1.5rem;
+    flex: 1 1 100%;
+  }
+
+  .hero-description-large {
+    font-size: 1rem;
+    padding: 0;
+  }
+  
+  .compatibility-badges-centered {
+    margin-top: 2rem;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-main-title-large {
+    font-size: 2.1rem;
+  }
+  
+  .pricing-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .price {
+    font-size: 2.8rem;
   }
 }
 

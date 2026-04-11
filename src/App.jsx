@@ -100,9 +100,7 @@ function LandingPage({ onGetStarted }) {
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
       <div className="hero-decorations">
-        <Sparkles className="floating-icon-subtle top-right" size={48} style={{ top: '120px', right: '10%' }} />
-        <Waves className="floating-icon-subtle mid-left" size={60} style={{ top: '300px', left: '5%' }} />
-        <Zap className="floating-icon-subtle bot-right" size={32} style={{ bottom: '80px', right: '15%' }} />
+        {/* Eliminados elementos distractores para un look más limpio */}
       </div>
       
       <nav className="landing-nav">
@@ -117,7 +115,6 @@ function LandingPage({ onGetStarted }) {
 
       <header className="landing-hero-centered">
         <div className="hero-content-full">
-          <div className="badge-promo">LA PLATAFORMA TODO-EN-UNO PARA BANDAS Y EQUIPOS MUSICALES</div>
           <h1 className="hero-main-title-large">
             Organiza tus shows, repertorios <br/>
             <span>y ensayos en un solo lugar</span>
@@ -159,7 +156,7 @@ function LandingPage({ onGetStarted }) {
 
       {/* Features Grid */}
       <section className="landing-features" style={{ padding: '8rem 2rem' }}>
-        <div className="pricing-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+        <div className="features-flex-container">
           <div className="feature-card">
             <div className="feature-icon"><Speaker size={32} /></div>
             <h3>Reproductor Nativo</h3>
