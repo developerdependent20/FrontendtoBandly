@@ -113,46 +113,43 @@ function LandingPage({ onGetStarted }) {
         </div>
       </nav>
 
-      <header className="landing-hero-centered">
+      <header className="landing-hero-centered" style={{ padding: '8rem 8% 4rem 8%' }}>
         <div className="hero-content-full">
           <h1 className="hero-main-title-large">
-            Organiza tus shows, repertorios <br/>
-            <span>y ensayos en un solo lugar</span>
+            Toda tu música. <br/>
+            <span className="serif-accent">Bajo control.</span>
           </h1>
-          <p className="hero-description-large">
-            Bandly te ayuda a planificar eventos, gestionar charts y letras, compartir recursos, organizar multitracks y ensayar con secuencias desde una sola plataforma.
-          </p>
-          <p style={{ color: 'var(--text-muted)', marginTop: '1rem', fontSize: '0.95rem', maxWidth: '700px', margin: '1rem auto 0 auto' }}>
-            Pensado para bandas, artistas, equipos de iglesia y proyectos musicales que quieren trabajar con más orden, menos caos y mejores herramientas.
-          </p>
           
-          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem', width: 'auto' }}>Comenzar gratis</button>
             <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver planes</button>
           </div>
           
-          <div className="compatibility-badges-centered" style={{ marginTop: '4rem' }}>
+          <div className="compatibility-badges-centered" style={{ marginTop: '5rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem', display: 'block', width: '100%', opacity: 0.8 }}>Disponible en</span>
             <div className="comp-item-badge"><span></span> macOS</div>
             <div className="comp-item-badge"><span>⊞</span> Windows</div>
             <div className="comp-item-badge"><span>🤖</span> Android</div>
             <div className="comp-item-badge"><span>🌐</span> Web</div>
           </div>
-          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '1.5rem', fontStyle: 'italic' }}>
-            Apps nativas disponibles según plan y etapa de acceso.
-          </p>
         </div>
       </header>
 
-      {/* Bloque Diferencial */}
-      <section className="landing-differentiator" style={{ background: 'rgba(139, 92, 246, 0.05)', padding: '6rem 2rem', borderTop: '1px solid rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.02)', textAlign: 'center' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '1.5rem', letterSpacing: '-1px' }}>Más que una app de reproducción. Más que una agenda.</h2>
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-            Bandly conecta la planificación del show, los repertorios, los recursos y el ensayo en una sola plataforma para que tu equipo trabaje mejor antes de subir al escenario.
+      {/* Frase Heroica Expandida (Premium Statement) */}
+      <section className="premium-statement">
+        <div className="statement-content">
+          <p className="statement-mini">Lo que hacemos</p>
+          <h2 className="statement-main">
+            Planificamos cada evento, gestionamos tus letras y recursos <br/>
+            y ensayamos con secuencias desde <span className="serif-accent">una sola plataforma.</span>
+          </h2>
+          <p className="statement-support">
+            Pensado para bandas y equipos que buscan trabajar con <span className="serif-accent">más orden, menos caos</span> y las mejores herramientas del mercado.
           </p>
         </div>
       </section>
+
+
 
       {/* Features Grid */}
       <section className="landing-features" style={{ padding: '8rem 2rem' }}>

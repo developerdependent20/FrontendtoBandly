@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Outfit:wght@400;700;800&display=swap');
+
 :root {
   --primary: #8b5cf6;
   --primary-hover: #7c3aed;
@@ -7,7 +9,7 @@
   --border-light: rgba(255, 255, 255, 0.08);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --font-sans: 'Inter', -apple-system, sans-serif;
+  --font-sans: 'Outfit', 'Inter', -apple-system, sans-serif;
   --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
   --radius-lg: 24px;
   --radius-md: 12px;
@@ -114,7 +116,15 @@ h1, h2, h3, h4 {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
+.serif-accent {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0;
 }
 
 .hero-description-large {
@@ -341,36 +351,55 @@ h1, h2, h3, h4 {
   font-size: 0.95rem;
 }
 
-/* Bloque Diferencial */
-.landing-differentiator {
-  background: rgba(139, 92, 246, 0.03);
-  padding: 8rem 6%;
-  border-top: 1px solid rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+/* Bloque Diferencial / Statement */
+.premium-statement {
+  background: rgba(15, 23, 42, 0.3);
+  padding: 12rem 8% 10rem 8%;
+  border-top: 1px solid rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.02);
   text-align: center;
 }
 
-.landing-differentiator h2 {
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 800;
-  margin-bottom: 2rem;
-  letter-spacing: -2px;
-  line-height: 1.1;
+.statement-content {
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-.landing-differentiator p {
+.statement-mini {
+  color: var(--primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.statement-main {
+  font-size: clamp(1.8rem, 6vw, 3.8rem);
+  font-weight: 800;
+  margin-bottom: 3rem;
+  letter-spacing: -2px;
+  line-height: 1.1;
+  color: white;
+}
+
+.statement-support {
   font-size: 1.4rem;
   color: var(--text-muted);
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
   line-height: 1.6;
 }
 
 @media (max-width: 768px) {
-  .landing-differentiator {
-    padding: 5rem 8%;
+  .premium-statement {
+    padding: 6rem 8%;
   }
-  .landing-differentiator p {
+  .statement-main {
+    font-size: 1.8rem;
+    letter-spacing: -1px;
+  }
+  .statement-support {
     font-size: 1.1rem;
   }
 }
