@@ -7,6 +7,8 @@ import {
 import { supabase } from './supabaseClient';
 import axios from 'axios';
 import ChartStudio from './components/ChartStudio';
+import SequenceUploader from './components/SequenceUploader';
+import SequenceMixer from './components/SequenceMixer';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -540,7 +542,7 @@ function DirectorView({ profile, session, activeTab }) {
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <EventPlanner readOnly={false} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} />
+          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} />
         </div>
       )}
       {activeTab === 'team' && (
@@ -564,7 +566,7 @@ function StaffView({ profile, session, activeTab }) {
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <EventPlanner readOnly={true} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} />
+          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} />
         </div>
       )}
       {activeTab === 'team' && (
@@ -588,7 +590,7 @@ function MusicianView({ profile, session, activeTab }) {
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <EventPlanner readOnly={true} events={events} members={members} songs={songs} profile={profile} session={session} />
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} />
+          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} session={session} />
         </div>
       )}
       {activeTab === 'team' && (
@@ -778,15 +780,44 @@ function VisualCalendar({ events, onEventClick, onDayClick }) {
   );
 }
 
-function SongLibrary({ songs, orgId, readOnly, refreshData }) {
+function SongLibrary({ songs, orgId, readOnly, refreshData, session }) {
   const [showModal, setShowModal] = useState(false);
-  const [chartSong, setChartSong] = useState(null); // Song being edited in ChartStudio
+  const [chartSong, setChartSong] = useState(null);
+  const [seqUploadSong, setSeqUploadSong] = useState(null);
+  const [seqMixerData, setSeqMixerData] = useState(null);
+  const [loadingSeq, setLoadingSeq] = useState(null);
   const [title, setTitle] = useState('');
   const [songKey, setSongKey] = useState('');
   const [keyMale, setKeyMale] = useState('');
   const [keyFemale, setKeyFemale] = useState('');
   const [bpm, setBpm] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
+
+  // Abrir Mixer: cargar secuencia desde el backend
+  const openMixer = async (song) => {
+    setLoadingSeq(song.id);
+    try {
+      const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await resp.json();
+      if (data.sequence && data.sequence.stems?.length > 0) {
+        setSeqMixerData(data.sequence);
+      } else {
+        // No hay secuencia subida, abrir uploader
+        if (!readOnly) {
+          setSeqUploadSong(song);
+        } else {
+          alert('Esta canción no tiene secuencia subida aún.');
+        }
+      }
+    } catch (e) {
+      console.error('Error loading sequence:', e);
+      alert('Error al cargar secuencia');
+    } finally {
+      setLoadingSeq(null);
+    }
+  };
 
   const handleSave = async () => {
     if(!title) return alert("El título es obligatorio");
@@ -875,6 +906,36 @@ function SongLibrary({ songs, orgId, readOnly, refreshData }) {
                 >
                   <FileText size={14} color={s.chart_data ? '#a78bfa' : '#c4b5fd'} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
+                <button 
+                  onClick={() => openMixer(s)}
+                  disabled={loadingSeq === s.id}
+                  style={{ 
+                    background: 'rgba(14, 165, 233, 0.08)', 
+                    border: '1px solid rgba(14, 165, 233, 0.3)', 
+                    color: '#38bdf8', 
+                    padding: '6px 14px', 
+                    borderRadius: '10px', 
+                    fontSize: '0.75rem', 
+                    fontWeight: '800', 
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontFamily: 'inherit',
+                    opacity: loadingSeq === s.id ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(14, 165, 233, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(14, 165, 233, 0.08)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  {loadingSeq === s.id ? <Loader2 size={14} className="spin-slow" /> : <Headphones size={14} />} Secuencia
+                </button>
               </div>
             </div>
           ))
@@ -939,6 +1000,26 @@ function SongLibrary({ songs, orgId, readOnly, refreshData }) {
             setChartSong(prev => ({ ...prev, ...chartData }));
             if (refreshData) refreshData();
           }}
+        />
+      )}
+
+      {/* Sequence Uploader Modal */}
+      {seqUploadSong && (
+        <SequenceUploader
+          song={seqUploadSong}
+          orgId={orgId}
+          session={session}
+          apiUrl={API_URL}
+          onClose={() => setSeqUploadSong(null)}
+          onComplete={() => { if (refreshData) refreshData(); }}
+        />
+      )}
+
+      {/* Sequence Mixer Modal */}
+      {seqMixerData && (
+        <SequenceMixer
+          sequence={seqMixerData}
+          onClose={() => setSeqMixerData(null)}
         />
       )}
     </section>
