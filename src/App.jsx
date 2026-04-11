@@ -119,8 +119,11 @@ function LandingPage({ onGetStarted }) {
             Toda tu música. <br/>
             <span className="serif-accent">Bajo control.</span>
           </h1>
+          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)', color: 'var(--text-muted)', maxWidth: '800px', margin: '1rem auto 0 auto', lineHeight: '1.4' }}>
+            Organiza shows, repertorios, multitracks y secuencias <br className="hide-mobile" /> desde una sola plataforma.
+          </p>
           <p className="hero-clarifier">
-            Shows <span className="dot">•</span> Repertorios <span className="dot">•</span> Secuencias
+            Eventos <span className="dot">•</span> Repertorios <span className="dot">•</span> Recursos <span className="dot">•</span> Multitracks <span className="dot">•</span> Secuencias
           </p>
           
           <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -141,13 +144,13 @@ function LandingPage({ onGetStarted }) {
       {/* Frase Heroica Expandida (Premium Statement) */}
       <section className="premium-statement">
         <div className="statement-content">
-          <p className="statement-mini">Lo que hacemos</p>
+          <p className="statement-mini">HECHO PARA EQUIPOS MUSICALES</p>
           <h2 className="statement-main">
-            Planificamos cada evento, gestionamos tus letras y recursos <br/>
-            y ensayamos con secuencias desde <span className="serif-accent">una sola plataforma.</span>
+            Organiza eventos, reúne tus recursos <br/>
+            y ensaya con secuencias desde <span className="serif-accent">una sola plataforma.</span>
           </h2>
           <p className="statement-support">
-            Pensado para bandas y equipos que buscan trabajar con <span className="serif-accent">más orden, menos caos</span> y las mejores herramientas del mercado.
+            Pensado para bandas y equipos musicales que quieren trabajar con <span className="serif-accent">más orden, menos caos</span> y una experiencia más completa.
           </p>
         </div>
       </section>

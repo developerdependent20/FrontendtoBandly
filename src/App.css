@@ -395,6 +395,16 @@ h1, h2, h3, h4 {
   .premium-statement {
     padding: 6rem 8%;
   }
+  .hero-clarifier {
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    margin-top: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .hide-mobile {
+    display: none;
+  }
   .statement-main {
     font-size: 1.8rem;
     letter-spacing: -1px;
@@ -561,6 +571,26 @@ input[type="datetime-local"] {
   letter-spacing: 0.5px;
   color: var(--primary);
   font-weight: 600;
+}
+
+.hero-clarifier {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  opacity: 0.8;
+  line-height: 1.8;
+}
+
+.hero-clarifier .dot {
+  color: var(--primary);
+  margin: 0 8px;
+}
+
+.hide-mobile {
+  display: inline;
 }
 
 .roster-label {
