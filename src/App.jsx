@@ -119,6 +119,9 @@ function LandingPage({ onGetStarted }) {
             Toda tu música. <br/>
             <span className="serif-accent">Bajo control.</span>
           </h1>
+          <p className="hero-clarifier">
+            Shows <span className="dot">•</span> Repertorios <span className="dot">•</span> Secuencias
+          </p>
           
           <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem', width: 'auto' }}>Comenzar gratis</button>
