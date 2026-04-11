@@ -430,6 +430,7 @@
   color: #2d3748;
   position: relative;
   z-index: 1;
+  white-space: pre-wrap;
 }
 
 .cs-chart-html h1 {
@@ -458,7 +459,10 @@
   letter-spacing: 0.3px;
 }
 
-.cs-chart-html .lyrics { color: #2d3748; }
+.cs-chart-html .lyrics { 
+  color: #2d3748; 
+  white-space: pre-wrap;
+}
 
 .cs-chart-html .comment {
   color: #6b46c1;
@@ -481,7 +485,10 @@
   font-family: 'Inter', sans-serif;
 }
 
-.cs-line { min-height: 1.4em; }
+.cs-line { 
+  min-height: 1.4em; 
+  white-space: pre-wrap;
+}
 
 /* Empty State */
 .cs-empty-state {

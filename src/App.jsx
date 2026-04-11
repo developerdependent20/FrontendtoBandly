@@ -849,22 +849,31 @@ function SongLibrary({ songs, orgId, readOnly, refreshData }) {
                 <button 
                   onClick={() => setChartSong(s)} 
                   style={{ 
-                    background: s.chart_data ? 'rgba(167, 139, 250, 0.12)' : 'rgba(255,255,255,0.04)', 
-                    border: `1px solid ${s.chart_data ? 'rgba(167, 139, 250, 0.25)' : 'rgba(255,255,255,0.08)'}`, 
-                    color: s.chart_data ? '#a78bfa' : '#64748b', 
-                    padding: '4px 10px', 
-                    borderRadius: '8px', 
+                    background: s.chart_data ? 'rgba(167, 139, 250, 0.15)' : 'rgba(139, 92, 246, 0.08)', 
+                    border: `1px solid ${s.chart_data ? '#a78bfa' : 'rgba(139, 92, 246, 0.3)'}`, 
+                    color: s.chart_data ? '#a78bfa' : '#c4b5fd', 
+                    padding: '6px 14px', 
+                    borderRadius: '10px', 
                     fontSize: '0.75rem', 
-                    fontWeight: '700', 
+                    fontWeight: '800', 
                     cursor: 'pointer', 
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    fontFamily: 'inherit'
+                    gap: '6px',
+                    fontFamily: 'inherit',
+                    boxShadow: s.chart_data ? '0 4px 12px rgba(167, 139, 250, 0.1)' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = s.chart_data ? 'rgba(167, 139, 250, 0.15)' : 'rgba(139, 92, 246, 0.08)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  <FileText size={12} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
+                  <FileText size={14} color={s.chart_data ? '#a78bfa' : '#c4b5fd'} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
               </div>
             </div>

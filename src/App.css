@@ -390,6 +390,7 @@ h1, h2, h3, h4 {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
   padding: clamp(1.2rem, 5vw, 3rem);
+  will-change: transform;
 }
 
 /* Typography */
@@ -728,6 +729,8 @@ input[type="datetime-local"] {
   z-index: 0;
   animation: float-extremely-slow 20s ease-in-out infinite;
   filter: blur(0.4px);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 @keyframes float-extremely-slow {
@@ -748,6 +751,16 @@ input[type="datetime-local"] {
   .landing-nav {
     height: 60px;
     padding: 0 4%;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #0f172a;
+  }
+
+  .glass-panel, .pricing-card, .feature-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .landing-logo {
