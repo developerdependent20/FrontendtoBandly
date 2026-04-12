@@ -4,15 +4,18 @@
   --primary: #8b5cf6;
   --primary-hover: #7c3aed;
   --accent: #0ea5e9;
-  --bg-dark: #0f172a;
-  --bg-panel: rgba(30, 41, 59, 0.6);
+  --bg-dark: #020617;
+  --bg-panel: rgba(15, 23, 42, 0.6);
   --border-light: rgba(255, 255, 255, 0.08);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --font-sans: 'Outfit', 'Inter', -apple-system, sans-serif;
   --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
   --radius-lg: 24px;
-  --radius-md: 12px;
+  --radius-md: 16px;
+  --glass-bg: rgba(30, 41, 59, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -104,11 +107,15 @@ h1, h2, h3, h4 {
 }
 
 .hero-main-title-large {
-  font-size: 5rem;
+  font-size: clamp(2.5rem, 10vw, 6rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1;
   margin-bottom: 2rem;
   letter-spacing: -3px;
+  background: linear-gradient(to bottom, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .hero-main-title-large span {
@@ -128,9 +135,9 @@ h1, h2, h3, h4 {
 }
 
 .hero-description-large {
-  font-size: 1.4rem;
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -885,9 +892,9 @@ input[type="datetime-local"] {
   }
 
   .glass-panel, .pricing-card, .feature-card {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background: #1e293b;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: rgba(30, 41, 59, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -897,18 +904,16 @@ input[type="datetime-local"] {
   }
 
   .hero-main-title-large {
-    font-size: clamp(2.2rem, 8vw, 2.8rem);
-    letter-spacing: -1px;
-    line-height: 1.1;
+    font-size: clamp(2.2rem, 10vw, 3.2rem);
+    letter-spacing: -1.5px;
+    line-height: 1;
     margin-bottom: 1.5rem;
-    overflow-wrap: break-word;
-    hyphens: auto;
   }
 
   .hero-description-large {
     font-size: 1.1rem;
-    padding: 0 5%;
-    line-height: 1.5;
+    padding: 0;
+    line-height: 1.4;
   }
 
   .landing-hero-centered {
