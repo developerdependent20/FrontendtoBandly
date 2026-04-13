@@ -110,9 +110,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   return (
-    <section className="glass-panel" style={{ padding: '2rem', position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
-        <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Calendario & Planeación</h3>
+    <section>
+      <div className="tutorial-banner">
+        <div style={{ background: 'var(--accent)', padding: '1rem', borderRadius: '15px', color: '#0f172a' }}>
+          <CalendarIcon size={24} />
+        </div>
+        <div>
+          <h4>Calendario & Planeación</h4>
+          <p>Organiza tus servicios, ensayos y eventos. Asigna el roster de músicos y staff para que todos sepan su rol.</p>
+        </div>
+      </div>
+
+      <section className="glass-panel" style={{ padding: '2rem', position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
+          <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
         {!readOnly && (
           <div style={{ padding: '0.6rem 1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>💡 Selecciona una fecha en el calendario para crear un evento</span>
@@ -411,6 +422,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           </div>
         </div>
       )}
+
+      <footer className="identity-footer">
+        <p>Bandly: Planea con orden, lidera con excelencia.</p>
+      </footer>
+    </section>
     </section>
   );
 }

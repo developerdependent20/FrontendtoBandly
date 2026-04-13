@@ -10,6 +10,10 @@ export function DirectorView({ profile, session, activeTab, orgData }) {
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <EventPlanner readOnly={false} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
+        </div>
+      )}
+      {activeTab === 'library' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} />
         </div>
       )}
@@ -29,6 +33,10 @@ export function StaffView({ profile, session, activeTab, orgData }) {
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <EventPlanner readOnly={true} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
+        </div>
+      )}
+      {activeTab === 'library' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} />
         </div>
       )}
@@ -48,6 +56,10 @@ export function MusicianView({ profile, session, activeTab, orgData }) {
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <EventPlanner readOnly={true} events={events} members={members} songs={songs} profile={profile} session={session} />
+        </div>
+      )}
+      {activeTab === 'library' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} session={session} />
         </div>
       )}

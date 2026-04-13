@@ -10,7 +10,12 @@ export default function LandingPage({ onGetStarted }) {
       
       <nav className="landing-nav">
         <div style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
-          <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" alt="Bandly Logotipo" className="landing-logo" />
+          <img 
+            src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" 
+            alt="Bandly Logotipo" 
+            className="landing-logo" 
+            style={{ height: '80px', width: 'auto', padding: '5px 0', objectFit: 'contain' }}
+          />
         </div>
         <div className="landing-nav-links">
           <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Ingresar</button>

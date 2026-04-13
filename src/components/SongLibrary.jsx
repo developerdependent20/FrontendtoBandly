@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music, Plus, Trash2, FileText, Headphones, X, Loader2 } from 'lucide-react';
+import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
@@ -67,9 +67,38 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   };
 
   return (
-    <section className="glass-panel" style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio</h3>
+    <section>
+      <div className="library-intro" style={{ marginBottom: '3rem', marginTop: '1rem' }}>
+        <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem' }}>
+          Tu Repertorio. <span className="serif-accent">Elevado.</span>
+        </h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <FileText size={28} color="var(--primary)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Chart Studio</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Crea cifrados profesionales en segundos. <span style={{ color: 'white' }}>Transpón tonos instantáneamente</span>, añade anotaciones de estructura y exporta para todo tu equipo.
+            </p>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <Headphones size={28} color="var(--accent)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Multitrack Player</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              El corazón de tus ensayos. Sube tus <span style={{ color: 'white' }}>secuencias en multitrack</span>, ajusta la mezcla perfecta para cada músico y ensaya con la máxima fidelidad desde la nube.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <section className="glass-panel" style={{ padding: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio Grupal</h3>
         {!readOnly && (
           <button onClick={() => setShowModal(true)} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
             <Plus size={16} /> Añadir Canción
@@ -115,26 +144,50 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       </div>
       
       {showModal && (
-        <div className="modal-overlay">
-          <div className="glass-panel modal-content" style={{ maxWidth: '600px' }}>
-            <button onClick={() => setShowModal(false)} className="modal-close-btn">
-              <X size={24} />
+        <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', zIndex: 1000 }}>
+          <div className="glass-panel modal-content" style={{ maxWidth: '550px', padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <button onClick={() => setShowModal(false)} className="modal-close-btn" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }}>
+              <X size={20} />
             </button>
-            <h3 className="modal-title">Datos de la Canción</h3>
-            <div className="input-group">
-              <input type="text" className="input-field" placeholder="Título de la canción *" value={title} onChange={e=>setTitle(e.target.value)} />
-              <div style={{display:'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap:'1rem', width: '100%'}}>
-                <input type="text" className="input-field" placeholder="Tono Original (ej. A)" value={songKey} onChange={e=>setSongKey(e.target.value)} />
-                <input type="number" className="input-field" placeholder="BPM (ej. 120)" value={bpm} onChange={e=>setBpm(e.target.value)} />
-                <input type="text" className="input-field" placeholder="Tono Hombre (ej. G)" value={keyMale} onChange={e=>setKeyMale(e.target.value)} />
-                <input type="text" className="input-field" placeholder="Tono Mujer (ej. D)" value={keyFemale} onChange={e=>setKeyFemale(e.target.value)} />
+            <h3 className="modal-title" style={{ fontSize: '1.5rem', marginBottom: '2rem', textAlign: 'center' }}>Datos de la Canción</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div className="input-group">
+                <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Título</label>
+                <input type="text" className="input-field" placeholder="Nombre de la canción *" value={title} onChange={e=>setTitle(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }} />
               </div>
-              <input type="url" className="input-field" placeholder="Enlace de YouTube" value={youtubeLink} onChange={e=>setYoutubeLink(e.target.value)} />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Tono Orig.</label>
+                  <input type="text" className="input-field" placeholder="Ex: A" value={songKey} onChange={e=>setSongKey(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>BPM</label>
+                  <input type="number" className="input-field" placeholder="Ex: 120" value={bpm} onChange={e=>setBpm(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Voz Hombre</label>
+                  <input type="text" className="input-field" placeholder="Ej: G" value={keyMale} onChange={e=>setKeyMale(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Voz Mujer</label>
+                  <input type="text" className="input-field" placeholder="Ej: D" value={keyFemale} onChange={e=>setKeyFemale(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Enlace de YouTube</label>
+                <input type="url" className="input-field" placeholder="https://youtube.com/..." value={youtubeLink} onChange={e=>setYoutubeLink(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+              </div>
             </div>
             
-            <div style={{display:'flex', gap:'1rem', marginTop:'2rem'}}>
-              <button className="btn-secondary" onClick={()=>setShowModal(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={handleSave}>Guardar Canción</button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+              <button className="btn-secondary" onClick={()=>setShowModal(false)} style={{ flex: 1, padding: '1rem' }}>Cancelar</button>
+              <button className="btn-primary" onClick={handleSave} style={{ flex: 1.5, padding: '1rem' }}>Guardar Canción</button>
             </div>
           </div>
         </div>
@@ -160,6 +213,11 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       {seqMixerData && (
         <SequenceMixer sequence={seqMixerData} onClose={() => setSeqMixerData(null)} />
       )}
+
+      <footer className="identity-footer">
+        <p>Bandly: Donde la excelencia musical encuentra el orden.</p>
+      </footer>
     </section>
+  </section>
   );
 }

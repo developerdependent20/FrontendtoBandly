@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Users, Loader2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import TermsModal from '../components/TermsModal';
 
 export default function OnboardingScreen({ session, fetchProfile }) {
   const urlParams = new URLSearchParams(window.location.search);
@@ -9,10 +10,13 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   const [roleMode, setRoleMode] = useState(magicCode ? 'member' : null); 
   const [orgName, setOrgName] = useState('');
   const [inviteCodeInput, setInviteCodeInput] = useState(magicCode || '');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const createOrganization = async () => {
     if(!orgName || !inviteCodeInput) { alert("Por favor ingresa nombre y un código para la banda."); return; }
+    if(!termsAccepted) { alert("Debes aceptar los términos de servicio."); return; }
     setLoading(true);
     try {
       const code = inviteCodeInput.toUpperCase().replace(/\s+/g, '');
@@ -31,7 +35,8 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0], 
         email: session.user.email, 
         role: 'director',
-        org_id: org.id
+        org_id: org.id,
+        accepted_terms: true
       }]);
       if (profError) throw profError;
       
@@ -44,6 +49,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
 
   const joinByCode = async (role) => {
     if (!inviteCodeInput) { alert("Ingresa un código"); return; }
+    if (!termsAccepted) { alert("Debes aceptar los términos de servicio."); return; }
     setLoading(true);
     try {
       const { data: org, error: orgError } = await supabase
@@ -57,7 +63,8 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0], 
         email: session.user.email, 
         role: role,
-        org_id: org.id
+        org_id: org.id,
+        accepted_terms: true
       }]);
       if (profError) throw profError;
 
@@ -101,6 +108,14 @@ export default function OnboardingScreen({ session, fetchProfile }) {
             <div className="input-group">
               <input type="text" placeholder="Nombre (Ej: Adoradores Central)" className="input-field" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
               <input type="text" placeholder="Crea tu Código Secreto (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} />
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                 <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                   Acepto los <span onClick={() => setShowTerms(true)} style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}>Términos de Servicio</span>.
+                 </span>
+              </div>
+
               <button onClick={createOrganization} className="btn-primary">Registrar Banda</button>
               <button onClick={() => setRoleMode(null)} className="btn-secondary">Volver</button>
             </div>
@@ -111,6 +126,14 @@ export default function OnboardingScreen({ session, fetchProfile }) {
             <div className="input-group">
               <input type="text" placeholder="Ej: CENTRAL24" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} disabled={!!magicCode}/>
               {magicCode && <p style={{fontSize:'0.8rem', color:'var(--primary)', textAlign:'center'}}>Código autocompletado por tu invitación.</p>}
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                 <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                   Acepto los <span onClick={() => setShowTerms(true)} style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}>Términos de Servicio</span>.
+                 </span>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button onClick={() => joinByCode('staff')} className="btn-primary">Soy Staff</button>
                 <button onClick={() => joinByCode('musico')} className="btn-primary">Soy Músico</button>
@@ -124,6 +147,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
       <button onClick={() => supabase.auth.signOut()} className="btn-secondary" style={{ marginTop: '3rem', border: 'none', background: 'transparent' }}>
         Cerrar Sesión
       </button>
+      <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }

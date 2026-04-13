@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 import { supabase } from './supabaseClient';
 
 // Pages
@@ -8,6 +9,7 @@ import OnboardingScreen from './pages/OnboardingScreen';
 
 // Components & Layout
 import LoadingScreen from './components/LoadingScreen';
+import TermsModal from './components/TermsModal';
 import Dashboard from './components/layout/Dashboard';
 import { DirectorView, StaffView, MusicianView } from './components/layout/RoleViews';
 
@@ -20,6 +22,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('bandly_active_tab') || 'planner');
   const [view, setView] = useState(() => localStorage.getItem('bandly_view') || 'landing');
+  const [showLegalBlocking, setShowLegalBlocking] = useState(false);
 
   // Org Data Hook
   const orgData = useOrgData(profile);
@@ -62,6 +65,9 @@ export default function App() {
       
       if (error && error.code !== 'PGRST116') throw error; 
       setProfile(data || null);
+      if (data && !data.accepted_terms) {
+        setShowLegalBlocking(true);
+      }
     } catch (e) {
       console.error(e);
       setProfile(null);
@@ -96,6 +102,17 @@ export default function App() {
     }
   };
 
+  const handleAcceptTerms = async () => {
+    try {
+      const { error } = await supabase.from('profiles').update({ accepted_terms: true }).eq('id', profile.id);
+      if (error) throw error;
+      setProfile({ ...profile, accepted_terms: true });
+      setShowLegalBlocking(false);
+    } catch (e) {
+      alert("Error al guardar aceptación legal.");
+    }
+  };
+
   if (loading) return <LoadingScreen />;
 
   if (!session) {
@@ -108,18 +125,27 @@ export default function App() {
   if (!profile) return <OnboardingScreen session={session} fetchProfile={fetchProfile} />;
 
   return (
-    <Dashboard 
-      profile={profile} 
-      session={session} 
-      onLogout={handleLogout} 
-      activeTab={activeTab} 
-      setActiveTab={setActiveTab}
-      handleCopyLink={handleCopyLink}
-      handleJoinTeam={handleJoinTeam}
-    >
-      {profile.role === 'director' && <DirectorView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
-      {profile.role === 'staff' && <StaffView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
-      {profile.role === 'musico' && <MusicianView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
-    </Dashboard>
+    <>
+      {showLegalBlocking && (
+        <TermsModal 
+          isOpen={true} 
+          onClose={handleAcceptTerms} 
+          onDecline={handleLogout} 
+        />
+      )}
+      <Dashboard 
+        profile={profile} 
+        session={session} 
+        onLogout={handleLogout} 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        handleCopyLink={handleCopyLink}
+        handleJoinTeam={handleJoinTeam}
+      >
+        {profile.role === 'director' && <DirectorView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
+        {profile.role === 'staff' && <StaffView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
+        {profile.role === 'musico' && <MusicianView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
+      </Dashboard>
+    </>
   );
 }

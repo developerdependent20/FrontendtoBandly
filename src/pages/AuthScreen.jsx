@@ -44,8 +44,8 @@ export default function AuthScreen({ onBack, initialMode }) {
         <span>← Volver</span>
       </div>
 
-      <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/LOGO%20BANDLY%20SIN%20FONDO.png" alt="Bandly Isotipo" style={{ width: '240px', height: 'auto', marginBottom: '-2rem', filter: 'drop-shadow(0 0 40px rgba(59, 130, 246, 0.7))' }} />
-      <h1 className="hero-title">Bandly</h1>
+      <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/LOGO%20BANDLY%20SIN%20FONDO.png" alt="Bandly Isotipo" style={{ width: '140px', height: 'auto', marginBottom: '-1rem', filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.5))' }} />
+      <h1 className="hero-title" style={{ fontSize: '2.5rem' }}>Bandly</h1>
       <p className="hero-subtitle">Plan songs. Send sequences. Lead better.</p>
       
       <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem' }}>

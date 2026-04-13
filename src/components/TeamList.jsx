@@ -11,8 +11,19 @@ export default function TeamList({ members, isDirector, refreshData }) {
   };
 
   return (
-    <section className="glass-panel" style={{ padding: '2rem' }}>
-      <h3 className="section-title"><Users size={20} color="var(--primary)" /> Equipo</h3>
+    <section>
+      <div className="tutorial-banner">
+        <div style={{ background: 'var(--primary)', padding: '1rem', borderRadius: '15px', color: 'white' }}>
+          <Users size={24} />
+        </div>
+        <div>
+          <h4>Gestión de Equipo</h4>
+          <p>Mira quiénes forman parte de tu banda y gestiona sus roles (Director, Staff o Músico) para controlar el acceso.</p>
+        </div>
+      </div>
+
+      <section className="glass-panel" style={{ padding: '2rem' }}>
+        <h3 className="section-title"><Users size={20} color="var(--primary)" /> Miembros de la Banda</h3>
       <div style={{ marginTop: '1rem' }}>
         {members?.length === 0 ? ( <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Manda la llave de acceso a tu banda.</p> ) : (
           members?.map(m => (
@@ -42,6 +53,11 @@ export default function TeamList({ members, isDirector, refreshData }) {
           ))
         )}
       </div>
+
+      <footer className="identity-footer">
+        <p>Bandly: Juntos sonamos mejor.</p>
+      </footer>
     </section>
+  </section>
   );
 }

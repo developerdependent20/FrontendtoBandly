@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music } from 'lucide-react';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
   return (
@@ -19,6 +19,14 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           title="Calendario & Planeación"
         >
           <CalendarIcon size={22} />
+        </div>
+
+        <div 
+          className={`nav-item ${activeTab === 'library' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('library')}
+          title="Biblioteca de Repertorio"
+        >
+          <Music size={22} />
         </div>
 
         <div 
