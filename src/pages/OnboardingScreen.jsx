@@ -7,6 +7,12 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   const urlParams = new URLSearchParams(window.location.search);
   const magicCode = urlParams.get('join');
 
+  const [roleMode, setRoleMode] = useState(magicCode ? 'member' : null); 
+  const [orgName, setOrgName] = useState('');
+  const [inviteCodeInput, setInviteCodeInput] = useState(magicCode || '');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedFunctions, setSelectedFunctions] = useState([]);
 
   const functionsList = [

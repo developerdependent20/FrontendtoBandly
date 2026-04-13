@@ -15,6 +15,17 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 export default function SongLibrary({ songs, orgId, readOnly, refreshData, session }) {
+  const [showModal, setShowModal] = useState(false);
+  const [chartSong, setChartSong] = useState(null);
+  const [seqUploadSong, setSeqUploadSong] = useState(null);
+  const [seqMixerData, setSeqMixerData] = useState(null);
+  const [liveSongData, setLiveSongData] = useState(null);
+  const [loadingSeq, setLoadingSeq] = useState(null);
+  const [title, setTitle] = useState('');
+  const [songKey, setSongKey] = useState('');
+  const [keyMale, setKeyMale] = useState('');
+  const [keyFemale, setKeyFemale] = useState('');
+  const [bpm, setBpm] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [editingSongId, setEditingSongId] = useState(null);
 

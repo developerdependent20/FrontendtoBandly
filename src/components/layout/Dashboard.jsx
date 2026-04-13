@@ -92,26 +92,3 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
     </div>
   );
 }
-
-export function DirectorView({ activeTab, plannerProps, libraryProps, teamProps }) {
-  const EventPlanner = require('../EventPlanner').default;
-  const SongLibrary = require('../SongLibrary').default;
-  const TeamList = require('../TeamList').default;
-
-  return (
-    <div className="dashboard-grid" style={{ display: 'block' }}>
-      {activeTab === 'planner' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <EventPlanner {...plannerProps} />
-          <SongLibrary {...libraryProps} />
-        </div>
-      )}
-      {activeTab === 'team' && (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <TeamList {...teamProps} />
-        </div>
-      )}
-    </div>
-  );
-}
-// Note: I'll actually pass components as children or props to avoid the synchronous require issue in ESM.
