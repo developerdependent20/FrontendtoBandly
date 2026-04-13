@@ -1126,7 +1126,6 @@ input[type="datetime-local"] {
 @media (max-width: 768px) {
   .main-content { 
     padding: 0.5rem !important;
-    overflow-x: hidden;
   }
   .glass-panel { 
     padding: 0.75rem !important;
@@ -1135,12 +1134,11 @@ input[type="datetime-local"] {
     border-radius: 0 !important;
   }
   
-  /* Arreglo específico para las tarjetas de canciones que se ven mal */
   .list-item {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 0.75rem !important;
-    padding: 1rem !important;
+    gap: 1rem !important;
+    padding: 1.25rem 1rem !important;
   }
   
   .song-info {
@@ -1149,16 +1147,23 @@ input[type="datetime-local"] {
   
   .song-actions {
     width: 100%;
-    justify-content: flex-start !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 0.5rem !important;
-    flex-wrap: wrap !important;
+  }
+  
+  /* El botón de secuencia (Play) ahora es grande y destacado */
+  .song-action-btn.sequence-btn {
+    grid-column: span 2 !important; /* Ocupa todo el ancho para que no se pierda */
+    padding: 1rem !important;
+    background: rgba(14, 165, 233, 0.2) !important;
+    border: 1px solid var(--accent) !important;
+    font-size: 0.9rem !important;
   }
   
   .song-action-btn {
-    flex: 1 1 auto !important;
-    min-width: 100px;
-    padding: 0.6rem !important;
-    font-size: 0.75rem !important;
+    padding: 0.75rem !important;
+    justify-content: center !important;
   }
 
   .hero-main-title-large { 

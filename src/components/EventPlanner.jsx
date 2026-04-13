@@ -109,6 +109,68 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       if (validRoster.length > 0) await supabase.from('event_roster').insert(validRoster);
       const validSongs = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx }));
       if (validSongs.length > 0) await supabase.from('event_songs').insert(validSongs);
+      
+      // DISPARAR NOTIFICACIONES POR EMAIL (RESEND)
+      if (confirm('Evento agendado exitosamente. ¿Deseas notificar al equipo por correo ahora mismo?')) {
+        const rosterToNotify = roster
+          .filter(r => r.profile_id && r.instrument)
+          .map(r => {
+            const member = members.find(m => m.id === r.profile_id);
+            return {
+               name: member?.full_name || 'Músico',
+               email: member?.email || null,
+               instrument: r.instrument,
+               profile_id: r.profile_id // Añadimos esto para depuración
+            };
+          })
+          .filter(r => r.email);
+
+        console.log('[DEBUG-MAIL] Intentando enviar a:', rosterToNotify);
+        console.log('[DEBUG-API] URL Base:', import.meta.env.VITE_API_URL);
+
+        if (rosterToNotify.length === 0) {
+          alert("⚠️ No se enviaron correos: Ninguno de los músicos seleccionados tiene un email registrado en su perfil.");
+        } else {
+          alert(`📧 Enviando invitaciones a ${rosterToNotify.length} músicos detectados.`);
+          
+          const { data: createdRoster } = await supabase
+            .from('event_roster')
+            .select('id, profile_id')
+            .eq('event_id', evtId);
+          
+          const payload = rosterToNotify.map(r => {
+            const dbRow = createdRoster.find(row => row.profile_id === r.profile_id);
+            return { ...r, event_roster_id: dbRow?.id };
+          });
+
+          const apiUrl = import.meta.env.VITE_API_URL || 'https://bandly-backend.onrender.com';
+          console.log('[DEBUG-API] Conectando a:', apiUrl);
+
+          fetch(`${apiUrl}/api/events/notify`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token || ''}`
+            },
+            body: JSON.stringify({ eventName, rosterWithEmails: payload })
+          })
+          .then(async res => {
+            const data = await res.json();
+            if (!res.ok) {
+              console.error('[DEBUG-MAIL] Error del servidor:', data);
+              alert(`❌ Error al enviar correos: ${data.error || 'Causa desconocida'}`);
+              return;
+            }
+            console.log('[DEBUG-MAIL] Éxito:', data);
+            alert(`🎉 ¡Éxito! Se enviaron ${data.count} invitaciones correctamente.`);
+          })
+          .catch(err => {
+            console.error("[DEBUG-MAIL] Error de conexión:", err);
+            alert("❌ No se pudo conectar con el servidor de correos. Verifica tu conexión o que Render esté activo.");
+          });
+        }
+      }
+
       closeModal(); refreshData();
     } catch (e) { alert('Error al guardar.'); } finally { setSaving(false); }
   };
