@@ -47,15 +47,28 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   };
 
   const openMixer = async (song) => {
+    console.log('[SongLibrary] Abriendo Mixer. Estado sesión:', session ? 'Conectado' : 'Desconectado');
+    if (!session?.access_token) {
+      alert("No se encontró una sesión activa. Por favor, intenta cerrar sesión y volver a entrar.");
+      setLoadingSeq(null);
+      return;
+    }
+
     setLoadingSeq(song.id);
     try {
       const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
-        headers: { 'Authorization': `Bearer ${session?.access_token || ''}` }
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       
       if (!resp.ok) {
-        const errorText = await resp.text();
-        throw new Error(`Error del servidor (${resp.status}): ${errorText || 'No se pudo obtener la secuencia'}`);
+        let errorInfo = 'Error desconocido';
+        try {
+          const errorJson = await resp.json();
+          errorInfo = JSON.stringify(errorJson);
+        } catch (jsonErr) {
+          errorInfo = await resp.text();
+        }
+        throw new Error(`Error del servidor (${resp.status}): ${errorInfo}`);
       }
 
       const data = await resp.json();

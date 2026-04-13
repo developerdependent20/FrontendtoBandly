@@ -20,9 +20,9 @@
 }
 
 .mx-container {
-  width: 100%;
-  max-width: 900px;
-  max-height: 92vh;
+  width: 95%;
+  max-width: 1100px;
+  max-height: 85vh;
   background: #0a0f1e;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
@@ -51,9 +51,10 @@
 }
 
 .mx-header-left h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .mx-header-info {
@@ -176,8 +177,8 @@
   background: rgba(139, 92, 246, 0.15);
   border-color: rgba(139, 92, 246, 0.3);
   color: #a78bfa;
-  min-width: 42px;
-  min-height: 42px;
+  min-width: 54px;
+  min-height: 54px;
 }
 
 .mx-btn-play:hover { background: rgba(139, 92, 246, 0.25); color: #c4b5fd; }
@@ -275,10 +276,10 @@
 }
 
 .mx-ch-label {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #e2e8f0;
-  min-width: 100px;
+  min-width: 130px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -297,11 +298,11 @@
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 28px;
+  height: 32px;
   background: 
     linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 50% / 10% 40% repeat-x,
     rgba(255, 255, 255, 0.03);
-  border-radius: 4px;
+  border-radius: 6px;
   outline: none;
   cursor: pointer;
   border: 1px solid rgba(255,255,255,0.05);
