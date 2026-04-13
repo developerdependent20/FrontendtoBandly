@@ -1124,10 +1124,21 @@ input[type="datetime-local"] {
 
 /* Optimizaciones de Zoom y Responsividad Móvil */
 @media (max-width: 768px) {
-  :root { font-size: 14px !important; } /* Esto aleja el zoom globalmente */
-  .main-content { padding: 0.6rem !important; }
-  .glass-panel { padding: 0.8rem !important; }
-  .hero-main-title-large { font-size: 1.8rem !important; line-height: 1.1 !important; }
+  .main-content { 
+    padding: 0.75rem 0.5rem !important;
+    overflow-x: hidden;
+  }
+  .glass-panel { 
+    padding: 1rem 0.75rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+  }
+  .hero-main-title-large { 
+    font-size: 2.2rem !important; 
+    line-height: 1.1 !important;
+    letter-spacing: -1.5px !important;
+  }
   .serif-accent { display: block; }
 }
 
