@@ -4,6 +4,9 @@ import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
 import SequenceMixer from './SequenceMixer';
+import ProPlayer from './ProPlayer';
+
+const isTauri = typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__;
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -12,17 +15,25 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 export default function SongLibrary({ songs, orgId, readOnly, refreshData, session }) {
-  const [showModal, setShowModal] = useState(false);
-  const [chartSong, setChartSong] = useState(null);
-  const [seqUploadSong, setSeqUploadSong] = useState(null);
-  const [seqMixerData, setSeqMixerData] = useState(null);
-  const [loadingSeq, setLoadingSeq] = useState(null);
-  const [title, setTitle] = useState('');
-  const [songKey, setSongKey] = useState('');
-  const [keyMale, setKeyMale] = useState('');
-  const [keyFemale, setKeyFemale] = useState('');
-  const [bpm, setBpm] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
+  const [editingSongId, setEditingSongId] = useState(null);
+
+  const openEditModal = (song) => {
+    setEditingSongId(song.id);
+    setTitle(song.title || '');
+    setSongKey(song.key || '');
+    setKeyMale(song.key_male || '');
+    setKeyFemale(song.key_female || '');
+    setBpm(song.bpm || '');
+    setYoutubeLink(song.youtube_link || '');
+    setShowModal(true);
+  };
+
+  const closeOverlay = () => {
+    setShowModal(false);
+    setEditingSongId(null);
+    setTitle(''); setSongKey(''); setKeyMale(''); setKeyFemale(''); setBpm(''); setYoutubeLink('');
+  };
 
   const openMixer = async (song) => {
     setLoadingSeq(song.id);
@@ -37,8 +48,21 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       }
 
       const data = await resp.json();
+      console.log('[SongLibrary] Datos recibidos del backend:', data);
+
       if (data.sequence && data.sequence.stems?.length > 0) {
-        setSeqMixerData(data.sequence);
+        console.log('[SongLibrary] Secuencia encontrada, abriendo ProPlayer...');
+        if (isTauri) {
+          // Si estamos en escritorio, usamos el reproductor de alto rendimiento
+          setLiveSongData({
+            ...song, 
+            stems: data.sequence.stems,
+            bpm: data.sequence.bpm,
+            key: data.sequence.key
+          });
+        } else {
+          setSeqMixerData(data.sequence);
+        }
       } else {
         if (!readOnly) {
           setSeqUploadSong(song);
@@ -57,16 +81,19 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   const handleSave = async () => {
     if(!title) return alert("El título es obligatorio");
     try {
-      const { error } = await supabase.from('songs').insert([{ org_id: orgId, title, key: songKey, key_male: keyMale, key_female: keyFemale, bpm, youtube_link: youtubeLink }]);
-      if (error) {
-        alert("Error de la base de datos: " + error.message);
-        return;
+      if (editingSongId) {
+        const { error } = await supabase.from('songs')
+          .update({ title, key: songKey, key_male: keyMale, key_female: keyFemale, bpm, youtube_link: youtubeLink })
+          .eq('id', editingSongId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('songs').insert([{ org_id: orgId, title, key: songKey, key_male: keyMale, key_female: keyFemale, bpm, youtube_link: youtubeLink }]);
+        if (error) throw error;
       }
-      setShowModal(false);
-      setTitle(''); setSongKey(''); setKeyMale(''); setKeyFemale(''); setBpm(''); setYoutubeLink('');
+      closeOverlay();
       if (refreshData) refreshData();
     } catch(e) { 
-      alert("Error de base de datos o conexión al guardar."); 
+      alert("Error de base de datos: " + (e.message || "Fallo al guardar")); 
     }
   };
   
@@ -110,7 +137,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio Grupal</h3>
         {!readOnly && (
-          <button onClick={() => setShowModal(true)} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
+          <button onClick={() => { setEditingSongId(null); setShowModal(true); }} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
             <Plus size={16} /> Añadir Canción
           </button>
         )}
@@ -140,14 +167,25 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
                      <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" style={{color:'#ef4444', fontWeight:'bold', fontSize:'0.85rem', textDecoration:'none'}}>📺 Ver Link</a>
                    );
                 })()}
-                {!readOnly && <Trash2 size={16} color="#ef4444" style={{cursor:'pointer', opacity:0.7, paddingLeft: '0.5rem'}} onClick={() => handleDelete(s.id)}/>}
+                {!readOnly && (
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button 
+                      onClick={() => openEditModal(s)} 
+                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                      title="Editar detalles"
+                    >
+                      <Plus size={16} style={{ transform: 'rotate(45deg)' }} /> 
+                    </button>
+                    <Trash2 size={16} color="#ef4444" style={{cursor:'pointer', opacity:0.7}} onClick={() => handleDelete(s.id)}/>
+                  </div>
+                )}
                 <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn">
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
                 <button onClick={() => openMixer(s)} disabled={loadingSeq === s.id} className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 ? 'ready' : ''}`}>
                   {loadingSeq === s.id ? (
                     <Loader2 size={14} className="spin-slow" />
-                  ) : s.sequences?.length > 0 ? (
+                  ) : s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? (
                     <ShieldCheck size={14} color="#22c55e" />
                   ) : (
                     <Headphones size={14} />
@@ -163,10 +201,12 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       {showModal && (
         <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', zIndex: 1000 }}>
           <div className="glass-panel modal-content" style={{ maxWidth: '550px', padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15, 23, 42, 0.8)' }}>
-            <button onClick={() => setShowModal(false)} className="modal-close-btn" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }}>
+            <button onClick={closeOverlay} className="modal-close-btn" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }}>
               <X size={20} />
             </button>
-            <h3 className="modal-title" style={{ fontSize: '1.5rem', marginBottom: '2rem', textAlign: 'center' }}>Datos de la Canción</h3>
+            <h3 className="modal-title" style={{ fontSize: '1.5rem', marginBottom: '2rem', textAlign: 'center' }}>
+              {editingSongId ? 'Editar Canción' : 'Nueva Canción'}
+            </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div className="input-group">
@@ -229,6 +269,13 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
 
       {seqMixerData && (
         <SequenceMixer sequence={seqMixerData} onClose={() => setSeqMixerData(null)} />
+      )}
+
+      {liveSongData && (
+        <ProPlayer 
+          song={liveSongData} 
+          onClose={() => setLiveSongData(null)} 
+        />
       )}
 
       <footer className="identity-footer">

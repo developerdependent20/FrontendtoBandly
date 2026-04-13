@@ -7,12 +7,23 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   const urlParams = new URLSearchParams(window.location.search);
   const magicCode = urlParams.get('join');
 
-  const [roleMode, setRoleMode] = useState(magicCode ? 'member' : null); 
-  const [orgName, setOrgName] = useState('');
-  const [inviteCodeInput, setInviteCodeInput] = useState(magicCode || '');
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [selectedFunctions, setSelectedFunctions] = useState([]);
+
+  const functionsList = [
+    { id: 'musico', label: 'Músico', icon: '🎸' },
+    { id: 'audio', label: 'Audio', icon: '🎚️' },
+    { id: 'media', label: 'Media/Visuales', icon: '📽️' },
+    { id: 'staff', label: 'Staff/Logística', icon: '📋' },
+    { id: 'bienvenida', label: 'Bienvenida', icon: '🤝' },
+    { id: 'maestro', label: 'Maestro', icon: '🎓' },
+    { id: 'voluntario', label: 'Voluntario', icon: '🌟' }
+  ];
+
+  const toggleFunction = (id) => {
+    setSelectedFunctions(prev => 
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
+    );
+  };
 
   const createOrganization = async () => {
     if(!orgName || !inviteCodeInput) { alert("Por favor ingresa nombre y un código para la banda."); return; }
@@ -35,6 +46,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0], 
         email: session.user.email, 
         role: 'director',
+        functions: ['director'],
         org_id: org.id,
         accepted_terms: true
       }]);
@@ -47,9 +59,11 @@ export default function OnboardingScreen({ session, fetchProfile }) {
     }
   };
 
-  const joinByCode = async (role) => {
+  const joinByCode = async () => {
     if (!inviteCodeInput) { alert("Ingresa un código"); return; }
     if (!termsAccepted) { alert("Debes aceptar los términos de servicio."); return; }
+    if (selectedFunctions.length === 0) { alert("Por favor selecciona al menos una función."); return; }
+    
     setLoading(true);
     try {
       const { data: org, error: orgError } = await supabase
@@ -62,7 +76,8 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         id: session.user.id, 
         full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0], 
         email: session.user.email, 
-        role: role,
+        role: 'member',
+        functions: selectedFunctions,
         org_id: org.id,
         accepted_terms: true
       }]);
@@ -121,27 +136,52 @@ export default function OnboardingScreen({ session, fetchProfile }) {
             </div>
           </div>
         ) : (
-          <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '500px', margin: '0 auto' }}>
-            <h3 className="section-title">Código de Invitación</h3>
+          <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '600px', margin: '0 auto' }}>
+            <h3 className="section-title">Ingreso al Equipo</h3>
             <div className="input-group">
-              <input type="text" placeholder="Ej: CENTRAL24" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} disabled={!!magicCode}/>
-              {magicCode && <p style={{fontSize:'0.8rem', color:'var(--primary)', textAlign:'center'}}>Código autocompletado por tu invitación.</p>}
+              <input type="text" placeholder="Código de la Banda (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} disabled={!!magicCode}/>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem', marginTop: '1rem' }}>
+                Selecciona tus funciones (puedes elegir varias):
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1.5rem' }}>
+                {functionsList.map(func => (
+                  <div 
+                    key={func.id}
+                    onClick={() => toggleFunction(func.id)}
+                    style={{
+                      padding: '0.8rem',
+                      borderRadius: '10px',
+                      background: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                      border: '1px solid',
+                      borderColor: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span>{func.icon}</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: selectedFunctions.includes(func.id) ? 'bold' : 'normal' }}>{func.label}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem' }}>
                  <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                    Acepto los <span onClick={() => setShowTerms(true)} style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}>Términos de Servicio</span>.
                  </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <button onClick={() => joinByCode('staff')} className="btn-primary">Soy Staff</button>
-                <button onClick={() => joinByCode('musico')} className="btn-primary">Soy Músico</button>
-              </div>
-              {!magicCode && <button onClick={() => setRoleMode(null)} className="btn-secondary">Volver</button>}
+              <button onClick={joinByCode} className="btn-primary" style={{ width: '100%' }}>Unirme con mis funciones</button>
+              {!magicCode && <button onClick={() => setRoleMode(null)} className="btn-secondary" style={{ width: '100%', marginTop: '0.5rem' }}>Volver</button>}
             </div>
           </div>
-        )}
+        )
+      }
       </div>
       
       <button onClick={() => supabase.auth.signOut()} className="btn-secondary" style={{ marginTop: '3rem', border: 'none', background: 'transparent' }}>

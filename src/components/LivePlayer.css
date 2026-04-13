@@ -1,0 +1,287 @@
+.live-player-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 15, 25, 0.98);
+  backdrop-filter: blur(20px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: fadeIn 0.3s ease;
+}
+
+.live-player-container {
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 40px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+}
+
+/* Header */
+.live-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4rem;
+}
+
+.live-song-info {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.live-icon-box {
+  width: 60px;
+  height: 60px;
+  background: var(--primary);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+.live-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.live-meta {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+
+.live-badge {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.live-badge.offline-ready {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.live-download-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: var(--primary);
+  padding: 6px 15px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.live-download-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.live-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Display Section */
+.live-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.live-time-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5rem;
+  font-weight: 200;
+}
+
+.live-time-display .current-time {
+  color: white;
+  font-weight: 800;
+}
+
+.live-time-display .time-divider,
+.live-time-display .total-time {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.live-progress-container {
+  width: 100%;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+
+.live-progress-bar {
+  width: 100%;
+  height: 100%;
+}
+
+.live-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  transition: width 0.1s linear;
+}
+
+/* Controls */
+.live-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  margin-top: 4rem;
+}
+
+.ctrl-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ctrl-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ctrl-btn.primary {
+  width: 150px;
+  height: 150px;
+  background: var(--primary);
+  border: none;
+  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+}
+
+.ctrl-btn.primary.playing {
+  background: #f43f5e;
+  box-shadow: 0 15px 40px rgba(244, 63, 94, 0.4);
+}
+
+.ctrl-btn.primary.loading {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  cursor: wait;
+}
+
+/* Footer & Panic */
+.live-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4rem;
+}
+
+.live-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.live-auto-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 0.8rem 1.5rem;
+  border-radius: 15px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.live-auto-btn.active {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.live-status {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.status-ok { color: #22c55e; }
+.status-loading { color: var(--primary); animation: pulse 1.5s infinite; }
+.status-error { color: #f43f5e; }
+
+.live-panic-btn {
+  background: rgba(244, 63, 94, 0.1);
+  border: 2px solid #f43f5e;
+  color: #f43f5e;
+  padding: 0.8rem 2rem;
+  border-radius: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.live-panic-btn:hover {
+  background: #f43f5e;
+  color: white;
+  box-shadow: 0 0 30px rgba(244, 63, 94, 0.5);
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

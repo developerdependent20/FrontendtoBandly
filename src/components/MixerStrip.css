@@ -1,0 +1,166 @@
+/* MixerStrip.css */
+.mixer-strip {
+  display: flex;
+  flex-direction: column;
+  width: 70px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.5rem;
+  gap: 0.8rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mixer-strip.is-priority {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.strip-header {
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.strip-name {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  color: var(--text-muted);
+}
+
+.mixer-strip.is-priority .strip-name {
+  color: #ef4444;
+}
+
+/* Routing */
+.strip-routing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.routing-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #000;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+}
+
+.routing-label {
+  color: #444;
+  font-size: 0.6rem;
+}
+
+.routing-value {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.routing-arrows {
+  display: flex;
+  flex-direction: column;
+}
+
+.routing-arrows button {
+  background: none;
+  border: none;
+  color: #666;
+  padding: 0;
+  cursor: pointer;
+}
+
+.stereo-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 2px 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.stereo-toggle.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Fader Area */
+.fader-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  height: 180px;
+  padding: 10px 0;
+}
+
+.vertical-fader {
+  appearance: none;
+  width: 6px;
+  height: 160px;
+  background: rgba(0, 0, 0, 0.4);
+  outline: none;
+  writing-mode: bt-lr; /* Bottom to top */
+  -webkit-appearance: slider-vertical;
+}
+
+.vu-meter {
+  width: 4px;
+  height: 160px;
+  background: #111;
+  position: relative;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vu-inner {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, #00ff00, #ffff00, #ff0000);
+  transition: height 0.05s;
+}
+
+/* Actions */
+.strip-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  flex: 1;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.solo-btn.active {
+  background: #f59e0b;
+  color: #000;
+}
+
+.mute-btn.active {
+  background: #ef4444;
+  color: #fff;
+}

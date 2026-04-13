@@ -26,8 +26,11 @@ export function DirectorView({ profile, session, activeTab, orgData }) {
   );
 }
 
-export function StaffView({ profile, session, activeTab, orgData }) {
+export function MemberView({ profile, session, activeTab, orgData }) {
   const { members, events, songs, fetchData } = orgData;
+  const userFunctions = profile.functions || [];
+  const canAccessLibrary = userFunctions.some(f => ['musico', 'audio', 'media'].includes(f));
+
   return (
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
@@ -35,37 +38,14 @@ export function StaffView({ profile, session, activeTab, orgData }) {
           <EventPlanner readOnly={true} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} />
         </div>
       )}
-      {activeTab === 'library' && (
+      {activeTab === 'library' && canAccessLibrary && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} />
+          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} refreshData={fetchData} session={session} />
         </div>
       )}
       {activeTab === 'team' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <TeamList members={members} isDirector={false} refreshData={fetchData} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function MusicianView({ profile, session, activeTab, orgData }) {
-  const { events, members, songs } = orgData;
-  return (
-    <div className="dashboard-grid" style={{ display: 'block' }}>
-      {activeTab === 'planner' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <EventPlanner readOnly={true} events={events} members={members} songs={songs} profile={profile} session={session} />
-        </div>
-      )}
-      {activeTab === 'library' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} session={session} />
-        </div>
-      )}
-      {activeTab === 'team' && (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <TeamList members={members} isDirector={false} />
         </div>
       )}
     </div>

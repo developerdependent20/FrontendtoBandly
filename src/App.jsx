@@ -11,7 +11,7 @@ import OnboardingScreen from './pages/OnboardingScreen';
 import LoadingScreen from './components/LoadingScreen';
 import TermsModal from './components/TermsModal';
 import Dashboard from './components/layout/Dashboard';
-import { DirectorView, StaffView, MusicianView } from './components/layout/RoleViews';
+import { DirectorView, MemberView } from './components/layout/RoleViews';
 
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
@@ -142,9 +142,11 @@ export default function App() {
         handleCopyLink={handleCopyLink}
         handleJoinTeam={handleJoinTeam}
       >
-        {profile.role === 'director' && <DirectorView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
-        {profile.role === 'staff' && <StaffView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
-        {profile.role === 'musico' && <MusicianView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />}
+        {profile.role === 'director' ? (
+          <DirectorView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />
+        ) : (
+          <MemberView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />
+        )}
       </Dashboard>
     </>
   );

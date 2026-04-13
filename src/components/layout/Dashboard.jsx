@@ -2,6 +2,10 @@ import React from 'react';
 import { Calendar as CalendarIcon, Users, LogOut, Plus, Music } from 'lucide-react';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
+  const userFunctions = profile.functions || [];
+  const canAccessLibrary = profile.role === 'director' || 
+                          userFunctions.some(f => ['musico', 'audio', 'media'].includes(f));
+
   return (
     <div className="dashboard-layout">
       <nav className="sidebar">
@@ -21,13 +25,15 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           <CalendarIcon size={22} />
         </div>
 
-        <div 
-          className={`nav-item ${activeTab === 'library' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('library')}
-          title="Biblioteca de Repertorio"
-        >
-          <Music size={22} />
-        </div>
+        {canAccessLibrary && (
+          <div 
+            className={`nav-item ${activeTab === 'library' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('library')}
+            title="Biblioteca de Repertorio"
+          >
+            <Music size={22} />
+          </div>
+        )}
 
         <div 
           className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} 
@@ -46,13 +52,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         <header className="dashboard-header">
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.2rem', display: 'block' }}>
-              {profile.role === 'director' ? 'Modo Director' : profile.role === 'staff' ? 'Modo Staff' : 'Panel Músico'}
             </span>
             <h1 className="hero-main-title-large" style={{ margin: 0, textAlign: 'left', background: 'none', color: 'white', WebkitTextFillColor: 'initial', letterSpacing: '-1px' }}>
               {profile.full_name}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-              Banda: <strong style={{ color: 'var(--text-main)' }}>{profile.organizations?.name || '---'}</strong>
+              Banda: <strong style={{ color: 'var(--text-main)' }}>{profile.organizations?.name || '---'}</strong> 
+              <span style={{ opacity: 0.5, margin: '0 8px' }}>•</span>
+              <span style={{ color: 'var(--primary)', fontWeight: '600' }}>
+                {profile.role === 'director' ? 'Director' : userFunctions.map(f => f.charAt(0).toUpperCase() + f.slice(1)).join(' + ')}
+              </span>
             </p>
           </div>
           
