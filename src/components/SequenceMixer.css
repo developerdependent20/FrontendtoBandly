@@ -105,6 +105,70 @@
   background: rgba(14, 165, 233, 0.1);
 }
 
+/* Edit Mode */
+.mx-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mx-edit-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  width: 50px;
+  outline: none;
+  font-weight: 700;
+}
+
+.mx-edit-input:focus { border-color: var(--primary); }
+
+.mx-edit-input[type="number"] { width: 70px; }
+
+.mx-edit-save, .mx-edit-cancel {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.mx-edit-save { color: #10b981; }
+.mx-edit-save:hover { background: rgba(16, 185, 129, 0.15); }
+.mx-edit-cancel { color: #ef4444; }
+.mx-edit-cancel:hover { background: rgba(239, 68, 68, 0.15); }
+
+.mx-action-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.mx-action-btn:hover { background: rgba(255, 255, 255, 0.08); color: white; }
+
+.mx-delete-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
+
+.spin { animation: mx-spin 1s linear infinite; }
+@keyframes mx-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 .mx-close {
   background: transparent;
   border: none;

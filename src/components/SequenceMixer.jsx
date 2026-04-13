@@ -2,24 +2,79 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
 import {
   X, Play, Pause, Square, Volume2, VolumeX, Headphones,
-  Loader2, Music, SkipBack, ArrowLeft
+  Loader2, Music, SkipBack, ArrowLeft, Pencil, Trash2, Check, AlertTriangle
 } from 'lucide-react';
 import './SequenceMixer.css';
 
-// ─────────────────────────────────────────────
-// SEQUENCE MIXER — Bandly Professional Player
-// ─────────────────────────────────────────────
+const API_URL = import.meta.env.VITE_API_URL || (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3001'
+    : ''
+);
 
-export default function SequenceMixer({ sequence, onClose }) {
+export default function SequenceMixer({ sequence, onClose, session }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [channels, setChannels] = useState([]);
+  
+  // Estados para edición
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedKey, setEditedKey] = useState(sequence?.key || '');
+  const [editedBpm, setEditedBpm] = useState(sequence?.bpm || '');
+  const [isSaving, setIsSaving] = useState(false);
+
   const playersRef = useRef({});
   const gainNodesRef = useRef({});
   const animFrameRef = useRef(null);
   const startTimeRef = useRef(0);
+
+  // ── Funciones de Gestión ──
+  const handleUpdateMetadata = async () => {
+    if (!session?.access_token) return;
+    setIsSaving(true);
+    try {
+      const resp = await fetch(`${API_URL}/api/sequences/${sequence.id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ key: editedKey, bpm: editedBpm })
+      });
+      if (!resp.ok) throw new Error('Error al actualizar');
+      
+      setIsEditing(false);
+      // Opcional: Notificar al padre o simplemente mostrar éxito local
+    } catch (err) {
+      alert("No se pudo actualizar la información.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("¿Seguro que quieres borrar esta secuencia permanentemente?")) return;
+    if (!session?.access_token) return;
+    
+    setIsSaving(true);
+    try {
+      const resp = await fetch(`${API_URL}/api/sequences/${sequence.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      if (!resp.ok) throw new Error('Error al eliminar');
+      
+      onClose();
+      // Recargar la página o notificar que ya no hay secuencia
+      window.location.reload(); 
+    } catch (err) {
+      alert("No se pudo eliminar la secuencia.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // ── Cargar todos los stems ──
   useEffect(() => {
@@ -264,9 +319,43 @@ export default function SequenceMixer({ sequence, onClose }) {
             <div className="mx-header-info">
               <h2>Mixer</h2>
               <div className="mx-meta">
-                {sequence?.title && <span className="mx-title-display">{sequence.title}</span>}
-                {sequence?.key && <span className="mx-badge mx-badge-key">Tono: {sequence.key}</span>}
-                {sequence?.bpm && <span className="mx-badge mx-badge-bpm">{sequence.bpm} BPM</span>}
+                {sequence?.title && <span className="mx-title-display h-hide-mobile">{sequence.title}</span>}
+                
+                {isEditing ? (
+                  <div className="mx-edit-form">
+                    <input 
+                      type="text" 
+                      value={editedKey} 
+                      onChange={(e) => setEditedKey(e.target.value)} 
+                      placeholder="Tono" 
+                      className="mx-edit-input"
+                    />
+                    <input 
+                      type="number" 
+                      value={editedBpm} 
+                      onChange={(e) => setEditedBpm(e.target.value)} 
+                      placeholder="BPM" 
+                      className="mx-edit-input"
+                    />
+                    <button onClick={handleUpdateMetadata} disabled={isSaving} className="mx-edit-save" title="Guardar">
+                      {isSaving ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
+                    </button>
+                    <button onClick={() => setIsEditing(false)} className="mx-edit-cancel" title="Cancelar">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span className="mx-badge mx-badge-key">Tono: {editedKey || sequence?.key || '---'}</span>
+                    <span className="mx-badge mx-badge-bpm">{(editedBpm || sequence?.bpm || '---')} BPM</span>
+                    <button className="mx-action-btn" onClick={() => setIsEditing(true)} title="Editar información">
+                      <Pencil size={14} />
+                    </button>
+                    <button className="mx-action-btn mx-delete-btn" onClick={handleDelete} title="Eliminar secuencia">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
