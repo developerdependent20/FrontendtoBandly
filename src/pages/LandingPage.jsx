@@ -18,7 +18,7 @@ export default function LandingPage({ onGetStarted }) {
           />
         </div>
         <div className="landing-nav-links">
-          <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Ingresar</button>
+          <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Iniciar Sesión</button>
           <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>Comenzar gratis</button>
         </div>
       </nav>
