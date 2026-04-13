@@ -1412,90 +1412,227 @@ input[type="datetime-local"] {
   }
 }
 
-/* --- Sistema de Pestañas (Tabs) --- */
-.modal-tabs {
+/* --- Team Management Elite Styles --- */
+.member-list-container {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0 1rem;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2rem;
 }
 
-.modal-tab-btn {
-  padding: 1rem 0.5rem;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-tab-btn.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-  text-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-}
-
-.modal-tab-btn:hover:not(.active) {
-  color: white;
-}
-
-/* --- Tarjetas de Roster --- */
-.roster-card {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
+.member-card {
+  background: rgba(15, 23, 42, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.2s;
+  border-radius: 20px;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.roster-card:focus-within {
-  border-color: rgba(139, 92, 246, 0.4);
-  background: rgba(139, 92, 246, 0.05);
+.member-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
 }
 
-.roster-label {
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+.member-card.is-director {
+  border-left: 4px solid var(--primary);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%);
 }
 
-@keyframes modalScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+.member-identity {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
-.modal-close-btn {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: none;
-  color: var(--text-muted);
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+.member-avatar {
+  width: 54px;
+  height: 54px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  z-index: 10;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
-.modal-close-btn:hover {
+.member-card.is-director .member-avatar {
+  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.director-shield {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: white;
+  color: var(--primary);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.member-info {
+  flex: 1;
+}
+
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.member-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.3px;
+}
+
+.director-badge {
+  font-size: 0.6rem;
+  font-weight: 900;
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.member-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.director-toggle-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted);
+}
+
+.director-toggle-btn.active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.director-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
+}
+
+.role-selector-section {
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-mini-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.role-selector-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.role-chip {
+  padding: 6px 14px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.role-chip.active {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--primary);
+  color: white;
+}
+
+.chip-icon {
+  font-size: 0.9rem;
+}
+
+.static-role-chip {
+  padding: 6px 14px;
+  border-radius: 50px;
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.empty-msg {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .member-identity {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .member-avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 1.8rem;
+  }
+  
+  .member-name-row {
+    justify-content: center;
+  }
+  
+  .director-toggle-btn {
+    width: 100%;
+  }
+  
+  .role-selector-grid {
+    justify-content: center;
+  }
 }

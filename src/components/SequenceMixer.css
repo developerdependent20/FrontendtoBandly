@@ -485,6 +485,64 @@
   .mx-ch-slider { height: 24px; }
   .mx-ch-btn { width: 32px; height: 32px; } /* Larger buttons for fingers */
   .hide-mobile { display: none !important; }
+  
+  .mx-group-label { font-size: 0.6rem; letter-spacing: 1px; }
+  .mx-channel-group { padding: 0.5rem; margin-bottom: 1rem; }
+}
+
+/* --- New Pro Mixer Elements --- */
+.mx-reset-btn {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.mx-reset-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  transform: translateY(-1px);
+}
+
+.mx-channel-group {
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 12px;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.mx-group-label {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mx-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
+}
+
+.mx-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 /* Scrollbar */

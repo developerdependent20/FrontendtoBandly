@@ -393,6 +393,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   <label className="roster-label" style={{ color: 'var(--primary)' }}>Título del Evento</label>
                   <input 
                     type="text" 
+                    disabled={readOnly}
                     placeholder="Ej: Concierto Anual de Verano" 
                     className="input-field" 
                     value={eventName} 
@@ -416,6 +417,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 <div className="input-group">
                   <label className="roster-label">Notas y Logística</label>
                   <textarea 
+                    disabled={readOnly}
                     placeholder="Instrucciones de vestuario, logística, notas del director..." 
                     className="input-field" 
                     rows="4" 
@@ -440,7 +442,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     <div key={slot.id} className="roster-card">
                       <div style={{ flex: 1 }}>
                         <div className="roster-label">{slot.instrument}</div>
-                        <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
+                        <select disabled={readOnly} className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
                           <option value="">-- Por asignar --</option>
                           {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
                         </select>
@@ -455,7 +457,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     <div key={slot.id} className="roster-card">
                       <div style={{ flex: 1 }}>
                         <div className="roster-label" style={{ color: '#f59e0b' }}>{slot.instrument}</div>
-                        <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
+                        <select disabled={readOnly} className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
                           <option value="">-- Por asignar --</option>
                           {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
                         </select>
@@ -493,7 +495,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </>
                 )}
                 
-                <button onClick={addExtraSlot} className="btn-secondary" style={{ fontSize: '0.75rem', width: 'auto', marginTop: '1.5rem', borderStyle: 'dashed' }}>+ Añadir Posición Extra</button>
+                {!readOnly && (
+                  <button onClick={addExtraSlot} className="btn-secondary" style={{ fontSize: '0.75rem', width: 'auto', marginTop: '1.5rem', borderStyle: 'dashed' }}>+ Añadir Posición Extra</button>
+                )}
               </div>
             )}
 
@@ -501,22 +505,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <div className="fade-in">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
                   {setlist.map((item, idx) => (
-                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 40px', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <select className="input-field" style={{ border: 'none', background: 'transparent' }} value={item.song_id} onChange={e => {
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: readOnly ? '1.5fr 1fr 1fr' : '1.5fr 1fr 1fr 40px', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <select disabled={readOnly} className="input-field" style={{ border: 'none', background: 'transparent' }} value={item.song_id} onChange={e => {
                         const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n);
                       }}>
                         <option value="">-- Canción --</option>
                         {songs?.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
                       </select>
 
-                      <select className="input-field" style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)' }} value={item.lead_id} onChange={e => {
+                      <select disabled={readOnly} className="input-field" style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)' }} value={item.lead_id} onChange={e => {
                         const n = [...setlist]; n[idx].lead_id = e.target.value; setSetlist(n);
                       }}>
                         <option value="">Líder / Voz</option>
                         {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name.split(' ')[0]}</option>))}
                       </select>
 
-                      <select className="input-field" style={{ border: 'none', background: 'transparent', color: 'var(--accent)', fontWeight: 'bold' }} value={item.selected_key} onChange={e => {
+                      <select disabled={readOnly} className="input-field" style={{ border: 'none', background: 'transparent', color: 'var(--accent)', fontWeight: 'bold' }} value={item.selected_key} onChange={e => {
                         const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n);
                       }}>
                         <option value="">Tono</option>
@@ -533,19 +537,23 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         })()}
                       </select>
 
-                      <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
-                        <X size={18} />
-                      </button>
+                      {!readOnly && (
+                        <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+                          <X size={18} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
-                <button 
-                  onClick={() => setSetlist([...setlist, {song_id: '', lead_id: '', selected_key: ''}])} 
-                  className="btn-secondary" 
-                  style={{ width: '100%', borderStyle: 'dashed', background: 'transparent', padding: '1rem' }}
-                >
-                  + Agregar Canción al Repertorio
-                </button>
+                {!readOnly && (
+                  <button 
+                    onClick={() => setSetlist([...setlist, {song_id: '', lead_id: '', selected_key: ''}])} 
+                    className="btn-secondary" 
+                    style={{ width: '100%', borderStyle: 'dashed', background: 'transparent', padding: '1rem' }}
+                  >
+                    + Agregar Canción al Repertorio
+                  </button>
+                )}
               </div>
             )}
 
@@ -553,10 +561,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               {modalTab !== 'info' && (
                 <button onClick={() => setModalTab(modalTab === 'songs' ? 'roster' : 'info')} className="btn-secondary" style={{ flex: 1 }}>Anterior</button>
               )}
-              {modalTab !== 'songs' ? (
-                <button onClick={() => setModalTab(modalTab === 'info' ? 'roster' : 'songs')} className="btn-primary" style={{ flex: 2 }}>Siguiente Paso</button>
+              {readOnly ? (
+                modalTab !== 'songs' && (
+                  <button onClick={() => setModalTab(modalTab === 'info' ? 'roster' : 'songs')} className="btn-primary" style={{ flex: 2 }}>Siguiente</button>
+                )
               ) : (
-                <button onClick={handleSave} className="btn-primary" disabled={saving} style={{ flex: 2 }}>{saving ? 'Guardando...' : 'Finalizar y Agendar'}</button>
+                modalTab !== 'songs' ? (
+                  <button onClick={() => setModalTab(modalTab === 'info' ? 'roster' : 'songs')} className="btn-primary" style={{ flex: 2 }}>Siguiente Paso</button>
+                ) : (
+                  <button onClick={handleSave} className="btn-primary" disabled={saving} style={{ flex: 2 }}>{saving ? 'Guardando...' : 'Finalizar y Agendar'}</button>
+                )
               )}
             </div>
           </div>

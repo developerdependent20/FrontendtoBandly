@@ -223,6 +223,20 @@ export default function SequenceMixer({ sequence, onClose, session }) {
     setCurrentTime(0);
   }, []);
 
+  // ── Reset Mixer ──
+  const handleResetMixer = useCallback(() => {
+    setChannels(prev => {
+      const updated = prev.map(ch => {
+        const gain = gainNodesRef.current[ch.id];
+        if (gain) {
+          gain.gain.rampTo(0.8, 0.1); // Reset to default 80%
+        }
+        return { ...ch, volume: 80, muted: false, solo: false };
+      });
+      return updated;
+    });
+  }, []);
+
   // ── Restart ──
   const handleRestart = useCallback(() => {
     handleStop();
@@ -316,6 +330,27 @@ export default function SequenceMixer({ sequence, onClose, session }) {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  // ── Agrupación de Canales ──
+  const getCategory = (label) => {
+    const lbl = label.toLowerCase();
+    if (lbl.includes('click') || lbl.includes('metronomo')) return 'Metrónomo';
+    if (lbl.includes('cue') || lbl.includes('guia') || lbl.includes('guide')) return 'Guías';
+    if (lbl.includes('drum') || lbl.includes('bateria') || lbl.includes('perc') || lbl.includes('beat') || lbl.includes('kick') || lbl.includes('snare') || lbl.includes('loop')) return 'Batería/Percusión';
+    if (lbl.includes('bas') || lbl.includes('bajo')) return 'Bajo';
+    if (lbl.includes('gtr') || lbl.includes('guitar')) return 'Guitarras';
+    if (lbl.includes('key') || lbl.includes('piano') || lbl.includes('syn') || lbl.includes('pad') || lbl.includes('org')) return 'Teclados/Sintes';
+    if (lbl.includes('vox') || lbl.includes('coro') || lbl.includes('lead') || lbl.includes('voz')) return 'Voces';
+    return 'Otros';
+  };
+
+  const categoriesOrder = ['Metrónomo', 'Guías', 'Batería/Percusión', 'Bajo', 'Guitarras', 'Teclados/Sintes', 'Voces', 'Otros'];
+  
+  const groupedChannels = categoriesOrder.reduce((acc, cat) => {
+    const items = channels.filter(ch => getCategory(ch.label) === cat);
+    if (items.length > 0) acc.push({ category: cat, items });
+    return acc;
+  }, []);
+
   // ── Render ──
   return (
     <div className="mx-overlay">
@@ -329,7 +364,12 @@ export default function SequenceMixer({ sequence, onClose, session }) {
             </button>
             <Headphones size={20} className="hide-mobile" />
             <div className="mx-header-info">
-              <h2>Mixer</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <h2 style={{ margin: 0 }}>Mixer</h2>
+                <button onClick={handleResetMixer} className="mx-reset-btn">
+                  <SkipBack size={12} /> Reestablecer faders
+                </button>
+              </div>
               <div className="mx-meta">
                 {sequence?.title && <span className="mx-title-display h-hide-mobile">{sequence.title}</span>}
                 
@@ -412,53 +452,54 @@ export default function SequenceMixer({ sequence, onClose, session }) {
               <div className="mx-time">{formatTime(duration)}</div>
             </div>
 
-            {/* Channel Strips */}
+            {/* Channel Strips Grouped */}
             <div className="mx-channels">
-              {channels.map(ch => (
-                <div key={ch.id} className={`mx-channel ${ch.muted ? 'muted' : ''} ${ch.solo ? 'solo' : ''}`}>
+              {groupedChannels.map(group => (
+                <div key={group.category} className="mx-channel-group">
+                  <div className="mx-group-label">{group.category}</div>
+                  <div className="mx-group-items">
+                    {group.items.map(ch => (
+                      <div key={ch.id} className={`mx-channel ${ch.muted ? 'muted' : ''} ${ch.solo ? 'solo' : ''}`}>
 
-                  {/* Color bar */}
-                  <div className="mx-ch-color" style={{ background: ch.color }} />
+                        {/* Color bar */}
+                        <div className="mx-ch-color" style={{ background: ch.color }} />
 
-                  {/* Label */}
-                  <div className="mx-ch-label">{ch.label}</div>
+                        {/* Label */}
+                        <div className="mx-ch-label">{ch.label}</div>
 
-                  {/* Volume slider */}
-                  <div className="mx-ch-slider-wrap" style={{ position: 'relative' }}>
-                    {/* Scale Ticks */}
-                    <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '10px', transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', padding: '0 5px', pointerEvents: 'none', opacity: 0.3 }}>
-                      {[...Array(11)].map((_, i) => (
-                        <div key={i} style={{ width: '1px', height: i % 5 === 0 ? '10px' : '5px', background: 'white' }} />
-                      ))}
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={ch.muted ? 0 : ch.volume}
-                      onChange={(e) => handleVolumeChange(ch.id, parseInt(e.target.value))}
-                      className="mx-ch-slider"
-                      style={{ '--slider-color': ch.color }}
-                    />
-                    <span className="mx-ch-db">{ch.muted ? '—' : ch.volume}</span>
-                  </div>
+                        {/* Volume slider */}
+                        <div className="mx-ch-slider-wrap" style={{ position: 'relative' }}>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={ch.muted ? 0 : ch.volume}
+                            onChange={(e) => handleVolumeChange(ch.id, parseInt(e.target.value))}
+                            className="mx-ch-slider"
+                            style={{ '--slider-color': ch.color }}
+                          />
+                          <span className="mx-ch-db">{ch.muted ? '—' : ch.volume}</span>
+                        </div>
 
-                  {/* Mute / Solo */}
-                  <div className="mx-ch-buttons">
-                    <button
-                      className={`mx-ch-btn mx-ch-mute ${ch.muted ? 'active' : ''}`}
-                      onClick={() => handleMute(ch.id)}
-                      title="Mute"
-                    >
-                      {ch.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                    </button>
-                    <button
-                      className={`mx-ch-btn mx-ch-solo ${ch.solo ? 'active' : ''}`}
-                      onClick={() => handleSolo(ch.id)}
-                      title="Solo"
-                    >
-                      S
-                    </button>
+                        {/* Mute / Solo */}
+                        <div className="mx-ch-buttons">
+                          <button
+                            className={`mx-ch-btn mx-ch-mute ${ch.muted ? 'active' : ''}`}
+                            onClick={() => handleMute(ch.id)}
+                            title="Mute"
+                          >
+                            {ch.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                          </button>
+                          <button
+                            className={`mx-ch-btn mx-ch-solo ${ch.solo ? 'active' : ''}`}
+                            onClick={() => handleSolo(ch.id)}
+                            title="Solo"
+                          >
+                            S
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}

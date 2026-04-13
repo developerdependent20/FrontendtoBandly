@@ -2,9 +2,11 @@ import React from 'react';
 import { Calendar as CalendarIcon, Users, LogOut, Plus, Music } from 'lucide-react';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
-  const userFunctions = profile.functions || [];
-  const canAccessLibrary = profile.role === 'director' || 
-                          userFunctions.some(f => ['musico', 'audio', 'media'].includes(f));
+  const userFunctions = profile?.functions || [];
+  const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
+  // Ahora todos pueden ver el Planner, pero se validará lectura/escritura adentro
+  const canAccessPlanner = true;
+  const canAccessTeam = profile?.role === 'director' || (userFunctions && userFunctions.includes('admin'));
 
   return (
     <div className="dashboard-layout">
