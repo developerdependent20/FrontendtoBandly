@@ -21,8 +21,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const generateTemplate = (fmt) => {
     const musicLabels = fmt === 'full' ? fullBandTpl : acousticTpl;
-    const base = musicLabels.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'music' }));
-    const service = serviceTpl.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'service' }));
+    const base = musicLabels.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'music', status: 'pending' }));
+    const service = serviceTpl.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'service', status: 'pending' }));
     return [...base, ...service];
   };
 
@@ -31,9 +31,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setRoster(generateTemplate(fmt));
   };
 
-  const addExtraSlot = () => setRoster([...roster, { id: Math.random().toString(), instrument: '', profile_id: '', category: 'extra' }]);
+  const addExtraSlot = () => setRoster([...roster, { id: Math.random().toString(), instrument: '', profile_id: '', category: 'extra', status: 'pending' }]);
   const updateSlot = (id, field, value) => {
-    setRoster(roster.map(r => r.id === id ? { ...r, [field]: value } : r));
+    setRoster(roster.map(r => {
+      if (r.id === id) {
+        const updated = { ...r, [field]: value };
+        // Si cambia la persona asignada, reiniciamos su estado a pendiente
+        if (field === 'profile_id' && value !== r.profile_id) {
+          updated.status = 'pending';
+        }
+        return updated;
+      }
+      return r;
+    }));
   };
 
   const handleEditEvent = (ev) => {
@@ -48,8 +58,18 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     let mergedRoster = generateTemplate(detectedFormat);
     existingRoster.forEach(er => {
        const existingSlotInTemplate = mergedRoster.find(m => m.instrument === er.instrument);
-       if (existingSlotInTemplate) existingSlotInTemplate.profile_id = er.profile_id;
-       else mergedRoster.push({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra' });
+       if (existingSlotInTemplate) {
+         existingSlotInTemplate.profile_id = er.profile_id;
+         existingSlotInTemplate.status = er.status || 'pending';
+       } else {
+         mergedRoster.push({ 
+           id: Math.random().toString(), 
+           instrument: er.instrument, 
+           profile_id: er.profile_id, 
+           category: 'extra',
+           status: er.status || 'pending'
+         });
+       }
     });
     setRoster(mergedRoster);
     const existingSetlist = ev.event_songs ? ev.event_songs.sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : [];
@@ -84,7 +104,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         instrument: r.instrument, 
         category: r.category, 
         profile_id: r.profile_id,
-        status: 'pending' 
+        status: r.status || 'pending' 
       }));
       if (validRoster.length > 0) await supabase.from('event_roster').insert(validRoster);
       const validSongs = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx }));
@@ -237,7 +257,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   )}
                                 </div>
                                 {song.selected_key && (
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold' }}>
                                     {song.selected_key}
                                   </span>
                                 )}
@@ -258,9 +278,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Vista Mensual & Agenda</h4>
           <VisualCalendar events={events} onEventClick={handleEditEvent} onDayClick={(dateStr) => {
             if(readOnly) return;
-            const existing = events?.find(e => e.date && e.date.startsWith(dateStr));
-            if (existing) handleEditEvent(existing);
-            else { setEditingEventId(null); setEventName(''); setEventDate(dateStr); setShowModal(true); }
+            // Quitamos la restricción de buscar uno existente. 
+            // Siempre abrimos para crear uno nuevo en esa fecha.
+            setEditingEventId(null); 
+            setEventName(''); 
+            setEventDate(dateStr); 
+            setRoster(generateTemplate(format)); 
+            setSetlist([]);
+            setModalTab('info');
+            setShowModal(true);
           }} />
         </div>
       </div>
@@ -363,6 +389,36 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
                   ))}
                 </div>
+
+                {roster.some(r => r.category === 'extra') && (
+                  <>
+                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', marginTop: '2rem', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>Posiciones Extra / Personalizadas</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                      {roster.filter(r => r.category === 'extra').map((slot) => (
+                        <div key={slot.id} className="roster-card" style={{ borderStyle: 'dashed' }}>
+                          <div style={{ flex: 1 }}>
+                            <input 
+                              type="text" 
+                              className="roster-label" 
+                              value={slot.instrument} 
+                              onChange={(e) => updateSlot(slot.id, 'instrument', e.target.value)} 
+                              placeholder="Ej: Fotógrafo, Cuerdas..."
+                              style={{ background: 'transparent', border: 'none', color: 'var(--primary)', outline: 'none', width: '100%', padding: 0 }}
+                            />
+                            <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
+                              <option value="">-- Por asignar --</option>
+                              {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
+                            </select>
+                          </div>
+                          <button onClick={() => setRoster(roster.filter(r => r.id !== slot.id))} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', opacity: 0.6 }} title="Eliminar posición">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                
                 <button onClick={addExtraSlot} className="btn-secondary" style={{ fontSize: '0.75rem', width: 'auto', marginTop: '1.5rem', borderStyle: 'dashed' }}>+ Añadir Posición Extra</button>
               </div>
             )}

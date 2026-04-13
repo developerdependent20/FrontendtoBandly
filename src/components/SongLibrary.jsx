@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck } from 'lucide-react';
+import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
@@ -185,7 +184,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
                       style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
                       title="Editar detalles"
                     >
-                      <Plus size={16} style={{ transform: 'rotate(45deg)' }} /> 
+                      <Settings size={16} /> 
                     </button>
                     <Trash2 size={16} color="#ef4444" style={{cursor:'pointer', opacity:0.7}} onClick={() => handleDelete(s.id)}/>
                   </div>
