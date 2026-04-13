@@ -30,8 +30,6 @@ img {
   object-fit: contain;
 }
 
-body {
-  font-family: var(--font-sans);
 html, body {
   margin: 0;
   padding: 0;
@@ -39,6 +37,7 @@ html, body {
   overflow-x: hidden;
   background: #020617;
   color: white;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1125,7 +1124,7 @@ input[type="datetime-local"] {
 
 /* Optimizaciones de Zoom y Responsividad Móvil */
 @media (max-width: 768px) {
-  :root { font-size: 14px; } /* Encoge todo lo que use 'rem' */
+  :root { font-size: 14px !important; } /* Esto aleja el zoom globalmente */
   .main-content { padding: 0.6rem !important; }
   .glass-panel { padding: 0.8rem !important; }
   .hero-main-title-large { font-size: 1.8rem !important; line-height: 1.1 !important; }
@@ -1140,34 +1139,18 @@ input[type="datetime-local"] {
     border-radius: 0 !important;
     margin: 0 !important;
     padding: 1.5rem !important;
-    background: #0f172a !important; /* Más sólido en móvil */
+    background: #0f172a !important;
   }
-
   .modal-overlay { padding: 0 !important; }
-
-  .mobile-nav-back { display: flex !important; margin-right: 0.5rem; }
+  .mobile-nav-back { display: flex !important; }
   
-@media (max-width: 768px) {
-  :root { font-size: 14px !important; } /* Esto aleja todo el zoom */
-  .main-content { padding: 0.6rem !important; }
-  .glass-panel { padding: 0.8rem !important; }
-  .hero-main-title-large { font-size: 1.8rem !important; line-height: 1.1 !important; }
-  .serif-accent { display: block; }
-}
-
-@media (max-width: 768px) {
-  .modal-content {
-    max-width: 100% !important;
-    margin: 0;
-    border-radius: 0;
-    min-height: 100vh;
+  .song-action-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.75rem !important;
+    font-size: 0.8rem !important;
   }
-  
-  .glass-panel {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-  }
+  .list-item { padding: 1.25rem !important; gap: 1rem !important; }
 }
 
 /* Mobile Back Button Styling */
