@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
