@@ -98,11 +98,17 @@ export default function SequenceMixer({ sequence, onClose, session }) {
 
         const sortedStems = [...sequence.stems].sort((a, b) => getWeight(a) - getWeight(b));
 
+        // Crear una promesa que resuelva por timeout para no quedarse trabado
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Tiempo de espera de carga excedido')), 15000)
+        );
+
         for (const stem of sortedStems) {
           const player = new Tone.Player({
             url: stem.playbackUrl,
-            fadeIn: 0.01,
-            fadeOut: 0.01,
+            fadeIn: 0.1,
+            fadeOut: 0.1,
+            onerror: (e) => console.warn(`Error cargando stem: ${stem.instrument_label}`, e)
           });
 
           const gain = new Tone.Gain(0.8).toDestination();
@@ -122,8 +128,9 @@ export default function SequenceMixer({ sequence, onClose, session }) {
           });
         }
 
-        // Esperar a que todos los buffers estén cargados
-        await Tone.loaded();
+        // Esperar a que todos los buffers estén cargados con un tope de tiempo
+        await Promise.race([Tone.loaded(), timeoutPromise]);
+        console.log('[MIXER] Todos los stems cargados correctamente');
 
         // Calcular duración máxima
         let maxDuration = 0;
@@ -140,8 +147,15 @@ export default function SequenceMixer({ sequence, onClose, session }) {
         setIsLoading(false);
 
       } catch (err) {
-        console.error('[MIXER] Error loading stems:', err);
-        setIsLoading(false);
+        console.error('[MIXER] Error crítico cargando stems:', err);
+        // Si falló por timeout, intentamos dejarlo pasar si al menos algo cargó
+        if (Object.keys(playersRef.current).length > 0) {
+           setIsLoading(false);
+        } else {
+           alert("El celular bloqueó la carga de audio o la conexión es muy lenta. Por favor, refresca e intenta de nuevo.");
+           setIsLoading(false);
+           onClose();
+        }
       }
     };
 
