@@ -35,7 +35,17 @@ export default function SequenceMixer({ sequence, onClose }) {
         const players = {};
         const gains = {};
 
-        for (const stem of sequence.stems) {
+        // --- Ordenar Stems (Click y Cues primero) ---
+        const getWeight = (s) => {
+          const label = (s.instrument_label || s.original_name || '').toLowerCase();
+          if (label.includes('click') || label.includes('metronomo')) return 1;
+          if (label.includes('cue') || label.includes('guia')) return 2;
+          return 10;
+        };
+
+        const sortedStems = [...sequence.stems].sort((a, b) => getWeight(a) - getWeight(b));
+
+        for (const stem of sortedStems) {
           const player = new Tone.Player({
             url: stem.playbackUrl,
             fadeIn: 0.01,
