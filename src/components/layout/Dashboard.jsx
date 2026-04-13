@@ -5,7 +5,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
   return (
     <div className="dashboard-layout">
       <nav className="sidebar">
-        <div style={{ marginBottom: '3rem', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 0.5rem' }}>
+        <div className="hide-mobile" style={{ marginBottom: '3rem', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 0.5rem' }}>
           <img 
             src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" 
             alt="Bandly Logo" 

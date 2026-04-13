@@ -676,6 +676,16 @@ input[type="datetime-local"] {
   z-index: 1000;
 }
 
+.hide-mobile {
+  display: flex !important;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
@@ -1107,8 +1117,68 @@ input[type="datetime-local"] {
 .modal-content {
   position: relative;
   width: 100%;
-  max-width: 600px;
+  max-width: 850px;
   animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --- Sistema de Pestañas (Tabs) --- */
+.modal-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 1rem;
+}
+
+.modal-tab-btn {
+  padding: 1rem 0.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.modal-tab-btn:hover:not(.active) {
+  color: white;
+}
+
+/* --- Tarjetas de Roster --- */
+.roster-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+}
+
+.roster-card:focus-within {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.roster-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 @keyframes modalScale {

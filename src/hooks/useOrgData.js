@@ -15,7 +15,7 @@ export function useOrgData(profile) {
       const resMem = await supabase.from('profiles').select('*').eq('org_id', profile.org_id);
       if (!resMem.error) setMembers(resMem.data);
 
-      const resSongs = await supabase.from('songs').select('*').eq('org_id', profile.org_id).order('title', { ascending: true });
+      const resSongs = await supabase.from('songs').select('*, sequences(id)').eq('org_id', profile.org_id).order('title', { ascending: true });
       if (!resSongs.error) setSongs(resSongs.data);
 
       const resEv = await supabase.from('events').select('*, event_roster(*), event_songs(*, songs(*))').eq('org_id', profile.org_id).order('date', { ascending: true });

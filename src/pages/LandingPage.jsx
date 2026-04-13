@@ -36,9 +36,9 @@ export default function LandingPage({ onGetStarted }) {
             Eventos <span className="dot">•</span> Repertorios <span className="dot">•</span> Recursos <span className="dot">•</span> Multitracks <span className="dot">•</span> Secuencias
           </p>
           
-          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.2rem', width: 'auto' }}>Comenzar gratis</button>
-            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2rem', fontSize: '1.2rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver planes</button>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '3.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', width: 'auto' }}>Empezar Ahora</button>
+            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver planes</button>
           </div>
           
           <div className="compatibility-badges-centered" style={{ marginTop: '5rem' }}>

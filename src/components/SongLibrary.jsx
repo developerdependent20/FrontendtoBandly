@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen } from 'lucide-react';
+import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
 import SequenceMixer from './SequenceMixer';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3001'
+    : ''
+);
 
 export default function SongLibrary({ songs, orgId, readOnly, refreshData, session }) {
   const [showModal, setShowModal] = useState(false);
@@ -24,8 +28,14 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
     setLoadingSeq(song.id);
     try {
       const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        headers: { 'Authorization': `Bearer ${session?.access_token || ''}` }
       });
+      
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        throw new Error(`Error del servidor (${resp.status}): ${errorText || 'No se pudo obtener la secuencia'}`);
+      }
+
       const data = await resp.json();
       if (data.sequence && data.sequence.stems?.length > 0) {
         setSeqMixerData(data.sequence);
@@ -38,7 +48,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       }
     } catch (e) {
       console.error('Error loading sequence:', e);
-      alert('Error al cargar secuencia');
+      alert(`Error al cargar secuencia: ${e.message}. Verifica que el servidor esté encendido en el puerto 3001.`);
     } finally {
       setLoadingSeq(null);
     }
@@ -134,8 +144,15 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
                 <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn">
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
-                <button onClick={() => openMixer(s)} disabled={loadingSeq === s.id} className="song-action-btn sequence-btn">
-                  {loadingSeq === s.id ? <Loader2 size={14} className="spin-slow" /> : <Headphones size={14} />} Secuencia
+                <button onClick={() => openMixer(s)} disabled={loadingSeq === s.id} className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 ? 'ready' : ''}`}>
+                  {loadingSeq === s.id ? (
+                    <Loader2 size={14} className="spin-slow" />
+                  ) : s.sequences?.length > 0 ? (
+                    <ShieldCheck size={14} color="#22c55e" />
+                  ) : (
+                    <Headphones size={14} />
+                  )}
+                  {loadingSeq === s.id ? ' Abriendo...' : s.sequences?.length > 0 ? ' Reproducir' : ' Secuencia'}
                 </button>
               </div>
             </div>

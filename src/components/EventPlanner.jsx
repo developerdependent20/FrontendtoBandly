@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
 
@@ -13,6 +13,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [setlist, setSetlist] = useState([]);
   const [saving, setSaving] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
+  const [modalTab, setModalTab] = useState('info'); // 'info', 'roster', 'songs'
 
   const fullBandTpl = ['Drums', 'Perc', 'Bass', 'Keys', 'E Gtr', 'A Gtr', 'Voice 1', 'Voice 2', 'Voice 3', 'Voice 4', 'Choir'];
   const acousticTpl = ['Perc', 'Keys / Piano', 'A Gtr', 'Voice 1', 'Voice 2', 'Voice 3'];
@@ -107,6 +108,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const closeModal = () => {
     setShowModal(false); setEventName(''); setEventDate(''); setDescription(''); 
     setFormat('full'); setRoster(generateTemplate('full')); setSetlist([]); setEditingEventId(null); setSaving(false);
+    setModalTab('info');
   };
 
   return (
@@ -148,7 +150,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       {ev.date ? (
                         (() => {
                           const dateObj = new Date(ev.date.split('T')[0] + 'T00:00:00');
-                          return isNaN(dateObj) ? '---' : dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+                          return isNaN(dateObj) ? '---' : dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
                         })()
                       ) : '---'}
                     </span>
@@ -273,151 +275,159 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <Plus size={24} style={{ transform: 'rotate(45deg)' }} />
             </button>
             <h3 style={{ marginBottom: '2rem', textAlign: 'center', fontSize: '1.5rem' }}>{editingEventId ? 'Editar Evento' : 'Nuevo Evento'}</h3>
-            <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-              <input 
-                type="text" 
-                placeholder="Nombre del Evento (ej: Servicio Dominical)" 
-                className="input-field" 
-                value={eventName} 
-                onChange={e => setEventName(e.target.value)} 
-                style={{ width: '100%', fontSize: '1.25rem', padding: '1.1rem', fontWeight: '700' }} 
-              />
+            <div className="modal-tabs">
+              <button className={`modal-tab-btn ${modalTab === 'info' ? 'active' : ''}`} onClick={() => setModalTab('info')}>
+                ℹ️ Info
+              </button>
+              <button className={`modal-tab-btn ${modalTab === 'roster' ? 'active' : ''}`} onClick={() => setModalTab('roster')}>
+                👥 Equipo
+              </button>
+              <button className={`modal-tab-btn ${modalTab === 'songs' ? 'active' : ''}`} onClick={() => setModalTab('songs')}>
+                🎵 Repertorio
+              </button>
             </div>
 
-            <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-               {eventDate && (
-                 <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '0.5rem 1rem', borderRadius: '20px', color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                   <CalendarIcon size={14}/> {(() => {
-                     const dateObj = new Date(eventDate.split('T')[0] + 'T00:00:00');
-                     return isNaN(dateObj) ? 'Sin fecha' : dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-                   })()}
-                 </div>
-               )}
-            </div>
-
-            <div className="input-group" style={{ marginBottom: '2rem' }}>
-              <textarea 
-                placeholder="Instrucciones de vestuario, logística, notas del director..." 
-                className="input-field" 
-                rows="3" 
-                value={description} 
-                onChange={e => setDescription(e.target.value)} 
-                style={{ width: '100%', padding: '1rem' }}
-              ></textarea>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-               <button className={format === 'full' ? 'btn-primary' : 'btn-secondary'} onClick={() => applyFormat('full')} style={{flex: 1}}>🎸 Full Band</button>
-               <button className={format === 'acoustic' ? 'btn-primary' : 'btn-secondary'} onClick={() => applyFormat('acoustic')} style={{flex: 1}}>🪕 Acústico</button>
-            </div>
-            {/* Músicos Section */}
-            <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(59, 130, 246, 0.2)' }}>
-              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🎸</span> Músicos / Banda
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '2.5rem' }}>
-              {roster.filter(r => r.category === 'music').map((slot) => (
-                <div key={slot.id} style={{ display: 'flex', alignItems: 'center', padding: '0.65rem 1rem', background: '#2d3748', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ width: '40%', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{slot.instrument}</span>
-                  <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', color: 'white' }}>
-                    <option value="">-- Vacío --</option>
-                    {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name.split(' ')[0]}</option>))}
-                  </select>
+            {modalTab === 'info' && (
+              <div className="fade-in">
+                <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                  <label className="roster-label" style={{ color: 'var(--primary)' }}>Título del Evento</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ej: Concierto Anual de Verano" 
+                    className="input-field" 
+                    value={eventName} 
+                    onChange={e => setEventName(e.target.value)} 
+                    style={{ width: '100%', fontSize: '1.25rem', padding: '1.1rem', fontWeight: '700' }} 
+                  />
                 </div>
-              ))}
-            </div>
 
-            {/* Staff Section */}
-            <h4 style={{ fontSize: '0.9rem', color: '#f59e0b', marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(245, 158, 11, 0.4)' }}>
-              <span style={{ fontSize: '1.4rem' }}>⚡</span> Producción / Staff
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '2rem' }}>
-              {roster.filter(r => r.category === 'service').map((slot) => (
-                <div key={slot.id} style={{ display: 'flex', alignItems: 'center', padding: '0.65rem 1rem', background: '#2d3748', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ width: '45%', fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase' }}>{slot.instrument}</span>
-                  <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', color: 'white' }}>
-                    <option value="">-- Vacío --</option>
-                    {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name.split(' ')[0]}</option>))}
-                  </select>
-                </div>
-              ))}
-            </div>
-
-            {/* Extras Section */}
-            {roster.some(r => r.category === 'extra') && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.85rem', color: 'white', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Otros / Invitados</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
-                  {roster.filter(r => r.category === 'extra').map((slot) => (
-                    <div key={slot.id} style={{ display: 'flex', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <input type="text" value={slot.instrument} onChange={(e) => updateSlot(slot.id, 'instrument', e.target.value)} placeholder="Ej: Coro" style={{ width: '40%', background: 'transparent', border: 'none', color: 'white', fontSize: '0.75rem' }} />
-                      <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.85rem' }}>
-                        <option value="">-- Vacío --</option>
-                        {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name.split(' ')[0]}</option>))}
-                      </select>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="roster-label">Fecha Seleccionada</label>
+                  {eventDate && (
+                    <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '0.8rem 1.2rem', borderRadius: '12px', color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                      <CalendarIcon size={18}/> {(() => {
+                        const dateObj = new Date(eventDate.split('T')[0] + 'T00:00:00');
+                        return isNaN(dateObj) ? 'Sin fecha' : dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+                      })()}
                     </div>
-                  ))}
+                  )}
+                </div>
+
+                <div className="input-group">
+                  <label className="roster-label">Notas y Logística</label>
+                  <textarea 
+                    placeholder="Instrucciones de vestuario, logística, notas del director..." 
+                    className="input-field" 
+                    rows="4" 
+                    value={description} 
+                    onChange={e => setDescription(e.target.value)} 
+                    style={{ width: '100%', padding: '1rem' }}
+                  ></textarea>
                 </div>
               </div>
             )}
-            <button onClick={addExtraSlot} className="btn-secondary" style={{ fontSize: '0.7rem', width: 'auto', marginBottom: '1.5rem' }}>+ Añadir Personalizado</button>
-            <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Repertorio del Evento</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '30vh', overflowY: 'auto', marginBottom: '2.5rem', paddingRight: '0.5rem' }}>
-              {setlist.map((item, idx) => (
-                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 40px', gap: '0.5rem', alignItems: 'center', background: '#2d3748', padding: '0.6rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  {/* Canción */}
-                  <select className="input-field" style={{ border: 'none', background: 'transparent', fontSize: '0.85rem' }} value={item.song_id} onChange={e => {
-                    const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n);
-                  }}>
-                    <option value="">-- Canción --</option>
-                    {songs?.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-                  </select>
 
-                  {/* Líder / Dirige */}
-                  <select className="input-field" style={{ border: 'none', background: 'transparent', fontSize: '0.8rem', color: 'var(--text-secondary)' }} value={item.lead_id} onChange={e => {
-                    const n = [...setlist]; n[idx].lead_id = e.target.value; setSetlist(n);
-                  }}>
-                    <option value="">-- Dirige --</option>
-                    {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name.split(' ')[0]}</option>))}
-                  </select>
-
-                  {/* Tono Dinámico */}
-                  <select 
-                    className="input-field" 
-                    style={{ border: 'none', background: 'transparent', fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold' }} 
-                    value={item.selected_key} 
-                    onChange={e => {
-                      const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n);
-                    }}
-                  >
-                    <option value="">-- Tono --</option>
-                    {(() => {
-                      const s = songs?.find(x => x.id === item.song_id);
-                      if (!s) return null;
-                      return (
-                        <>
-                          {s.key && <option value={s.key}>Original: {s.key}</option>}
-                          {s.key_male && <option value={s.key_male}>Hombre: {s.key_male}</option>}
-                          {s.key_female && <option value={s.key_female}>Mujer: {s.key_female}</option>}
-                        </>
-                      );
-                    })()}
-                  </select>
-
-                  <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#ef4444', display: 'flex', justifyContent: 'center' }}>
-                    <Plus size={18} style={{ transform: 'rotate(45deg)' }} />
-                  </button>
+            {modalTab === 'roster' && (
+              <div className="fade-in">
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                   <button className={format === 'full' ? 'btn-primary' : 'btn-secondary'} onClick={() => applyFormat('full')} style={{flex: 1, padding: '0.8rem'}}>🎸 Full Band</button>
+                   <button className={format === 'acoustic' ? 'btn-primary' : 'btn-secondary'} onClick={() => applyFormat('acoustic')} style={{flex: 1, padding: '0.8rem'}}>🪕 Acústico</button>
                 </div>
-              ))}
-              <button 
-                onClick={() => setSetlist([...setlist, {song_id: '', lead_id: '', selected_key: ''}])} 
-                className="btn-secondary" 
-                style={{ fontSize: '0.8rem', marginTop: '0.5rem', borderStyle: 'dashed', background: 'transparent' }}
-              >
-                + Añadir Canción
-              </button>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button onClick={closeModal} className="btn-secondary" style={{ flex: 1 }}>Volver</button>
-              <button onClick={handleSave} className="btn-primary" disabled={saving} style={{ flex: 2 }}>{saving ? '...' : 'Guardar'}</button>
+
+                <h4 style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>Instrumentos / Músicos</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem', marginBottom: '2rem' }}>
+                  {roster.filter(r => r.category === 'music').map((slot) => (
+                    <div key={slot.id} className="roster-card">
+                      <div style={{ flex: 1 }}>
+                        <div className="roster-label">{slot.instrument}</div>
+                        <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
+                          <option value="">-- Por asignar --</option>
+                          {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <h4 style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>Producción / Staff</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                  {roster.filter(r => r.category === 'service').map((slot) => (
+                    <div key={slot.id} className="roster-card">
+                      <div style={{ flex: 1 }}>
+                        <div className="roster-label" style={{ color: '#f59e0b' }}>{slot.instrument}</div>
+                        <select className="input-field" value={slot.profile_id} onChange={(e) => updateSlot(slot.id, 'profile_id', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, fontSize: '0.95rem' }}>
+                          <option value="">-- Por asignar --</option>
+                          {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={addExtraSlot} className="btn-secondary" style={{ fontSize: '0.75rem', width: 'auto', marginTop: '1.5rem', borderStyle: 'dashed' }}>+ Añadir Posición Extra</button>
+              </div>
+            )}
+
+            {modalTab === 'songs' && (
+              <div className="fade-in">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                  {setlist.map((item, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 40px', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <select className="input-field" style={{ border: 'none', background: 'transparent' }} value={item.song_id} onChange={e => {
+                        const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n);
+                      }}>
+                        <option value="">-- Canción --</option>
+                        {songs?.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                      </select>
+
+                      <select className="input-field" style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)' }} value={item.lead_id} onChange={e => {
+                        const n = [...setlist]; n[idx].lead_id = e.target.value; setSetlist(n);
+                      }}>
+                        <option value="">Líder / Voz</option>
+                        {members?.map(m => (<option key={m.id} value={m.id}>{m.full_name.split(' ')[0]}</option>))}
+                      </select>
+
+                      <select className="input-field" style={{ border: 'none', background: 'transparent', color: 'var(--accent)', fontWeight: 'bold' }} value={item.selected_key} onChange={e => {
+                        const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n);
+                      }}>
+                        <option value="">Tono</option>
+                        {(() => {
+                          const s = songs?.find(x => x.id === item.song_id);
+                          if (!s) return null;
+                          return (
+                            <>
+                              {s.key && <option value={s.key}>Orig: {s.key}</option>}
+                              {s.key_male && <option value={s.key_male}>M: {s.key_male}</option>}
+                              {s.key_female && <option value={s.key_female}>F: {s.key_female}</option>}
+                            </>
+                          );
+                        })()}
+                      </select>
+
+                      <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setSetlist([...setlist, {song_id: '', lead_id: '', selected_key: ''}])} 
+                  className="btn-secondary" 
+                  style={{ width: '100%', borderStyle: 'dashed', background: 'transparent', padding: '1rem' }}
+                >
+                  + Agregar Canción al Repertorio
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              {modalTab !== 'info' && (
+                <button onClick={() => setModalTab(modalTab === 'songs' ? 'roster' : 'info')} className="btn-secondary" style={{ flex: 1 }}>Anterior</button>
+              )}
+              {modalTab !== 'songs' ? (
+                <button onClick={() => setModalTab(modalTab === 'info' ? 'roster' : 'songs')} className="btn-primary" style={{ flex: 2 }}>Siguiente Paso</button>
+              ) : (
+                <button onClick={handleSave} className="btn-primary" disabled={saving} style={{ flex: 2 }}>{saving ? 'Guardando...' : 'Finalizar y Agendar'}</button>
+              )}
             </div>
           </div>
         </div>

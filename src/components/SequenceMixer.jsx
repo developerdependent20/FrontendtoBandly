@@ -310,7 +310,13 @@ export default function SequenceMixer({ sequence, onClose }) {
                   <div className="mx-ch-label">{ch.label}</div>
 
                   {/* Volume slider */}
-                  <div className="mx-ch-slider-wrap">
+                  <div className="mx-ch-slider-wrap" style={{ position: 'relative' }}>
+                    {/* Scale Ticks */}
+                    <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '10px', transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', padding: '0 5px', pointerEvents: 'none', opacity: 0.3 }}>
+                      {[...Array(11)].map((_, i) => (
+                        <div key={i} style={{ width: '1px', height: i % 5 === 0 ? '10px' : '5px', background: 'white' }} />
+                      ))}
+                    </div>
                     <input
                       type="range"
                       min="0"
