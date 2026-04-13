@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Plus, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, X, Info, Users, Music } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
 
@@ -377,13 +377,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <h3 style={{ marginBottom: '2rem', textAlign: 'center', fontSize: '1.5rem' }}>{editingEventId ? 'Editar Evento' : 'Nuevo Evento'}</h3>
             <div className="modal-tabs">
               <button className={`modal-tab-btn ${modalTab === 'info' ? 'active' : ''}`} onClick={() => setModalTab('info')}>
-                ℹ️ Info
+                <Info size={16} /> INFO
               </button>
               <button className={`modal-tab-btn ${modalTab === 'roster' ? 'active' : ''}`} onClick={() => setModalTab('roster')}>
-                👥 Equipo
+                <Users size={16} /> EQUIPO
               </button>
               <button className={`modal-tab-btn ${modalTab === 'songs' ? 'active' : ''}`} onClick={() => setModalTab('songs')}>
-                🎵 Repertorio
+                <Music size={16} /> REPERTORIO
               </button>
             </div>
 
