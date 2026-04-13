@@ -98,9 +98,9 @@ export default function SequenceMixer({ sequence, onClose, session }) {
 
         const sortedStems = [...sequence.stems].sort((a, b) => getWeight(a) - getWeight(b));
 
-        // Crear una promesa que resuelva por timeout para no quedarse trabado
+        // Crear una promesa que resuelva por timeout (25s para móviles lentos)
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Tiempo de espera de carga excedido')), 15000)
+          setTimeout(() => reject(new Error('Tiempo de espera de carga excedido')), 25000)
         );
 
         for (const stem of sortedStems) {
