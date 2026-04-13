@@ -15,7 +15,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
-export default function SongLibrary({ songs, orgId, readOnly, refreshData, session }) {
+export default function SongLibrary({ songs, orgId, readOnly, refreshData, session, profile }) {
   const [showModal, setShowModal] = useState(false);
   const [chartSong, setChartSong] = useState(null);
   const [seqUploadSong, setSeqUploadSong] = useState(null);
@@ -174,52 +174,71 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {songs?.length === 0 ? <p style={{color:'var(--text-muted)'}}>No hay canciones en el registro.</p> : 
           songs?.map(s => (
-            <div key={s.id} className="list-item" style={{display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap: 'wrap', gap: '0.5rem'}}>
-              <div>
-                <strong style={{color:'white', fontSize:'1rem', display:'block'}}>{s.title}</strong>
-                <span style={{fontSize:'0.8rem', color:'var(--text-muted)'}}>
-                   Orig: <span style={{color:'var(--primary)', fontWeight:'bold'}}>{s.key || '-'}</span> | 
-                   Hombre: <span style={{color:'var(--primary)', fontWeight:'bold'}}>{s.key_male || '-'}</span> | 
-                   Mujer: <span style={{color:'var(--primary)', fontWeight:'bold'}}>{s.key_female || '-'}</span> | 
-                   BPM: {s.bpm || '-'}
-                </span>
+            <div key={s.id} className="list-item song-library-item">
+              <div className="song-identity">
+                <div className="song-header">
+                  <strong className="song-title">{s.title}</strong>
+                  {!readOnly && (
+                    <div className="song-manage-icons">
+                      <button 
+                        onClick={() => openEditModal(s)} 
+                        className="icon-btn-subtle"
+                        title="Editar detalles"
+                      >
+                        <Settings size={14} /> 
+                      </button>
+                      {profile?.role === 'director' && (
+                        <button 
+                          onClick={() => handleDelete(s.id)} 
+                          className="icon-btn-subtle delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="song-metadata">
+                   <div className="meta-tag">Orig: <span>{s.key || '-'}</span></div>
+                   <div className="meta-tag male">♂: <span>{s.key_male || '-'}</span></div>
+                   <div className="meta-tag female">♀: <span>{s.key_female || '-'}</span></div>
+                   <div className="meta-tag bpm">BPM: <span>{s.bpm || '-'}</span></div>
+                </div>
               </div>
-              <div style={{display:'flex', gap:'1rem', alignItems:'center'}}>
+
+              <div className="song-visuals">
                 {s.youtube_link && (() => {
                    const match = s.youtube_link.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
                    const yId = match ? match[1] : null;
                    return yId ? (
-                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100px', height: '56px', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0, transition: '0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }} className="yt-thumb">
-                       <img src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} alt="YouTube" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" className="yt-thumb-wrapper">
+                       <img src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} alt="YouTube" />
+                       <div className="yt-play-overlay">▶</div>
                      </a>
                    ) : (
-                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" style={{color:'#ef4444', fontWeight:'bold', fontSize:'0.85rem', textDecoration:'none'}}>📺 Ver Link</a>
+                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" className="yt-link-simple">📺 Video</a>
                    );
                 })()}
-                {!readOnly && (
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <button 
-                      onClick={() => openEditModal(s)} 
-                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                      title="Editar detalles"
-                    >
-                      <Settings size={16} /> 
-                    </button>
-                    <Trash2 size={16} color="#ef4444" style={{cursor:'pointer', opacity:0.7}} onClick={() => handleDelete(s.id)}/>
-                  </div>
-                )}
+              </div>
+
+              <div className="song-actions-grid">
                 <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn">
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
-                <button onClick={() => openMixer(s)} disabled={loadingSeq === s.id} className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 ? 'ready' : ''}`}>
+                <button 
+                  onClick={() => openMixer(s)} 
+                  disabled={loadingSeq === s.id} 
+                  className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
+                >
                   {loadingSeq === s.id ? (
                     <Loader2 size={14} className="spin-slow" />
                   ) : s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? (
-                    <ShieldCheck size={14} color="#22c55e" />
+                    <ShieldCheck size={14} />
                   ) : (
                     <Headphones size={14} />
                   )}
-                  {loadingSeq === s.id ? ' Abriendo...' : s.sequences?.length > 0 ? ' Reproducir' : ' Secuencia'}
+                  {loadingSeq === s.id ? ' Abriendo...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reproducir' : ' Secuencia'}
                 </button>
               </div>
             </div>

@@ -218,12 +218,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
         <div>
           <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Próximos Eventos</h4>
-          {!events || events.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
-              <p>No existen eventos activos.</p>
-            </div>
-          ) : (
-            events.map(ev => (
+          {(() => {
+            const currentUserId = session?.user?.id || profile?.id;
+            const userRole = (profile?.role || '').toLowerCase();
+            
+            // FILTRADO: El director ve todo. Los demás solo lo que tienen agendado.
+            const eventsToShow = userRole === 'director' 
+              ? events 
+              : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId)));
+
+            if (!eventsToShow || eventsToShow.length === 0) {
+              return (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+                  <p>{userRole === 'director' ? 'No existen eventos activos.' : 'No tienes servicios agendados próximamente.'}</p>
+                </div>
+              );
+            }
+
+            return eventsToShow.map(ev => (
               <div key={ev.id} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', margin: '1rem 0', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <div>
@@ -332,8 +344,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   );
                 })()}
               </div>
-            ))
-          )}
+            ));
+          })()}
         </div>
 
         <div>

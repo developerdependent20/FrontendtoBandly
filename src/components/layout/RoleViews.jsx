@@ -14,7 +14,7 @@ export function DirectorView({ profile, session, activeTab, orgData }) {
       )}
       {activeTab === 'library' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} />
+          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} profile={profile} />
         </div>
       )}
       {activeTab === 'team' && (
@@ -40,7 +40,7 @@ export function MemberView({ profile, session, activeTab, orgData }) {
       )}
       {activeTab === 'library' && canAccessLibrary && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={true} refreshData={fetchData} session={session} />
+          <SongLibrary songs={songs} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} profile={profile} />
         </div>
       )}
       {activeTab === 'team' && (

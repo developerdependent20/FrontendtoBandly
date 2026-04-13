@@ -1171,6 +1171,203 @@ input[type="datetime-local"] {
   }
 }
 
+/* --- Song Library Elite Styles --- */
+.song-library-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 2rem;
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.song-library-item:hover {
+  background: rgba(139, 92, 246, 0.05);
+  border-color: rgba(139, 92, 246, 0.2);
+  transform: translateX(4px);
+}
+
+.song-identity {
+  flex: 1;
+  min-width: 200px;
+}
+
+.song-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.song-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.song-manage-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn-subtle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.icon-btn-subtle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.icon-btn-subtle.delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.song-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.meta-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.meta-tag span {
+  color: var(--primary);
+  margin-left: 4px;
+}
+
+.song-visuals {
+  flex-shrink: 0;
+}
+
+.yt-thumb-wrapper {
+  display: block;
+  width: 110px;
+  height: 62px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.yt-thumb-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.yt-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(139, 92, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.yt-thumb-wrapper:hover img { transform: scale(1.1); }
+.yt-thumb-wrapper:hover .yt-play-overlay { opacity: 1; }
+
+.song-actions-grid {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Mobile Overrides para Song Library */
+@media (max-width: 768px) {
+  .song-library-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 1.5rem !important;
+    gap: 1.25rem !important;
+    border-radius: 20px !important;
+    width: auto !important;
+    margin: 0.5rem 0.5rem 1rem 0.5rem !important;
+  }
+  
+  .song-identity, .song-visuals, .song-actions-grid {
+    width: 100% !important;
+  }
+
+  .song-header {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .song-title {
+    font-size: 1.3rem !important;
+  }
+
+  .song-metadata {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .meta-tag {
+    padding: 8px !important;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  .yt-thumb-wrapper {
+    width: 100% !important;
+    height: 160px !important;
+  }
+
+  .song-actions-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .song-action-btn {
+    width: 100% !important;
+    padding: 12px !important;
+    font-size: 0.85rem !important;
+    justify-content: center !important;
+  }
+
+  .song-action-btn.sequence-btn {
+    grid-column: span 2 !important;
+    background: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3) !important;
+  }
+
+  .song-action-btn.sequence-btn.ready {
+    background: #10b981 !important;
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3) !important;
+  }
+}
+
 @media (max-width: 640px) {
   .modal-content {
     width: 100% !important;
