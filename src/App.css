@@ -1125,21 +1125,45 @@ input[type="datetime-local"] {
 /* Optimizaciones de Zoom y Responsividad Móvil */
 @media (max-width: 768px) {
   .main-content { 
-    padding: 0.75rem 0.5rem !important;
+    padding: 0.5rem !important;
     overflow-x: hidden;
   }
   .glass-panel { 
-    padding: 1rem 0.75rem !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    padding: 0.75rem !important;
+    margin: 0 !important;
     width: 100% !important;
+    border-radius: 0 !important;
   }
+  
+  /* Arreglo específico para las tarjetas de canciones que se ven mal */
+  .list-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+  }
+  
+  .song-info {
+    width: 100%;
+  }
+  
+  .song-actions {
+    width: 100%;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .song-action-btn {
+    flex: 1 1 auto !important;
+    min-width: 100px;
+    padding: 0.6rem !important;
+    font-size: 0.75rem !important;
+  }
+
   .hero-main-title-large { 
-    font-size: 2.2rem !important; 
-    line-height: 1.1 !important;
-    letter-spacing: -1.5px !important;
+    font-size: 1.8rem !important; 
   }
-  .serif-accent { display: block; }
 }
 
 @media (max-width: 640px) {
