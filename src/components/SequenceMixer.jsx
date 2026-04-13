@@ -84,8 +84,6 @@ export default function SequenceMixer({ sequence, onClose, session }) {
       setIsLoading(true);
 
       try {
-        await Tone.start();
-
         const channelData = [];
         const players = {};
         const gains = {};

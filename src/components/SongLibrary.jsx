@@ -56,6 +56,10 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
 
     setLoadingSeq(song.id);
     try {
+      // Activar audio inmediatamente para móviles (gesto de usuario)
+      await Tone.start();
+      console.log('[SongLibrary] Tone.js activado');
+
       const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
@@ -292,7 +296,11 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       )}
 
       {seqMixerData && (
-        <SequenceMixer sequence={seqMixerData} onClose={() => setSeqMixerData(null)} />
+        <SequenceMixer 
+          sequence={seqMixerData} 
+          session={session}
+          onClose={() => setSeqMixerData(null)} 
+        />
       )}
 
       {liveSongData && (
