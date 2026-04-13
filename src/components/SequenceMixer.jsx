@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
 import {
   X, Play, Pause, Square, Volume2, VolumeX, Headphones,
-  Loader2, Music, SkipBack
+  Loader2, Music, SkipBack, ArrowLeft
 } from 'lucide-react';
 import './SequenceMixer.css';
 
@@ -247,17 +247,20 @@ export default function SequenceMixer({ sequence, onClose }) {
         {/* Header */}
         <div className="mx-header">
           <div className="mx-header-left">
-            <Headphones size={20} />
-            <div>
+            <button className="mobile-nav-back" onClick={onClose}>
+              <ArrowLeft size={20} />
+            </button>
+            <Headphones size={20} className="hide-mobile" />
+            <div className="mx-header-info">
               <h2>Mixer</h2>
               <div className="mx-meta">
+                {sequence?.title && <span className="mx-title-display">{sequence.title}</span>}
                 {sequence?.key && <span className="mx-badge mx-badge-key">Tono: {sequence.key}</span>}
                 {sequence?.bpm && <span className="mx-badge mx-badge-bpm">{sequence.bpm} BPM</span>}
-                <span className="mx-badge">{sequence?.stems?.length || 0} stems</span>
               </div>
             </div>
           </div>
-          <button className="mx-close" onClick={onClose}><X size={22} /></button>
+          <button className="mx-close hide-mobile" onClick={onClose}><X size={22} /></button>
         </div>
 
         {/* Loading */}

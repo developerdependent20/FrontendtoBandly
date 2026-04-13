@@ -3,7 +3,7 @@ import ChordSheetJS from 'chordsheetjs';
 import { 
   X, ChevronUp, ChevronDown, Pencil, Eraser,
   Save, Maximize2, Minimize2, FileText, Copy, Check, Eye, Edit3,
-  Play, Pause
+  Play, Pause, ArrowLeft
 } from 'lucide-react';
 import './ChartStudio.css';
 
@@ -243,11 +243,16 @@ export default function ChartStudio({ song, onClose, onSave }) {
         {/* ── Header ── */}
         <div className="cs-header">
           <div className="cs-header-left">
-            <FileText size={20} />
-            <h2>{song?.title || 'Nuevo Chart'}</h2>
-            {getCurrentKey() && (
-              <span className="cs-key-badge">Tono: {getCurrentKey()}</span>
-            )}
+            <button className="mobile-nav-back" onClick={onClose}>
+              <ArrowLeft size={20} />
+            </button>
+            <div className="cs-header-title-group">
+              <FileText size={18} className="hide-mobile" />
+              <h2>{song?.title || 'Nuevo Chart'}</h2>
+              {getCurrentKey() && (
+                <span className="cs-key-badge">Tono: {getCurrentKey()}</span>
+              )}
+            </div>
           </div>
           <div className="cs-header-actions">
             {/* Transpose */}
@@ -272,7 +277,7 @@ export default function ChartStudio({ song, onClose, onSave }) {
             </div>
 
             {/* Auto-scroll (teleprompter) */}
-            <div className="cs-autoscroll">
+            <div className="cs-autoscroll hide-mobile-small">
               <button 
                 className={`cs-btn cs-btn-icon ${autoScrolling ? 'cs-btn-playing' : ''}`} 
                 onClick={() => setAutoScrolling(!autoScrolling)}
@@ -280,15 +285,17 @@ export default function ChartStudio({ song, onClose, onSave }) {
               >
                 {autoScrolling ? <Pause size={16} /> : <Play size={16} />}
               </button>
-              {SCROLL_SPEEDS.map(sp => (
-                <button 
-                  key={sp}
-                  className={`cs-speed-btn ${scrollSpeed === sp ? 'active' : ''}`}
-                  onClick={() => setScrollSpeed(sp)}
-                >
-                  {sp}x
-                </button>
-              ))}
+              <div className="cs-speed-picker hide-tablet">
+                {SCROLL_SPEEDS.map(sp => (
+                  <button 
+                    key={sp}
+                    className={`cs-speed-btn ${scrollSpeed === sp ? 'active' : ''}`}
+                    onClick={() => setScrollSpeed(sp)}
+                  >
+                    {sp}x
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Drawing tools */}
@@ -318,7 +325,7 @@ export default function ChartStudio({ song, onClose, onSave }) {
               </button>
             )}
 
-            <button className="cs-btn cs-btn-close" onClick={onClose}><X size={20} /></button>
+            <button className="cs-btn cs-btn-close hide-mobile" onClick={onClose}><X size={20} /></button>
           </div>
         </div>
 

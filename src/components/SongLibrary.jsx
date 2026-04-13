@@ -211,8 +211,8 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       
       {showModal && (
         <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', zIndex: 1000 }}>
-          <div className="glass-panel modal-content" style={{ maxWidth: '550px', padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15, 23, 42, 0.8)' }}>
-            <button onClick={closeOverlay} className="modal-close-btn" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px' }}>
+          <div className="glass-panel modal-content" style={{ padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <button onClick={closeOverlay} className="modal-close-btn">
               <X size={20} />
             </button>
             <h3 className="modal-title" style={{ fontSize: '1.5rem', marginBottom: '2rem', textAlign: 'center' }}>

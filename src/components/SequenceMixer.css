@@ -56,10 +56,29 @@
   margin: 0;
 }
 
+.mx-header-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mx-title-display {
+  display: block;
+  font-size: 0.75rem;
+  color: #a78bfa;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
 .mx-meta {
   display: flex;
   gap: 0.4rem;
-  margin-top: 3px;
+  align-items: center;
   flex-wrap: wrap;
 }
 
@@ -372,10 +391,20 @@
 
 /* Responsive */
 @media (max-width: 640px) {
-  .mx-container { border-radius: 0; max-height: 100vh; }
-  .mx-transport { flex-wrap: wrap; gap: 0.5rem; }
-  .mx-ch-label { min-width: 70px; font-size: 0.7rem; }
-  .mx-ch-slider-wrap { min-width: 80px; }
+  .mx-overlay { padding: 0; }
+  .mx-container { border-radius: 0; height: 100vh; max-height: 100vh; border: none; }
+  .mx-header { padding: 0.75rem 1rem; gap: 0.5rem; }
+  .mx-header-left h2 { font-size: 0.95rem; }
+  .mx-transport { padding: 0.75rem 1rem; gap: 0.5rem; }
+  .mx-transport-buttons .mx-btn { min-width: 32px; min-height: 32px; padding: 0.35rem; }
+  .mx-time { font-size: 0.7rem; min-width: 35px; }
+  .mx-channels { padding: 0.5rem; }
+  .mx-channel { gap: 0.5rem; padding: 0.5rem; }
+  .mx-ch-label { min-width: 60px; font-size: 0.68rem; }
+  .mx-ch-slider-wrap { min-width: 60px; }
+  .mx-ch-slider { height: 24px; }
+  .mx-ch-btn { width: 32px; height: 32px; } /* Larger buttons for fingers */
+  .hide-mobile { display: none !important; }
 }
 
 /* Scrollbar */
