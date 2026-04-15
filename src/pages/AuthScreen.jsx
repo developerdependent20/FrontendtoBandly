@@ -13,6 +13,8 @@ export default function AuthScreen({ onBack, initialMode }) {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +24,15 @@ export default function AuthScreen({ onBack, initialMode }) {
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ 
-          email, password, options: { data: { full_name: fullName } } 
+          email, 
+          password, 
+          options: { 
+            data: { 
+              full_name: fullName,
+              accepted_terms: true,
+              accepted_privacy: true
+            } 
+          } 
         });
         if (error) throw error;
         alert('¡Bienvenido a Bandly! Tu cuenta ha sido creada exitosamente.');
@@ -59,9 +69,23 @@ export default function AuthScreen({ onBack, initialMode }) {
           <input type="email" placeholder="Correo electrónico" className="input-field" value={email} onChange={e => setEmail(e.target.value)} required />
           <input type="password" placeholder="Contraseña" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required />
           
+          {isSignUp && (
+            <div className="legal-checkboxes" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+               <label className="checkbox-container" style={{ display: 'flex', gap: '10px', fontSize: '0.75rem', color: '#888', cursor: 'pointer', textAlign: 'left' }}>
+                  <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} />
+                  <span>He leído y acepto los <a href="/terminos" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/terminos'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Términos y Condiciones</a> de Bandly.</span>
+               </label>
+               <label className="checkbox-container" style={{ display: 'flex', gap: '10px', fontSize: '0.75rem', color: '#888', cursor: 'pointer', textAlign: 'left' }}>
+                  <input type="checkbox" checked={acceptedPrivacy} onChange={e => setAcceptedPrivacy(e.target.checked)} />
+                  <span>He leído la <a href="/privacidad" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/privacidad'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Política de Privacidad</a> y autorizo el tratamiento de mis datos personales.</span>
+               </label>
+               <p style={{ fontSize: '0.65rem', color: '#555', marginTop: '0.5rem' }}>Bandly está disponible para mayores de 18 años.</p>
+            </div>
+          )}
+
           {errorMsg && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{errorMsg}</p>}
           
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading || (isSignUp && (!acceptedTerms || !acceptedPrivacy))}>
             {loading ? <Loader2 className="spin" size={20}/> : (isSignUp ? 'Registrar' : 'Iniciar Sesión')}
           </button>
         </form>

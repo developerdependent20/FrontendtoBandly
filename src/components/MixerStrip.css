@@ -1,166 +1,175 @@
-/* MixerStrip.css */
-.mixer-strip {
+/* MixerStrip.css - Modern Playback Aesthetic */
+.m32-strip {
+  width: 90px; 
+  height: 100%; /* Aprovechar el espacio flexible */
+  background: transparent;
+  border-right: 1px solid #1a1a1b;
   display: flex;
   flex-direction: column;
-  width: 70px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 0.5rem;
-  gap: 0.8rem;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.mixer-strip.is-priority {
-  background: rgba(239, 68, 68, 0.05);
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-.strip-header {
-  height: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 4px;
-}
-
-.strip-name {
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  color: var(--text-muted);
-}
-
-.mixer-strip.is-priority .strip-name {
-  color: #ef4444;
-}
-
-/* Routing */
-.strip-routing {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.routing-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #000;
-  padding: 2px 4px;
-  border-radius: 4px;
+  padding: 10px 4px;
+  user-select: none;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
 }
 
-.routing-label {
-  color: #444;
-  font-size: 0.6rem;
-}
-
-.routing-value {
-  color: #00ff00;
-  font-weight: bold;
-}
-
-.routing-arrows {
+/* 1. Scribble Strip Modern */
+.scribble-strip {
+  height: 45px; 
+  background: #1a1a1b; /* Fondo oscuro flat */
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #333;
 }
 
-.routing-arrows button {
-  background: none;
-  border: none;
-  color: #666;
-  padding: 0;
-  cursor: pointer;
+.m32-strip.is-priority .scribble-strip {
+  background: #2a1111;
+  border-color: #ef444455;
 }
 
-.stereo-toggle {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-  font-size: 0.6rem;
-  font-weight: bold;
-  padding: 2px 0;
+.scribble-name {
+  color: #fff;
+  font-size: 0.65rem; 
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 2. Routing Section (Mini labels) */
+.m32-routing {
+  background: rgba(0,0,0,0.3);
+  padding: 4px;
+  margin-bottom: 15px;
   border-radius: 4px;
-  cursor: pointer;
 }
 
-.stereo-toggle.active {
-  background: rgba(59, 130, 246, 0.2);
-  color: var(--primary);
-  border-color: var(--primary);
+.routing-box .lbl { font-size: 0.5rem; color: #444; }
+.routing-box .val { font-size: 0.65rem; color: #3b82f6; font-weight: bold; }
+
+/* 3. Console Body (Vertical expansion) */
+.m32-console-body {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  position: relative;
 }
 
-/* Fader Area */
-.fader-container {
+.m32-meter-bridge {
+  width: 6px;
+  background: #000;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.m32-meter-leds {
+  background: linear-gradient(to top, #0f0 60%, #ff0 85%, #f00 100%);
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  transition: height 0.05s ease-out;
+}
+
+.m32-meter-labels {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.45rem;
+  color: #666;
+  pointer-events: none;
+}
+
+/* Fader Well Modern */
+.m32-fader-well {
+  flex: 1;
+  background: transparent;
+  position: relative;
   display: flex;
   justify-content: center;
-  gap: 8px;
-  height: 180px;
+  margin: 0 15px;
+}
+
+.fader-scale {
+  position: absolute;
+  left: -20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.5rem;
+  color: #444;
   padding: 10px 0;
 }
 
-.vertical-fader {
-  appearance: none;
-  width: 6px;
-  height: 160px;
-  background: rgba(0, 0, 0, 0.4);
-  outline: none;
-  writing-mode: bt-lr; /* Bottom to top */
-  -webkit-appearance: slider-vertical;
-}
-
-.vu-meter {
-  width: 4px;
-  height: 160px;
-  background: #111;
-  position: relative;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.vu-inner {
+/* El carril del fader */
+.m32-fader-well::before {
+  content: '';
   position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(to top, #00ff00, #ffff00, #ff0000);
-  transition: height 0.05s;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 100%;
+  background: #111;
+  border-radius: 2px;
 }
 
-/* Actions */
-.strip-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.action-btn {
-  flex: 1;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: bold;
+.m32-vertical-fader {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 200px; /* Ajustado */
+  height: 40px;
+  transform: rotate(-90deg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -20px;
+  margin-left: -100px;
+  transform-origin: center;
   cursor: pointer;
+  z-index: 2;
 }
 
-.solo-btn.active {
-  background: #f59e0b;
-  color: #000;
+.m32-vertical-fader::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 35px;
+  width: 18px;
+  background: #fff;
+  border: 2px solid #3b82f6; 
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
-.mute-btn.active {
-  background: #ef4444;
-  color: #fff;
+/* Actions Bottom */
+.m32-strip-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 10px;
 }
+
+.m32-btn-solo, .m32-btn-mute {
+  background: #222;
+  border: 1px solid #333;
+  color: #777;
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 6px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.m32-btn-solo.active { color: #facc15; border-color: #facc15; background: rgba(250, 204, 21, 0.1); }
+.m32-btn-mute.active { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }

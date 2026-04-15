@@ -1,84 +1,101 @@
-import React from 'react';
-import { Volume2, VolumeX, Headphones, Music, ChevronUp, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Headphones, Music } from 'lucide-react';
 import './MixerStrip.css';
 
 /**
- * MixerStrip - Canal vertical de la consola Pro.
+ * MixerStrip Pro v3.6 - Modo Fantasma y Resiliencia
  */
-const MixerStrip = ({ stem, state, onUpdate }) => {
-  if (!state) return null;
+const MixerStrip = ({ stem, state, meter, onUpdate }) => {
+  const [vuLevel, setVuLevel] = useState(-Infinity);
+  const animRef = useRef();
 
-  const handleVolChange = (e) => {
-    onUpdate(stem.id, { volume: parseFloat(e.target.value) });
-  };
+  // Bucle de animación para el vúmetro (VU Meter)
+  useEffect(() => {
+    if (!meter) return;
+    
+    const updateLevel = () => {
+      const val = meter.getValue();
+      // El valor viene en dB (-Infinity a 0)
+      setVuLevel(Array.isArray(val) ? val[0] : val);
+      animRef.current = requestAnimationFrame(updateLevel);
+    };
 
-  const toggleMute = () => onUpdate(stem.id, { muted: !state.muted });
-  const toggleSolo = () => onUpdate(stem.id, { soloed: !state.soloed });
-  const toggleStereo = () => onUpdate(stem.id, { isStereo: !state.isStereo });
-  
-  const changeRouting = (delta) => {
-    const newIndex = Math.max(0, Math.min(31, state.routingIndex + delta));
-    onUpdate(stem.id, { routingIndex: newIndex });
-  };
+    updateLevel();
+    return () => cancelAnimationFrame(animRef.current);
+  }, [meter]);
+
+  // Variables calculadas con salvaguarda (Modo Fantasma)
+  const volume = state?.volume ?? -12;
+  const isMuted = state?.muted ?? false;
+  const isSoloed = state?.soloed ?? false;
+  const trackName = state?.name || stem?.instrument_label || stem?.name || 'Track';
+  const isClick = state?.isClickOrCue ?? false;
+
+  // Normalización del nivel VU para la barra visual (de -60dB a +6dB)
+  const normalizedHeight = Math.max(0, Math.min(100, (vuLevel + 60) * 1.6));
 
   return (
-    <div className={`mixer-strip ${state.isClickOrCue ? 'is-priority' : ''} ${state.muted ? 'is-muted' : ''}`}>
-      {/* Header Info */}
+    <div className={`m32-strip ${isSoloed ? 'is-solo' : ''} ${isMuted ? 'is-muted' : ''} ${!state ? 'is-ghost' : ''}`}>
+      
+      {/* 1. Scribble Strip (LCD Screen) */}
       <div className="strip-header">
-        <span className="strip-name">{stem.name}</span>
-        <div className="strip-icon">
-          {state.isClickOrCue ? <Headphones size={14} /> : <Music size={14} />}
+        <div className={`raw-badge ${isClick ? 'priority' : 'instrument'}`}>
+          {isClick ? <Headphones size={12} /> : <Music size={12} />}
+          <span>{trackName?.toUpperCase()}</span>
         </div>
       </div>
 
-      {/* Routing Controls */}
-      <div className="strip-routing">
-        <div className="routing-display" title="Salida Física">
-          <span className="routing-label">OUT</span>
-          <span className="routing-value">{state.routingIndex + 1}{state.isStereo ? `-${state.routingIndex + 2}` : ''}</span>
-          <div className="routing-arrows">
-            <button onClick={() => changeRouting(-1)}><ChevronUp size={10} /></button>
-            <button onClick={() => changeRouting(1)}><ChevronDown size={10} /></button>
-          </div>
+      {/* 2. LED Meter Bridge */}
+      <div className="vu-meter-container">
+        <div className="vu-scale">
+          <span>0</span><span>-6</span><span>-12</span><span>-18</span><span>-30</span><span>-60</span>
         </div>
+        <div className="vu-glass">
+          <div 
+            className="vu-fill" 
+            style={{ height: `${normalizedHeight}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* 3. M32 Controls (Solo / Mute) */}
+      <div className="strip-controls">
         <button 
-          className={`stereo-toggle ${state.isStereo ? 'active' : ''}`}
-          onClick={toggleStereo}
+          className={`btn-m32 solo ${isSoloed ? 'active' : ''}`}
+          onClick={() => onUpdate({ soloed: !isSoloed })}
+          disabled={!state}
         >
-          {state.isStereo ? 'ST' : 'M'}
+          SOLO
+        </button>
+        
+        <button 
+          className={`btn-m32 mute ${isMuted ? 'active' : ''}`}
+          onClick={() => onUpdate({ muted: !isMuted })}
+          disabled={!state}
+        >
+          MUTE
         </button>
       </div>
 
-      {/* Main Fader Area */}
-      <div className="fader-container">
-        <div className="vu-meter">
-          <div className="vu-inner" style={{ height: state.muted ? '0%' : '40%' }}></div>
-        </div>
+      {/* 4. Midas Style Fader */}
+      <div className="fader-track">
         <input 
           type="range"
           min="-60"
           max="6"
           step="0.1"
-          value={state.volume}
-          onChange={handleVolChange}
-          className="vertical-fader"
+          value={volume}
+          onChange={(e) => onUpdate({ volume: parseFloat(e.target.value) })}
+          disabled={!state}
         />
+        <div className="fader-db-value">
+          {state ? `${volume > 0 ? '+' : ''}${volume.toFixed(1)} dB` : 'LOADING...'}
+        </div>
       </div>
 
-      {/* Bottom Actions */}
-      <div className="strip-actions">
-        <button 
-          className={`action-btn solo-btn ${state.soloed ? 'active' : ''}`}
-          onClick={toggleSolo}
-        >
-          S
-        </button>
-        <button 
-          className={`action-btn mute-btn ${state.muted ? 'active' : ''}`}
-          onClick={toggleMute}
-        >
-          {state.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-        </button>
+      {/* 5. Routing Info (Pequeña info visual) */}
+      <div className="strip-footer-info">
+        <span>OUT {isClick ? '1-2' : 'L-R'}</span>
       </div>
     </div>
   );

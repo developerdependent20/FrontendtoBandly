@@ -1,11 +1,12 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, PlayCircle } from 'lucide-react';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
   const userFunctions = profile?.functions || [];
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
   // Ahora todos pueden ver el Planner, pero se validará lectura/escritura adentro
   const canAccessPlanner = true;
+  const isTauri = typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__;
   const canAccessTeam = profile?.role === 'director' || (userFunctions && userFunctions.includes('admin'));
 
   return (
@@ -34,6 +35,17 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             title="Biblioteca de Repertorio"
           >
             <Music size={22} />
+          </div>
+        )}
+
+        {isTauri && canAccessLibrary && (
+          <div 
+            className={`nav-item ${activeTab === 'live' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('live')}
+            title="Sessión en Vivo (Multitrack)"
+            style={{ color: 'var(--primary)', filter: activeTab === 'live' ? 'drop-shadow(0 0 8px var(--primary))' : 'none' }}
+          >
+            <PlayCircle size={26} strokeWidth={2.5} />
           </div>
         )}
 

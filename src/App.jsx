@@ -6,6 +6,8 @@ import { supabase } from './supabaseClient';
 import LandingPage from './pages/LandingPage';
 import AuthScreen from './pages/AuthScreen';
 import OnboardingScreen from './pages/OnboardingScreen';
+import TermsPage from './pages/legal/TermsPage';
+import PrivacyPage from './pages/legal/PrivacyPage';
 
 // Components & Layout
 import LoadingScreen from './components/LoadingScreen';
@@ -16,6 +18,10 @@ import { DirectorView, MemberView } from './components/layout/RoleViews';
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
 
+/**
+ * App - Versión de Estabilidad Garantizada
+ * Hemos restaurado la estructura base para asegurar la visibilidad total.
+ */
 export default function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -76,6 +82,21 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/terminos') setView('legal_terms');
+    if (path === '/privacidad') setView('legal_privacy');
+    
+    const handlePopState = () => {
+      const p = window.location.pathname;
+      if (p === '/terminos') setView('legal_terms');
+      else if (p === '/privacidad') setView('legal_privacy');
+      else if (p === '/') setView('landing');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleLogout = () => supabase.auth.signOut();
 
   const handleCopyLink = () => {
@@ -114,6 +135,9 @@ export default function App() {
   };
 
   if (loading) return <LoadingScreen />;
+  
+  if (view === 'legal_terms') return <TermsPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
+  if (view === 'legal_privacy') return <PrivacyPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
 
   if (!session) {
     if (view === 'landing' || typeof view === 'string' && view.startsWith('landing')) {
@@ -143,9 +167,9 @@ export default function App() {
         handleJoinTeam={handleJoinTeam}
       >
         {profile.role === 'director' ? (
-          <DirectorView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />
+          <DirectorView profile={profile} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         ) : (
-          <MemberView profile={profile} session={session} activeTab={activeTab} orgData={orgData} />
+          <MemberView profile={profile} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         )}
       </Dashboard>
     </>

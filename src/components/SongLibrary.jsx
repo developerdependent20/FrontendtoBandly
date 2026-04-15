@@ -15,7 +15,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
-export default function SongLibrary({ songs, orgId, readOnly, refreshData, session, profile }) {
+export default function SongLibrary({ songs, orgId, readOnly, refreshData, session, profile, setActiveTab }) {
   const [showModal, setShowModal] = useState(false);
   const [chartSong, setChartSong] = useState(null);
   const [seqUploadSong, setSeqUploadSong] = useState(null);
@@ -57,12 +57,20 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
 
     setLoadingSeq(song.id);
     try {
+      // Obtener sesión fresca para evitar tokens expirados (especialmente en Tauri tras largas sesiones)
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      const token = freshSession?.access_token || session?.access_token;
+
+      if (!token) {
+        throw new Error("Sesión expirada o no encontrada. Por favor, reinicia la aplicación.");
+      }
+
       // Activar audio inmediatamente para móviles (gesto de usuario)
       await Tone.start();
       console.log('[SongLibrary] Tone.js activado');
 
       const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (!resp.ok) {
@@ -80,15 +88,12 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       console.log('[SongLibrary] Datos recibidos del backend:', data);
 
       if (data.sequence && data.sequence.stems?.length > 0) {
-        console.log('[SongLibrary] Secuencia encontrada, abriendo ProPlayer...');
+        console.log('[SongLibrary] Secuencia encontrada...');
         if (isTauri) {
-          // Si estamos en escritorio, usamos el reproductor de alto rendimiento
-          setLiveSongData({
-            ...song, 
-            stems: data.sequence.stems,
-            bpm: data.sequence.bpm,
-            key: data.sequence.key
-          });
+          // ESCRITORIO: Navegar a la pestaña Live y cargar ahí
+          console.log('[SongLibrary] Redirigiendo a Estación Live...');
+          localStorage.setItem('bandly_load_song_id', song.id);
+          setActiveTab('live');
         } else {
           setSeqMixerData(data.sequence);
         }

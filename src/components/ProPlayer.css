@@ -1,204 +1,422 @@
-/* ProPlayer.css */
+/* 1. Contenedor Maestro Fullscreen */
 .pro-player-overlay {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 9999;
-  display: flex;
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-}
-
-.pro-player-container {
-  flex: 1;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #0a0a0b !important;
+  z-index: 999999 !important;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
-  background: linear-gradient(180deg, #0a0a0a 0%, #000 100%);
-}
-
-/* Header */
-.pro-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.live-badge {
-  background: #ef4444;
+  overflow: hidden;
   color: #fff;
-  font-size: 0.65rem;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 4px;
-  vertical-align: middle;
-  margin-right: 12px;
-  letter-spacing: 1px;
-}
-
-.pro-header h1 {
-  font-size: 1.5rem;
-  font-weight: 900;
-  margin: 0;
-  display: inline;
-}
-
-.song-key-bpm {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-left: 10px;
   font-family: 'JetBrains Mono', monospace;
 }
 
-.pro-actions {
+/* 1. Header de Transporte Gigante */
+.playback-header {
+  height: 100px; /* Alto para botones grandes */
+  background: #111112;
+  border-bottom: 1px solid #222;
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
 }
 
-.pro-action-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.playback-info-group {
+  display: flex;
+  gap: 20px;
+  min-width: 200px;
+}
+
+.info-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.info-box .lbl { font-size: 0.6rem; color: #555; font-weight: 800; }
+.info-box .val { font-size: 1.2rem; color: #fff; font-weight: 900; }
+
+.playback-controls-central {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.ctrl-btn {
+  background: #1a1a1b;
+  border: 1px solid #333;
+  color: #888;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ctrl-btn.primary {
+  width: 80px;
+  height: 80px;
+  background: #2a2a2b;
   color: #fff;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
+  border-color: #444;
+}
+
+.ctrl-btn.primary:hover { transform: scale(1.05); background: #333; }
+.ctrl-btn.primary.is-playing { color: #00ff00; border-color: #00ff00; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); }
+
+.ctrl-btn.secondary {
+  width: 50px;
+  height: 50px;
+}
+
+.ctrl-btn.secondary:hover { color: #fff; background: #222; }
+
+.song-title-display {
+  text-align: right;
+  margin-right: 20px;
+}
+
+.song-title-display h2 { font-size: 1.1rem; color: #fff; margin: 0; }
+.song-title-display .status {
+  font-size: 0.6rem;
+  color: var(--primary);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  display: block;
+}
+
+.status-container {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
 }
 
-.close-pro-btn {
-  background: #222;
-  border: none;
-  color: #666;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
+.engine-cached-tag {
+  font-size: 0.55rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
   font-weight: 800;
+  text-transform: uppercase;
 }
 
-/* Console Layout */
-.pro-console {
+/* 2. Waveform Navigation (Mini Tira) */
+.playback-timeline-strip {
+  height: 65px; /* Altura mini solicitada */
+  background: #000;
+  border-bottom: 1px solid #222;
+  position: relative;
+}
+
+/* 3. Mezclador Expandido */
+.playback-mixer-area {
   flex: 1;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 1.5rem;
-  overflow: hidden;
-  margin-bottom: 2rem;
+  background: rgba(0,0,0,0.2);
+  margin: 10px;
+  border-radius: 12px;
+  border: 1px solid #1a1a1b;
+  overflow-x: auto; /* IMPORTANTE: Para ver todos los canales */
+  overflow-y: hidden;
+  display: flex;
 }
 
 .mixer-scroll-container {
   display: flex;
-  gap: 10px;
   height: 100%;
-  overflow-x: auto;
-  padding-bottom: 1rem;
+  padding: 10px;
+  min-width: min-content; /* Asegurar que no se colapsen */
 }
 
-/* Custom Scrollbar for Mixer */
-.mixer-scroll-container::-webkit-scrollbar {
-  height: 10px;
-}
-.mixer-scroll-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 5px;
-}
-.mixer-scroll-container::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 5px;
+/* Forzar que las tiras no se encojan */
+.m32-strip {
+  flex-shrink: 0;
 }
 
-.mixer-divider {
-  width: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  height: 100%;
-  margin: 0 10px;
+/* 4. Caja Negra de Telemetría */
+.diagnostic-black-box {
+  background: #000;
+  border-top: 2px solid #333;
+  padding: 15px;
+  font-family: 'JetBrains Mono', monospace;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
-/* Footer & Controls */
-.pro-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1.5rem 2rem;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.transport-group {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-.transport-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.transport-btn:active {
-  transform: scale(0.9);
-}
-
-.play-pause {
-  width: 70px;
-  height: 70px;
-  background: var(--primary);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
-}
-
-.play-pause.active {
-  background: #10b981;
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
-}
-
-.killer-switch {
-  background: #ef4444;
-  color: #fff;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 900;
-  font-size: 1rem;
+.diagnostic-black-box header {
+  color: #3b82f6;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 10px;
   letter-spacing: 2px;
+}
+
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.debug-item {
+  background: #0a0a0a;
+  border-left: 3px solid #3b82f6;
+  padding: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.debug-item.is-err {
+  border-color: #ef4444;
+}
+
+.debug-item .dot {
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.debug-item.is-err .dot {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.debug-item .name { font-size: 0.7rem; color: #fff; font-weight: bold; margin: 0; }
+.debug-item .status { font-size: 0.6rem; color: #888; margin: 2px 0; }
+.debug-item .url-mini { font-size: 0.5rem; color: #444; word-break: break-all; margin: 0; }
+
+/* 4.1 Monitor de Latido */
+.heartbeat-stats {
+  display: flex;
+  gap: 20px;
+  background: #0a0a0a;
+  padding: 8px 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #1a1a1b;
+}
+
+.h-stat {
+  font-size: 0.65rem;
+  color: #555;
+  font-weight: bold;
+}
+
+.h-stat span {
+  color: #00ffff;
+  margin-left: 5px;
+}
+
+/* 4.2 Consola de Logs Nuclear */
+.system-logs-panel {
+  background: #050505;
+  border: 1px solid #1a1a1b;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  height: 80px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.log-line {
+  font-size: 0.6rem;
+  color: #888;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+.log-line .log-arrow {
+  color: #00ffff;
+  margin-right: 5px;
+}
+
+.log-line.ghost {
+  color: #444;
+  font-style: italic;
+}
+
+.pulse-fast {
+  animation: heartPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes heartPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.debug-grid.mini {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+}
+
+.playback-v-divider {
+  width: 2px;
+  background: #222;
+  margin: 0 10px;
+  height: 100%;
+}
+
+/* 4. Footer Minimalista */
+.playback-footer-mini {
+  height: 40px;
+  background: #111112;
+  border-top: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.mini-marker-btn {
+  background: transparent;
+  border: none;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: bold;
   cursor: pointer;
+}
+
+.mini-marker-btn:hover { color: #fff; }
+
+.master-vu-mini {
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
 }
 
-/* Loader */
-.pro-loader {
-  position: fixed;
-  inset: 0;
+.master-vu-mini .lbl { font-size: 0.6rem; color: #333; font-weight: 900; }
+
+.vu-tiny-bars {
+  height: 15px;
+  width: 40px;
   background: #000;
   display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.vu-tiny-bars .fill {
+  flex: 1;
+  background: #0f0;
+  transition: height 0.1s;
+}
+/* 5. Cargador y Diagnóstico */
+.pro-loader {
+  position: absolute !important;
+  inset: 0 !important;
+  background: #0a0a0b !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.pro-player-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #000 !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  color: #fff !important;
+  overflow: hidden !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  transition: box-shadow 0.2s;
+}
+
+.pro-player-overlay.click-flash {
+  animation: clickFlash 0.2s ease-out;
+}
+
+@keyframes clickFlash {
+  0% { box-shadow: inset 0 0 100px rgba(0, 255, 255, 0); }
+  50% { box-shadow: inset 0 0 200px rgba(0, 255, 255, 0.4); background: #111 !important; }
+  100% { box-shadow: inset 0 0 100px rgba(0, 255, 255, 0); }
+}
+
+.diagnostic-dashboard {
+  width: 100%;
+  max-width: 500px;
+  background: #111112;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  animation: diagFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes diagFadeIn { 
+  from { opacity: 0; transform: translateY(20px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+.diag-header { display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2rem; }
+.diag-header h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; color: #fff; }
+.diag-header .spin-slow { color: var(--primary); animation: spin 8s linear infinite; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.status-badge { font-size: 0.75rem; color: var(--primary); font-weight: 800; margin: 0; }
+
+.stems-progress-list { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 12px; 
+  max-height: 250px; 
+  overflow-y: auto; 
+  margin-bottom: 2rem;
+  padding-right: 8px;
+}
+
+.stem-progress-item { 
+  background: rgba(255,255,255,0.02); 
+  padding: 12px; 
+  border-radius: 8px;
+  display: flex; 
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  gap: 1rem;
+  gap: 4px;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
-.loading-icon {
-  color: var(--primary);
-  animation: pulse 1s infinite alternate;
+.stem-progress-item .name { font-size: 0.65rem; color: #666; font-weight: 800; text-transform: uppercase; }
+.stem-progress-item .status-text { font-size: 0.75rem; color: #999; }
+
+.stem-progress-item.ready { border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.05); }
+.stem-progress-item.ready .status-text { color: #10b981; }
+
+.stem-progress-item.error { border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); }
+.stem-progress-item.error .status-text { color: #ef4444; }
+
+.diag-actions { display: flex; gap: 12px; }
+
+.pro-action-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #333;
+  background: #1a1a1b;
+  color: #fff;
 }
 
-@keyframes pulse {
-  from { transform: scale(1); opacity: 0.5; }
-  to { transform: scale(1.5); opacity: 1; }
-}
+.pro-action-btn:hover { background: #222; transform: translateY(-2px); }
+.pro-action-btn.urgent { background: var(--primary); border: none; }
+.pro-action-btn.secondary { color: #555; border-color: transparent; }

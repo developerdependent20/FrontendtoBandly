@@ -183,6 +183,23 @@ export default function LandingPage({ onGetStarted }) {
         <p style={{ fontSize: '1.2rem', marginBottom: '2.5rem' }}>Organiza mejor cada show, centraliza tus recursos y ensaya con más control desde una sola plataforma.</p>
         <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 4rem', fontSize: '1.1rem', borderRadius: '50px' }}>Comenzar gratis</button>
       </section>
+
+      {/* Footer Legal Profesional */}
+      <footer className="landing-footer-legal" style={{ padding: '4rem 2rem', background: '#050506', borderTop: '1px solid #111', color: '#444', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+            Bandly es una plataforma para organizar shows, repertorios, multitracks y secuencias desde un solo lugar.
+            Uso sujeto a nuestros <a href="/terminos" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/terminos'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Términos y Condiciones</a> y <a href="/privacidad" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/privacidad'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Política de Privacidad</a>.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '0.75rem', marginBottom: '1.5rem' }}>
+             <span>Operado por Johan Sebastian Jimenez Calderon</span>
+             <span>•</span>
+             <span>Bogotá, Colombia</span>
+          </div>
+          <p style={{ fontSize: '0.75rem' }}>Contacto: <a href="mailto:dependent.mix@gmail.com" style={{ color: '#888' }}>dependent.mix@gmail.com</a></p>
+          <p style={{ marginTop: '2rem', fontSize: '0.65rem', opacity: 0.5 }}>© 2026 Bandly Live Engine. Todos los derechos reservados.</p>
+        </div>
+      </footer>
     </div>
   );
 }

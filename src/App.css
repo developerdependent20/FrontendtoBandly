@@ -1560,6 +1560,7 @@ input[type="datetime-local"] {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  row-gap: 10px; /* Refuerzo de espaciado vertical */
 }
 
 .role-chip {
@@ -1601,6 +1602,18 @@ input[type="datetime-local"] {
   font-size: 0.7rem;
   font-weight: 800;
   border: 1px solid rgba(139, 92, 246, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.role-display-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  row-gap: 10px;
+  width: 100%;
 }
 
 .empty-msg {
