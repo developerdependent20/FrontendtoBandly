@@ -93,9 +93,10 @@ async function encodeWavToMp3(wavArrayBuffer) {
 export default function SequenceUploader({ song, orgId, session, onClose, onComplete, apiUrl }) {
   const [step, setStep] = useState('select'); // select | review | uploading | done
   const [stems, setStems] = useState([]);
+  const [zipFile, setZipFile] = useState(null); // Guardar el archivo original
   const [seqKey, setSeqKey] = useState(song?.key || '');
   const [seqBpm, setSeqBpm] = useState(song?.bpm || '');
-  const [progress, setProgress] = useState({});
+  const [progress, setProgress] = useState(0); // Ahora es progreso del ZIP único
   const [globalStatus, setGlobalStatus] = useState('');
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
@@ -115,6 +116,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
     setError(null);
 
     try {
+      setZipFile(file); // Guardamos para subirlo después
       const arrayBuffer = await file.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
       const unzipped = unzipSync(uint8);
@@ -172,51 +174,14 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
 
   // ── Paso 2: Procesar y subir ──
   const handleUpload = async () => {
-    if (stems.length === 0) return;
+    if (stems.length === 0 || !zipFile) return;
 
     setStep('uploading');
     setError(null);
 
     try {
-      // 1. Comprimir cada stem a MP3
-      setGlobalStatus('Comprimiendo audio...');
-      const compressedStems = [];
-
-      for (let i = 0; i < stems.length; i++) {
-        const stem = stems[i];
-        setProgress(prev => ({ ...prev, [stem.id]: { phase: 'encoding', percent: 0 } }));
-        setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'encoding' } : s));
-
-        const isWav = stem.fileName.toLowerCase().endsWith('.wav') || stem.fileName.toLowerCase().endsWith('.aif') || stem.fileName.toLowerCase().endsWith('.aiff');
-        let blob, durationSeconds;
-
-        if (isWav) {
-          // Convertir WAV/AIF a MP3
-          const result = await encodeWavToMp3(stem.data.buffer);
-          blob = result.blob;
-          durationSeconds = result.durationSeconds;
-        } else {
-          // Ya es MP3/OGG, subir tal cual
-          blob = new Blob([stem.data], { type: 'audio/mpeg' });
-          durationSeconds = null;
-        }
-
-        const mp3FileName = stem.fileName.replace(/\.[^.]+$/, '.mp3');
-
-        compressedStems.push({
-          ...stem,
-          fileName: mp3FileName,
-          blob,
-          sizeCompressed: blob.size,
-          durationSeconds,
-          status: 'ready'
-        });
-
-        setProgress(prev => ({ ...prev, [stem.id]: { phase: 'encoded', percent: 100 } }));
-      }
-
-      // 2. Solicitar URLs de subida al backend
-      setGlobalStatus('Preparando subida...');
+      // 1. Solicitar URL de subida para el ZIP al backend
+      setGlobalStatus('Preparando subida del ZIP...');
       const createResponse = await fetch(`${apiUrl}/api/sequences/create`, {
         method: 'POST',
         headers: {
@@ -228,7 +193,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
           songId: song.id,
           key: seqKey,
           bpm: seqBpm,
-          stems: compressedStems.map(s => ({
+          stems: stems.map(s => ({
             fileName: s.fileName,
             instrumentType: s.instrumentType,
             instrumentLabel: s.instrumentLabel,
@@ -237,46 +202,30 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
         })
       });
 
-      if (!createResponse.ok) throw new Error('Error al crear la secuencia en el servidor');
-      const { sequenceId, stems: stemsWithUrls } = await createResponse.json();
+      if (!createResponse.ok) throw new Error('Error al preparar la secuencia en el servidor');
+      const { sequenceId, uploadUrl, stems: backendStems } = await createResponse.json();
 
-      // 3. Subir cada stem a R2 usando las signed URLs
-      setGlobalStatus('Subiendo stems...');
-      const confirmedStems = [];
+      // 2. Subir el ZIP a R2
+      setGlobalStatus('Subiendo archivo ZIP...');
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/zip' },
+        body: zipFile
+      });
 
-      for (let i = 0; i < compressedStems.length; i++) {
-        const stem = compressedStems[i];
-        const { uploadUrl, r2Key, stemId } = stemsWithUrls[i];
+      if (!uploadResponse.ok) throw new Error(`Error al subir el archivo ZIP`);
 
-        setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'uploading' } : s));
-        setProgress(prev => ({ ...prev, [stem.id]: { phase: 'uploading', percent: 0 } }));
-
-        // Subir directamente a R2
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'audio/mpeg' },
-          body: stem.blob
-        });
-
-        if (!uploadResponse.ok) throw new Error(`Error al subir ${stem.fileName}`);
-
-        setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'done' } : s));
-        setProgress(prev => ({ ...prev, [stem.id]: { phase: 'done', percent: 100 } }));
-
-        confirmedStems.push({
-          originalName: stem.fileName,
-          instrumentType: stem.instrumentType,
-          instrumentLabel: stem.instrumentLabel,
-          r2Key,
-          sizeBytes: stem.sizeCompressed,
-          durationSeconds: stem.durationSeconds,
-          sortOrder: i,
-          color: stem.color
-        });
-      }
-
-      // 4. Confirmar subida en el backend
+      // 3. Confirmar subida en el backend con los IDs que nos dio
       setGlobalStatus('Finalizando...');
+      const confirmedStems = backendStems.map((s, idx) => ({
+        originalName: s.fileName,
+        instrumentType: s.instrumentType,
+        instrumentLabel: s.instrumentLabel,
+        sizeBytes: stems[idx].sizeOriginal,
+        sortOrder: s.sortOrder,
+        color: s.color
+      }));
+
       await fetch(`${apiUrl}/api/sequences/confirm`, {
         method: 'POST',
         headers: {
@@ -287,7 +236,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
       });
 
       setStep('done');
-      setGlobalStatus('¡Secuencia subida exitosamente!');
+      setGlobalStatus('¡ZIP subido exitosamente!');
 
     } catch (err) {
       console.error('Error en el proceso de subida:', err);
@@ -431,32 +380,20 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
               </div>
 
               <button className="su-btn-upload" onClick={handleUpload}>
-                <Upload size={18} /> Comprimir y Subir Secuencia
+                <Upload size={18} /> Subir Archivo ZIP
               </button>
             </div>
           )}
 
           {/* Step 3: Uploading */}
           {step === 'uploading' && (
-            <div className="su-uploading">
+            <div className="su-uploading" style={{ textAlign: 'center', padding: '3rem 0' }}>
               <div className="su-status-bar">
-                <Loader2 size={20} className="spin-slow" />
-                <span>{globalStatus}</span>
+                <Loader2 size={40} className="spin-slow" color="var(--daw-cyan)" />
+                <p style={{ marginTop: '1.5rem', fontWeight: '800' }}>{globalStatus}</p>
               </div>
-              <div className="su-stem-progress-list">
-                {stems.map(stem => (
-                  <div key={stem.id} className={`su-stem-progress ${stem.status}`}>
-                    <div className="su-stem-color-dot" style={{ background: stem.color }} />
-                    <span className="su-stem-label">{stem.instrumentLabel || stem.fileName}</span>
-                    <span className="su-stem-status-badge">
-                      {stem.status === 'pending' && '⏳ Pendiente'}
-                      {stem.status === 'encoding' && '🔄 Comprimiendo...'}
-                      {stem.status === 'uploading' && '📤 Subiendo...'}
-                      {stem.status === 'done' && '✅ Listo'}
-                      {stem.status === 'error' && '❌ Error'}
-                    </span>
-                  </div>
-                ))}
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginTop: '2rem', overflow: 'hidden' }}>
+                 <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '10px' }} className="su-upload-progress-bar" />
               </div>
             </div>
           )}
@@ -465,10 +402,10 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
           {step === 'done' && (
             <div className="su-done">
               <CheckCircle size={64} className="su-done-icon" />
-              <h3>¡Secuencia Lista!</h3>
-              <p>Los {stems.length} stems han sido comprimidos y subidos exitosamente.</p>
+              <h3>¡Multitrack ZIP Guardado!</h3>
+              <p>El archivo original ha sido almacenado en R2.</p>
               <p className="su-done-savings">
-                Ahorro de espacio: {((1 - stems.reduce((a, s) => a + (s.sizeCompressed || 0), 0) / stems.reduce((a, s) => a + s.sizeOriginal, 0)) * 100).toFixed(0)}%
+                Este archivo será descargado y extraído automáticamente por la app de escritorio.
               </p>
               <button className="su-btn-upload" onClick={() => { if (onComplete) onComplete(); onClose(); }}>
                 Aceptar

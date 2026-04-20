@@ -4,10 +4,8 @@ import * as Tone from 'tone';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
-import SequenceMixer from './SequenceMixer';
-import ProPlayer from './ProPlayer';
-
-const isTauri = typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__;
+import ProMixer from './DAW/ProMixer';
+import { isTauri, safeInvoke } from '../utils/tauri';
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -57,47 +55,30 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
 
     setLoadingSeq(song.id);
     try {
-      // Obtener sesión fresca para evitar tokens expirados (especialmente en Tauri tras largas sesiones)
-      const { data: { session: freshSession } } = await supabase.auth.getSession();
-      const token = freshSession?.access_token || session?.access_token;
+      // 1. Verificar secuencia directamente en Supabase (Bypass de API para estabilidad)
+      const { data: sequences, error: seqError } = await supabase
+        .from('sequences')
+        .select(`
+          *,
+          sequence_stems(*)
+        `)
+        .eq('song_id', song.id);
 
-      if (!token) {
-        throw new Error("Sesión expirada o no encontrada. Por favor, reinicia la aplicación.");
-      }
+      if (seqError) throw seqError;
 
-      // Activar audio inmediatamente para móviles (gesto de usuario)
-      await Tone.start();
-      console.log('[SongLibrary] Tone.js activado');
+      const mainSequence = sequences && sequences.length > 0 ? sequences[0] : null;
 
-      const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!resp.ok) {
-        let errorInfo = 'Error desconocido';
-        try {
-          const errorJson = await resp.json();
-          errorInfo = JSON.stringify(errorJson);
-        } catch (jsonErr) {
-          errorInfo = await resp.text();
-        }
-        throw new Error(`Error del servidor (${resp.status}): ${errorInfo}`);
-      }
-
-      const data = await resp.json();
-      console.log('[SongLibrary] Datos recibidos del backend:', data);
-
-      if (data.sequence && data.sequence.stems?.length > 0) {
-        console.log('[SongLibrary] Secuencia encontrada...');
-        if (isTauri) {
-          // ESCRITORIO: Navegar a la pestaña Live y cargar ahí
-          console.log('[SongLibrary] Redirigiendo a Estación Live...');
+      if (mainSequence && (mainSequence.sequence_stems?.length > 0)) {
+        if (isTauri()) {
+          // ESCRITORIO: Navegar a la pestaña DAW y cargar ahí
           localStorage.setItem('bandly_load_song_id', song.id);
-          setActiveTab('live');
+          setActiveTab('daw');
         } else {
-          setSeqMixerData(data.sequence);
+          // WEB: Cargar el mezclador ligero
+          setSeqMixerData(mainSequence);
         }
       } else {
+        // NO HAY SECUENCIA: Abrir subidor
         if (!readOnly) {
           setSeqUploadSong(song);
         } else {
@@ -105,8 +86,8 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
         }
       }
     } catch (e) {
-      console.error('Error loading sequence:', e);
-      alert(`Error al cargar secuencia: ${e.message}. Verifica que el servidor esté encendido en el puerto 3001.`);
+      console.error('Error loading sequence via Supabase:', e);
+      alert(`Error al verificar secuencia: ${e.message}`);
     } finally {
       setLoadingSeq(null);
     }
@@ -114,19 +95,40 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
 
   const handleSave = async () => {
     if(!title) return alert("El título es obligatorio");
+
+    // NORMALIZACIÓN DEFENSIVA (v1.0): Evita error de sintaxis integer en Postgres
+    const normalizeInt = (val) => {
+      if (val === "" || val === null || val === undefined) return null;
+      const parsed = parseInt(val, 10);
+      return isNaN(parsed) ? null : parsed;
+    };
+
+    const payload = {
+      title,
+      key: songKey,
+      key_male: keyMale,
+      key_female: keyFemale,
+      bpm: normalizeInt(bpm),
+      youtube_link: youtubeLink
+    };
+
+    console.log("[Bandly DEBUG] Payload Final de Canción:", payload);
+
     try {
       if (editingSongId) {
         const { error } = await supabase.from('songs')
-          .update({ title, key: songKey, key_male: keyMale, key_female: keyFemale, bpm, youtube_link: youtubeLink })
+          .update(payload)
           .eq('id', editingSongId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('songs').insert([{ org_id: orgId, title, key: songKey, key_male: keyMale, key_female: keyFemale, bpm, youtube_link: youtubeLink }]);
+        const { error } = await supabase.from('songs')
+          .insert([{ org_id: orgId, ...payload }]);
         if (error) throw error;
       }
       closeOverlay();
       if (refreshData) refreshData();
     } catch(e) { 
+      console.error("[Bandly ERROR] Fallo al persistir canción:", e);
       alert("Error de base de datos: " + (e.message || "Fallo al guardar")); 
     }
   };
@@ -321,16 +323,19 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       )}
 
       {seqMixerData && (
-        <SequenceMixer 
-          sequence={seqMixerData} 
+        <ProMixer 
           session={session}
+          songs={songs}
+          preloadedSequence={seqMixerData}
           onClose={() => setSeqMixerData(null)} 
         />
       )}
 
       {liveSongData && (
-        <ProPlayer 
-          song={liveSongData} 
+        <ProMixer 
+          session={session}
+          songs={songs}
+          preloadedSequence={liveSongData}
           onClose={() => setLiveSongData(null)} 
         />
       )}
