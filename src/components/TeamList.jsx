@@ -13,6 +13,15 @@ export default function TeamList({ members, isDirector, refreshData }) {
     { id: 'voluntario', label: 'Voluntario', icon: '🌟' }
   ];
 
+  const INSTRUMENTS_CATALOG = [
+    { id: 'instr:bateria', label: 'Batería', icon: '🥁' },
+    { id: 'instr:bajo', label: 'Bajo', icon: '🎸' },
+    { id: 'instr:piano', label: 'Piano/Keys', icon: '🎹' },
+    { id: 'instr:guitarra', label: 'Guitarra', icon: '🎸' },
+    { id: 'instr:voz', label: 'Voz', icon: '🎤' },
+    { id: 'instr:sonido', label: 'Sonido/Media', icon: '🎚️' }
+  ];
+
   const handleToggleFunction = async (userId, functions, functionId) => {
     if (!isDirector) return;
     try {
@@ -123,6 +132,34 @@ export default function TeamList({ members, isDirector, refreshData }) {
                       )}
                     </div>
                   </div>
+
+                  {mFunctions.includes('musico') && (
+                    <div className="role-selector-section" style={{ marginTop: '1.2rem', paddingTop: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span className="section-mini-label" style={{ color: 'var(--primary)' }}>🎸 Instrumentos / Habilidades</span>
+                      <div className="role-selector-grid">
+                        {INSTRUMENTS_CATALOG.map(inst => {
+                          const isActive = mFunctions.includes(inst.id);
+                          return (
+                            <button
+                              key={inst.id}
+                              onClick={() => isDirector && handleToggleFunction(m.id, m.functions, inst.id)}
+                              className={`role-chip ${isActive ? 'active' : ''}`}
+                              style={{ 
+                                opacity: isDirector ? 1 : (isActive ? 1 : 0.3), 
+                                cursor: isDirector ? 'pointer' : 'default',
+                                background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.02)',
+                                border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)'
+                              }}
+                            >
+                              <span className="chip-icon">{inst.icon}</span>
+                              {inst.label}
+                              {isActive && <CheckCircle2 size={12} className="check-icon" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })

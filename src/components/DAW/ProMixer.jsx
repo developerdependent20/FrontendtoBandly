@@ -64,7 +64,8 @@ const MemoizedTransportUI = React.memo(({
   engineReady, tracksLoadingCount, rawDbg, 
   metronome, onMetronomeUpdate, deviceChannels,
   showPads, setShowPads,
-  playbackSample, sampleRate
+  playbackSample, sampleRate,
+  reconnectAudio
 }) => {
   const bpm = metronome.bpm || 120;
   const sr = sampleRate || 44100;
@@ -141,9 +142,29 @@ const MemoizedTransportUI = React.memo(({
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '6px 15px', borderRadius: '10px' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '0.55rem', fontWeight: '800', color: 'var(--daw-cyan)', opacity: 0.7 }}>STATUS</span>
-          <span style={{ fontSize: '0.75rem', fontWeight: '900', color: engineReady ? 'var(--daw-green)' : 'var(--daw-red)' }}>
-            {engineReady ? 'ENGINE READY' : 'NO DRIVER'}
-          </span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span 
+              onClick={!engineReady ? reconnectAudio : null}
+              style={{ 
+                fontSize: '0.75rem', 
+                fontWeight: '900', 
+                color: engineReady ? 'var(--daw-green)' : 'var(--daw-red)',
+                cursor: !engineReady ? 'pointer' : 'default',
+                textDecoration: !engineReady ? 'underline' : 'none'
+              }}
+              title={!engineReady ? "Click para intentar re-conectar audio" : "Motor Activo"}
+            >
+              {engineReady ? 'ENGINE READY' : 'NO DRIVER'}
+            </span>
+            {!engineReady && (
+              <button 
+                onClick={() => setIsConfigured(false)}
+                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--daw-cyan)', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontWeight: '800' }}
+              >
+                CAMBIAR
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -250,7 +271,44 @@ export default function ProMixer({ session }) {
     fetchSongs();
     const saved = localStorage.getItem('bandly_setlist');
     if (saved) setSetlist(JSON.parse(saved));
+    
+    // AUTO-INIT AUDIO (v1.0): Intenta conectar el driver guardado al arrancar
+    if (isTauri()) {
+      const lastDevice = localStorage.getItem('bandly_last_audio_device');
+      if (lastDevice) {
+        console.log('[DAW] Auto-conectando driver:', lastDevice);
+        safeInvoke('init_audio_stream', { deviceId: lastDevice })
+          .then(() => console.log('[DAW] Motor auto-inicializado.'))
+          .catch(e => console.error('[DAW] Error en auto-init:', e));
+      }
+    }
   }, []);
+
+  const reconnectAudio = async () => {
+    if (!isTauri()) return;
+    const lastDevice = localStorage.getItem('bandly_last_audio_device');
+    
+    setLoading(true);
+    try {
+      // Limpieza preventiva
+      await safeInvoke('kill_audio_stream');
+      
+      if (!lastDevice) {
+        setIsConfigured(false);
+        return;
+      }
+
+      await safeInvoke('init_audio_stream', { deviceId: lastDevice });
+      console.log('[DAW] Reconexión exitosa');
+    } catch (e) {
+      console.error('[DAW] Reconnect failed:', e);
+      // Si falla, lo mejor es volver a mostrar el selector para que el usuario elija de nuevo
+      setIsConfigured(false);
+      alert(`No se pudo conectar: ${e}. Por favor, selecciona el dispositivo manualmente.`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSyncState = useCallback(async () => {
     if (!isTauri()) return;
@@ -446,6 +504,7 @@ export default function ProMixer({ session }) {
         tracksLoadingCount={tracksLoadingCount} rawDbg={rawDbg} setShowCloudBrowser={setShowCloudBrowser}
         metronome={metronome} deviceChannels={deviceChannels} showPads={showPads} setShowPads={setShowPads}
         playbackSample={playbackSample} sampleRate={playbackSR}
+        reconnectAudio={reconnectAudio}
         onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
