@@ -24,19 +24,20 @@ export default function PadBoard() {
     const loadPads = async () => {
       console.log("[PadBoard] Cargando samples nativos...");
       for (const note of NOTES) {
-        try {
-          // Resolvemos la ruta real del recurso en el sistema de archivos
-          // IMPORTANTE: En Tauri v2, resources/audio/pads es lo que configuramos en bundle
-          const resourcePath = await resolveResource(`resources/audio/pads/${note}.wav`);
-          
-          await safeInvoke('load_pad_sample', { 
-            id: note, 
-            filePath: resourcePath 
-          });
-        } catch (err) {
-          console.error(`[PadBoard] Error cargando recurso para ${note}:`, err);
-        }
-      }
+          // Intentamos cargar .wav primero, si falla buscamos .mp3
+          try {
+            const wavPath = await resolveResource(`resources/audio/pads/${note}.wav`);
+            await safeInvoke('load_pad_sample', { padId: note, filePath: wavPath });
+          } catch (wavErr) {
+            try {
+                const mp3Path = await resolveResource(`resources/audio/pads/${note}.mp3`);
+                await safeInvoke('load_pad_sample', { padId: note, filePath: mp3Path });
+                console.log(`[PadBoard] ${note} cargado como MP3 exitosamente.`);
+            } catch (mp3Err) {
+                console.warn(`[PadBoard] No se encontró audio para ${note} (.wav o .mp3)`);
+            }
+          }
+      } // Fin del for
     };
 
     loadPads();
@@ -46,7 +47,7 @@ export default function PadBoard() {
   useEffect(() => {
     if (isTauri()) {
       NOTES.forEach(note => {
-        safeInvoke('set_pad_volume', { id: note, volume: warmLevel });
+        safeInvoke('set_pad_volume', { padId: note, volume: warmLevel });
       });
     }
   }, [warmLevel]);
@@ -57,22 +58,22 @@ export default function PadBoard() {
 
     if (activeKey === note) {
       // Toggle OFF
-      await safeInvoke('stop_pad', { id: note });
+      await safeInvoke('stop_pad', { padId: note });
       setActiveKey(null);
     } else {
       // Toggle ON (Apagamos el anterior si existe)
       if (activeKey) {
-        await safeInvoke('stop_pad', { id: activeKey });
+        await safeInvoke('stop_pad', { padId: activeKey });
       }
 
-      await safeInvoke('trigger_pad', { id: note, isLoop: isAmbient });
+      await safeInvoke('trigger_pad', { padId: note, isLoop: isAmbient });
       setActiveKey(note);
     }
   }, [activeKey, isAmbient]);
 
   const releaseAll = async () => {
     if (!isTauri() || !activeKey) return;
-    await safeInvoke('stop_pad', { id: activeKey });
+    await safeInvoke('stop_pad', { padId: activeKey });
     setActiveKey(null);
   };
 

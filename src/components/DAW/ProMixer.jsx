@@ -65,7 +65,7 @@ const MemoizedTransportUI = React.memo(({
   metronome, onMetronomeUpdate, deviceChannels,
   showPads, setShowPads,
   playbackSample, sampleRate,
-  reconnectAudio
+  reconnectAudio, setIsConfigured
 }) => {
   const bpm = metronome.bpm || 120;
   const sr = sampleRate || 44100;
@@ -271,40 +271,31 @@ export default function ProMixer({ session }) {
     fetchSongs();
     const saved = localStorage.getItem('bandly_setlist');
     if (saved) setSetlist(JSON.parse(saved));
-    
-    // AUTO-INIT AUDIO (v1.0): Intenta conectar el driver guardado al arrancar
-    if (isTauri()) {
-      const lastDevice = localStorage.getItem('bandly_last_audio_device');
-      if (lastDevice) {
-        console.log('[DAW] Auto-conectando driver:', lastDevice);
-        safeInvoke('init_audio_stream', { deviceId: lastDevice })
-          .then(() => console.log('[DAW] Motor auto-inicializado.'))
-          .catch(e => console.error('[DAW] Error en auto-init:', e));
-      }
-    }
   }, []);
 
   const reconnectAudio = async () => {
-    if (!isTauri()) return;
+    console.log('[DAW] Iniciando reconexión forzosa...');
     const lastDevice = localStorage.getItem('bandly_last_audio_device');
     
     setLoading(true);
     try {
-      // Limpieza preventiva
-      await safeInvoke('kill_audio_stream');
+      // Limpieza preventiva (Incluso si falla, seguimos)
+      try { await safeInvoke('kill_audio_stream'); } catch(e) {}
       
       if (!lastDevice) {
+        console.warn('[DAW] No hay dispositivo guardado. Abriendo selector.');
         setIsConfigured(false);
         return;
       }
 
+      console.log('[DAW] Intentando init con:', lastDevice);
       await safeInvoke('init_audio_stream', { deviceId: lastDevice });
-      console.log('[DAW] Reconexión exitosa');
+      console.log('[DAW] ¡Driver conectado con éxito!');
     } catch (e) {
-      console.error('[DAW] Reconnect failed:', e);
-      // Si falla, lo mejor es volver a mostrar el selector para que el usuario elija de nuevo
+      console.error('[DAW] Error crítico de conexión:', e);
+      // Si falla, forzamos el selector para que el usuario elija otro driver
       setIsConfigured(false);
-      alert(`No se pudo conectar: ${e}. Por favor, selecciona el dispositivo manualmente.`);
+      alert(`ERROR DE DRIVER: ${e}. \n\nSuele pasar si el dispositivo está en uso o el ID cambió. Por favor, selecciona la interfaz de nuevo.`);
     } finally {
       setLoading(false);
     }
@@ -494,18 +485,19 @@ export default function ProMixer({ session }) {
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
   }, [activeSequenceId, markers]);
 
-  if (!isConfigured && isTauri()) return <HardwarePicker onConfigured={() => setIsConfigured(true)} />;
+  if (!isConfigured) return <HardwarePicker onConfigured={() => setIsConfigured(true)} />;
 
   return (
     <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
-       <MemoizedTransportUI 
-        isPlaying={isPlaying} isBuffering={isBuffering} togglePlay={togglePlay} handleStop={handleStop} 
-        handleRestart={handleRestart} activeSong={activeSong} loading={loading} engineReady={engineReady}
-        tracksLoadingCount={tracksLoadingCount} rawDbg={rawDbg} setShowCloudBrowser={setShowCloudBrowser}
-        metronome={metronome} deviceChannels={deviceChannels} showPads={showPads} setShowPads={setShowPads}
-        playbackSample={playbackSample} sampleRate={playbackSR}
-        reconnectAudio={reconnectAudio}
-        onMetronomeUpdate={async (type, val) => {
+        <MemoizedTransportUI 
+          isPlaying={isPlaying} isBuffering={isBuffering} togglePlay={togglePlay} handleStop={handleStop} 
+          handleRestart={handleRestart} activeSong={activeSong} loading={loading} engineReady={engineReady}
+          tracksLoadingCount={tracksLoadingCount} rawDbg={rawDbg} setShowCloudBrowser={setShowCloudBrowser}
+          metronome={metronome} deviceChannels={deviceChannels} showPads={showPads} setShowPads={setShowPads}
+          playbackSample={playbackSample} sampleRate={playbackSR}
+          reconnectAudio={reconnectAudio}
+          setIsConfigured={setIsConfigured}
+          onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
           if (isTauri()) {

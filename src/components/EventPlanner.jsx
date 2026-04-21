@@ -16,6 +16,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 // [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
+// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
 const INSTRUMENT_MATCH_MAP = {
   'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
@@ -23,6 +24,28 @@ const INSTRUMENT_MATCH_MAP = {
   'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
   'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz',
   'sonido': 'instr:sonido', 'audio': 'instr:sonido', 'media': 'instr:sonido', 'pantalla': 'instr:sonido'
+};
+
+// [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
+const INSTRUMENT_DISPLAY_MAP = {
+  'instr:bateria': 'DRUMS / BATERÍA',
+  'instr:bajo': 'BASS / BAJO',
+  'instr:piano': 'KEYS / TECLADO',
+  'instr:guitarra': 'GTR / GUITARRA',
+  'instr:voz': 'VOICE / VOZ',
+  'instr:sonido': 'AUDIO / SONIDO',
+  'instr:sonido_media': 'VISUALS / PANTALLAS'
+};
+
+const getBilingualName = (inst) => {
+  const normalized = (inst || '').toLowerCase();
+  // Primero buscamos si es una etiqueta interna directa
+  if (INSTRUMENT_DISPLAY_MAP[normalized]) return INSTRUMENT_DISPLAY_MAP[normalized];
+  // Si no, buscamos en el mapa de coincidencia para ver qué etiqueta le corresponde
+  const tag = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k)) 
+    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k))] 
+    : null;
+  return INSTRUMENT_DISPLAY_MAP[tag] || inst;
 };
 
 const getSuggestedMembers = (roleName, members) => {
@@ -371,14 +394,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <div style={{ width: '100%', marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Equipo Completo</div>
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem', marginBottom: '2rem' }}>
-                 {(ev.event_roster || []).map((s, i) => (
-                   <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                       <span style={{ fontSize: '1rem' }}>{getInstrumentIcon(s.instrument)}</span>
-                       <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase' }}>
-                         {INSTRUMENT_MATCH_MAP[s.instrument?.toUpperCase()] || s.instrument}
-                       </span>
-                     </div>
+                  {(ev.event_roster || []).map((s, i) => (
+                    <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '1rem' }}>{getInstrumentIcon(s.instrument)}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase' }}>
+                          {getBilingualName(s.instrument)}
+                        </span>
+                      </div>
                      <strong style={{ 
                        fontSize: '0.9rem', 
                        color: 'white',
