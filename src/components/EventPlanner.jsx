@@ -539,10 +539,40 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {setlist.map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <select className="input-field" value={item.song_id} onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} style={{ flex: 2, background: 'none' }}>
+                    <select 
+                      className="input-field" 
+                      value={item.song_id} 
+                      onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
+                      style={{ flex: 2, background: 'none' }}
+                    >
                       <option value="">Seleccionar Canción</option>
                       {songs.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
                     </select>
+
+                    {/* NUEVO: Selector de Tono (Tonality) */}
+                    <div style={{ flex: 1 }}>
+                      <select 
+                        className="input-field" 
+                        value={item.selected_key || ''} 
+                        onChange={e => { const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n); }}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.75rem' }}
+                        disabled={!item.song_id}
+                      >
+                        <option value="">Tono</option>
+                        {(() => {
+                          const song = songs.find(s => String(s.id) === String(item.song_id));
+                          if (!song) return null;
+                          return (
+                            <>
+                              {song.key && <option value={song.key}>{song.key} (Orig)</option>}
+                              {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
+                              {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
+                            </>
+                          );
+                        })()}
+                      </select>
+                    </div>
+
                     <div style={{ flex: 1.5 }}>
                       <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>

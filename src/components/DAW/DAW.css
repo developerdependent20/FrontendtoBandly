@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
 
 /* ══════════════════════════════════════════════
-   BANDLY DAW — Design System v3 (Premium)
+   BANDLY DAW — Design System v4 (Geist Edition)
    ══════════════════════════════════════════════ */
 :root {
-  /* Color Palette */
+  /* ... colores ... */
   --daw-bg:           #0d0f14;
   --daw-surface:      #13161e;
   --daw-panel:        #1a1d27;
@@ -26,8 +26,9 @@
   --daw-fader-track:  #080a10;
   --daw-fader-knob:   #e2e8f0;
 
-  /* Typography — Premium Modern */
-  --daw-font:         'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
+  /* Typography — Geist Evolution */
+  --daw-font:         'Geist', system-ui, sans-serif;
+  --daw-font-mono:    'Geist Mono', monospace;
 }
 
 /* ── Base ─────────────────────────────────── */
@@ -40,6 +41,12 @@
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
+}
+
+.mono-data {
+  font-family: var(--daw-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 /* ── Mixer Scroll Area ────────────────────── */

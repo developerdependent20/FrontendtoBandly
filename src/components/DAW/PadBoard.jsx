@@ -5,7 +5,7 @@ import { safeInvoke, isTauri } from '../../utils/tauri';
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURACIÓN DE NOTAS
 // ─────────────────────────────────────────────────────────────────────────────
-const NOTES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENTE PADBOARD (Versión Nativa Rust + Recursos Tauri)
@@ -22,22 +22,14 @@ export default function PadBoard() {
     if (!isTauri()) return;
 
     const loadPads = async () => {
-      console.log("[PadBoard] Cargando samples nativos...");
       for (const note of NOTES) {
-          // Intentamos cargar .wav primero, si falla buscamos .mp3
           try {
-            const wavPath = await resolveResource(`resources/audio/pads/${note}.wav`);
-            await safeInvoke('load_pad_sample', { padId: note, filePath: wavPath });
-          } catch (wavErr) {
-            try {
-                const mp3Path = await resolveResource(`resources/audio/pads/${note}.mp3`);
-                await safeInvoke('load_pad_sample', { padId: note, filePath: mp3Path });
-                console.log(`[PadBoard] ${note} cargado como MP3 exitosamente.`);
-            } catch (mp3Err) {
-                console.warn(`[PadBoard] No se encontró audio para ${note} (.wav o .mp3)`);
-            }
+            const mp3Path = await resolveResource(`resources/audio/pads/${note}.mp3`);
+            await safeInvoke('load_pad_sample', { padId: note, filePath: mp3Path });
+          } catch (err) {
+            console.warn(`[PadBoard] No se pudo cargar el pad ${note}:`, err);
           }
-      } // Fin del for
+      }
     };
 
     loadPads();

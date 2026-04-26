@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react';
 import ChannelStrip from './ChannelStrip';
 import { Settings, Music, Layers } from 'lucide-react';
 
-const ProMixerConsole = memo(({ tracks = [], onTrackUpdate, deviceChannels = 2 }) => {
+const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceChannels = 2 }) => {
   const [activeSolo, setActiveSolo] = useState(null);
 
   const handleVolumeChange = (trackId, volume) => {
@@ -51,6 +51,7 @@ const ProMixerConsole = memo(({ tracks = [], onTrackUpdate, deviceChannels = 2 }
             <ChannelStrip 
               key={track.id} 
               track={track}
+              peak={peaks[track.id] || 0}
               onVolumeChange={handleVolumeChange}
               onMuteToggle={handleMute}
               onSoloToggle={handleSolo}

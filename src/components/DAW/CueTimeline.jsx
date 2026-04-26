@@ -34,7 +34,7 @@ const CueTimeline = memo(({
     try {
       await safeInvoke('play_with_preroll', { 
         targetSample: marker.sample, 
-        bars: 2 
+        bars: 2  // 2 barras = 8 beats exactos de conteo
       });
     } catch (e) {
       console.error("[DAW] Error al iniciar pre-roll:", e);
@@ -54,7 +54,7 @@ const CueTimeline = memo(({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
             <Timer size={64} color="var(--daw-cyan)" className="animate-pulse" />
-            <span style={{ fontSize: '7rem', fontWeight: '950', color: 'white', textShadow: '0 0 50px var(--daw-cyan)', fontFamily: 'monospace' }}>
+            <span className="mono-data" style={{ fontSize: '7rem', fontWeight: '950', color: 'white', textShadow: '0 0 50px var(--daw-cyan)' }}>
               {prerollBars}
             </span>
           </div>

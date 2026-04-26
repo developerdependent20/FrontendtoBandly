@@ -4,7 +4,7 @@ import { Volume2, VolumeX, Headphones } from 'lucide-react';
 // Constantes físicas del Fader
 const FADER_HEIGHT = 160;
 
-const ChannelStrip = memo(({ track, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, deviceChannels = 2 }) => {
+const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, deviceChannels = 2 }) => {
   const [localVol, setLocalVol] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [isSolo, setIsSolo] = useState(false);
@@ -85,26 +85,27 @@ const ChannelStrip = memo(({ track, onVolumeChange, onMuteToggle, onSoloToggle, 
   const lastPeakTime = useRef(0);
   
   useEffect(() => {
-    const currentPeak = track.peak || 0;
-    
     // Nivel suavizado (Se actualizará mediante la transición CSS de 80ms)
-    setSmoothedLevel(currentPeak);
+    setSmoothedLevel(peak);
 
     // Lógica de Peak Hold (Pico se mantiene 1.5 segundos)
-    if (currentPeak >= peakLevel) {
-      setPeakLevel(currentPeak);
+    if (peak >= peakLevel) {
+      setPeakLevel(peak);
       lastPeakTime.current = Date.now();
     } else {
       // Si el nivel baja, esperamos 1.5s antes de soltar el pico
       const timer = setTimeout(() => {
         const timeDiff = Date.now() - lastPeakTime.current;
         if (timeDiff >= 1500) {
-          setPeakLevel(prev => Math.max(0, prev * 0.94)); // Caída suave
+          setPeakLevel(prev => {
+            const next = prev * 0.94;
+            return next < 1 ? 0 : next; // Detiene el renderizado infinito
+          }); 
         }
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [track.peak, peakLevel]);
+  }, [peak, peakLevel]);
 
   // Color dinámico según umbrales DAW standard
   const getVUColor = (lvl) => {
@@ -253,6 +254,7 @@ const ChannelStrip = memo(({ track, onVolumeChange, onMuteToggle, onSoloToggle, 
              setLocalOutputIdx(val);
              onOutputToggle && onOutputToggle(track.id, val);
            }}
+           className="mono-data"
            style={{ 
              background: 'rgba(0,0,0,0.35)', 
              color: 'var(--daw-cyan)', 
@@ -264,7 +266,6 @@ const ChannelStrip = memo(({ track, onVolumeChange, onMuteToggle, onSoloToggle, 
              outline: 'none',
              width: '100%',
              fontWeight: '700',
-             fontFamily: 'var(--daw-font)',
              textAlign: 'center',
              letterSpacing: '0.04em'
            }}

@@ -134,7 +134,7 @@ export default function HardwarePicker({ onConfigured }) {
             <div 
               key={size}
               onClick={() => {
-                safeInvoke('set_audio_buffer_size', { frames: size });
+                safeInvoke('set_audio_buffer_size', { size });
                 localStorage.setItem('bandly_buffer_size', size.toString());
               }}
               style={{
