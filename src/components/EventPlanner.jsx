@@ -23,7 +23,9 @@ const INSTRUMENT_MATCH_MAP = {
   'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
   'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
   'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz',
-  'sonido': 'instr:sonido', 'audio': 'instr:sonido', 'media': 'instr:sonido', 'pantalla': 'instr:sonido'
+  'sonido': 'instr:sonido', 'audio': 'instr:sonido',
+  'streaming': 'instr:sonido_media', 'video': 'instr:sonido_media', 'pantalla': 'instr:sonido_media', 'media': 'instr:sonido_media',
+  'roadie': 'instr:roadie', 'logistica': 'instr:roadie', 'staff': 'instr:roadie'
 };
 
 // [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
@@ -121,16 +123,68 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => 
       {isOpen && (
         <>
           <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} />
-          <div style={{ position: 'absolute', top: '115%', left: 0, right: 0, background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', zIndex: 101, maxHeight: '220px', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.6)', padding: '6px', animation: 'dropdownFadeIn 0.2s ease-out' }}>
+          <div style={{ 
+            position: 'absolute', 
+            top: '115%', 
+            left: 0, 
+            minWidth: '220px', 
+            background: '#1a2133', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            borderRadius: '16px', 
+            zIndex: 101, 
+            maxHeight: '260px', 
+            overflowY: 'auto', 
+            boxShadow: '0 20px 60px rgba(0,0,0,0.8)', 
+            padding: '8px', 
+            animation: 'dropdownFadeIn 0.2s ease-out' 
+          }}>
             {listToRender.map(m => (
-              <div key={m.id} onClick={() => handleSelect(m.id)} style={{ padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', background: value === m.id ? 'rgba(59,130,246,0.15)' : 'transparent', marginBottom: '2px' }} className="dropdown-item-custom">
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>{m.full_name?.[0]}</div>
-                <div style={{ flex: 1, fontSize: '0.85rem', fontWeight: '500', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.full_name}</div>
-                {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.85rem' }}>✨</span>}
+              <div 
+                key={m.id} 
+                onClick={() => handleSelect(m.id)} 
+                style={{ 
+                  padding: '10px 14px', 
+                  borderRadius: '12px', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
+                  marginBottom: '4px',
+                  transition: 'all 0.2s ease'
+                }} 
+                className="dropdown-item-custom"
+              >
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                  {m.full_name?.[0]}
+                </div>
+                <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap' }}>
+                  {m.full_name}
+                </div>
+                {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }}>✨</span>}
               </div>
             ))}
             {suggested.length > 0 && !showAll && (
-              <button onClick={(e) => { e.stopPropagation(); setShowAll(true); }} style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.02)', border: 'none', color: 'rgba(59,130,246,0.8)', fontSize: '0.65rem', fontWeight: '900', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '10px', marginTop: '4px' }}>+ Mostrar resto del equipo</button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
+                style={{ 
+                  width: '100%', 
+                  padding: '12px', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  border: 'none', 
+                  color: 'var(--primary)', 
+                  fontSize: '0.7rem', 
+                  fontWeight: '900', 
+                  cursor: 'pointer', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1.5px', 
+                  borderRadius: '12px', 
+                  marginTop: '6px',
+                  border: '1px dashed rgba(59,130,246,0.3)'
+                }}
+              >
+                + Mostrar resto del equipo
+              </button>
             )}
           </div>
         </>
@@ -159,6 +213,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [chartSong, setChartSong] = useState(null);
   const [initialRoster, setInitialRoster] = useState([]);
   const [dbHistory, setDbHistory] = useState([]);
+  const [pendingTemplate, setPendingTemplate] = useState(null);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -183,16 +238,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
-    if (i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('media')) return <Video size={20} />;
+    if (i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('media') || i.includes('streaming')) return <Video size={20} />;
     if (i.includes('leader') || i.includes('direc') || i.includes('md') || i.includes('musical')) return <Shield size={20} />;
-    if (i.includes('logística') || i.includes('staff')) return <Users size={20} />;
+    if (i.includes('logística') || i.includes('staff') || i.includes('roadie')) return <Users size={20} />;
     return <User size={20} />;
   };
 
   const generateTemplate = (fmt) => {
-    const musicLabels = fmt === 'full' 
-      ? ['DRUMS / BATERÍA', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'BACKVOCKS / COROS']
-      : ['PERC / PERCUSIÓN', 'PIANO / KEYS', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2'];
+    let musicLabels = [];
+    if (fmt === 'full') {
+      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS'];
+    } else if (fmt === 'acoustic') {
+      musicLabels = ['PERC / PERCUSIÓN', 'BASS / BAJO', 'PIANO / KEYS', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3'];
+    } else { // general
+      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
+    }
+    
     const service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÍSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÓN MUSICAL'];
     const base = musicLabels.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'music', status: 'pending' }));
     const srv = service.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'service', status: 'pending' }));
@@ -338,17 +399,25 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     { main: '#06b6d4', glass: 'rgba(6, 182, 212, 0.1)', light: 'rgba(6, 182, 212, 0.3)' },   // Cyan
   ];
 
-  const getEventTheme = (id) => {
-    if (!id) return cardThemes[0];
-    const index = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % cardThemes.length;
-    return cardThemes[index];
+  const getEventTheme = (name) => {
+    const n = (name || '').toLowerCase();
+    // Indigo para Servicios
+    if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return cardThemes[0]; 
+    // Emerald para Oración
+    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return cardThemes[1];
+    // Violet para Reuniones
+    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[4];
+    // Orange/Amber para Especiales
+    if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return cardThemes[3];
+    // Cyan por defecto
+    return cardThemes[5];
   };
 
   const renderEventList = (list, isPast = false) => {
     if (list.length === 0) return null;
     return list.map(ev => {
       const isExpanded = !!expandedCardIds[ev.id];
-      const theme = getEventTheme(ev.id);
+      const theme = getEventTheme(ev.name);
       const userSlots = ev.event_roster?.filter(r => String(r.profile_id) === String(currentUserId)) || [];
 
       return (
@@ -526,7 +595,41 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
             )}
             {modalTab === 'equipo' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  {[
+                    { id: 'full', label: 'FULL BAND', icon: <Zap size={14}/> },
+                    { id: 'acoustic', label: 'ACÚSTICO', icon: <Music size={14}/> },
+                    { id: 'general', label: 'GRAL / ESPECIAL', icon: <Users size={14}/> }
+                  ].map(t => (
+                    <button 
+                      key={t.id}
+                      onClick={() => {
+                        setPendingTemplate(t);
+                      }}
+                      style={{ 
+                        flex: 1, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        gap: '8px', 
+                        padding: '0.6rem', 
+                        borderRadius: '8px', 
+                        border: 'none', 
+                        fontSize: '0.65rem', 
+                        fontWeight: '800', 
+                        cursor: 'pointer',
+                        background: format === t.id ? 'var(--primary)' : 'transparent',
+                        color: format === t.id ? 'white' : 'var(--text-muted)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {t.icon} {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
                 {roster.map(r => (
                   <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative' }}>
                     <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
@@ -554,6 +657,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     )}
                   </div>
                 ))}
+                </div>
                 <button onClick={() => setRoster([...roster, { id: Math.random().toString(), instrument: '', profile_id: '', category: 'custom' }])} className="btn-secondary" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>+ Añadir Rol</button>
               </div>
             )}
@@ -634,6 +738,50 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <button onClick={() => setActiveYoutubeUrl(null)} style={{ position: 'absolute', top: '-35px', right: 0, color: 'white', background: 'none', border: 'none' }}><X size={32} /></button>
             <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px' }}>
               <iframe style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} src={`https://www.youtube-nocookie.com/embed/${getYoutubeId(activeYoutubeUrl)}?autoplay=1`} frameBorder="0" allowFullScreen></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+      {pendingTemplate && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--primary)', animation: 'modalFadeIn 0.3s ease-out' }}>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Zap size={30} color="var(--primary)" />
+            </div>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>¿Cambiar a {pendingTemplate.label}?</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
+              Se generará una nueva lista de roles. Las asignaciones actuales que no hayas guardado se perderán.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                onClick={() => setPendingTemplate(null)} 
+                className="btn-secondary" 
+                style={{ flex: 1, padding: '1rem' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  const t = pendingTemplate;
+                  setFormat(t.id);
+                  if (t.id === 'general') {
+                    setRoster(members.map(m => ({
+                      id: Math.random().toString(),
+                      instrument: 'MEMBER',
+                      profile_id: m.id,
+                      category: 'music',
+                      status: 'pending'
+                    })));
+                  } else {
+                    setRoster(generateTemplate(t.id));
+                  }
+                  setPendingTemplate(null);
+                }} 
+                className="btn-primary" 
+                style={{ flex: 1.5, padding: '1rem' }}
+              >
+                Sí, cambiar
+              </button>
             </div>
           </div>
         </div>

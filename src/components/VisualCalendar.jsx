@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Circle, Download } from 'lucide-react';
 
 export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -22,18 +22,77 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
+  // Lógica de colores por categoría
+  const getEventStyle = (name) => {
+    const n = (name || '').toLowerCase();
+    if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return { bg: 'rgba(99, 102, 241, 0.2)', text: '#818cf8', border: 'rgba(99, 102, 241, 0.4)' }; 
+    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return { bg: 'rgba(16, 185, 129, 0.2)', text: '#34d399', border: 'rgba(16, 185, 129, 0.4)' }; 
+    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return { bg: 'rgba(139, 92, 246, 0.2)', text: '#a78bfa', border: 'rgba(139, 92, 246, 0.4)' }; 
+    if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return { bg: 'rgba(249, 115, 22, 0.2)', text: '#fb923c', border: 'rgba(249, 115, 22, 0.4)' }; 
+    return { bg: 'rgba(6, 182, 212, 0.2)', text: '#22d3ee', border: 'rgba(6, 182, 212, 0.4)' }; 
+  };
+
+  const categories = [
+    { name: 'Servicios', color: '#818cf8' },
+    { name: 'Oración', color: '#34d399' },
+    { name: 'Reuniones', color: '#a78bfa' },
+    { name: 'Especiales', color: '#fb923c' }
+  ];
+
+  // Exportar a formato universal .ics
+  const exportToICS = () => {
+    try {
+      const monthEvents = events?.filter(e => e.date && e.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)) || [];
+      if (monthEvents.length === 0) return alert('No hay eventos este mes para exportar.');
+
+      let icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PROID:-//Bandly//Calendar//ES',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH'
+      ];
+
+      monthEvents.forEach(ev => {
+        const d = new Date(ev.date);
+        const dateStr = d.toISOString().replace(/-|:|\.\d+/g, '').split('T')[0];
+        icsContent.push('BEGIN:VEVENT');
+        icsContent.push(`SUMMARY:${ev.name}`);
+        icsContent.push(`DTSTART;VALUE=DATE:${dateStr}`);
+        icsContent.push(`DTEND;VALUE=DATE:${dateStr}`);
+        icsContent.push(`DESCRIPTION:${ev.description || 'Evento de Bandly'}`);
+        icsContent.push('STATUS:CONFIRMED');
+        icsContent.push('END:VEVENT');
+      });
+
+      icsContent.push('END:VCALENDAR');
+      
+      const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Bandly_Agenda_${monthNames[month]}_${year}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) { alert('Error al exportar: ' + e.message); }
+  };
+
   return (
-    <div className="calendar-container" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'white', fontWeight: 'bold' }}>{monthNames[month]} {year}</h3>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={prevMonth} className="btn-secondary" style={{ padding: '0.4rem', width: 'auto' }}><ChevronLeft size={18}/></button>
-          <button onClick={nextMonth} className="btn-secondary" style={{ padding: '0.4rem', width: 'auto' }}><ChevronRight size={18}/></button>
+    <div className="calendar-container" style={{ background: 'rgba(30, 41, 59, 0.3)', borderRadius: '24px', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
+      {/* HEADER */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white', fontWeight: '800', letterSpacing: '-0.5px' }}>{monthNames[month]} <span style={{ color: 'rgba(255,255,255,0.3)' }}>{year}</span></h3>
+        <div style={{ display: 'flex', gap: '0.8rem' }}>
+          <button onClick={prevMonth} className="btn-secondary" style={{ padding: '0.5rem', width: '36px', height: '36px', borderRadius: '10px' }}><ChevronLeft size={18}/></button>
+          <button onClick={nextMonth} className="btn-secondary" style={{ padding: '0.5rem', width: '36px', height: '36px', borderRadius: '10px' }}><ChevronRight size={18}/></button>
         </div>
       </div>
       
-      <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', textAlign: 'center' }}>
-        {weekDays.map(d => <div key={d} style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 'bold', paddingBottom: '0.5rem', textTransform: 'uppercase' }}>{d}</div>)}
+      {/* GRID */}
+      <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
+        {weekDays.map(d => <div key={d} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', fontWeight: 'bold', paddingBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{d}</div>)}
         
         {calendarDays.map((day, idx) => {
           const dateStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
@@ -44,51 +103,54 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
             <div 
               key={idx} 
               onClick={() => day && onDayClick(dateStr)}
-              className={`calendar-day ${day ? "calendar-cell-hover" : ""}`}
+              className={`calendar-day ${day ? "calendar-cell-active" : ""}`}
               style={{ 
-                minHeight: 'clamp(40px, 10vw, 80px)', 
+                minHeight: '85px', 
                 background: day ? 'rgba(255,255,255,0.02)' : 'transparent', 
-                border: '1px solid rgba(255,255,255,0.03)', 
+                borderRadius: '12px',
+                border: isToday ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255,255,255,0.03)', 
                 position: 'relative', 
                 cursor: day ? 'pointer' : 'default', 
-                transition: '0.2s', 
+                transition: 'all 0.2s ease', 
                 display: 'flex', 
                 flexDirection: 'column', 
-                padding: '4px' 
+                padding: '8px' 
               }}
             >
               {day && (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                    <span style={{ fontSize: '0.75rem', color: isToday ? 'var(--primary)' : 'var(--text-secondary)', fontWeight: isToday ? 'bold' : 'normal' }}>{day}</span>
-                    {isToday && <div style={{ width: '4px', height: '4px', background: 'var(--primary)', borderRadius: '50%' }}></div>}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.7rem', color: isToday ? 'var(--primary)' : 'rgba(255,255,255,0.3)', fontWeight: isToday ? '900' : '500' }}>{day}</span>
                   </div>
-                  <div className="calendar-events-container" style={{ display: 'flex', flexDirection: 'column', gap: '2px', justifyContent: 'flex-start', marginTop: '2px', width: '100%', overflow: 'hidden' }}>
-                    {dayEvents.map(ev => (
-                      <div 
-                        key={ev.id} 
-                        onClick={(e) => { e.stopPropagation(); onEventClick(ev); }}
-                        className="calendar-event-pill"
-                        style={{ 
-                          width: '100%', 
-                          padding: '2px 4px', 
-                          background: 'var(--accent)', 
-                          color: '#0f172a', 
-                          borderRadius: '3px', 
-                          fontSize: '0.6rem', 
-                          fontWeight: '800', 
-                          cursor: 'pointer', 
-                          whiteSpace: 'nowrap', 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis', 
-                          textAlign: 'left'
-                        }}
-                        title={ev.name}
-                      >
-                        <span className="hide-mobile-small">{ev.name}</span>
-                        <div className="show-mobile-small-dot" style={{ display: 'none', width: '100%', height: '4px', background: 'var(--accent)', borderRadius: '2px' }}></div>
-                      </div>
-                    ))}
+                  <div className="calendar-events-container" style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', overflow: 'hidden' }}>
+                    {dayEvents.map(ev => {
+                      const style = getEventStyle(ev.name);
+                      return (
+                        <div 
+                          key={ev.id} 
+                          onClick={(e) => { e.stopPropagation(); onEventClick(ev); }}
+                          style={{ 
+                            width: '100%', 
+                            padding: '4px 6px', 
+                            background: style.bg, 
+                            color: style.text, 
+                            borderLeft: `3px solid ${style.text}`,
+                            borderRadius: '4px', 
+                            fontSize: '0.65rem', 
+                            fontWeight: '700', 
+                            whiteSpace: 'nowrap', 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis', 
+                            textAlign: 'left',
+                            transition: 'transform 0.1s'
+                          }}
+                          className="calendar-pill-hover"
+                          title={ev.name}
+                        >
+                          {ev.name}
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               )}
@@ -96,12 +158,47 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
           );
         })}
       </div>
+
+      {/* FOOTER / LEYENDA / EXPORT */}
+      <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.2rem' }}>
+          {categories.map(cat => (
+            <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cat.color, boxShadow: `0 0 10px ${cat.color}66` }}></div>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{cat.name}</span>
+            </div>
+          ))}
+        </div>
+        
+        <button 
+          onClick={exportToICS}
+          style={{ 
+            background: 'rgba(99, 102, 241, 0.1)', 
+            border: '1px solid rgba(99, 102, 241, 0.3)', 
+            color: '#818cf8', 
+            padding: '0.5rem 1rem', 
+            borderRadius: '10px', 
+            fontSize: '0.7rem', 
+            fontWeight: '800', 
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s'
+          }}
+          className="btn-export-hover"
+        >
+          <Download size={14} /> Sincronizar Calendario
+        </button>
+      </div>
+
       <style>{`
+        .calendar-cell-active:hover { background: rgba(255,255,255,0.05) !important; transform: translateY(-2px); }
+        .calendar-pill-hover:hover { transform: scale(1.02); filter: brightness(1.2); }
+        .btn-export-hover:hover { background: rgba(99, 102, 241, 0.2) !important; transform: translateY(-1px); border-color: rgba(99, 102, 241, 0.5) !important; }
         @media (max-width: 480px) {
-          .hide-mobile-small { display: none; }
-          .show-mobile-small-dot { display: block !important; }
-          .calendar-day { min-height: 45px !important; padding: 2px !important; }
-          .calendar-event-pill { height: 6px; padding: 0 !important; }
+          .calendar-day { min-height: 50px !important; padding: 4px !important; }
+          .calendar-pill-hover { font-size: 0 !important; height: 6px; padding: 0 !important; }
         }
       `}</style>
     </div>
