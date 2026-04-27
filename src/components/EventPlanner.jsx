@@ -227,6 +227,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setShowModal(true);
   };
 
+  const handleNewEvent = (selectedDate) => {
+    setEditingEventId(null);
+    setEventName('');
+    setEventDate(selectedDate || '');
+    setDescription('');
+    setFormat('full');
+    const template = generateTemplate('full');
+    setRoster(template);
+    setInitialRoster(JSON.parse(JSON.stringify(template)));
+    setDbHistory([]);
+    setSetlist([]);
+    setModalTab('info');
+    setShowModal(true);
+  };
+
   const calculateRosterDiff = (initial, history, current, eventId) => {
     const diff = { newRecords: [], reactivated: [], updated: [], softDeleted: [], toNotify: [] };
     const currentActive = current.filter(m => m.profile_id);
@@ -470,7 +485,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       </div>
 
       <section className="glass-panel" style={{ padding: '2rem' }}>
-        <h3 className="section-title"><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
+          {!readOnly && (
+            <button onClick={() => handleNewEvent('')} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
+              <Plus size={16} /> Nuevo Evento
+            </button>
+          )}
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
            <div><h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>Próximos Eventos</h4>{renderEventList(upcomingEvents)}</div>
            {pastEvents.length > 0 && (
@@ -483,7 +505,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
            )}
            <div style={{ marginTop: '2rem' }}>
              <h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>Calendario Visual</h4>
-             <VisualCalendar events={events} onEventClick={handleEditEvent} />
+             <VisualCalendar events={events} onEventClick={handleEditEvent} onDayClick={handleNewEvent} />
            </div>
         </div>
       </section>
