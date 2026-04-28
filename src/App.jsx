@@ -6,6 +6,7 @@ import { supabase } from './supabaseClient';
 import LandingPage from './pages/LandingPage';
 import AuthScreen from './pages/AuthScreen';
 import OnboardingScreen from './pages/OnboardingScreen';
+import ResetPassword from './pages/ResetPassword';
 import TermsPage from './pages/legal/TermsPage';
 import PrivacyPage from './pages/legal/PrivacyPage';
 
@@ -29,6 +30,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('bandly_active_tab') || 'planner');
   const [view, setView] = useState(() => localStorage.getItem('bandly_view') || 'landing');
   const [showLegalBlocking, setShowLegalBlocking] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
 
   // Org Data Hook
   const { members, events, songs, fetchData } = useOrgData(profile);
@@ -37,14 +39,26 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else setLoading(false);
+      // Si el hash de la URL contiene type=recovery, estamos en flujo de recuperación
+      if (window.location.hash.includes('type=recovery')) {
+        setIsRecovering(true);
+        setLoading(false);
+      } else if (session) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else {
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovering(true);
+        setLoading(false);
+      } else if (session) {
+        fetchProfile(session.user.id);
+      } else {
         setProfile(null);
         setLoading(false);
       }
@@ -139,6 +153,15 @@ export default function App() {
   
   if (view === 'legal_terms') return <TermsPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
   if (view === 'legal_privacy') return <PrivacyPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
+
+  // Prioridad: Si estamos recuperando contraseña, mostrar esa pantalla
+  if (isRecovering) {
+    return <ResetPassword onFinish={() => {
+      setIsRecovering(false);
+      if (session) fetchProfile(session.user.id);
+      else setView('landing');
+    }} />;
+  }
 
   if (!session) {
     if (view === 'landing' || typeof view === 'string' && view.startsWith('landing')) {
