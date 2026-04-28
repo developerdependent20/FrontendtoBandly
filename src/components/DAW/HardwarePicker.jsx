@@ -43,7 +43,8 @@ export default function HardwarePicker({ onConfigured }) {
     if (!selectedDevice) return;
     setLoading(true);
     try {
-      // Usamos el ID único (Host_Nombre)
+      await safeInvoke('kill_audio_stream');
+      await new Promise(r => setTimeout(r, 200)); // Pequeña pausa para que el driver respire
       await safeInvoke('init_audio_stream', { 
         deviceId: selectedDevice.id
       });
@@ -51,7 +52,8 @@ export default function HardwarePicker({ onConfigured }) {
       localStorage.setItem('bandly_last_audio_host', selectedDevice.host);
       onConfigured(selectedDevice);
     } catch (e) {
-      setError(`Error al inicializar el motor: ${e}`);
+      console.error("[HardwarePicker] Error:", e);
+      setError(`FALLO CRÍTICO: ${e}. Intenta desconectar y volver a conectar la interfaz, o selecciona otro controlador.`);
     } finally {
       setLoading(false);
     }
@@ -166,12 +168,23 @@ export default function HardwarePicker({ onConfigured }) {
         disabled={!selectedDevice || loading}
         onClick={handleConfirm}
       >
-        INICIAR MOTOR DE AUDIO
+        {loading ? 'CONECTANDO...' : 'INICIAR MOTOR DE AUDIO'}
       </button>
 
-      <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-        Recomendamos usar controladores **ASIO** en Windows para obtener la latencia más baja posible.
-      </p>
+      <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <button 
+          onClick={() => {
+            localStorage.clear();
+            window.location.reload();
+          }}
+          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', textDecoration: 'underline', cursor: 'pointer' }}
+        >
+          RESETEAR APP Y LIMPIAR CACHÉ
+        </button>
+        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+          Recomendamos usar controladores **ASIO** en Windows para obtener la latencia más baja posible.
+        </p>
+      </div>
     </div>
   );
 }

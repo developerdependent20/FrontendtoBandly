@@ -16,6 +16,26 @@ export default function AuthScreen({ onBack, initialMode }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://getbandly.com/reset-password',
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (error) {
+      setErrorMsg(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -47,6 +67,35 @@ export default function AuthScreen({ onBack, initialMode }) {
     }
   };
 
+  if (isForgotPassword) {
+    return (
+      <div className="center-layout">
+        <div className="auth-back" onClick={() => setIsForgotPassword(false)} style={{ position: 'absolute', top: '2rem', left: '2rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+          <span>← Volver al login</span>
+        </div>
+        <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem', textAlign: 'center' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Recuperar Contraseña</h3>
+          {resetSent ? (
+            <div style={{ color: '#4ade80', fontSize: '0.9rem', padding: '1rem', background: 'rgba(74, 222, 128, 0.1)', borderRadius: '12px' }}>
+              ¡Listo! Revisa tu correo electrónico para encontrar el link de recuperación.
+            </div>
+          ) : (
+            <form onSubmit={handleResetPassword} className="input-group">
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Te enviaremos un link a tu correo para que puedas crear una nueva contraseña.
+              </p>
+              <input type="email" placeholder="Correo electrónico" className="input-field" value={email} onChange={e => setEmail(e.target.value)} required />
+              {errorMsg && <p style={{ color: '#ef4444', fontSize: '0.85rem' }}>{errorMsg}</p>}
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? <Loader2 className="spin" size={20}/> : 'Enviar link de recuperación'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="center-layout">
       {/* Botón Volver */}
@@ -69,6 +118,12 @@ export default function AuthScreen({ onBack, initialMode }) {
           <input type="email" placeholder="Correo electrónico" className="input-field" value={email} onChange={e => setEmail(e.target.value)} required />
           <input type="password" placeholder="Contraseña" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required />
           
+          {!isSignUp && (
+            <p onClick={() => setIsForgotPassword(true)} style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+              ¿Olvidaste tu contraseña?
+            </p>
+          )}
+
           {isSignUp && (
             <div className="legal-checkboxes" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                <label className="checkbox-container" style={{ display: 'flex', gap: '10px', fontSize: '0.75rem', color: '#888', cursor: 'pointer', textAlign: 'left' }}>

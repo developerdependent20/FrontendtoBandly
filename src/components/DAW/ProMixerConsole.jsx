@@ -28,16 +28,6 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--daw-bg)' }}>
-      {/* Mini Header de Mixer */}
-      <div style={{ padding: '10px 20px', background: 'var(--daw-panel)', borderBottom: '1px solid var(--daw-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: 'var(--daw-text-muted)', fontSize: '0.7rem', fontWeight: '800' }}>
-          <Layers size={14} />
-          <span>{tracks.length} CANALES ACTIVOS</span>
-        </div>
-        <div style={{ display: 'flex', gap: '5px' }}>
-             {/* Futuros filtros de visibilidad */}
-        </div>
-      </div>
 
       {/* Rack de Canales */}
       <div className="mixer-scroll">

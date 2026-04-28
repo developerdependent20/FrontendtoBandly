@@ -243,14 +243,6 @@ const MemoizedTransportUI = React.memo(({
     </div>
 
     <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ fontSize: '0.55rem', fontWeight: '600', color: 'var(--daw-text-muted)', letterSpacing: '1px' }}>
-          {activeSong ? 'SESIÓN ACTIVA' : 'arma tu setlist'}
-        </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: activeSong ? 'white' : 'var(--daw-text-muted)', opacity: activeSong ? 1 : 0.4 }}>
-          {activeSong?.title || 'Sigue creando'}
-        </div>
-      </div>
       <div style={{ display: 'flex', gap: '8px' }}>
         <button 
           onClick={() => setShowPads(!showPads)} 
@@ -279,7 +271,7 @@ export default function ProMixer({ session }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null); 
   const [metronome, setMetronome] = useState({ enabled: true, bpm: 120, volume: 0.5, outputCh: 0 });
-  const [deviceChannels, setDeviceChannels] = useState(2);
+  const [deviceChannels, setDeviceChannels] = useState(2); // Volvemos a 2 como base, la app se expandirá según el hardware real
   const [activeSong, setActiveSong] = useState(null);
   const [songs, setSongs] = useState([]);
   const [setlist, setSetlist] = useState([]);
@@ -339,6 +331,7 @@ export default function ProMixer({ session }) {
           })
           .catch((err) => {
             console.warn('[DAW] Auto-reconexión falló, mostrando HardwarePicker:', err);
+            localStorage.removeItem('bandly_last_audio_device'); // Limpiar para evitar bucles de crash
             setIsConfigured(false); // Mostrar picker para que el usuario elija de nuevo
           });
         // Mientras el init es async, dejar isConfigured=false para mostrar una pantalla de espera
@@ -355,7 +348,6 @@ export default function ProMixer({ session }) {
   useEffect(() => {
     if (!songs.length || !isTauri()) return;
     const prefetchAll = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || '';
       for (const song of songs) {
         try {
@@ -406,6 +398,10 @@ export default function ProMixer({ session }) {
       setPlaybackSample(report.sample_pos);
       setPlaybackSR(report.sample_rate);
       setEngineReady(report.is_ready);
+      // Sincronización Real: La UI se ajusta exactamente a lo que el hardware reporta
+      if (report.device_channels > 0 && report.device_channels !== deviceChannels) {
+        setDeviceChannels(report.device_channels);
+      }
       setTracksLoadingCount(report.tracks_loading);
       setIsPrerollActive(report.preroll_active);
       setPrerollBars(report.preroll_bars);
@@ -654,9 +650,9 @@ export default function ProMixer({ session }) {
           </div>
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <MemoizedMixerConsole tracks={tracks} peaks={peaks} onTrackUpdate={onTrackUpdate} />
+                <MemoizedMixerConsole tracks={tracks} peaks={peaks} onTrackUpdate={onTrackUpdate} deviceChannels={deviceChannels} />
               </div>
-             {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard /></div>}
+             {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} /></div>}
           </div>
         </div>
         <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} />

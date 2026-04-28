@@ -353,15 +353,42 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const handleSendNotifications = async (recipients, mode) => {
     if (dispatching) return;
+    console.log(`[DEBUG] Iniciando envío de notificaciones. Modo: ${mode}`);
+    console.log(`[DEBUG] Destinatarios recibidos:`, recipients);
+
     setDispatching(true);
     try {
       const validRecipients = recipients.filter(r => r.email);
-      if (validRecipients.length === 0) return alert('Sin correos válidos.');
+      console.log(`[DEBUG] Destinatarios con email válido:`, validRecipients);
+
+      if (validRecipients.length === 0) {
+        console.warn('[DEBUG] No hay destinatarios con correo electrónico válido.');
+        return alert('Sin correos válidos.');
+      }
+
+      const payload = { 
+        eventName: notifyData.eventName, 
+        eventDate: notifyData.eventDate, 
+        description: notifyData.description, 
+        rosterWithEmails: validRecipients.map(r => ({ 
+          event_roster_id: r.id, 
+          email: r.email, 
+          name: r.name, 
+          instrument: r.instrument 
+        })) 
+      };
+
+      console.log('[DEBUG] Enviando payload al backend:', payload);
+
       const response = await fetch(`${API_URL}/api/events/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ eventName: notifyData.eventName, eventDate: notifyData.eventDate, description: notifyData.description, rosterWithEmails: validRecipients.map(r => ({ event_roster_id: r.id, email: r.email, name: r.name, instrument: r.instrument })) })
+        body: JSON.stringify(payload)
       });
+
+      const result = await response.json();
+      console.log('[DEBUG] Respuesta del servidor:', result);
+
       if (response.ok) {
         await supabase.from('event_roster').upsert(validRecipients.map(r => ({ id: r.id, last_invite_sent_at: new Date().toISOString(), invite_status: 'sent' })));
         alert('Enviado.');
@@ -722,10 +749,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
              <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>¿Notificar al equipo?</h3>
              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Los cambios se guardaron. Selecciona una opción de aviso.</p>
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-               <button onClick={() => handleSendNotifications(notifyData.candidates, 'delta')} className="btn-primary" style={{ padding: '1.2rem' }}>Enviar a nuevos ({notifyData.candidates.length})</button>
-               <button onClick={() => { setShowNotifyModal(false); closeModal(); }} className="btn-secondary" style={{ padding: '1.2rem' }}>Finalizar sin notificar</button>
-             </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <button onClick={() => handleSendNotifications(notifyData.candidates, 'delta')} className="btn-primary" style={{ padding: '1.2rem' }}>
+                  Enviar solo a nuevos ({notifyData.candidates.length})
+                </button>
+                
+                <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
+                  Notificar a todo el equipo ({notifyData.allRoster.length})
+                </button>
+
+                <button onClick={() => { setShowNotifyModal(false); closeModal(); }} className="btn-secondary" style={{ padding: '1.2rem' }}>
+                  Finalizar sin notificar
+                </button>
+              </div>
            </div>
          </div>
       )}

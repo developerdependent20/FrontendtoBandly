@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo, useRef, useCallback } from 'react';
 import { Volume2, VolumeX, Headphones } from 'lucide-react';
 
 // Constantes físicas del Fader
-const FADER_HEIGHT = 160;
+const FADER_HEIGHT = 140;
 
 const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, deviceChannels = 2 }) => {
   const [localVol, setLocalVol] = useState(100);
@@ -206,10 +206,13 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
               bottom: `${(localVol / 120) * 100}%`, 
               left: '50%',
               transform: 'translateX(-50%)',
-              marginBottom: '-12px', // Centrar knob basado en su altura (24px std)
+              height: '24px',
+              marginTop: '-12px', // Centrar knob basado en su altura (24px std)
               zIndex: 3, // Siempre al frente
               transition: 'box-shadow 0.1s ease',
               width: '40px', // Hacerlo sobresalir un poco a los lados
+              background: 'linear-gradient(to bottom, #333, #111)',
+              borderRadius: '4px',
               boxShadow: '0 4px 6px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.2), 0 0 0 1px rgba(0,0,0,0.8)'
             }}
           >

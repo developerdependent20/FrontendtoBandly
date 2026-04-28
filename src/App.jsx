@@ -31,7 +31,8 @@ export default function App() {
   const [showLegalBlocking, setShowLegalBlocking] = useState(false);
 
   // Org Data Hook
-  const orgData = useOrgData(profile);
+  const { members, events, songs, fetchData } = useOrgData(profile);
+  const orgData = React.useMemo(() => ({ members, events, songs, fetchData }), [members, events, songs, fetchData]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

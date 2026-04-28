@@ -10,12 +10,13 @@ const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENTE PADBOARD (Versión Nativa Rust + Recursos Tauri)
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PadBoard() {
+export default function PadBoard({ deviceChannels = 2 }) {
   const [activeKey, setActiveKey] = useState(null);
   const [chordMode, setChordMode] = useState('MAJ');
   const [warmLevel, setWarmLevel] = useState(0.85); // Volumen Maestro Papds
   const [octave, setOctave] = useState(4);
   const [isAmbient, setIsAmbient] = useState(true);
+  const [outputIdx, setOutputIdx] = useState(0);
 
   // 1. Carga de Samples usando resolveResource (Seguridad en Producción)
   useEffect(() => {
@@ -26,6 +27,8 @@ export default function PadBoard() {
           try {
             const mp3Path = await resolveResource(`resources/audio/pads/${note}.mp3`);
             await safeInvoke('load_pad_sample', { padId: note, filePath: mp3Path });
+            // Asegurar que hereden la salida actual al cargar
+            await safeInvoke('set_pad_output', { padId: note, outputIdx });
           } catch (err) {
             console.warn(`[PadBoard] No se pudo cargar el pad ${note}:`, err);
           }
@@ -43,6 +46,16 @@ export default function PadBoard() {
       });
     }
   }, [warmLevel]);
+
+  // [NUEVO] Cambio de Salida en Tiempo Real
+  const handleOutputChange = (idx) => {
+    setOutputIdx(idx);
+    if (isTauri()) {
+      NOTES.forEach(note => {
+        safeInvoke('set_pad_output', { padId: note, outputIdx: idx });
+      });
+    }
+  };
 
   // 3. Disparador de Pads (Nativo)
   const handleKey = useCallback(async (note) => {
@@ -123,6 +136,30 @@ export default function PadBoard() {
             C{octave}
           </span>
           <button onClick={() => setOctave(o => Math.min(5,o+1))} style={octBtn}>+</button>
+
+          <div style={{ width:'1px', height:'14px', background:'rgba(255,255,255,0.07)', margin:'0 8px' }} />
+          
+          {/* SELECTOR DE SALIDA PROFESIONAL */}
+          <select 
+            value={outputIdx}
+            onChange={(e) => handleOutputChange(parseInt(e.target.value))}
+            style={{
+              background: 'rgba(0,0,0,0.35)',
+              color: 'var(--daw-cyan)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              fontSize: '0.6rem',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '900',
+              outline: 'none'
+            }}
+            title="Salida Física de Pads"
+          >
+            {Array.from({ length: Math.ceil(deviceChannels / 2) }).map((_, idx) => (
+              <option key={idx} value={idx}>OUT {idx * 2 + 1}-{idx * 2 + 2}</option>
+            ))}
+          </select>
         </div>
       </div>
 
