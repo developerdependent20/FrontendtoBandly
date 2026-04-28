@@ -298,7 +298,6 @@ export default function ProMixer({ session }) {
     let unlisten = null;
     const startListening = async () => {
         unlisten = await safeListen('audio-device-lost', (event) => {
-            console.error("[Audio Engine] CRITICAL: Audio hardware lost!", event.payload);
             setAudioError(`DISPOSITIVO DESCONECTADO: ${event.payload}`);
             setIsPlaying(false);
         });
@@ -326,11 +325,9 @@ export default function ProMixer({ session }) {
         safeInvoke('init_audio_stream', { deviceId: lastDevice })
           .then(() => {
             if (savedBuffer) safeInvoke('set_audio_buffer_size', { size: parseInt(savedBuffer) }).catch(() => {});
-            console.log('[DAW] Auto-reconexión exitosa con:', lastDevice);
             setIsConfigured(true); // Motor OK → entrar al DAW sin HardwarePicker
           })
           .catch((err) => {
-            console.warn('[DAW] Auto-reconexión falló, mostrando HardwarePicker:', err);
             localStorage.removeItem('bandly_last_audio_device'); // Limpiar para evitar bucles de crash
             setIsConfigured(false); // Mostrar picker para que el usuario elija de nuevo
           });
@@ -359,7 +356,6 @@ export default function ProMixer({ session }) {
           const zipPath = await safeInvoke('download_multitrack', { url: zipUrl, songId: songDir, fileName: 'multitrack.zip', token }).catch(() => null);
           if (zipPath) {
             await safeInvoke('extract_multitrack_zip', { zipPath, songId: songDir }).catch(() => null);
-            console.log(`[PREFETCH] Canción lista localmente: ${song.title}`);
           }
         } catch(e) { /* Silencioso */ }
         // Pausa entre descargas para no saturar la red
@@ -559,16 +555,16 @@ export default function ProMixer({ session }) {
             await syncStemsNatively(song.id, stems);
           }
         } catch (err) {
-          console.error("[DAW DEBUG] Error crítico en la carga de stems:", err);
+          // Error interno silenciado
         } finally {
-          setIsLoadingStems(false); // Fase 2: Ocultar estado de carga
+          setIsLoadingStems(false);
         }
       }
     } catch (e) { 
-      console.error('[DAW] Error en handleSyncSong:', e);
+      // Error de flujo general
     } finally { 
       setLoading(false); 
-      setIsLoadingStems(false); // Garantía: siempre limpiar el estado de carga
+      setIsLoadingStems(false);
     }
   }, []);
 

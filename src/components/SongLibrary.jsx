@@ -46,7 +46,6 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   };
 
   const openMixer = async (song) => {
-    console.log('[SongLibrary] Abriendo Mixer. Estado sesión:', session ? 'Conectado' : 'Desconectado');
     if (!session?.access_token) {
       alert("No se encontró una sesión activa. Por favor, intenta cerrar sesión y volver a entrar.");
       setLoadingSeq(null);
@@ -78,7 +77,6 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
           setSeqMixerData(mainSequence);
         }
       } else {
-        // NO HAY SECUENCIA: Abrir subidor
         if (!readOnly) {
           setSeqUploadSong(song);
         } else {
@@ -86,7 +84,6 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
         }
       }
     } catch (e) {
-      console.error('Error loading sequence via Supabase:', e);
       alert(`Error al verificar secuencia: ${e.message}`);
     } finally {
       setLoadingSeq(null);
@@ -112,8 +109,6 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       youtube_link: youtubeLink
     };
 
-    console.log("[Bandly DEBUG] Payload Final de Canción:", payload);
-
     try {
       if (editingSongId) {
         const { error } = await supabase.from('songs')
@@ -128,7 +123,6 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       closeOverlay();
       if (refreshData) refreshData();
     } catch(e) { 
-      console.error("[Bandly ERROR] Fallo al persistir canción:", e);
       alert("Error de base de datos: " + (e.message || "Fallo al guardar")); 
     }
   };
@@ -328,15 +322,6 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
           songs={songs}
           preloadedSequence={seqMixerData}
           onClose={() => setSeqMixerData(null)} 
-        />
-      )}
-
-      {liveSongData && (
-        <ProMixer 
-          session={session}
-          songs={songs}
-          preloadedSequence={liveSongData}
-          onClose={() => setLiveSongData(null)} 
         />
       )}
 

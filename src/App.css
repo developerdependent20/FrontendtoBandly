@@ -96,9 +96,21 @@ h1, h2, h3, h4 {
 @media (max-width: 480px) {
   .landing-nav {
     padding: 0 4%;
+    height: 60px;
+  }
+  .landing-nav-links {
+    gap: 0.4rem;
   }
   .landing-nav-links .btn-secondary {
-    display: none; /* Ocultar el 'Ingresar' secundario para dejar espacio al botón principal */
+    display: flex; 
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.75rem !important;
+    background: transparent;
+    border: none;
+  }
+  .landing-nav-links .btn-primary {
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.75rem !important;
   }
 }
 
@@ -413,11 +425,17 @@ h1, h2, h3, h4 {
   .premium-statement {
     padding: 6rem 8%;
   }
+  .hero-main-title-large {
+    font-size: 2.2rem !important;
+    letter-spacing: -1px;
+    line-height: 1.2;
+  }
   .hero-clarifier {
-    font-size: 0.7rem;
-    letter-spacing: 1.5px;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
     margin-top: 1.5rem;
     padding: 0 1rem;
+    display: block;
   }
 
   .hide-mobile {

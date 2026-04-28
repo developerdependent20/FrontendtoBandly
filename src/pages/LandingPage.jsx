@@ -1,7 +1,9 @@
 import React from 'react';
-import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown } from 'lucide-react';
+import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2 } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted }) {
+  const [billingPeriod, setBillingPeriod] = React.useState('monthly');
+
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
       <div className="hero-decorations">
@@ -96,11 +98,84 @@ export default function LandingPage({ onGetStarted }) {
         </div>
       </section>
 
+      {/* Comparison Section (The "Why Bandly" Factor) */}
+      <section className="comparison-section" style={{ padding: '8rem 2rem', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="section-header-centered">
+          <h2 className="section-title-large">¿Por qué elegir <span className="serif-accent">Bandly</span>?</h2>
+          <p className="section-subtitle">A diferencia de otras soluciones que fragmentan tus recursos y cobran por cada función, nosotros lo unificamos todo en un solo ecosistema diseñado para músicos.</p>
+        </div>
+
+        <div style={{ maxWidth: '1000px', margin: '4rem auto 0', overflowX: 'auto' }}>
+          <table className="comparison-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#fff', fontSize: '1rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <th style={{ textAlign: 'left', padding: '1.5rem', opacity: 0.5 }}>CARACTERÍSTICAS</th>
+                <th style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--primary)', fontWeight: 800 }}>BANDLY</th>
+                <th style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>OTRAS APPS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { feature: "Reproductor de Multitracks & Secuencias", bandly: true, others: "Pago Adicional" },
+                { feature: "Almacenamiento Cloud incluido", bandly: true, others: "Suscripción aparte" },
+                { feature: "Gestión de Equipos y Roles", bandly: true, others: "No disponible" },
+                { feature: "Calendario de Eventos y Ensayos", bandly: true, others: "App externa" },
+                { feature: "Repertorios, Letras y PDF Charts", bandly: true, others: "Limitado" },
+                { feature: "Precio único mensual", bandly: "Desde $12", others: "$35+ mensual" }
+              ].map((item, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '1.2rem', fontWeight: 500 }}>{item.feature}</td>
+                  <td style={{ padding: '1.2rem', textAlign: 'center', background: 'rgba(124, 58, 237, 0.05)' }}>
+                    {item.bandly === true ? <CheckCircle2 size={20} color="var(--primary)" style={{margin:'0 auto'}} /> : <span style={{color:'var(--primary)', fontWeight: 800}}>{item.bandly}</span>}
+                  </td>
+                  <td style={{ padding: '1.2rem', textAlign: 'center', opacity: 0.6 }}>
+                    {item.others}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="pricing" className="landing-pricing-section">
         <div className="section-header-centered">
           <h2 className="section-title-large">Planes simples para cada etapa de tu equipo</h2>
           <p className="section-subtitle">Empieza gratis y escala cuando necesites más usuarios, más almacenamiento y herramientas avanzadas para preparar cada presentación.</p>
+          
+          {/* Billing Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '3rem', marginBottom: '1rem' }}>
+            <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem' }}>Mensual</span>
+            <div 
+              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'semester' : 'monthly')}
+              style={{ 
+                width: '50px', 
+                height: '26px', 
+                background: 'rgba(255,255,255,0.1)', 
+                borderRadius: '20px', 
+                position: 'relative', 
+                cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              <div style={{ 
+                width: '20px', 
+                height: '20px', 
+                background: 'var(--primary)', 
+                borderRadius: '50%', 
+                position: 'absolute', 
+                top: '2px', 
+                left: billingPeriod === 'monthly' ? '3px' : '25px',
+                transition: '0.3s ease',
+                boxShadow: '0 0 10px var(--primary)'
+              }} />
+            </div>
+            <span style={{ color: billingPeriod === 'semester' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Semestral
+              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>AHORRA 20%</span>
+            </span>
+          </div>
         </div>
 
         <div className="pricing-grid">
@@ -109,6 +184,7 @@ export default function LandingPage({ onGetStarted }) {
             <div className="pricing-badge">BÁSICO</div>
             <h3>Gratis</h3>
             <div className="price">0<span>/mes</span></div>
+            <p style={{fontSize:'0.75rem', opacity:0.6, marginTop:'-1rem', marginBottom:'1.5rem'}}>Ideal para bandas nuevas</p>
             <ul className="pricing-features">
               <li><ShieldCheck size={16} /> 1 banda u organización</li>
               <li><ShieldCheck size={16} /> Hasta 10 usuarios</li>
@@ -125,8 +201,13 @@ export default function LandingPage({ onGetStarted }) {
           <div className="pricing-card featured">
             <div className="pricing-badge-popular">RECOMENDADO</div>
             <h3>Starter</h3>
-            <div className="price">$59<span>/semestre</span></div>
-            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>o $12 / mes</p>
+            <div className="price">
+              {billingPeriod === 'monthly' ? '$12' : '$59'}
+              <span>/{billingPeriod === 'monthly' ? 'mes' : 'semestre'}</span>
+            </div>
+            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
+              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $9.8 / mes'}
+            </p>
             <ul className="pricing-features">
               <li><Crown size={16} color="var(--primary)" /> Hasta 3 bandas</li>
               <li><Crown size={16} color="var(--primary)" /> Hasta 25 usuarios</li>
@@ -144,8 +225,13 @@ export default function LandingPage({ onGetStarted }) {
           <div className="pricing-card">
             <div className="pricing-badge">PRO</div>
             <h3>Pro</h3>
-            <div className="price">$99<span>/semestre</span></div>
-            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>o $19 / mes</p>
+            <div className="price">
+              {billingPeriod === 'monthly' ? '$19' : '$99'}
+              <span>/{billingPeriod === 'monthly' ? 'mes' : 'semestre'}</span>
+            </div>
+            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
+              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $16.5 / mes'}
+            </p>
             <ul className="pricing-features">
               <li><Crown size={16} color="var(--accent)" /> Hasta 10 bandas</li>
               <li><Crown size={16} color="var(--accent)" /> Hasta 50 usuarios</li>
@@ -161,8 +247,13 @@ export default function LandingPage({ onGetStarted }) {
           <div className="pricing-card">
             <div className="pricing-badge">ELITE</div>
             <h3>Elite</h3>
-            <div className="price">$179<span>/semestre</span></div>
-            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>o $34 / mes</p>
+            <div className="price">
+              {billingPeriod === 'monthly' ? '$39' : '$199'}
+              <span>/{billingPeriod === 'monthly' ? 'mes' : 'semestre'}</span>
+            </div>
+            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
+              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $33.1 / mes'}
+            </p>
             <ul className="pricing-features">
               <li><Crown size={16} color="var(--accent)" /> Bandas ilimitadas</li>
               <li><Crown size={16} color="var(--accent)" /> Hasta 100 usuarios</li>

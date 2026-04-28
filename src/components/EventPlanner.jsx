@@ -353,16 +353,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const handleSendNotifications = async (recipients, mode) => {
     if (dispatching) return;
-    console.log(`[DEBUG] Iniciando envío de notificaciones. Modo: ${mode}`);
-    console.log(`[DEBUG] Destinatarios recibidos:`, recipients);
 
     setDispatching(true);
     try {
       const validRecipients = recipients.filter(r => r.email);
-      console.log(`[DEBUG] Destinatarios con email válido:`, validRecipients);
 
       if (validRecipients.length === 0) {
-        console.warn('[DEBUG] No hay destinatarios con correo electrónico válido.');
         return alert('Sin correos válidos.');
       }
 
@@ -378,8 +374,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         })) 
       };
 
-      console.log('[DEBUG] Enviando payload al backend:', payload);
-
       const response = await fetch(`${API_URL}/api/events/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
@@ -387,7 +381,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       });
 
       const result = await response.json();
-      console.log('[DEBUG] Respuesta del servidor:', result);
 
       if (response.ok) {
         await supabase.from('event_roster').upsert(validRecipients.map(r => ({ id: r.id, last_invite_sent_at: new Date().toISOString(), invite_status: 'sent' })));
