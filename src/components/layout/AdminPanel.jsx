@@ -62,7 +62,7 @@ const AdminPanel = () => {
     if (!confirm('¿Sincronizar almacenamiento de todas las bandas?')) return;
     setLoading(true);
     try {
-      const token = null;
+      let token = null;
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.includes('auth-token')) {
