@@ -90,8 +90,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               display: 'flex', alignItems: 'center', gap: '8px', 
               background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)',
               padding: '6px 16px', borderRadius: '20px', cursor: 'pointer',
-              transition: 'all 0.2s hover:bg-white/5'
+              transition: 'all 0.2s'
             }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)'}
           >
             <Crown size={14} color="#a855f7" />
             <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>

@@ -1,8 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, Shield, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { AvatarPicker } from './layout/AvatarPicker';
 
 export default function TeamList({ members, isDirector, refreshData }) {
+  const [selectedMember, setSelectedMember] = useState(null);
+  
+  const handleAvatarUpdate = async (url) => {
+    if (!selectedMember) return;
+    try {
+      const { error } = await supabase.from('profiles')
+        .update({ avatar_url: url })
+        .eq('id', selectedMember.id);
+      
+      if (error) throw error;
+      setSelectedMember(null);
+      if (refreshData) refreshData();
+    } catch (e) {
+      alert("Error al actualizar avatar del miembro.");
+    }
+  };
+
   const functionsList = [
     { id: 'musico', label: 'Músico', icon: '🎸' },
     { id: 'audio', label: 'Audio', icon: '🎚️' },
@@ -71,6 +89,14 @@ export default function TeamList({ members, isDirector, refreshData }) {
 
       <section className="glass-panel" style={{ padding: '2rem' }}>
         <h3 className="section-title"><Users size={20} color="var(--primary)" /> Miembros de la Banda</h3>
+        
+        <AvatarPicker 
+          isOpen={!!selectedMember} 
+          onClose={() => setSelectedMember(null)} 
+          onSelect={handleAvatarUpdate}
+          currentAvatar={selectedMember?.avatar_url}
+        />
+
         <div className="member-list-container">
           {members?.length === 0 ? (
             <p className="empty-msg">Manda el código de acceso a tu banda para empezar a sumar talentos.</p>
@@ -82,9 +108,36 @@ export default function TeamList({ members, isDirector, refreshData }) {
               return (
                 <div key={m.id} className={`member-card ${isUserDirector ? 'is-director' : ''}`}>
                   <div className="member-identity">
-                    <div className="member-avatar">
-                      {m.full_name?.[0]?.toUpperCase()}
-                      {isUserDirector && <div className="director-shield"><Shield size={10} /></div>}
+                    <div 
+                      className="member-avatar"
+                      onClick={() => isDirector && setSelectedMember(m)}
+                      style={{ 
+                        width: '110px',
+                        height: '110px',
+                        borderRadius: '50%',
+                        cursor: isDirector ? 'pointer' : 'default',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        background: 'rgba(255,255,255,0.03)',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+                      }}
+                    >
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt={m.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '2.5rem', fontWeight: '900' }}>{m.full_name?.[0]?.toUpperCase()}</span>
+                      )}
+                      {isUserDirector && <div className="director-shield" style={{ zIndex: 10 }}><Shield size={10} /></div>}
+                      {isDirector && (
+                        <div style={{ 
+                          position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', 
+                          fontSize: '0.55rem', padding: '3px 0', textAlign: 'center', fontWeight: 'bold',
+                          backdropFilter: 'blur(4px)', color: 'white', pointerEvents: 'none'
+                        }}>
+                          EDIT
+                        </div>
+                      )}
                     </div>
                     
                     <div className="member-info">

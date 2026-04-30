@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../../supabaseClient';
 import EventPlanner from '../EventPlanner';
 import SongLibrary from '../SongLibrary';
 import TeamList from '../TeamList';
@@ -7,11 +8,32 @@ import WebUploadStudio from '../DAW/WebUploadStudio';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight } from 'lucide-react';
 
+import { AVATARS, AvatarPicker } from './AvatarPicker';
+
 const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
+  const [showPicker, setShowPicker] = useState(false);
+  const [currentAvatar, setCurrentAvatar] = useState(profile?.avatar_url);
+  const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
   const { members, songs } = orgData;
+
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleAvatarSelect = async (url) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url })
+        .eq('id', profile.id);
+      
+      if (error) throw error;
+      setCurrentAvatar(url);
+      setShowPicker(false);
+    } catch (e) {
+      alert("Error al actualizar avatar.");
+    }
   };
 
   const today = new Date();
@@ -20,24 +42,52 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
 
   return (
     <div style={{ animation: 'dropdownFadeIn 0.5s ease-out', marginBottom: '2rem' }}>
+      <AvatarPicker 
+        isOpen={showPicker} 
+        onClose={() => setShowPicker(false)} 
+        onSelect={handleAvatarSelect}
+        currentAvatar={currentAvatar}
+      />
+
       {/* Saludo y Botones de Scroll */}
       <div style={{ 
         padding: '2.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', 
         alignItems: 'center', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%)',
         border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '24px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ 
-            width: '80px', height: '80px', borderRadius: '24px', background: 'var(--primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem',
-            fontWeight: '900', color: 'white', border: '4px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 10px 30px rgba(139, 92, 246, 0.3)'
-          }}>
-            {profile?.full_name?.[0]}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+          <div 
+            onClick={() => setShowPicker(true)}
+            onMouseEnter={() => setIsHoveringAvatar(true)}
+            onMouseLeave={() => setIsHoveringAvatar(false)}
+            style={{ 
+              width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem',
+              fontWeight: '900', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
+              position: 'relative', cursor: 'pointer', overflow: 'hidden',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.6)'
+            }}
+            className="hover-scale"
+          >
+            {currentAvatar ? (
+              <img src={currentAvatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              profile?.full_name?.[0]
+            )}
+            <div style={{ 
+              position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', 
+              fontSize: '0.75rem', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold',
+              backdropFilter: 'blur(4px)', color: 'white',
+              opacity: isHoveringAvatar ? 1 : 0,
+              transition: 'all 0.3s ease',
+              transform: isHoveringAvatar ? 'translateY(0)' : 'translateY(100%)'
+            }}>
+              CAMBIAR
+            </div>
           </div>
           <div>
-            <h2 style={{ fontSize: '2rem', margin: 0, fontWeight: '900' }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
-            <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '0.9rem' }}>Bienvenido de nuevo a tu centro de control musical.</p>
+            <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: '900', letterSpacing: '-2px' }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
+            <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '1.2rem' }}>Bienvenido de nuevo a tu centro de control musical.</p>
           </div>
         </div>
 
@@ -85,9 +135,14 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
               <div key={i} style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', 
                 marginLeft: i > 0 ? '-10px' : 0, border: '2px solid #0f172a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold'
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold',
+                overflow: 'hidden'
               }}>
-                {m.full_name?.[0]}
+                {m.avatar_url ? (
+                  <img src={m.avatar_url} alt={m.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  m.full_name?.[0]
+                )}
               </div>
             ))}
             {members.length > 3 && (

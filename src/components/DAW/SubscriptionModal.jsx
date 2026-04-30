@@ -52,7 +52,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
+      position: 'fixed', inset: 0, zIndex: 2000,
       background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px'
