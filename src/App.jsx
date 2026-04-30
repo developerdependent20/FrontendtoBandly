@@ -165,7 +165,12 @@ export default function App() {
 
   if (!session) {
     if (view === 'landing' || typeof view === 'string' && view.startsWith('landing')) {
-      return <LandingPage onGetStarted={(mode) => setView(mode === 'login' ? 'auth_login' : 'auth_signup')} />;
+      return (
+        <LandingPage 
+          onGetStarted={(mode) => setView(mode === 'login' ? 'auth_login' : 'auth_signup')} 
+          onNavigate={(v) => setView(v)}
+        />
+      );
     }
     return <AuthScreen initialMode={view === 'auth_signup' ? 'signup' : 'login'} onBack={() => setView('landing')} />;
   }

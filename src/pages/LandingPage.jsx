@@ -1,8 +1,8 @@
 import React from 'react';
 import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2 } from 'lucide-react';
 
-export default function LandingPage({ onGetStarted }) {
-  const [billingPeriod, setBillingPeriod] = React.useState('monthly');
+export default function LandingPage({ onGetStarted, onNavigate }) {
+  const [billingPeriod, setBillingPeriod] = React.useState('annual');
 
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -10,48 +10,79 @@ export default function LandingPage({ onGetStarted }) {
         {/* Eliminados elementos distractores para un look más limpio */}
       </div>
       
-      <nav className="landing-nav">
-        <div style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
-          <img 
-            src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" 
-            alt="Bandly Logotipo" 
-            className="landing-logo" 
-            style={{ height: '80px', width: 'auto', padding: '5px 0', objectFit: 'contain' }}
-          />
-        </div>
-        <div className="landing-nav-links">
-          <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.5rem', border: 'none' }}>Iniciar Sesión</button>
-          <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>Comenzar gratis</button>
-        </div>
-      </nav>
+        <nav className="landing-nav">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <img 
+              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/LOGO%20BANDLY%20SIN%20FONDO.png" 
+              alt="Bandly" 
+              className="landing-logo" 
+            />
+          </div>
 
-      <header className="landing-hero-centered">
+          <div className="landing-nav-center hide-mobile">
+            <a href="#multitrack">Funciones</a>
+            <a href="#pricing">Planes</a>
+            <a href="#community">Comunidad</a>
+            <a href="#support">Soporte</a>
+          </div>
+
+          <div className="landing-nav-links">
+            <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>Iniciar Sesión</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>Probar Gratis</button>
+          </div>
+        </nav>
+
+      <main className="landing-hero-centered">
         <div className="hero-content-full">
-          <h1 className="hero-main-title-large">
+          <div style={{ marginBottom: '0', animation: 'dropdownFadeIn 0.8s ease-out' }}>
+            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" style={{ height: '140px', filter: 'drop-shadow(0 0 30px rgba(139, 92, 246, 0.4))' }} />
+          </div>
+          <h1 className="hero-main-title-large" style={{ marginTop: '-1rem' }}>
             Toda tu música. <br/>
             <span className="serif-accent">Bajo control.</span>
           </h1>
-          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)', color: 'var(--text-muted)', maxWidth: '800px', margin: '1rem auto 0 auto', lineHeight: '1.4' }}>
+          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-muted)', maxWidth: '700px', margin: '1.5rem auto 0 auto', lineHeight: '1.6', fontWeight: '500' }}>
             Organiza shows, repertorios, multitracks y secuencias <br className="hide-mobile" /> desde una sola plataforma.
           </p>
-          <p className="hero-clarifier">
+          <p className="hero-clarifier" style={{ marginTop: '2rem', opacity: 0.6 }}>
             Eventos <span className="dot">•</span> Repertorios <span className="dot">•</span> Recursos <span className="dot">•</span> Multitracks <span className="dot">•</span> Secuencias
           </p>
           
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '3.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', width: 'auto' }}>Empezar Ahora</button>
-            <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1rem 2rem', fontSize: '1.1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto' }}>Ver planes</button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', marginTop: '3.5rem' }}>
+            <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '800' }}>Empezar Ahora</button>
+              <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '800' }}>Ver planes</button>
+            </div>
           </div>
           
-          <div className="compatibility-badges-centered" style={{ marginTop: '5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem', display: 'block', width: '100%', opacity: 0.8 }}>Disponible en</span>
-            <div className="comp-item-badge"><span></span> macOS</div>
-            <div className="comp-item-badge"><span>⊞</span> Windows</div>
-            <div className="comp-item-badge"><span>🤖</span> Android</div>
-            <div className="comp-item-badge"><span>🌐</span> Web</div>
+          <div className="compatibility-badges-centered" style={{ marginTop: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
+            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '4px' }}>Disponible en</span>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+              <img 
+                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/BadgeMacOS.png" 
+                alt="MacOS" 
+                style={{ height: '42px', width: 'auto', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
+                onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
+                onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
+              />
+              <img 
+                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/images.png" 
+                alt="Windows" 
+                style={{ height: '42px', width: 'auto', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
+                onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
+                onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
+              />
+              <img 
+                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/0w8ONb9ouWJ2GDFdyHnwlzOy90.avif" 
+                alt="Google Play" 
+                style={{ height: '42px', width: 'auto', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
+                onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
+                onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
+              />
+            </div>
           </div>
         </div>
-      </header>
+      </main>
 
       {/* Frase Heroica Expandida (Premium Statement) */}
       <section className="premium-statement">
@@ -64,6 +95,55 @@ export default function LandingPage({ onGetStarted }) {
           <p className="statement-support">
             Pensado para bandas y equipos musicales que quieren trabajar con <span className="serif-accent">más orden, menos caos</span> y una experiencia más completa.
           </p>
+        </div>
+      </section>
+
+      {/* Pro Player Showcase Section */}
+      <section id="multitrack" className="pro-player-showcase" style={{ padding: '8rem 8%', background: 'linear-gradient(to bottom, #0f172a, #020617)' }}>
+        <div style={{ display: 'flex', gap: '5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '350px', order: 2 }}>
+            <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem' }}>
+              Mezclador Pro. <br/>
+              <span className="serif-accent">Potencia Nativa.</span>
+            </h2>
+            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '2rem' }}>
+              Nuestro motor de audio de alto rendimiento te permite gestionar todos tus multitracks simultáneos con latencia cero. Diseñado específicamente para músicos que necesitan fiabilidad absoluta en el escenario.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {[
+                { title: 'Audio Multicanal', desc: 'Control independiente de volumen y ruteo por track.' },
+                { title: 'Sincronización Local', desc: 'Descarga y reproduce sin depender del internet.' },
+                { title: 'Resiliencia de Hardware', desc: 'Recuperación instantánea ante desconexiones.' }
+              ].map((item, i) => (
+                <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</div>
+                  <div>
+                    <strong style={{ display: 'block', color: 'white' }}>{item.title}</strong>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{item.desc}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div style={{ flex: '1.2', minWidth: '350px', order: 1 }}>
+            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, rgba(139,92,246,0.1), transparent)', zIndex: 2, pointerEvents: 'none' }}></div>
+              <img 
+                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-04-29%20121603.png" 
+                alt="Pro Player Interface" 
+                style={{ 
+                  width: '100%', 
+                  height: '550px', 
+                  objectFit: 'cover', 
+                  objectPosition: 'top left', 
+                  transition: 'transform 0.5s ease',
+                  display: 'block'
+                }}
+                onMouseOver={e => e.currentTarget.style.transform='scale(1.05)'}
+                onMouseOut={e => e.currentTarget.style.transform='scale(1)'}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -116,12 +196,12 @@ export default function LandingPage({ onGetStarted }) {
             </thead>
             <tbody>
               {[
-                { feature: "Reproductor de Multitracks & Secuencias", bandly: true, others: "Pago Adicional" },
-                { feature: "Almacenamiento Cloud incluido", bandly: true, others: "Suscripción aparte" },
-                { feature: "Gestión de Equipos y Roles", bandly: true, others: "No disponible" },
-                { feature: "Calendario de Eventos y Ensayos", bandly: true, others: "App externa" },
-                { feature: "Repertorios, Letras y PDF Charts", bandly: true, others: "Limitado" },
-                { feature: "Precio único mensual", bandly: "Desde $12", others: "$35+ mensual" }
+                { feature: "Reproductor de Multitracks & DAW Nativo", bandly: true, others: "No disponible (App aparte)" },
+                { feature: "Usuarios / Miembros", bandly: "Ilimitados (Elite)", others: "Limitado (Max 1000)" },
+                { feature: "Almacenamiento para Stems/Pistas", bandly: "Hasta 50 GB", others: "Limitado (2GB - 11GB)" },
+                { feature: "Eventos y Ensayos", bandly: "Ilimitados", others: "Limitado por plan" },
+                { feature: "Charts en PDF y Letras", bandly: true, others: true },
+                { feature: "Costo para Equipos Grandes", bandly: "$39/mes", others: "$135+/mes" }
               ].map((item, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1.2rem', fontWeight: 500 }}>{item.feature}</td>
@@ -141,14 +221,14 @@ export default function LandingPage({ onGetStarted }) {
       {/* Pricing Section */}
       <section id="pricing" className="landing-pricing-section">
         <div className="section-header-centered">
-          <h2 className="section-title-large">Planes simples para cada etapa de tu equipo</h2>
+          <h2 className="section-title-large">Planes diseñados para cada etapa de tu equipo</h2>
           <p className="section-subtitle">Empieza gratis y escala cuando necesites más usuarios, más almacenamiento y herramientas avanzadas para preparar cada presentación.</p>
           
           {/* Billing Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '3rem', marginBottom: '1rem' }}>
             <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem' }}>Mensual</span>
             <div 
-              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'semester' : 'monthly')}
+              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
               style={{ 
                 width: '50px', 
                 height: '26px', 
@@ -171,9 +251,9 @@ export default function LandingPage({ onGetStarted }) {
                 boxShadow: '0 0 10px var(--primary)'
               }} />
             </div>
-            <span style={{ color: billingPeriod === 'semester' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Semestral
-              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>AHORRA 20%</span>
+            <span style={{ color: billingPeriod === 'annual' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Anual
+              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>AHORRA 30%</span>
             </span>
           </div>
         </div>
@@ -188,7 +268,7 @@ export default function LandingPage({ onGetStarted }) {
             <ul className="pricing-features">
               <li><ShieldCheck size={16} /> 1 banda u organización</li>
               <li><ShieldCheck size={16} /> Hasta 10 usuarios</li>
-              <li><ShieldCheck size={16} /> 400 MB almacenamiento</li>
+              <li><ShieldCheck size={16} /> 300 MB almacenamiento</li>
               <li><ShieldCheck size={16} /> Calendario de eventos</li>
               <li><ShieldCheck size={16} /> Repertorios básicos</li>
               <li><ShieldCheck size={16} /> Letras</li>
@@ -202,11 +282,11 @@ export default function LandingPage({ onGetStarted }) {
             <div className="pricing-badge-popular">RECOMENDADO</div>
             <h3>Starter</h3>
             <div className="price">
-              {billingPeriod === 'monthly' ? '$12' : '$59'}
-              <span>/{billingPeriod === 'monthly' ? 'mes' : 'semestre'}</span>
+              {billingPeriod === 'monthly' ? '$9' : '$75'}
+              <span>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $9.8 / mes'}
+              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $6.2 / mes'}
             </p>
             <ul className="pricing-features">
               <li><Crown size={16} color="var(--primary)" /> Hasta 3 bandas</li>
@@ -226,16 +306,16 @@ export default function LandingPage({ onGetStarted }) {
             <div className="pricing-badge">PRO</div>
             <h3>Pro</h3>
             <div className="price">
-              {billingPeriod === 'monthly' ? '$19' : '$99'}
-              <span>/{billingPeriod === 'monthly' ? 'mes' : 'semestre'}</span>
+              {billingPeriod === 'monthly' ? '$19' : '$159'}
+              <span>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $16.5 / mes'}
+              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $13.2 / mes'}
             </p>
             <ul className="pricing-features">
               <li><Crown size={16} color="var(--accent)" /> Hasta 10 bandas</li>
-              <li><Crown size={16} color="var(--accent)" /> Hasta 50 usuarios</li>
-              <li><Crown size={16} color="var(--accent)" /> 30 GB almacenamiento</li>
+              <li><Crown size={16} color="var(--accent)" /> Hasta 75 usuarios</li>
+              <li><Crown size={16} color="var(--accent)" /> 45 GB almacenamiento</li>
               <li><Crown size={16} color="var(--accent)" /> Todo lo de Starter</li>
               <li><Crown size={16} color="var(--accent)" /> Sala de previsualización</li>
               <li><Crown size={16} color="var(--accent)" /> Player de secuencias</li>
@@ -248,16 +328,16 @@ export default function LandingPage({ onGetStarted }) {
             <div className="pricing-badge">ELITE</div>
             <h3>Elite</h3>
             <div className="price">
-              {billingPeriod === 'monthly' ? '$39' : '$199'}
-              <span>/{billingPeriod === 'monthly' ? 'mes' : 'semestre'}</span>
+              {billingPeriod === 'monthly' ? '$39' : '$329'}
+              <span>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $33.1 / mes'}
+              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $27.4 / mes'}
             </p>
             <ul className="pricing-features">
               <li><Crown size={16} color="var(--accent)" /> Bandas ilimitadas</li>
-              <li><Crown size={16} color="var(--accent)" /> Hasta 100 usuarios</li>
-              <li><Crown size={16} color="var(--accent)" /> 50 GB almacenamiento</li>
+              <li><Crown size={16} color="var(--accent)" /> Usuarios ilimitados</li>
+              <li><Crown size={16} color="var(--accent)" /> 100 GB almacenamiento</li>
               <li><Crown size={16} color="var(--accent)" /> Todo lo de Pro</li>
               <li><Crown size={16} color="var(--accent)" /> Roles y permisos</li>
               <li><Crown size={16} color="var(--accent)" /> Prioridad en soporte</li>
@@ -275,20 +355,15 @@ export default function LandingPage({ onGetStarted }) {
         <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 4rem', fontSize: '1.1rem', borderRadius: '50px' }}>Comenzar gratis</button>
       </section>
 
-      {/* Footer Legal Profesional */}
-      <footer className="landing-footer-legal" style={{ padding: '4rem 2rem', background: '#050506', borderTop: '1px solid #111', color: '#444', textAlign: 'center' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-            Bandly es una plataforma para organizar shows, repertorios, multitracks y secuencias desde un solo lugar.
-            Uso sujeto a nuestros <a href="/terminos" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/terminos'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Términos y Condiciones</a> y <a href="/privacidad" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/privacidad'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Política de Privacidad</a>.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '0.75rem', marginBottom: '1.5rem' }}>
-             <span>Operado por Johan Sebastian Jimenez Calderon</span>
-             <span>•</span>
-             <span>Bogotá, Colombia</span>
+      <footer className="landing-footer">
+        <div className="footer-content">
+          <div className="footer-links" style={{ fontSize: '0.65rem' }}>
+            <span onClick={() => onNavigate('legal_terms')} style={{ cursor: 'pointer' }}>Términos</span>
+            <span onClick={() => onNavigate('legal_privacy')} style={{ cursor: 'pointer' }}>Privacidad</span>
+            <a href="mailto:dependent.mix@gmail.com">Contacto</a>
           </div>
-          <p style={{ fontSize: '0.75rem' }}>Contacto: <a href="mailto:dependent.mix@gmail.com" style={{ color: '#888' }}>dependent.mix@gmail.com</a></p>
-          <p style={{ marginTop: '2rem', fontSize: '0.65rem', opacity: 0.5 }}>© 2026 Bandly Live Engine. Todos los derechos reservados.</p>
+          <p style={{ margin: '0.5rem 0', opacity: 0.8 }}>Operado por Johan Sebastian Jimenez Calderon • Bogotá, Colombia</p>
+          <p style={{ opacity: 0.5, fontSize: '0.6rem' }}>© 2026 Bandly Live Engine. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

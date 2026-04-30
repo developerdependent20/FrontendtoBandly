@@ -14,7 +14,7 @@ import * as Icons from 'lucide-react';
 const { 
   Settings, Play, Pause, Layout, Volume2, Bell, BellOff, FolderOpen, 
   Save, Activity, Cloud, X, Loader2, Square, SkipBack, Trash2, 
-  ChevronUp, ChevronDown, Grid 
+  ChevronUp, ChevronDown, Grid, Crown 
 } = Icons;
 
 const sortTracks = (tracksList) => {
@@ -34,45 +34,77 @@ const sortTracks = (tracksList) => {
 };
 
 const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading }) => (
-  <aside style={{ width: '300px', background: '#0f172a', borderLeft: '1px solid var(--daw-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-    <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--daw-cyan)' }}>
-        <Icons.Layout size={16} />
-        <span style={{ fontWeight: '900', fontSize: '0.75rem', letterSpacing: '1px' }}>SHOW MANAGER</span>
+  <aside style={{ 
+    position: 'absolute', right: 0, top: 0, bottom: 0,
+    width: '300px', background: 'rgba(15, 23, 42, 0.4)', 
+    borderLeft: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', 
+    overflow: 'hidden', backdropFilter: 'blur(30px)', zIndex: 10
+  }}>
+    <div style={{ padding: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: 'rgba(255,255,255,0.6)' }}>
+        <Icons.Layout size={18} />
+        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px' }}>SETLIST MANAGER</span>
       </div>
     </div>
-    <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
-      {setlist.map((song, idx) => (
-        <div key={song.id} className={`setlist-item ${activeSong?.id === song.id ? 'active' : ''}`}
-          style={{ position: 'relative' }}
-        >
-          <div onClick={() => onSelect(song)} style={{ flex: 1, cursor: 'pointer' }}>
-            <div style={{ fontWeight: '800', fontSize: '0.75rem', opacity: 0.5 }}>{idx + 1}. {song.artist || 'Bandly Artist'}</div>
-            <div style={{ fontSize: '1rem', fontWeight: '900', color: activeSong?.id === song.id ? 'var(--daw-cyan)' : 'white' }}>{song.title}</div>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <span style={{ fontSize: '0.6rem', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontWeight: '900' }}>{song.bpm} BPM</span>
-              {activeSong?.id === song.id && loading && <Icons.Loader2 size={12} className="animate-spin" color="var(--daw-cyan)" />}
-            </div>
-          </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onRemove(song.id); }}
-            title="Quitar del setlist"
-            style={{
-              position: 'absolute', top: '8px', right: '8px',
-              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-              color: '#f87171', borderRadius: '4px', padding: '2px 6px',
-              cursor: 'pointer', fontSize: '0.6rem', fontWeight: '900',
-              opacity: 0.7, transition: 'opacity 0.15s'
+    
+    <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column' }}>
+      {setlist.map((song, idx) => {
+        const isActive = activeSong?.id === song.id;
+        return (
+          <div 
+            key={`${song.id}-${idx}`} 
+            onClick={() => onSelect(song)}
+            style={{ 
+              padding: '16px', borderRadius: '10px', marginBottom: '8px',
+              background: isActive ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)' : 'rgba(255,255,255,0.02)',
+              display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
+              border: '1px solid',
+              borderColor: isActive ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255,255,255,0.03)',
+              boxShadow: isActive ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
+              position: 'relative', overflow: 'hidden'
             }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
           >
-            ✕
-          </button>
-        </div>
-      ))}
+            {isActive && (
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#a855f7' }} />
+            )}
+
+            <div style={{ 
+              width: '28px', height: '28px', borderRadius: '6px', 
+              background: isActive ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255,255,255,0.05)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.65rem', fontWeight: '900', color: isActive ? '#fff' : 'rgba(255,255,255,0.2)'
+            }}>
+              {isActive ? <Icons.Play size={14} fill="currentColor" /> : (idx + 1).toString().padStart(2, '0')}
+            </div>
+
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ 
+                fontSize: '0.85rem', fontWeight: isActive ? '800' : '500', 
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'
+              }}>
+                {song.title}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>{song.bpm || '120'} BPM</span>
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)' }}>•</span>
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>{song.key || 'G#m'}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={(e) => { e.stopPropagation(); onRemove(idx); }} 
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', cursor: 'pointer', padding: '4px' }}
+            >
+              <Icons.Trash2 size={14} />
+            </button>
+          </div>
+        );
+      })}
+
       {setlist.length === 0 && (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', fontWeight: '700' }}>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '0.7rem', fontWeight: '700', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '8px' }}>
           Abre el repertorio para añadir canciones
         </div>
       )}
@@ -90,7 +122,8 @@ const MemoizedTransportUI = React.memo(({
   showPads, setShowPads,
   playbackSample, sampleRate,
   reconnectAudio, setIsConfigured,
-  isLoadingStems
+  isLoadingStems,
+  masterVolume, setMasterVolume
 }) => {
   const bpm = metronome.bpm || 120;
   const sr = sampleRate || 44100;
@@ -102,67 +135,72 @@ const MemoizedTransportUI = React.memo(({
 
   return (
     <header style={{ 
-    height: '75px', background: '#020617', padding: '0 2rem', borderBottom: '1px solid var(--daw-border)', 
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
-  }}>
-    <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', color: 'var(--daw-cyan)' }}>
-        <Activity size={20} strokeWidth={3} className={isPlaying ? "animate-pulse" : ""} />
-        <span style={{ fontWeight: '900', fontSize: '0.9rem', letterSpacing: '2px' }}>BANDLY DAW</span>
+      height: '64px', background: 'rgba(8, 10, 16, 0.8)', 
+      borderBottom: '1px solid rgba(255,255,255,0.04)',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+      padding: '0 24px', backdropFilter: 'blur(10px)', zIndex: 100
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ 
+            width: '32px', height: '32px', borderRadius: '8px', 
+            background: 'linear-gradient(135deg, #a855f7, #3b82f6)', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' 
+          }}>
+            <Icons.Activity size={18} color="white" strokeWidth={3} className={isPlaying ? "animate-pulse" : ""} />
+          </div>
+          <span style={{ fontSize: '1.1rem', fontWeight: '950', color: '#fff', letterSpacing: '2px' }}>BANDLY</span>
+        </div>
+
+        <div style={{ 
+          display: 'flex', alignItems: 'center', gap: '20px', 
+          background: 'rgba(255,255,255,0.03)', padding: '6px 20px', 
+          borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' 
+        }}>
+          <button onClick={handleRestart} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><SkipBack size={16} fill="currentColor" /></button>
+          
+          <button 
+            onClick={togglePlay} 
+            disabled={!engineReady} 
+            style={{ 
+              background: isLoadingStems ? '#78350f' : (isPlaying ? 'rgba(239, 68, 68, 0.15)' : 'linear-gradient(135deg, #a855f7, #3b82f6)'),
+              padding: '6px 24px',
+              borderRadius: '20px',
+              border: isPlaying ? '1px solid #ef4444' : 'none',
+              display: 'flex', alignItems: 'center', gap: '10px',
+              cursor: isLoadingStems ? 'wait' : 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {isPlaying ? <Pause size={16} fill="#ef4444" color="#ef4444" /> : <Play size={16} fill="white" color="white" />}
+            <span style={{ fontWeight: '900', fontSize: '0.75rem', color: isPlaying ? '#ef4444' : 'white' }}>
+              {isLoadingStems ? 'LOADING' : (isPlaying ? 'PAUSE' : 'PLAY')}
+            </span>
+          </button>
+
+          <button onClick={handleStop} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><Square size={16} fill="currentColor" /></button>
+        </div>
       </div>
-      
-      <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '6px 15px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <button onClick={handleRestart} className="transport-btn" title="Volver al inicio"><SkipBack size={18} fill="currentColor" /></button>
 
-        <button 
-          onClick={togglePlay} 
-          disabled={!engineReady} 
-          className="main-play-btn"
-          style={{ 
-            background: isLoadingStems ? '#78350f' : (isPlaying ? '#ef4444' : 'var(--daw-cyan)'),
-            padding: '10px 25px',
-            borderRadius: '10px',
-            display: 'flex', alignItems: 'center', gap: '10px',
-            boxShadow: isLoadingStems ? '0 0 20px rgba(251, 191, 36, 0.4)' : (isPlaying ? '0 0 20px rgba(239, 68, 68, 0.4)' : '0 0 20px rgba(34, 211, 238, 0.4)'),
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            opacity: isLoadingStems ? 0.8 : 1,
-            cursor: isLoadingStems ? 'wait' : 'pointer'
-          }}
-        >
-          {isLoadingStems ? (
-            <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite', fontSize: '16px' }}>⏳</span>
-          ) : isPlaying ? (
-            <Pause size={20} fill="white" />
-          ) : (
-            <Play size={20} fill="white" style={{ marginLeft: '2px' }} />
-          )}
-          <span style={{ fontWeight: '900', fontSize: '0.8rem', color: 'white' }}>
-            {isLoadingStems ? 'CARGANDO' : (isPlaying ? 'PAUSE' : 'PLAY')}
-          </span>
-        </button>
-
-        <button onClick={handleStop} className="transport-btn" title="Detener"><Square size={18} fill="currentColor" /></button>
-      </div>
-
-      {/* CONTADOR BAR / BEAT (Hito 60) */}
+      {/* CONTADOR BAR / BEAT - ESTILO PREMIUM */}
       <div style={{ 
-        display: 'flex', gap: '1rem', alignItems: 'center', 
-        background: 'rgba(0,0,0,0.5)', padding: '8px 25px', 
-        borderRadius: '12px', border: '1px solid rgba(34, 211, 238, 0.2)',
-        boxShadow: 'inset 0 0 15px rgba(34, 211, 238, 0.05)',
-        minWidth: '220px', justifyContent: 'center'
+        display: 'flex', gap: '1.2rem', alignItems: 'center', 
+        background: 'rgba(0,0,0,0.3)', padding: '6px 20px', 
+        borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)',
+        boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
+        minWidth: '180px', justifyContent: 'center'
       }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span style={{ fontSize: '0.6rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6, letterSpacing: '1px' }}>BAR</span>
-          <span className="mono-data" style={{ fontSize: '1.4rem', fontWeight: '950', color: 'var(--daw-cyan)', textShadow: '0 0 10px rgba(34, 211, 238, 0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>BAR</span>
+          <span className="mono-data" style={{ fontSize: '1.2rem', fontWeight: '950', color: '#fff' }}>
             {bar}
           </span>
         </div>
-        <span style={{ color: 'var(--daw-cyan)', opacity: 0.3, fontWeight: '900' }}>·</span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span style={{ fontSize: '0.6rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6, letterSpacing: '1px' }}>BEAT</span>
-          <span className="mono-data" style={{ fontSize: '1.4rem', fontWeight: '950', color: 'var(--daw-cyan)', textShadow: '0 0 10px rgba(34, 211, 238, 0.3)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.1)', fontWeight: '900' }}>|</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>BEAT</span>
+          <span className="mono-data" style={{ fontSize: '1.2rem', fontWeight: '950', color: '#fff' }}>
             {beat}
           </span>
         </div>
@@ -217,43 +255,79 @@ const MemoizedTransportUI = React.memo(({
           />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', width: '50px' }}>
-           <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>VOL</span>
-           <input 
-             type="range" min="0" max="1" step="0.01"
-             value={metronome.volume}
-             onChange={(e) => onMetronomeUpdate('volume', parseFloat(e.target.value))}
-             style={{ width: '100%', height: '4px', accentColor: 'var(--daw-cyan)' }}
-           />
+        {/* SELECTOR DE SALIDA DEL CLICK */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: '85px', marginLeft: '10px' }}>
+          <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>OUT CLICK</span>
+          <select 
+            value={metronome.outputCh}
+            onChange={(e) => onMetronomeUpdate('outputCh', parseInt(e.target.value))}
+            style={{
+              background: 'transparent', border: 'none', color: 'white', 
+              fontWeight: '900', fontSize: '0.75rem', outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            {Array.from({ length: deviceChannels }).map((_, idx) => (
+              <option key={idx} value={idx} style={{ background: '#020617' }}>CH {idx + 1} (MONO)</option>
+            ))}
+          </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', width: '45px' }}>
-           <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>OUT</span>
-           <select 
-             value={metronome.outputCh || 0}
-             onChange={(e) => onMetronomeUpdate('outputCh', parseInt(e.target.value))}
-             style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', fontWeight: '900', fontSize: '0.7rem', borderRadius: '4px', outline: 'none', cursor: 'pointer' }}
-           >
-             {[...Array(deviceChannels || 2)].map((_, i) => (
-               <option key={i} value={i} style={{ background: '#020617' }}>{i + 1}</option>
-             ))}
-           </select>
-        </div>
-      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>METRONOME VOLUME</span>
+              <input 
+                type="range" min="0" max="1.5" step="0.01" 
+                value={metronome.volume} 
+                onChange={(e) => onMetronomeUpdate('volume', parseFloat(e.target.value))}
+                style={{ width: '100px', height: '4px', accentColor: '#ffffff' }} 
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', marginLeft: '10px' }}>
+              <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>TAP TEMPO</span>
+              <button 
+                onClick={() => {
+                  const now = Date.now();
+                  const taps = window._bandlyTaps || [];
+                  const newTaps = [...taps.filter(t => now - t < 2000), now];
+                  window._bandlyTaps = newTaps;
+                  
+                  if (newTaps.length >= 2) {
+                    const diffs = [];
+                    for(let i = 1; i < newTaps.length; i++) diffs.push(newTaps[i] - newTaps[i-1]);
+                    const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+                    const calculatedBpm = Math.round(60000 / avg);
+                    if (calculatedBpm >= 40 && calculatedBpm <= 250) {
+                      onMetronomeUpdate('bpm', calculatedBpm);
+                    }
+                  }
+                }}
+                className="tap-btn"
+                style={{ 
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', fontWeight: '950', fontSize: '0.65rem', 
+                  padding: '6px 12px', borderRadius: '4px', cursor: 'pointer',
+                  transition: 'all 0.1s active:scale-95'
+                }}
+              >
+                TAP
+              </button>
+            </div>
+          </div>
     </div>
 
     <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '8px' }}>
         <button 
           onClick={() => setShowPads(!showPads)} 
-          className={`icon-btn ${showPads ? 'active-cyan' : ''}`} 
+          className={`icon-btn ${showPads ? 'active-white' : ''}`} 
           title="Toggle Pad Board"
-          style={{ background: showPads ? 'rgba(34,211,238,0.1)' : 'transparent' }}
+          style={{ background: showPads ? 'rgba(255,255,255,0.1)' : 'transparent' }}
         >
-          <Grid size={22} color={showPads ? 'var(--daw-cyan)' : 'white'} />
+          <Grid size={22} color={showPads ? '#fff' : 'white'} />
         </button>
 
-        <button onClick={() => setShowCloudBrowser(true)} className="icon-btn-cyan" title="Repertorio Cloud"><Cloud size={24} /></button>
+        <button onClick={() => setShowCloudBrowser(true)} className="icon-btn" title="Repertorio Cloud"><Cloud size={24} /></button>
         <button onClick={() => setIsConfigured(false)} className="icon-btn" title="Configuración de Audio"><Settings size={22} /></button>
       </div>
     </div>
@@ -271,6 +345,7 @@ export default function ProMixer({ session }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null); 
   const [metronome, setMetronome] = useState({ enabled: true, bpm: 120, volume: 0.5, outputCh: 0 });
+  const [masterVolume, setMasterVolume] = useState(1);
   const [deviceChannels, setDeviceChannels] = useState(2); // Volvemos a 2 como base, la app se expandirá según el hardware real
   const [activeSong, setActiveSong] = useState(null);
   const [songs, setSongs] = useState([]);
@@ -307,17 +382,25 @@ export default function ProMixer({ session }) {
   }, []);
 
   useEffect(() => {
-    const fetchSongs = async () => {
-      // Optimizacion: Traer toda la jerarquia de stems desde el inicio para evitar latencia de red al cambiar de cancion
-      const { data } = await supabase.from('songs').select('*, sequences(*, sequence_stems(*))').order('title');
-      if (data) setSongs(data);
-    };
-    fetchSongs();
     const saved = localStorage.getItem('bandly_setlist');
     if (saved) {
       try { setSetlist(JSON.parse(saved)); } catch(e) {}
     }
-    // Auto-inicializar el stream de audio si ya hay un dispositivo guardado
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('bandly_setlist', JSON.stringify(setlist));
+  }, [setlist]);
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      const { data } = await supabase.from('songs').select('*, sequences(*, sequence_stems(*))').order('title');
+      if (data) setSongs(data);
+    };
+    fetchSongs();
+  }, []);
+
+  useEffect(() => {
     if (isTauri()) {
       const lastDevice = localStorage.getItem('bandly_last_audio_device');
       const savedBuffer = localStorage.getItem('bandly_buffer_size');
@@ -325,18 +408,16 @@ export default function ProMixer({ session }) {
         safeInvoke('init_audio_stream', { deviceId: lastDevice })
           .then(() => {
             if (savedBuffer) safeInvoke('set_audio_buffer_size', { size: parseInt(savedBuffer) }).catch(() => {});
-            setIsConfigured(true); // Motor OK → entrar al DAW sin HardwarePicker
+            setIsConfigured(true);
           })
-          .catch((err) => {
-            localStorage.removeItem('bandly_last_audio_device'); // Limpiar para evitar bucles de crash
-            setIsConfigured(false); // Mostrar picker para que el usuario elija de nuevo
+          .catch(() => {
+            localStorage.removeItem('bandly_last_audio_device');
+            setIsConfigured(false);
           });
-        // Mientras el init es async, dejar isConfigured=false para mostrar una pantalla de espera
       } else {
-        // Sin dispositivo guardado → ir directo al picker (isConfigured ya es false)
+        setIsConfigured(false);
       }
     } else {
-      // No es Tauri (web preview) → entrar directo
       setIsConfigured(true);
     }
   }, []);
@@ -426,23 +507,8 @@ export default function ProMixer({ session }) {
     }
   }, [activeSong]);
 
-  useEffect(() => {
-    const interval = setInterval(handleSyncState, 300);
-    return () => clearInterval(interval);
-  }, [handleSyncState]);
-
-  const togglePlay = useCallback(async (e) => {
-    if (e) {
-      if (typeof e.preventDefault === 'function') e.preventDefault();
-      if (typeof e.stopPropagation === 'function') e.stopPropagation();
-    }
-    if (isTauri()) {
-      const nextState = !isPlaying;
-      setIsPlaying(nextState);
-      lastActionTime.current = Date.now();
-      safeInvoke('toggle_playback', { playing: nextState });
-    }
-  }, [isPlaying]);
+  // RE-SINCRONIZACIÓN DE ESTADO (Fuerza Bruta contra caché)
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   const handleStop = useCallback(async () => {
     setIsPlaying(false);
@@ -461,6 +527,48 @@ export default function ProMixer({ session }) {
     }
     setPlaybackSample(0);
   }, []);
+
+  const togglePlay = useCallback(async (e) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (isTauri()) {
+      const nextState = !isPlaying;
+      setIsPlaying(nextState);
+      lastActionTime.current = Date.now();
+      safeInvoke('toggle_playback', { playing: nextState });
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const interval = setInterval(handleSyncState, 300);
+    return () => clearInterval(interval);
+  }, [handleSyncState]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        document.activeElement.tagName === 'INPUT' ||
+        document.activeElement.tagName === 'TEXTAREA' ||
+        document.activeElement.tagName === 'SELECT' ||
+        document.activeElement.isContentEditable
+      ) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      }
+      if (e.code === 'Enter') {
+        e.preventDefault();
+        handleStop();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, handleStop]);
+
 
   const onTrackUpdate = useCallback(async (type, data) => {
     if (!data.trackId) return;
@@ -517,18 +625,17 @@ export default function ProMixer({ session }) {
       const songDir = song.id.toString();
       setActiveSequenceId(sequence.id);
       setMarkers(sequence.markers || []);
-      const resTracks = stems.map((stem) => ({
-        id: stem.id, name: stem.instrument_label || stem.original_name, peak: 0, outputIdx: 1, 
-        color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
-      }));
+      const resTracks = stems.map((stem) => {
+        const rawName = stem.original_name || stem.instrument_label || 'Inst';
+        const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
+        return {
+          id: stem.id, name: cleanName, peak: 0, outputIdx: 1, 
+          color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
+        };
+      });
       setTracks(sortTracks(resTracks));
       setActiveSong(song);
-      setSetlist(prev => {
-        if (prev.find(s => s.id === song.id)) return prev;
-        const next = [...prev, song];
-        localStorage.setItem('bandly_setlist', JSON.stringify(next));
-        return next;
-      });
+      setActiveSong(song);
       if (isTauri()) {
         try {
           setIsLoadingStems(true); // Fase 2: Mostrar estado de carga
@@ -584,9 +691,9 @@ export default function ProMixer({ session }) {
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
   }, [activeSequenceId, markers]);
 
-  const handleRemoveFromSetlist = useCallback((songId) => {
+  const handleRemoveFromSetlist = useCallback((index) => {
     setSetlist(prev => {
-      const next = prev.filter(s => s.id !== songId);
+      const next = prev.filter((_, i) => i !== index);
       localStorage.setItem('bandly_setlist', JSON.stringify(next));
       return next;
     });
@@ -597,7 +704,7 @@ export default function ProMixer({ session }) {
   }} />;
 
   return (
-    <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', background: '#020617' }}>
+    <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', background: '#020617' }}>
       {/* BANNER DE PÁNICO (Resiliencia UX) */}
       {audioError && (
         <div style={{ 
@@ -626,16 +733,19 @@ export default function ProMixer({ session }) {
           metronome={metronome} deviceChannels={deviceChannels} showPads={showPads} setShowPads={setShowPads}
           playbackSample={playbackSample} sampleRate={playbackSR}
           reconnectAudio={reconnectAudio} setIsConfigured={setIsConfigured}
-          isLoadingStems={isLoadingStems}
+          isLoadingStems={isLoadingStems} masterVolume={masterVolume} setMasterVolume={setMasterVolume}
           onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
           if (isTauri()) await safeInvoke('set_metronome', { enabled: next.enabled, volume: next.volume, bpm: next.bpm, outputCh: next.outputCh, standalone: true });
         }}
       />
-      <main style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid var(--daw-border)' }}>
+      <main style={{ flex: 1, display: 'flex', overflow: 'hidden', width: '100%', maxWidth: '100%', position: 'relative' }}>
+        <div style={{ 
+          flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', 
+          paddingRight: '300px' 
+        }}>
+          <div style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.1)', borderBottom: '1px solid var(--daw-border)' }}>
             <CueTimeline 
               progress={totalSamples > 0 ? playbackSample / totalSamples : 0} totalSamples={totalSamples} 
               playbackSample={playbackSample} bpm={metronome.bpm} sampleRate={playbackSR} 
@@ -644,17 +754,16 @@ export default function ProMixer({ session }) {
               onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: Math.floor(p * totalSamples) })} 
             />
           </div>
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                <MemoizedMixerConsole tracks={tracks} peaks={peaks} onTrackUpdate={onTrackUpdate} deviceChannels={deviceChannels} />
-              </div>
-             {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} /></div>}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <MemoizedMixerConsole tracks={tracks} peaks={peaks} onTrackUpdate={onTrackUpdate} deviceChannels={deviceChannels} />
           </div>
-        </div>
+             {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
+          </div>
         <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} />
       </main>
       {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); handleSyncSong(s); setShowCloudBrowser(false); }} />}
-      {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="var(--daw-cyan)" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: 'var(--daw-cyan)', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
+      {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
+      
     </div>
   );
 }

@@ -1,8 +1,11 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
+import SubscriptionModal from '../DAW/SubscriptionModal';
+import '../DAW/DAW.css';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
+  const [showSubscription, setShowSubscription] = React.useState(false);
   const userFunctions = profile?.functions || [];
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
   // Ahora todos pueden ver el Planner, pero se validará lectura/escritura adentro
@@ -63,6 +66,36 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
       </nav>
 
       <main className="main-content">
+        <header style={{ 
+          height: '60px', background: 'rgba(15, 23, 42, 0.2)', 
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex', justifyContent: 'flex-end', alignItems: 'center', 
+          padding: '0 2rem', backdropFilter: 'blur(10px)'
+        }}>
+          <div 
+            onClick={() => setShowSubscription(true)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '8px', 
+              background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)',
+              padding: '6px 16px', borderRadius: '20px', cursor: 'pointer',
+              transition: 'all 0.2s hover:bg-white/5'
+            }}
+          >
+            <Crown size={14} color="#a855f7" />
+            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>
+              {(profile?.plan_id || 'STARTER').toUpperCase()}
+            </span>
+            {(!profile?.plan_id || profile.plan_id === 'starter') && (
+              <span style={{ fontSize: '0.6rem', background: '#a855f7', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontWeight: '900', marginLeft: '6px' }}>
+                UPGRADE
+              </span>
+            )}
+          </div>
+        </header>
+
+        {showSubscription && (
+          <SubscriptionModal profile={profile} onClose={() => setShowSubscription(false)} />
+        )}
 
         {children}
       </main>

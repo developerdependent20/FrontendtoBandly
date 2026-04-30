@@ -4,6 +4,16 @@ import { Settings, Music, Layers } from 'lucide-react';
 
 const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceChannels = 2 }) => {
   const [activeSolo, setActiveSolo] = useState(null);
+  const [selectedTracks, setSelectedTracks] = useState([]);
+
+  const toggleSelection = (trackId, isShift) => {
+    setSelectedTracks(prev => {
+      if (isShift) {
+        return prev.includes(trackId) ? prev.filter(id => id !== trackId) : [...prev, trackId];
+      }
+      return [trackId];
+    });
+  };
 
   const handleVolumeChange = (trackId, volume) => {
     onTrackUpdate('volume', { trackId, volume });
@@ -19,7 +29,14 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
   };
 
   const handleOutput = (trackId, output) => {
-    onTrackUpdate('output', { trackId, output });
+    // Si la pista cambiada está seleccionada, aplicamos a todas las seleccionadas
+    if (selectedTracks.includes(trackId)) {
+      selectedTracks.forEach(id => {
+        onTrackUpdate('output', { trackId: id, output });
+      });
+    } else {
+      onTrackUpdate('output', { trackId, output });
+    }
   };
 
   const handlePanMode = (trackId, isStereo) => {
@@ -27,7 +44,7 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--daw-bg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', overflow: 'hidden', background: 'var(--daw-bg)' }}>
 
       {/* Rack de Canales */}
       <div className="mixer-scroll">
@@ -47,6 +64,8 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
               onSoloToggle={handleSolo}
               onOutputToggle={handleOutput}
               onPanModeToggle={handlePanMode}
+              onSelect={(isShift) => toggleSelection(track.id, isShift)}
+              isSelected={selectedTracks.includes(track.id)}
               deviceChannels={deviceChannels}
             />
           ))

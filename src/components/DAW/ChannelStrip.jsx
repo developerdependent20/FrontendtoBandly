@@ -4,12 +4,17 @@ import { Volume2, VolumeX, Headphones } from 'lucide-react';
 // Constantes físicas del Fader
 const FADER_HEIGHT = 140;
 
-const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, deviceChannels = 2 }) => {
+const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, onSelect, isSelected, deviceChannels = 2 }) => {
   const [localVol, setLocalVol] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [isSolo, setIsSolo] = useState(false);
   const [isStereo, setIsStereo] = useState(true);
   const [localOutputIdx, setLocalOutputIdx] = useState(track.outputIdx || 0);
+
+  // Sincronizar estado local cuando cambia la prop (vital para ruteo simultáneo)
+  useEffect(() => {
+    setLocalOutputIdx(track.outputIdx || 0);
+  }, [track.outputIdx]);
   
   // Sincronización Senior: Validar límites de salida al cambiar modo de paneo
   useEffect(() => {
@@ -116,9 +121,35 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
 
 
   return (
-    <div className="channel-strip" style={{ borderTop: `3px solid ${track.color || 'var(--daw-cyan)'}` }}>
-      <div className="channel-name" style={{ color: track.color || 'white', minHeight: '40px', flexShrink: 0, overflow: 'visible', textOverflow: 'clip' }}>
-        {track.name ? track.name.substring(0, 8) : 'Inst'}
+    <div 
+      className={`channel-strip ${isSelected ? 'selected' : ''}`} 
+      style={{ 
+        borderTop: `3px solid ${track.color || 'var(--daw-cyan)'}`, 
+        filter: isSelected ? 'none' : 'saturate(0.4)',
+        background: isSelected ? 'rgba(34, 211, 238, 0.05)' : 'transparent',
+        transition: 'all 0.2s'
+      }}
+    >
+      <div 
+        className="channel-name" 
+        onClick={(e) => onSelect && onSelect(e.shiftKey)}
+        style={{ 
+          color: isSelected ? 'var(--daw-cyan)' : '#ffffff', 
+          minHeight: '44px', 
+          flexShrink: 0, 
+          padding: '0 4px', 
+          fontSize: '11px', 
+          fontWeight: isSelected ? '900' : '400', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          textAlign: 'center', 
+          letterSpacing: '0.5px',
+          cursor: 'pointer',
+          background: isSelected ? 'rgba(34, 211, 238, 0.1)' : 'transparent'
+        }}
+      >
+        {track.name || 'Inst'}
       </div>
       
       <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'center' }}>
