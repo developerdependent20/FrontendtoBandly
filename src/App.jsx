@@ -32,9 +32,11 @@ export default function App() {
   const [view, setView] = useState(() => localStorage.getItem('bandly_view') || 'landing');
   const [showLegalBlocking, setShowLegalBlocking] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [inspectedOrg, setInspectedOrg] = useState(null);
 
   // Org Data Hook
-  const { members, events, songs, fetchData } = useOrgData(profile);
+  const effectiveOrgId = inspectedOrg?.id || profile?.org_id;
+  const { members, events, songs, fetchData } = useOrgData(effectiveOrgId);
   const orgData = React.useMemo(() => ({ members, events, songs, fetchData }), [members, events, songs, fetchData]);
 
   useEffect(() => {
@@ -187,6 +189,21 @@ export default function App() {
           onDecline={handleLogout} 
         />
       )}
+      {inspectedOrg && (
+        <div style={{ 
+          background: '#ef4444', color: '#fff', padding: '10px', textAlign: 'center', 
+          fontWeight: 'bold', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px'
+        }}>
+          <span>ESTÁS INSPECCIONANDO: {inspectedOrg.name.toUpperCase()}</span>
+          <button 
+            onClick={() => { setInspectedOrg(null); setActiveTab('admin'); }}
+            style={{ background: '#fff', color: '#ef4444', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            SALIR DE INSPECCIÓN
+          </button>
+        </div>
+      )}
       <Dashboard 
         profile={profile} 
         session={session} 
@@ -197,11 +214,11 @@ export default function App() {
         handleJoinTeam={handleJoinTeam}
       >
         {activeTab === 'admin' ? (
-          <AdminPanel />
-        ) : profile.role === 'director' ? (
-          <DirectorView profile={profile} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
+          <AdminPanel onInspect={(org) => { setInspectedOrg(org); setActiveTab('planner'); }} />
+        ) : profile.role === 'director' || inspectedOrg ? (
+          <DirectorView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         ) : (
-          <MemberView profile={profile} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
+          <MemberView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         )}
       </Dashboard>
     </>

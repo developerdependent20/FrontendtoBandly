@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, Database, HardDrive, Search } from 'lucide-react';
 
-const AdminPanel = () => {
+const AdminPanel = ({ onInspect }) => {
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -162,10 +162,14 @@ const AdminPanel = () => {
                 </div>
               </div>
 
-              <button style={{ 
-                width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
-                background: 'transparent', color: '#fff', fontSize: '0.75rem', cursor: 'pointer'
-              }}>
+              <button 
+                onClick={() => onInspect?.(org)}
+                style={{ 
+                  width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.4)',
+                  background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', fontSize: '0.75rem', cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
                 Inspeccionar Banda
               </button>
             </div>
