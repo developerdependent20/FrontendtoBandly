@@ -567,13 +567,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   return (
-    <section>
+    <section id="planner-top">
       <div className="tutorial-banner">
         <div style={{ background: 'var(--accent)', padding: '1rem', borderRadius: '15px' }}><CalendarIcon size={24} color="#0f172a" /></div>
         <div style={{ marginLeft: '1rem' }}><h4>Calendario & Planeación</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
       </div>
 
-      <section className="glass-panel" style={{ padding: '2rem' }}>
+      <section id="upcoming-events" className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
           {!readOnly && (
@@ -592,7 +592,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                {showPastEvents && <div style={{ marginTop: '1rem' }}>{renderEventList(pastEvents, true)}</div>}
              </div>
            )}
-           <div style={{ marginTop: '2rem' }}>
+           <div id="visual-calendar" style={{ marginTop: '2rem' }}>
              <h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>Calendario Visual</h4>
              <VisualCalendar events={events} onEventClick={handleEditEvent} onDayClick={handleNewEvent} />
            </div>
