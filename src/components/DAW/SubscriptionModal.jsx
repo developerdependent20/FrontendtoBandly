@@ -20,6 +20,13 @@ const SubscriptionModal = ({ profile, onClose }) => {
 
   const plans = [
     {
+      id: 'starter',
+      name: 'Starter',
+      monthly: 0,
+      yearly: 0,
+      features: ['Hasta 1 banda', '400 MB almacenamiento', 'Funciones básicas', 'Comunidad Bandly']
+    },
+    {
       id: 'pro',
       name: 'Pro',
       monthly: 19,
@@ -83,45 +90,56 @@ const SubscriptionModal = ({ profile, onClose }) => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {plans.map(plan => (
-              <div key={plan.id} style={{ 
-                background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
-                padding: '24px', display: 'flex', flexDirection: 'column'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>{plan.name}</h3>
-                   <Crown size={20} color="var(--daw-cyan)" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            {plans.map(plan => {
+              const isCurrentPlan = (profile?.organizations?.plan || 'starter').toLowerCase() === plan.id;
+              
+              return (
+                <div key={plan.id} style={{ 
+                  background: isCurrentPlan ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255,255,255,0.02)', 
+                  borderRadius: '12px', 
+                  border: isCurrentPlan ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.05)',
+                  padding: '24px', display: 'flex', flexDirection: 'column',
+                  transform: isCurrentPlan ? 'scale(1.02)' : 'none',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                     <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>{plan.name}</h3>
+                     <Crown size={20} color={isCurrentPlan ? '#a855f7' : 'var(--daw-cyan)'} />
+                  </div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '950', marginBottom: '4px' }}>
+                    ${billingPeriod === 'monthly' ? plan.monthly : plan.yearly}
+                    <span style={{ fontSize: '1rem', opacity: 0.5, fontWeight: '400' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+                  </div>
+                  <p style={{ fontSize: '0.7rem', opacity: 0.4, marginBottom: '24px' }}>
+                    {plan.monthly === 0 ? 'Gratis para siempre' : (billingPeriod === 'monthly' ? 'Facturado mensualmente' : `Equivale a $${(plan.yearly/12).toFixed(1)} / mes`)}
+                  </p>
+                  <div style={{ flex: 1, marginBottom: '24px' }}>
+                    {plan.features.map((f, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', fontSize: '0.8rem', opacity: 0.8 }}>
+                        <Check size={14} color="var(--daw-green)" />
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    disabled={loading || isCurrentPlan || plan.monthly === 0}
+                    onClick={() => handleSubscribe(plan.id)}
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: '8px', border: 'none', 
+                      background: isCurrentPlan ? 'rgba(255,255,255,0.1)' : 'var(--daw-cyan)', 
+                      color: isCurrentPlan ? '#fff' : '#000', 
+                      fontWeight: '950', fontSize: '0.8rem',
+                      cursor: (loading || isCurrentPlan || plan.monthly === 0) ? 'default' : 'pointer', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                      opacity: loading === plan.id ? 0.7 : 1
+                    }}
+                  >
+                    {loading === plan.id ? <Loader2 className="animate-spin" size={18} /> : (isCurrentPlan ? 'TU PLAN ACTUAL' : 'SELECCIONAR')}
+                  </button>
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: '950', marginBottom: '4px' }}>
-                  ${billingPeriod === 'monthly' ? plan.monthly : plan.yearly}
-                  <span style={{ fontSize: '1rem', opacity: 0.5, fontWeight: '400' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
-                </div>
-                <p style={{ fontSize: '0.7rem', opacity: 0.4, marginBottom: '24px' }}>
-                  {billingPeriod === 'monthly' ? 'Facturado mensualmente' : `Equivale a $${(plan.yearly/12).toFixed(1)} / mes`}
-                </p>
-                <div style={{ flex: 1, marginBottom: '24px' }}>
-                  {plan.features.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', fontSize: '0.8rem', opacity: 0.8 }}>
-                      <Check size={14} color="var(--daw-green)" />
-                      {f}
-                    </div>
-                  ))}
-                </div>
-                <button 
-                  disabled={loading}
-                  onClick={() => handleSubscribe(plan.id)}
-                  style={{
-                    width: '100%', padding: '12px', borderRadius: '8px', border: 'none', 
-                    background: 'var(--daw-cyan)', color: '#000', fontWeight: '950', fontSize: '0.8rem',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    opacity: loading === plan.id ? 0.7 : 1
-                  }}
-                >
-                  {loading === plan.id ? <Loader2 className="animate-spin" size={18} /> : 'SELECCIONAR PLAN'}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
