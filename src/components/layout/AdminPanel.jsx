@@ -58,11 +58,48 @@ const AdminPanel = () => {
     org.invite_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleSync = async () => {
+    if (!confirm('¿Sincronizar almacenamiento de todas las bandas?')) return;
+    setLoading(true);
+    try {
+      const token = null;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.includes('auth-token')) {
+          const raw = localStorage.getItem(key);
+          token = JSON.parse(raw)?.access_token;
+          if (token) break;
+        }
+      }
+
+      await fetch('https://bandly-backend.onrender.com/api/admin/sync-storage', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      await fetchOrgs();
+      alert('Sincronización completada');
+    } catch (err) {
+      alert('Error en sincronización');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ padding: '2rem', color: '#fff' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0 }}>PANEL DE CONTROL</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0 }}>PANEL DE CONTROL</h1>
+            <button 
+              onClick={handleSync}
+              style={{ 
+                background: 'rgba(168, 85, 247, 0.2)', color: '#a855f7', border: '1px solid #a855f7',
+                padding: '4px 12px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer'
+              }}
+            >
+              SINCRONIZAR TODO
+            </button>
+          </div>
           <p style={{ opacity: 0.5 }}>Gestión global de bandas y almacenamiento</p>
         </div>
         <div style={{ position: 'relative' }}>

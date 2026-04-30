@@ -15,7 +15,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <img 
               src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/LOGO%20BANDLY%20SIN%20FONDO.png" 
               alt="Bandly" 
-              className="landing-logo" 
+              style={{ height: '32px', width: 'auto' }}
             />
           </div>
 
@@ -34,8 +34,11 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
       <main className="landing-hero-centered">
         <div className="hero-content-full">
-          <div style={{ marginBottom: '0', animation: 'dropdownFadeIn 0.8s ease-out' }}>
-            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" style={{ height: '140px', filter: 'drop-shadow(0 0 30px rgba(139, 92, 246, 0.4))' }} />
+          <div style={{ marginBottom: '1rem', animation: 'dropdownFadeIn 0.8s ease-out' }}>
+            <img 
+              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/LOGO%20BANDLY%20SIN%20FONDO.png" 
+              style={{ width: '280px', height: 'auto', filter: 'drop-shadow(0 0 30px rgba(139, 92, 246, 0.4))' }} 
+            />
           </div>
           <h1 className="hero-main-title-large" style={{ marginTop: '-1rem' }}>
             Toda tu música. <br/>
