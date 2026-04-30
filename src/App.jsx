@@ -14,6 +14,7 @@ import PrivacyPage from './pages/legal/PrivacyPage';
 import LoadingScreen from './components/LoadingScreen';
 import TermsModal from './components/TermsModal';
 import Dashboard from './components/layout/Dashboard';
+import AdminPanel from './components/layout/AdminPanel';
 import { DirectorView, MemberView } from './components/layout/RoleViews';
 
 // Hooks
@@ -195,7 +196,9 @@ export default function App() {
         handleCopyLink={handleCopyLink}
         handleJoinTeam={handleJoinTeam}
       >
-        {profile.role === 'director' ? (
+        {activeTab === 'admin' ? (
+          <AdminPanel />
+        ) : profile.role === 'director' ? (
           <DirectorView profile={profile} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         ) : (
           <MemberView profile={profile} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />

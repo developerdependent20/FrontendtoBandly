@@ -1,11 +1,12 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import '../DAW/DAW.css';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
   const [showSubscription, setShowSubscription] = React.useState(false);
+  const isSuperAdmin = profile?.email === 'dependent.mix@gmail.com';
   const userFunctions = profile?.functions || [];
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
   // Ahora todos pueden ver el Planner, pero se validará lectura/escritura adentro
@@ -59,6 +60,17 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         >
           <Users size={22} />
         </div>
+
+        {isSuperAdmin && (
+          <div 
+            className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('admin')}
+            title="Panel de Superadmin"
+            style={{ color: '#ef4444' }}
+          >
+            <ShieldCheck size={22} />
+          </div>
+        )}
 
         <div className="nav-item" style={{ marginTop: 'auto', marginBottom: '0' }} onClick={onLogout} title="Cerrar Sesión">
           <LogOut size={20} />
