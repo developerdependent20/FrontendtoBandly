@@ -15,7 +15,7 @@ export const paymentService = {
       
       console.log('[DEBUG] Iniciando pago con:', { planId, billingPeriod, userId, API_URL });
       
-      const response = await fetch(`${API_URL}/api/payments/create-preference-v2`, {
+      const response = await fetch(`${API_URL}/api/payments/create-preference`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

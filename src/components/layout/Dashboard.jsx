@@ -83,9 +83,9 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           >
             <Crown size={14} color="#a855f7" />
             <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>
-              {(profile?.plan_id || 'STARTER').toUpperCase()}
+              {(profile?.organizations?.plan || profile?.plan_id || 'STARTER').toUpperCase()}
             </span>
-            {(!profile?.plan_id || profile.plan_id === 'starter') && (
+            {(!profile?.organizations?.plan || profile.organizations.plan === 'free' || profile.organizations.plan === 'starter') && (
               <span style={{ fontSize: '0.6rem', background: '#a855f7', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontWeight: '900', marginLeft: '6px' }}>
                 UPGRADE
               </span>
