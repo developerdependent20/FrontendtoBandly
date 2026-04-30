@@ -12,7 +12,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
       const checkoutUrl = await paymentService.createCheckout(planId, billingPeriod, profile.id);
       paymentService.openCheckout(checkoutUrl);
     } catch (err) {
-      alert('Error al iniciar el pago. Inténtalo de nuevo.');
+      alert(`Error al iniciar el pago: ${err.message}`);
     } finally {
       setLoading(null);
     }

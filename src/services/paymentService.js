@@ -13,7 +13,9 @@ export const paymentService = {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(`${API_URL}/api/payments/create-preference`, {
+      console.log('[DEBUG] Iniciando pago con:', { planId, billingPeriod, userId, API_URL });
+      
+      const response = await fetch(`${API_URL}/api/payments/create-preference-v2`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -22,12 +24,15 @@ export const paymentService = {
         body: JSON.stringify({ planId, billingPeriod, userId })
       });
 
+      console.log('[DEBUG] Respuesta del servidor:', response.status);
+      
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Fallo en el pago');
+      if (!response.ok) throw new Error(data.details || data.error || 'Fallo en el pago');
 
       return data.checkoutUrl;
     } catch (err) {
       console.error('Error al crear checkout:', err);
+      alert(`DETALLE DEL ERROR: ${err.message}`);
       throw err;
     }
   },
