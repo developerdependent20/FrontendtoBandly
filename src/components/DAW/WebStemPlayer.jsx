@@ -165,7 +165,11 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
   // Carga iniciada por tap del usuario (requerido por iOS Safari)
   const handleStartLoad = async () => {
     try {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtxRef.current = new AudioContext();
+      if (audioCtxRef.current.state === 'suspended') {
+        await audioCtxRef.current.resume();
+      }
     } catch (e) {
       setErrorMsg('Tu navegador no soporta Web Audio API.');
       setStatus('error');
@@ -310,10 +314,10 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
   }, []);
 
-  const startPlayback = useCallback((offset = 0) => {
+  const startPlayback = useCallback(async (offset = 0) => {
     if (!audioCtxRef.current || stems.length === 0) return;
     const ctx = audioCtxRef.current;
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended') await ctx.resume();
     stopAll();
 
     const anySolo = Object.values(soloMap).some(Boolean);
@@ -348,27 +352,27 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
     setStatus('playing');
   }, [stems, muteMap, soloMap, volumeMap, duration, stopAll]);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
     if (status === 'playing') {
       pauseOffsetRef.current = audioCtxRef.current.currentTime - startTimeRef.current;
       stopAll();
       setStatus('ready');
     } else {
-      startPlayback(pauseOffsetRef.current);
+      await startPlayback(pauseOffsetRef.current);
     }
   };
 
-  const handleSeek = (e) => {
+  const handleSeek = async (e) => {
     const t = parseFloat(e.target.value);
     setCurrentTime(t);
     pauseOffsetRef.current = t;
-    if (status === 'playing') startPlayback(t);
+    if (status === 'playing') await startPlayback(t);
   };
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
     pauseOffsetRef.current = 0;
     setCurrentTime(0);
-    if (status === 'playing') startPlayback(0);
+    if (status === 'playing') await startPlayback(0);
   };
 
   // ── Controles de canal ────────────────────────────────────
