@@ -2,7 +2,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
 export const isTauri = () => {
-  return typeof window !== 'undefined' && (!!window.__TAURI_INTERNALS__ || !!window.__TAURI__ || !!window.__TAURI_IPC__);
+  return typeof window !== 'undefined' && (
+    window.__TAURI_INTERNALS__ !== undefined || 
+    window.__TAURI_IPC__ !== undefined || 
+    window.__TAURI__ !== undefined ||
+    navigator.userAgent.includes('WebView2') ||
+    navigator.userAgent.includes('Tauri')
+  );
 };
 
 // Wrapper seguro para invoke que no rompe el navegador

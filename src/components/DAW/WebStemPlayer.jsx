@@ -507,6 +507,10 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
               }}>
                 <Play size={18} /> Cargar Secuencia
               </button>
+              <div style={{ marginTop: '1.5rem', fontSize: '0.75rem', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '10px 16px', borderRadius: '10px', display: 'inline-flex', alignItems: 'flex-start', gap: '8px', textAlign: 'left', maxWidth: '400px' }}>
+                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span><b>Aviso Móvil:</b> El reproductor rinde al máximo en computadora. En celulares, procesar todos los canales de audio puede tardar más tiempo del usual.</span>
+              </div>
             </div>
           )}
 
@@ -523,6 +527,9 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
                 }} />
               </div>
               <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '8px' }}>{loadProgress}%</p>
+              <p style={{ fontSize: '0.7rem', color: '#f59e0b', marginTop: '1.5rem', opacity: 0.9 }}>
+                Procesando canales... Si estás en celular, ten paciencia, esto puede tardar un poco.
+              </p>
             </div>
           )}
 

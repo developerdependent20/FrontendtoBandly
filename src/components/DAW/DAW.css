@@ -60,14 +60,15 @@
   background: #0f172a; /* Slightly lighter than base */
   overflow-x: auto;
   flex: 1;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
   align-items: stretch;
 }
 
-.mixer-scroll::-webkit-scrollbar { height: 4px; }
-.mixer-scroll::-webkit-scrollbar-track { background: transparent; }
-.mixer-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.mixer-scroll::-webkit-scrollbar { height: 12px; }
+.mixer-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 6px; }
+.mixer-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 6px; }
+.mixer-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 
 /* ── Channel Strip ────────────────────────── */
 .channel-strip {

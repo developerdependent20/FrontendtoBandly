@@ -1,10 +1,25 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useRef, useEffect } from 'react';
 import ChannelStrip from './ChannelStrip';
 import { Settings, Music, Layers } from 'lucide-react';
 
 const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceChannels = 2 }) => {
   const [activeSolo, setActiveSolo] = useState(null);
   const [selectedTracks, setSelectedTracks] = useState([]);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      // Si mueve la rueda verticalmente, transformarlo en scroll horizontal
+      if (e.deltaY !== 0 && e.deltaX === 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
 
   const toggleSelection = (trackId, isShift) => {
     setSelectedTracks(prev => {
@@ -47,7 +62,7 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', overflow: 'hidden', background: 'var(--daw-bg)' }}>
 
       {/* Rack de Canales */}
-      <div className="mixer-scroll">
+      <div className="mixer-scroll" ref={scrollRef}>
         {tracks.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}>
             <Music size={40} />

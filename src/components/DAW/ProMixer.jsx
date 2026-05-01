@@ -575,11 +575,26 @@ export default function ProMixer({ session }) {
     const { trackId, volume, muted, solo, isStereo, output } = data;
     setTracks(prev => prev.map(t => {
       if (t.id === trackId) {
-        if (type === 'volume') return { ...t, volume };
-        if (type === 'mute') return { ...t, muted };
-        if (type === 'solo') return { ...t, solo };
-        if (type === 'panMode') return { ...t, isStereo };
-        if (type === 'output') return { ...t, outputIdx: output };
+        const next = { ...t };
+        if (type === 'volume') next.volume = volume;
+        if (type === 'mute') next.muted = muted;
+        if (type === 'solo') next.solo = solo;
+        if (type === 'panMode') next.isStereo = isStereo;
+        if (type === 'output') next.outputIdx = output;
+
+        // Persistencia global por nombre de track
+        try {
+          const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
+          const profile = JSON.parse(profileStr);
+          const trackKey = next.name.toUpperCase().trim();
+          if (!profile[trackKey]) profile[trackKey] = {};
+          if (type === 'volume') profile[trackKey].volume = volume;
+          if (type === 'output') profile[trackKey].outputIdx = output;
+          if (type === 'panMode') profile[trackKey].isStereo = isStereo;
+          localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
+        } catch(e) {}
+
+        return next;
       }
       return t;
     }));
@@ -625,11 +640,24 @@ export default function ProMixer({ session }) {
       const songDir = song.id.toString();
       setActiveSequenceId(sequence.id);
       setMarkers(sequence.markers || []);
+
+      // Recuperar perfil global de mezcla
+      let mixerProfile = {};
+      try {
+        mixerProfile = JSON.parse(localStorage.getItem('bandly_mixer_profile') || '{}');
+      } catch(e) {}
+
       const resTracks = stems.map((stem) => {
         const rawName = stem.original_name || stem.instrument_label || 'Inst';
         const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
+        const trackKey = cleanName.toUpperCase().trim();
+        const saved = mixerProfile[trackKey] || {};
+
         return {
-          id: stem.id, name: cleanName, peak: 0, outputIdx: 1, 
+          id: stem.id, name: cleanName, peak: 0, 
+          outputIdx: saved.outputIdx !== undefined ? saved.outputIdx : 1, 
+          volume: saved.volume !== undefined ? saved.volume : 1,
+          isStereo: saved.isStereo !== undefined ? saved.isStereo : false,
           color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
@@ -660,6 +688,13 @@ export default function ProMixer({ session }) {
             const zipPath = await safeInvoke('download_multitrack', { url: zipDownloadUrl, songId: songDir, fileName: "multitrack.zip", token });
             await safeInvoke('extract_multitrack_zip', { zipPath, songId: songDir });
             await syncStemsNatively(song.id, stems);
+          }
+
+          // Aplicar estados globales guardados al backend de Rust
+          for (const t of resTracks) {
+            if (t.volume !== undefined && t.volume !== 1) await safeInvoke('set_track_volume', { trackId: t.id, volume: t.volume }).catch(()=>{});
+            if (t.outputIdx !== undefined && t.outputIdx !== 1) await safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(()=>{});
+            if (t.isStereo !== undefined && t.isStereo !== false) await safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(()=>{});
           }
         } catch (err) {
           // Error interno silenciado
