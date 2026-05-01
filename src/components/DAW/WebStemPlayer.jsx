@@ -162,20 +162,38 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
     };
   }, []);
 
-  // Carga iniciada por tap del usuario (requerido por iOS Safari)
-  const handleStartLoad = async () => {
-    try {
+  // Helper to reliably unlock Web Audio API on iOS/Mobile
+  const unlockAudioContext = () => {
+    if (!audioCtxRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioCtxRef.current = new AudioContext();
-      if (audioCtxRef.current.state === 'suspended') {
-        await audioCtxRef.current.resume();
-      }
+    }
+    const ctx = audioCtxRef.current;
+    
+    // Play a silent buffer to fully unlock the audio context
+    try {
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      if (source.start) source.start(0);
+    } catch (e) {}
+
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+  };
+
+  // Carga iniciada por tap del usuario (requerido por iOS Safari)
+  const handleStartLoad = () => {
+    try {
+      unlockAudioContext();
     } catch (e) {
       setErrorMsg('Tu navegador no soporta Web Audio API.');
       setStatus('error');
       return;
     }
-    await loadStems();
+    loadStems();
   };
 
   const loadStems = async () => {
@@ -358,6 +376,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       stopAll();
       setStatus('ready');
     } else {
+      unlockAudioContext();
       await startPlayback(pauseOffsetRef.current);
     }
   };
