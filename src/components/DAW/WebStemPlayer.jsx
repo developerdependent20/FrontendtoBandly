@@ -163,12 +163,16 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
   }, []);
 
   // Helper to reliably unlock Web Audio API on iOS/Mobile
-  const unlockAudioContext = () => {
+  const unlockAudioContext = async () => {
     if (!audioCtxRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioCtxRef.current = new AudioContext();
     }
     const ctx = audioCtxRef.current;
+    
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
     
     // Play a silent buffer to fully unlock the audio context
     try {
@@ -176,18 +180,14 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
-      if (source.start) source.start(0);
+      source.start(0);
     } catch (e) {}
-
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
   };
 
   // Carga iniciada por tap del usuario (requerido por iOS Safari)
-  const handleStartLoad = () => {
+  const handleStartLoad = async () => {
     try {
-      unlockAudioContext();
+      await unlockAudioContext();
     } catch (e) {
       setErrorMsg('Tu navegador no soporta Web Audio API.');
       setStatus('error');
@@ -376,7 +376,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       stopAll();
       setStatus('ready');
     } else {
-      unlockAudioContext();
+      await unlockAudioContext();
       await startPlayback(pauseOffsetRef.current);
     }
   };
