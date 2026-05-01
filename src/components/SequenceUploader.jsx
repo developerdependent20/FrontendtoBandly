@@ -99,7 +99,30 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
   const [progress, setProgress] = useState(0); // Ahora es progreso del ZIP único
   const [globalStatus, setGlobalStatus] = useState('');
   const [error, setError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  // ── Handlers de Drag & Drop ──
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelect({ target: { files: [e.dataTransfer.files[0]] } });
+    }
+  }, [handleFileSelect]);
 
   // ── Paso 1: Seleccionar y descomprimir ZIP ──
   const handleFileSelect = useCallback(async (e) => {
@@ -289,7 +312,18 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
 
           {/* Step 1: Select ZIP */}
           {step === 'select' && (
-            <div className="su-select-zone" onClick={() => fileInputRef.current?.click()}>
+            <div 
+              className={`su-select-zone ${isDragging ? 'dragging' : ''}`} 
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              style={{
+                border: isDragging ? '2px dashed var(--primary)' : '2px dashed rgba(255,255,255,0.2)',
+                background: isDragging ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                transition: 'all 0.2s'
+              }}
+            >
               <input
                 ref={fileInputRef}
                 type="file"

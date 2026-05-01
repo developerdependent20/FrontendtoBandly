@@ -150,6 +150,84 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         </div>
       </section>
 
+      {/* Mobile App Virtues Showcase */}
+      <section className="app-virtues-showcase" style={{ padding: '8rem 2rem', background: '#020617', overflow: 'hidden' }}>
+        <style>{`
+          .virtues-gallery {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          .virtue-img-wrapper {
+            flex: 1;
+            border-radius: 24px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
+            overflow: hidden; /* Esto asegura que el recorte del zoom funcione */
+            background: #0f172a;
+          }
+          .virtue-img-wrapper img {
+            width: 100%;
+            display: block;
+            border-radius: 24px;
+          }
+          .virtue-left {
+            max-width: 280px;
+            opacity: 0.7;
+            transform: scale(0.9);
+          }
+          .virtue-right {
+            max-width: 260px;
+            opacity: 0.7;
+            transform: scale(0.85); /* Un poco más pequeña proporcional a la izquierda */
+          }
+          .virtue-center {
+            max-width: 320px;
+            z-index: 10;
+            box-shadow: 0 30px 60px rgba(139,92,246,0.3), 0 0 0 2px rgba(139,92,246,0.5);
+          }
+          .virtue-img-wrapper:hover {
+            transform: translateY(-15px) scale(1.05);
+            opacity: 1;
+            z-index: 20;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.2);
+          }
+          @media (max-width: 900px) {
+            .virtues-gallery {
+              flex-direction: column;
+              gap: 3rem;
+            }
+            .virtue-left, .virtue-right, .virtue-center {
+              max-width: 80%;
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+        `}</style>
+
+        <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
+          <h2 className="section-title-large">Todo tu equipo, <span className="serif-accent">en tu bolsillo.</span></h2>
+          <p className="section-subtitle">Visualiza la agenda, ensaya con la secuencia virtual, y revisa cada detalle desde cualquier dispositivo. La experiencia móvil definitiva para músicos.</p>
+        </div>
+
+        <div className="virtues-gallery">
+          <div className="virtue-img-wrapper virtue-left">
+            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM%20(1).jpeg" alt="Dashboard Móvil" />
+          </div>
+
+          <div className="virtue-img-wrapper virtue-center">
+            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM.jpeg" alt="Player Móvil" />
+          </div>
+
+          <div className="virtue-img-wrapper virtue-right">
+            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/WhatsApp%20Image%202026-04-30%20at%2011.19.05%20PM.jpeg" alt="Repertorios Móviles" />
+          </div>
+        </div>
+      </section>
       {/* Features Grid */}
       <section className="landing-features" style={{ padding: '8rem 2rem' }}>
         <div className="features-flex-container">

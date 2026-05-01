@@ -546,10 +546,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                </div>
                             </div>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-                               {/* Boton reproducir secuencia (solo web, solo si tiene secuencias) */}
-                               {!isTauri() && (song?.has_sequence || (song?.sequences && song.sequences.length > 0)) && (
+                               {/* Boton reproducir secuencia (solo PRO/ELITE) */}
+                               {(song?.has_sequence || (song?.sequences && song.sequences.length > 0)) && (
                                   <button
-                                    onClick={() => setSeqPlayerSong(song)}
+                                    onClick={() => {
+                                      const plan = (profile?.organizations?.plan || profile?.plan_id || 'starter').toLowerCase();
+                                      if (plan === 'pro' || plan === 'elite' || plan === 'premium') {
+                                        setSeqPlayerSong(song);
+                                      } else {
+                                        alert("La Sala de Ensayo Virtual (Reproductor Multi-Track) es una función exclusiva para planes PRO y ELITE. ¡Haz upgrade a tu banda para habilitar esta sala de práctica para todos tus músicos!");
+                                      }
+                                    }}
                                     style={{
                                       padding: '6px', borderRadius: '8px', border: 'none',
                                       background: 'rgba(139,92,246,0.15)',
@@ -557,7 +564,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                                       transition: 'all 0.15s',
                                     }}
-                                    title="Previsualizar Secuencia"
+                                    title="Sala de Ensayo Virtual (Requiere PRO)"
                                   >
                                     <Headphones size={15} />
                                   </button>

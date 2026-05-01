@@ -82,8 +82,57 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           height: '60px', background: 'rgba(15, 23, 42, 0.2)', 
           borderBottom: '1px solid rgba(255,255,255,0.05)',
           display: 'flex', justifyContent: 'flex-end', alignItems: 'center', 
-          padding: '0 2rem', backdropFilter: 'blur(10px)'
+          padding: '0 2rem', backdropFilter: 'blur(10px)', gap: '12px'
         }}>
+
+          {profile?.role === 'director' && profile?.organizations?.invite_code && (
+            <div 
+              onClick={handleCopyLink}
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '6px', 
+                background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
+                padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              className="hover-scale"
+              title="Copiar link mágico para invitar"
+            >
+              <Users size={14} color="#3b82f6" />
+              <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#3b82f6', letterSpacing: '1px' }}>
+                CÓDIGO: {profile.organizations.invite_code}
+              </span>
+            </div>
+          )}
+
+          <div 
+            onClick={() => {
+              const option = window.prompt("Escribe '1' para unirte a otra banda con un código, o '2' para registrar una nueva banda (solo planes PRO):");
+              if (option === '1') {
+                if (handleJoinTeam) handleJoinTeam();
+              } else if (option === '2') {
+                if (profile?.organizations?.plan === 'pro' || profile?.organizations?.plan === 'premium') {
+                  window.alert("Creación multi-banda en proceso. Pronto habilitaremos el panel para alternar entre tus bandas.");
+                } else {
+                  window.alert("Necesitas un plan PRO o superior para administrar múltiples bandas.");
+                  setShowSubscription(true);
+                }
+              }
+            }}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '6px', 
+              background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            className="hover-scale"
+            title="Opciones de Banda"
+          >
+            <Plus size={14} color="#fff" />
+            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#fff', letterSpacing: '1px' }}>
+              BANDA
+            </span>
+          </div>
+
           <div 
             onClick={() => setShowSubscription(true)}
             style={{ 
