@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import '../DAW/DAW.css';
@@ -46,10 +46,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           <div 
             className={`nav-item ${activeTab === 'daw' ? 'active' : ''}`} 
             onClick={() => setActiveTab('daw')}
-            title="Bandly Mini DAW (Manual Hardware)"
+            title={isTauri() ? 'Bandly DAW' : 'Subir Secuencias'}
             style={{ color: 'var(--primary)', filter: activeTab === 'daw' ? 'drop-shadow(0 0 8px var(--primary))' : 'none' }}
           >
-            <Layout size={26} strokeWidth={2.5} />
+            {isTauri() ? <Layout size={26} strokeWidth={2.5} /> : <Upload size={22} />}
           </div>
         )}
 

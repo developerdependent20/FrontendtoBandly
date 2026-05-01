@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Shield, CheckCircle2 } from 'lucide-react';
+import { Users, Shield, CheckCircle2, Trash2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { AvatarPicker } from './layout/AvatarPicker';
 
@@ -18,6 +18,38 @@ export default function TeamList({ members, isDirector, refreshData }) {
       if (refreshData) refreshData();
     } catch (e) {
       alert("Error al actualizar avatar del miembro.");
+    }
+  };
+
+  const handleDeleteMember = async (member) => {
+    // Alert de depuración
+    console.log("Intentando eliminar a:", member.full_name);
+    
+    if (!isDirector) {
+      alert("No tienes permisos de director para esta acción.");
+      return;
+    }
+    if (member.role === 'director' && members.filter(m => m.role === 'director').length === 1) {
+      alert("No puedes eliminar al único director de la banda.");
+      return;
+    }
+
+    const confirm = window.confirm(`¿Estás seguro de que quieres eliminar a ${member.full_name} de la banda?`);
+    if (!confirm) return;
+
+    try {
+      const { error } = await supabase.from('profiles')
+        .update({ 
+          org_id: null,
+          functions: [],
+          role: 'member' // Reset role to member if they were a co-director
+        })
+        .eq('id', member.id);
+      
+      if (error) throw error;
+      if (refreshData) refreshData();
+    } catch (e) {
+      alert("Error al eliminar miembro: " + e.message);
     }
   };
 
@@ -148,15 +180,51 @@ export default function TeamList({ members, isDirector, refreshData }) {
                       <div className="member-email">{m.email}</div>
                     </div>
 
-                    {isDirector && (
-                      <button 
-                        onClick={() => handleToggleDirector(m.id, m.role)}
-                        className={`director-toggle-btn ${isUserDirector ? 'active' : ''}`}
-                        title={isUserDirector ? 'Quitar rol de director' : 'Hacer director'}
-                      >
-                        {isUserDirector ? 'ADMIN' : 'PROMOVER'}
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
+                      {isDirector && (
+                        <button 
+                          type="button"
+                          onClick={() => handleToggleDirector(m.id, m.role)}
+                          className={`director-toggle-btn ${isUserDirector ? 'active' : ''}`}
+                          title={isUserDirector ? 'Quitar rol de director' : 'Hacer director'}
+                          style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '0.7rem' }}
+                        >
+                          {isUserDirector ? 'ADMIN' : 'PROMOVER'}
+                        </button>
+                      )}
+
+                      {isDirector && (
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.alert("¡CLICK DETECTADO! Intentando borrar a: " + m.full_name);
+                            handleDeleteMember(m);
+                          }}
+                          style={{ 
+                            background: '#ef4444', 
+                            border: 'none',
+                            color: 'white', 
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px', 
+                            cursor: 'pointer',
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            transition: 'all 0.2s',
+                            position: 'relative', 
+                            zIndex: 9999,
+                            boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+                          }}
+                          className="hover-scale"
+                          title="Eliminar de la banda"
+                        >
+                          <Trash2 size={22} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="role-selector-section">

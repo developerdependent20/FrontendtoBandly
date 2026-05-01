@@ -4,6 +4,7 @@ import * as Tone from 'tone';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
+import WebStemPlayer from './DAW/WebStemPlayer';
 import ProMixer from './DAW/ProMixer';
 import { isTauri, safeInvoke } from '../utils/tauri';
 
@@ -164,7 +165,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       </div>
 
       <section className="glass-panel" style={{ padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio Grupal</h3>
         {!readOnly && (
           <button onClick={() => { setEditingSongId(null); setShowModal(true); }} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
@@ -317,11 +318,11 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       )}
 
       {seqMixerData && (
-        <ProMixer 
-          session={session}
-          songs={songs}
+        <WebStemPlayer
+          song={songs.find(s => s.id === seqMixerData.song_id) || { id: seqMixerData.song_id, title: 'Canción' }}
           preloadedSequence={seqMixerData}
-          onClose={() => setSeqMixerData(null)} 
+          session={session}
+          onClose={() => setSeqMixerData(null)}
         />
       )}
 

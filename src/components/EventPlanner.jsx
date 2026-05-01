@@ -7,6 +7,7 @@ import {
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
 import ChartStudio from './ChartStudio';
+import WebStemPlayer from './DAW/WebStemPlayer';
 import { isTauri } from '../utils/tauri';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -214,6 +215,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [initialRoster, setInitialRoster] = useState([]);
   const [dbHistory, setDbHistory] = useState([]);
   const [pendingTemplate, setPendingTemplate] = useState(null);
+  const [seqPlayerSong, setSeqPlayerSong] = useState(null);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -452,7 +454,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           borderRadius: '12px',
           boxShadow: isPast ? 'none' : `0 15px 40px -20px ${theme.glass}`
         }}>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between' }}>
             <div>
               <h4 style={{ fontSize: '1.3rem', margin: 0, color: 'white' }}>{ev.name}</h4>
               <span style={{ fontSize: '0.9rem', color: theme.main, fontWeight: '700' }}>{formatEventDate(ev.date)}</span>
@@ -483,7 +485,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           )}
 
           {userSlots.some(s => s.status === 'pending') && !isPast && (
-            <div style={{ display: 'flex', gap: '0.8rem', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '1rem' }}>
               <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')} className="btn-primary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Confirmar Todo</button>
               <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')} className="btn-secondary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Declinar</button>
             </div>
@@ -543,7 +545,23 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                  </div>
                                </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                               {/* Boton reproducir secuencia (solo web, solo si tiene secuencias) */}
+                               {!isTauri() && (song?.has_sequence || (song?.sequences && song.sequences.length > 0)) && (
+                                  <button
+                                    onClick={() => setSeqPlayerSong(song)}
+                                    style={{
+                                      padding: '6px', borderRadius: '8px', border: 'none',
+                                      background: 'rgba(139,92,246,0.15)',
+                                      color: '#a78bfa', cursor: 'pointer',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      transition: 'all 0.15s',
+                                    }}
+                                    title="Previsualizar Secuencia"
+                                  >
+                                    <Headphones size={15} />
+                                  </button>
+                                )}
                                {song?.youtube_link && (
                                  <button onClick={() => setActiveYoutubeUrl(song.youtube_link)} className="icon-btn-subtle" style={{ padding: '6px', color: '#ef4444' }} title="Ver en YouTube">
                                    <Play size={16} fill="#ef4444" />
@@ -814,6 +832,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             </div>
           </div>
         </div>
+      )}
+
+      {/* Sala de Previsualizacion de Secuencia */}
+      {seqPlayerSong && (
+        <WebStemPlayer
+          song={seqPlayerSong}
+          session={session}
+          onClose={() => setSeqPlayerSong(null)}
+        />
       )}
     </section>
   );

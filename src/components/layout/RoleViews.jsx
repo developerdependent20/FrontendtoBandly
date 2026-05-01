@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../supabaseClient';
 import EventPlanner from '../EventPlanner';
 import SongLibrary from '../SongLibrary';
@@ -6,15 +7,26 @@ import TeamList from '../TeamList';
 import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
 import { isTauri } from '../../utils/tauri';
-import { Calendar, LayoutList, Home, Music, ChevronRight } from 'lucide-react';
+import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
 import { AVATARS, AvatarPicker } from './AvatarPicker';
 
 const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
   const [showPicker, setShowPicker] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(profile?.avatar_url);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
   const { members, songs } = orgData;
+
+  const handleLeaveTeam = async () => {
+    try {
+      const { error } = await supabase.from('profiles').update({ org_id: null, functions: [], role: 'member' }).eq('id', profile.id);
+      if (error) throw error;
+      window.location.reload();
+    } catch (e) {
+      alert("Error al abandonar el equipo.");
+    }
+  };
 
   const scrollTo = (id) => {
     const el = document.getElementById(id);
@@ -50,12 +62,8 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
       />
 
       {/* Saludo y Botones de Scroll */}
-      <div style={{ 
-        padding: '2.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', 
-        alignItems: 'center', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%)',
-        border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '24px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+      <div className="unified-header-container">
+        <div className="unified-greeting-section">
           <div 
             onClick={() => setShowPicker(true)}
             onMouseEnter={() => setIsHoveringAvatar(true)}
@@ -65,7 +73,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem',
               fontWeight: '900', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
               position: 'relative', cursor: 'pointer', overflow: 'hidden',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.6)'
+              boxShadow: '0 25px 60px rgba(0,0,0,0.6)', flexShrink: 0
             }}
             className="hover-scale"
           >
@@ -91,7 +99,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px' }}>
+        <div className="unified-actions-section">
           <button 
             onClick={() => scrollTo('visual-calendar')}
             style={{ 
@@ -116,15 +124,65 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             <LayoutList size={18} color="var(--primary)" />
             Próximos Eventos
           </button>
+          <button 
+            type="button"
+            onClick={() => setShowLeaveConfirm(true)}
+            style={{ 
+              padding: '8px 12px', borderRadius: '10px', background: 'transparent',
+              border: 'none', color: 'rgba(255, 255, 255, 0.35)', display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s',
+              position: 'relative', zIndex: 100, fontWeight: '600', gap: '6px'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#ef4444'}
+            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.35)'}
+          >
+            <span style={{ fontSize: '1rem' }}>🚪</span>
+            <span style={{ fontSize: '0.65rem', letterSpacing: '1px' }}>SALIR DE ESTA BANDA</span>
+          </button>
         </div>
       </div>
 
+      {showLeaveConfirm && createPortal(
+        <div style={{ 
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          background: 'rgba(0,0,0,0.9)', zIndex: 1000000, 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', 
+          padding: '20px', backdropFilter: 'blur(10px)'
+        }}>
+          <div className="glass-panel" style={{ 
+            maxWidth: '500px', width: '100%', padding: '3rem', 
+            textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)',
+            animation: 'dropdownFadeIn 0.3s ease-out'
+          }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>👋</div>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.8rem', fontWeight: '900' }}>¿Abandonar Equipo?</h3>
+            <p style={{ opacity: 0.7, marginBottom: '2.5rem', lineHeight: '1.6' }}>
+              Estás a punto de salir de <strong>{profile?.organizations?.name || 'la banda'}</strong>. 
+              No podrás volver a ver la información de este equipo hasta que te vuelvan a invitar.
+            </p>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button 
+                onClick={() => setShowLeaveConfirm(false)} 
+                className="btn-secondary" 
+                style={{ flex: 1, padding: '1rem' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleLeaveTeam} 
+                className="btn-primary" 
+                style={{ flex: 1, padding: '1rem', background: '#ef4444' }}
+              >
+                Confirmar Salida
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Widgets Dashboard */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-        gap: '20px'
-      }}>
+      <div className="unified-widgets-grid">
         {/* Widget 1: Team */}
         <div onClick={() => setActiveTab('team')} className="glass-panel hover-scale" style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }}>
           <span style={{ fontSize: '0.7rem', fontWeight: '900', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Current Team</span>
@@ -216,7 +274,9 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
       )}
       {activeTab === 'daw' && (
         isTauri()
+          // En la app de escritorio: DAW completo con ProMixer
           ? <ProMixer songs={songs} session={session} profile={profile} />
+          // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
 
@@ -249,7 +309,9 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       )}
       {activeTab === 'daw' && canAccessLibrary && (
         isTauri()
+          // En la app de escritorio: DAW completo con ProMixer
           ? <ProMixer songs={songs} session={session} profile={profile} />
+          // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
 

@@ -1596,7 +1596,73 @@ input[type="datetime-local"] {
   color: white;
   letter-spacing: -0.3px;
 }
+/* --- Unified Dashboard Responsive Styles --- */
+.unified-header-container {
+  padding: 2.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 24px;
+  gap: 2rem;
+}
 
+.unified-greeting-section {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.unified-actions-section {
+  display: flex;
+  gap: 15px;
+}
+
+.unified-widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .unified-header-container {
+    flex-direction: column;
+    padding: 1.5rem;
+    text-align: center;
+    gap: 1.5rem;
+    border-radius: 16px;
+  }
+  
+  .unified-greeting-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .unified-greeting-section h2 {
+    font-size: 2rem !important;
+  }
+  
+  .unified-greeting-section p {
+    font-size: 1rem !important;
+  }
+  
+  .unified-actions-section {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .unified-actions-section button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .unified-widgets-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
 .director-badge {
   font-size: 0.6rem;
   font-weight: 900;
@@ -1796,4 +1862,77 @@ input[type="datetime-local"] {
     letter-spacing: 1px;
     padding-bottom: 0.5rem;
   }
+}
+
+/* ============================================================
+   RESPONSIVE COMPLETO — BANDLY WEB
+   Breakpoints: 1024 (tablet) / 768 (movil) / 480 (small)
+   ============================================================ */
+
+/* Nav landing */
+@media (max-width: 768px) {
+  .landing-nav-center { display: none; }
+  .landing-nav { justify-content: space-between; }
+}
+
+/* Tutorial banner */
+@media (max-width: 768px) {
+  .tutorial-banner { padding: 1rem 1.25rem; gap: 1rem; border-radius: 14px; }
+  .tutorial-banner h4 { font-size: 0.95rem; }
+  .tutorial-banner p  { font-size: 0.8rem; }
+  .tutorial-banner > div:first-child { display: none; }
+}
+
+/* Dashboard grid colapsa a 1 columna en tablet */
+@media (max-width: 900px) {
+  .dashboard-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Song Library */
+@media (max-width: 768px) {
+  .song-actions-grid { flex-wrap: wrap !important; }
+  .yt-thumb-wrapper  { width: 100% !important; height: auto !important; aspect-ratio: 16/9 !important; }
+}
+
+/* VisualCalendar scroll horizontal */
+@media (max-width: 768px) {
+  #visual-calendar { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  #visual-calendar > * { min-width: 320px; }
+}
+
+/* Targets tactiles minimo 44px */
+@media (max-width: 768px) {
+  .icon-btn-subtle {
+    padding: 10px !important; min-width: 44px; min-height: 44px;
+    display: flex !important; align-items: center; justify-content: center;
+  }
+  .modal-tab-btn { min-height: 44px; }
+  .song-action-btn { min-height: 44px; }
+}
+
+/* Padding global pequeno en small */
+@media (max-width: 480px) {
+  .main-content { padding: 0.75rem !important; margin-bottom: 85px !important; }
+  .glass-panel  { padding: 1rem !important; border-radius: 16px !important; }
+  h3 { font-size: 1.1rem !important; }
+  h4 { font-size: 0.95rem !important; }
+  .btn-primary, .btn-secondary { width: 100% !important; padding: 1rem !important; }
+  .input-field  { padding: 1rem !important; font-size: 1rem !important; }
+}
+
+/* Landscape en movil */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar { height: 56px !important; padding: 0 1rem !important; }
+  .main-content { margin-bottom: 60px !important; }
+}
+
+/* Safe area para iPhones con notch/Dynamic Island */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .sidebar      { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
+  .main-content { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+}
+
+/* Reducir animaciones para ahorro de bateria */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
