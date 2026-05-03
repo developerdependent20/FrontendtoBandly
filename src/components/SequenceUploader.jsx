@@ -115,14 +115,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileSelect({ target: { files: [e.dataTransfer.files[0]] } });
-    }
-  }, [handleFileSelect]);
+
 
   // ── Paso 1: Seleccionar y descomprimir ZIP ──
   const handleFileSelect = useCallback(async (e) => {
@@ -184,6 +177,15 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
       setGlobalStatus('');
     }
   }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelect({ target: { files: [e.dataTransfer.files[0]] } });
+    }
+  }, [handleFileSelect]);
 
   // ── Cambiar instrumento de un stem ──
   const updateStemInstrument = (stemId, field, value) => {
