@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { isTauri, safeInvoke, safeListen } from '../../utils/tauri';
-import { open } from '@tauri-apps/plugin-dialog';
+
+
 import HardwarePicker from './HardwarePicker';
 import CueTimeline from './CueTimeline';
 import ProMixerConsole from './ProMixerConsole';
@@ -31,6 +32,14 @@ const sortTracks = (tracksList) => {
     return 10;
   };
   return [...tracksList].sort((a, b) => priority(a.name) - priority(b.name));
+};
+
+const normalizeTrackName = (name) => {
+  if (!name) return 'UNNAMED';
+  const clean = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .toUpperCase()
+    .replace(/[^A-Z]/g, ''); // Remove numbers, spaces, symbols
+  return clean.length > 0 ? clean : name.toUpperCase().replace(/\s/g, '');
 };
 
 const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading }) => (
@@ -368,17 +377,23 @@ export default function ProMixer({ session }) {
   const [rawDbg, setRawDbg] = useState(null);
   const lastActionTime = useRef(0);
 
-  // RADAR DE RESILIENCIA (释放硬件错误检测)
+  // RADAR DE RESILIENCIA (Detección de Hardware Live)
   useEffect(() => {
-    let unlisten = null;
-    const startListening = async () => {
-        unlisten = await safeListen('audio-device-lost', (event) => {
-            setAudioError(`DISPOSITIVO DESCONECTADO: ${event.payload}`);
-            setIsPlaying(false);
-        });
+    let unlistenFn = null;
+    let isMounted = true;
+    
+    safeListen('audio-device-lost', (event) => {
+        setAudioError(`DISPOSITIVO DESCONECTADO: ${event.payload}`);
+        setIsPlaying(false);
+    }).then(fn => {
+        if (isMounted) unlistenFn = fn;
+        else if (fn) fn();
+    });
+
+    return () => { 
+      isMounted = false;
+      if (unlistenFn) unlistenFn(); 
     };
-    startListening();
-    return () => { if (unlisten) unlisten(); };
   }, []);
 
   useEffect(() => {
@@ -586,11 +601,13 @@ export default function ProMixer({ session }) {
         try {
           const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
           const profile = JSON.parse(profileStr);
-          const trackKey = next.name.toUpperCase().trim();
+          const trackKey = normalizeTrackName(next.name);
           if (!profile[trackKey]) profile[trackKey] = {};
           if (type === 'volume') profile[trackKey].volume = volume;
           if (type === 'output') profile[trackKey].outputIdx = output;
           if (type === 'panMode') profile[trackKey].isStereo = isStereo;
+          if (type === 'mute') profile[trackKey].muted = muted;
+          if (type === 'solo') profile[trackKey].solo = solo;
           localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
         } catch(e) {}
 
@@ -611,7 +628,8 @@ export default function ProMixer({ session }) {
 
    const handleSyncSong = useCallback(async (song) => {
     if (!song) return;
-    setLoading(true);
+    // Ya no bloqueamos toda la pantalla con setLoading(true).
+    // Usaremos isLoadingStems para que sea transparente y rápido en el botón Play.
     const targetBpm = parseFloat(song.bpm) || 120;
     setMetronome(prev => {
       const next = { ...prev, bpm: targetBpm };
@@ -650,7 +668,7 @@ export default function ProMixer({ session }) {
       const resTracks = stems.map((stem) => {
         const rawName = stem.original_name || stem.instrument_label || 'Inst';
         const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
-        const trackKey = cleanName.toUpperCase().trim();
+        const trackKey = normalizeTrackName(cleanName);
         const saved = mixerProfile[trackKey] || {};
 
         return {
@@ -658,6 +676,8 @@ export default function ProMixer({ session }) {
           outputIdx: saved.outputIdx !== undefined ? saved.outputIdx : 1, 
           volume: saved.volume !== undefined ? saved.volume : 1,
           isStereo: saved.isStereo !== undefined ? saved.isStereo : false,
+          muted: saved.muted !== undefined ? saved.muted : false,
+          solo: saved.solo !== undefined ? saved.solo : false,
           color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
@@ -667,7 +687,6 @@ export default function ProMixer({ session }) {
       if (isTauri()) {
         try {
           setIsLoadingStems(true); // Fase 2: Mostrar estado de carga
-          const { data: { session } } = await supabase.auth.getSession();
           const token = session?.access_token || "";
           const songDir = song.id.toString();
           const syncStemsNatively = async (songId, stemsList) => {
@@ -691,11 +710,26 @@ export default function ProMixer({ session }) {
           }
 
           // Aplicar estados globales guardados al backend de Rust
-          for (const t of resTracks) {
-            if (t.volume !== undefined && t.volume !== 1) await safeInvoke('set_track_volume', { trackId: t.id, volume: t.volume }).catch(()=>{});
-            if (t.outputIdx !== undefined && t.outputIdx !== 1) await safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(()=>{});
-            if (t.isStereo !== undefined && t.isStereo !== false) await safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(()=>{});
-          }
+          // CRÍTICO: Rust carga en background, debemos esperar a que tracks_loading sea 0
+          const applyStatesToRust = async () => {
+            let retries = 40; // max 20 segundos
+            while (retries > 0) {
+              const report = await safeInvoke('get_engine_report').catch(() => null);
+              if (report && report.tracks_loading === 0) {
+                for (const t of resTracks) {
+                  if (t.volume !== undefined && t.volume !== 1) safeInvoke('set_track_volume', { trackId: t.id, volume: t.volume }).catch(()=>{});
+                  if (t.outputIdx !== undefined && t.outputIdx !== 1) safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(()=>{});
+                  if (t.isStereo !== undefined && t.isStereo !== false) safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(()=>{});
+                  if (t.muted !== undefined && t.muted !== false) safeInvoke('set_track_mute', { trackId: t.id, muted: t.muted }).catch(()=>{});
+                  if (t.solo !== undefined && t.solo !== false) safeInvoke('set_track_solo', { trackId: t.id, soloed: t.solo }).catch(()=>{});
+                }
+                break;
+              }
+              await new Promise(r => setTimeout(r, 500));
+              retries--;
+            }
+          };
+          applyStatesToRust();
         } catch (err) {
           // Error interno silenciado
         } finally {
@@ -716,15 +750,31 @@ export default function ProMixer({ session }) {
     const newMarker = { id: crypto.randomUUID(), bar, label, sample, color: colors[markers.length % colors.length] };
     const nextMarkers = [...markers, newMarker].sort((a, b) => a.sample - b.sample);
     setMarkers(nextMarkers);
+    
+    setSongs(prev => prev.map(s => {
+      if (s.id === activeSong?.id && s.sequences && s.sequences.length > 0) {
+        return { ...s, sequences: [{ ...s.sequences[0], markers: nextMarkers }] };
+      }
+      return s;
+    }));
+
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
-  }, [activeSequenceId, markers]);
+  }, [activeSequenceId, markers, activeSong]);
 
   const onRemoveMarker = useCallback(async (index) => {
     if (!activeSequenceId) return;
     const nextMarkers = markers.filter((_, i) => i !== index);
     setMarkers(nextMarkers);
+    
+    setSongs(prev => prev.map(s => {
+      if (s.id === activeSong?.id && s.sequences && s.sequences.length > 0) {
+        return { ...s, sequences: [{ ...s.sequences[0], markers: nextMarkers }] };
+      }
+      return s;
+    }));
+
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
-  }, [activeSequenceId, markers]);
+  }, [activeSequenceId, markers, activeSong]);
 
   const handleRemoveFromSetlist = useCallback((index) => {
     setSetlist(prev => {

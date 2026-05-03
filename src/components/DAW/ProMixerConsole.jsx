@@ -31,31 +31,45 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
   };
 
   const handleVolumeChange = (trackId, volume) => {
-    onTrackUpdate('volume', { trackId, volume });
+    if (selectedTracks.includes(trackId)) {
+      selectedTracks.forEach(id => onTrackUpdate('volume', { trackId: id, volume }));
+    } else {
+      onTrackUpdate('volume', { trackId, volume });
+    }
   };
 
   const handleMute = (trackId, muted) => {
-    onTrackUpdate('mute', { trackId, muted });
+    if (selectedTracks.includes(trackId)) {
+      selectedTracks.forEach(id => onTrackUpdate('mute', { trackId: id, muted }));
+    } else {
+      onTrackUpdate('mute', { trackId, muted });
+    }
   };
 
   const handleSolo = (trackId, solo) => {
     setActiveSolo(solo ? trackId : null);
-    onTrackUpdate('solo', { trackId, solo });
+    if (selectedTracks.includes(trackId)) {
+      selectedTracks.forEach(id => onTrackUpdate('solo', { trackId: id, solo }));
+    } else {
+      onTrackUpdate('solo', { trackId, solo });
+    }
   };
 
   const handleOutput = (trackId, output) => {
     // Si la pista cambiada está seleccionada, aplicamos a todas las seleccionadas
     if (selectedTracks.includes(trackId)) {
-      selectedTracks.forEach(id => {
-        onTrackUpdate('output', { trackId: id, output });
-      });
+      selectedTracks.forEach(id => onTrackUpdate('output', { trackId: id, output }));
     } else {
       onTrackUpdate('output', { trackId, output });
     }
   };
 
   const handlePanMode = (trackId, isStereo) => {
-    onTrackUpdate('panMode', { trackId, isStereo });
+    if (selectedTracks.includes(trackId)) {
+      selectedTracks.forEach(id => onTrackUpdate('panMode', { trackId: id, isStereo }));
+    } else {
+      onTrackUpdate('panMode', { trackId, isStereo });
+    }
   };
 
   return (

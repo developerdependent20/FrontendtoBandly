@@ -5,9 +5,9 @@ import { Volume2, VolumeX, Headphones } from 'lucide-react';
 const FADER_HEIGHT = 140;
 
 const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, onSelect, isSelected, deviceChannels = 2 }) => {
-  const [localVol, setLocalVol] = useState(100);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isSolo, setIsSolo] = useState(false);
+  const [localVol, setLocalVol] = useState(track.volume !== undefined ? Math.round(track.volume * 100) : 100);
+  const [isMuted, setIsMuted] = useState(track.muted || false);
+  const [isSolo, setIsSolo] = useState(track.solo || false);
   const [isStereo, setIsStereo] = useState(true);
   const [localOutputIdx, setLocalOutputIdx] = useState(track.outputIdx || 0);
 
@@ -15,6 +15,15 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
   useEffect(() => {
     setLocalOutputIdx(track.outputIdx || 0);
   }, [track.outputIdx]);
+
+  // Sincronizar volumen inicial al cambiar de canción
+  useEffect(() => {
+    if (track.volume !== undefined) {
+      setLocalVol(Math.round(track.volume * 100));
+    }
+    setIsMuted(track.muted || false);
+    setIsSolo(track.solo || false);
+  }, [track.volume, track.muted, track.solo]);
   
   // Sincronización Senior: Validar límites de salida al cambiar modo de paneo
   useEffect(() => {
