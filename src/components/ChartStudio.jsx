@@ -23,10 +23,10 @@ const SECTIONS = [
   { label: 'Outro', tag: '{start_of_verse: Outro}\n\n{end_of_verse}' },
 ];
 
-export default function ChartStudio({ song, onClose, onSave }) {
+export default function ChartStudio({ song, onClose, onSave, readOnly = false }) {
   // ── State ──
   const [source, setSource] = useState(song?.chart_data || '');
-  const [mode, setMode] = useState(song?.chart_data ? 'preview' : 'edit'); // 'edit' or 'preview'
+  const [mode, setMode] = useState((song?.chart_data || readOnly) ? 'preview' : 'edit'); // 'edit' or 'preview'
   const [transposeDelta, setTransposeDelta] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -90,14 +90,18 @@ export default function ChartStudio({ song, onClose, onSave }) {
     }
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
+    const currentScrollTop = textarea.scrollTop; // Guardar posición de scroll
+
     const before = source.substring(0, start);
     const after = source.substring(end);
     const newSource = before + text + after;
     setSource(newSource);
-    // Restore focus and cursor position
+    
+    // Restore focus, cursor position and scroll
     setTimeout(() => {
       textarea.focus();
       textarea.selectionStart = textarea.selectionEnd = start + text.length;
+      textarea.scrollTop = currentScrollTop; // Restaurar scroll
     }, 0);
   };
 
@@ -119,8 +123,13 @@ export default function ChartStudio({ song, onClose, onSave }) {
       if (transposeDelta !== 0) {
         parsedSong = parsedSong.transpose(transposeDelta);
       }
-      const formatter = new ChordSheetJS.HtmlDivFormatter();
-      return formatter.format(parsedSong);
+      
+      // En vez de usar el formateador HTML complejo que rompe los espacios de la gente,
+      // volvemos a generar el texto exacto con ChordProFormatter y lo pintamos manual
+      const textFormatter = new ChordSheetJS.ChordProFormatter();
+      const transposedText = textFormatter.format(parsedSong);
+      
+      return renderPlainChords(transposedText);
     } catch (e) {
       return renderPlainChords(source);
     }
@@ -129,12 +138,27 @@ export default function ChartStudio({ song, onClose, onSave }) {
   function renderPlainChords(text) {
     const lines = text.split('\n');
     return lines.map(line => {
-      const escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      let escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      
+      // 1. Manejar etiquetas de secciones (ChordPro)
+      let isHeader = false;
+      escaped = escaped.replace(/\{start_of_[a-z]+:\s*([^}]+)\}/i, (match, p1) => {
+        isHeader = true;
+        return `<h2>${p1}</h2>`;
+      });
+      // Eliminar etiquetas de cierre
+      escaped = escaped.replace(/\{end_of_[a-z]+\}/i, '');
+      
+      // 2. Procesar acordes
       const formatted = escaped.replace(
-        /\[([A-Ga-g][#b♯♭]?(?:m|min|maj|dim|aug|sus|add|7|9|11|13|6)?(?:\/[A-Ga-g][#b♯♭]?)?)\]/g,
+        /\[([^\]]+)\]/g,
         '<span class="cs-chord">$1</span>'
       );
-      return `<div class="cs-line">${formatted || '&nbsp;'}</div>`;
+      
+      if (isHeader) return formatted; // Retorna directo el <h2>
+      if (!formatted.trim()) return `<div class="cs-line">&nbsp;</div>`;
+      
+      return `<div class="cs-line">${formatted}</div>`;
     }).join('');
   }
 
@@ -266,18 +290,20 @@ export default function ChartStudio({ song, onClose, onSave }) {
               </button>
             </div>
 
-            {/* Mode toggle */}
+            {/* Mode toggle — ocultar Editar en modo readOnly */}
             <div className="cs-mode-toggle">
-              <button className={`cs-btn ${mode === 'edit' ? 'cs-btn-active' : ''}`} onClick={() => setMode('edit')}>
-                <Edit3 size={15} /> Editar
-              </button>
+              {!readOnly && (
+                <button className={`cs-btn ${mode === 'edit' ? 'cs-btn-active' : ''}`} onClick={() => setMode('edit')}>
+                  <Edit3 size={15} /> Editar
+                </button>
+              )}
               <button className={`cs-btn ${mode === 'preview' ? 'cs-btn-active' : ''}`} onClick={() => setMode('preview')}>
                 <Eye size={15} /> Atril
               </button>
             </div>
 
-            {/* Auto-scroll (teleprompter) */}
-            <div className="cs-autoscroll hide-mobile-small">
+            {/* Auto-scroll (teleprompter) — siempre visible en readOnly para uso en vivo */}
+            <div className={`cs-autoscroll ${readOnly ? '' : 'hide-mobile-small'}`}>
               <button 
                 className={`cs-btn cs-btn-icon ${autoScrolling ? 'cs-btn-playing' : ''}`} 
                 onClick={() => setAutoScrolling(!autoScrolling)}
@@ -285,7 +311,7 @@ export default function ChartStudio({ song, onClose, onSave }) {
               >
                 {autoScrolling ? <Pause size={16} /> : <Play size={16} />}
               </button>
-              <div className="cs-speed-picker hide-tablet">
+              <div className={`cs-speed-picker ${readOnly ? '' : 'hide-tablet'}`}>
                 {SCROLL_SPEEDS.map(sp => (
                   <button 
                     key={sp}

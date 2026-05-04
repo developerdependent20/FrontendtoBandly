@@ -17,6 +17,7 @@ export default function WaveformVisualizer({
   setScrollOffset, 
   vZoom = 1, 
   totalBars = 64,
+  snapToGrid = false,
   onZoomWheel = null 
 }) {
   const staticCanvasRef = useRef(null);
@@ -108,11 +109,22 @@ export default function WaveformVisualizer({
     if (!onSeek) return;
     const rect = dynamicCanvasRef.current.getBoundingClientRect();
     const lPos = (e.clientX - rect.left) / rect.width;
-    if (zoom > 1) {
-      onSeek(Math.max(0, Math.min(1, scrollOffset * (1 - 1/zoom) + lPos * (1/zoom))));
-    } else {
-      onSeek(Math.max(0, Math.min(1, lPos)));
+    
+    let rawPos = zoom > 1 
+      ? Math.max(0, Math.min(1, scrollOffset * (1 - 1/zoom) + lPos * (1/zoom)))
+      : Math.max(0, Math.min(1, lPos));
+      
+    // SNAP TO GRID LOGIC (Estabilidad perfecta, cálculos 100% frontend)
+    // Asumimos un compás de 4/4 (4 beats por bar)
+    if (snapToGrid && totalBars > 0) {
+      const beatsPerBar = 4;
+      const totalBeats = totalBars * beatsPerBar;
+      const beatProgress = 1 / totalBeats;
+      const nearestBeatIndex = Math.round(rawPos / beatProgress);
+      rawPos = nearestBeatIndex * beatProgress;
     }
+    
+    onSeek(Math.max(0, Math.min(1, rawPos)));
   };
 
   const handleWheel = (e) => {

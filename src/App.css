@@ -110,6 +110,9 @@ h1, h2, h3, h4 {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  /* Límite de ancho para que nunca invada los botones laterales */
+  max-width: calc(100% - 480px);
+  white-space: nowrap;
 }
 
 .landing-nav-center a {
@@ -130,6 +133,10 @@ h1, h2, h3, h4 {
 .landing-nav-links {
   display: flex;
   gap: 0.75rem;
+  /* Estabiliza el lado derecho para que nunca sea invadido */
+  flex-shrink: 0;
+  min-width: 220px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 480px) {

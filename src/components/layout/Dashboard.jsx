@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import '../DAW/DAW.css';

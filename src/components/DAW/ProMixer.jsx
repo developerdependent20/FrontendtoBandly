@@ -45,13 +45,28 @@ const normalizeTrackName = (name) => {
 const getTrackCategory = (rawName) => {
   const n = normalizeTrackName(rawName);
   if (n.includes('CLICK') || n.includes('METRO')) return 'CATEGORY_CLICK';
-  if (n.includes('CUE') || n.includes('GUIA')) return 'CATEGORY_CUE';
+  if (n.includes('CUE') || n.includes('GUIA') || n.includes('GUIDE')) return 'CATEGORY_CUE';
   if (n.includes('DRUM') || n.includes('PERC') || n.includes('BATERIA')) return 'CATEGORY_DRUMS';
   if (n.includes('BASS') || n.includes('BAJO')) return 'CATEGORY_BASS';
-  if (n.includes('GTR') || n.includes('GUITAR')) return 'CATEGORY_GTR';
-  if (n.includes('PIANO') || n.includes('KEY') || n.includes('TECLA')) return 'CATEGORY_KEYS';
-  if (n.includes('VOCAL') || n.includes('VOX') || n.includes('VOZ')) return 'CATEGORY_VOCAL';
+  if (n.includes('GTR') || n.includes('GUITAR') || n.includes('ELEC')) return 'CATEGORY_GTR';
+  if (n.includes('PIANO') || n.includes('KEY') || n.includes('TECLA') || n.includes('SYNTH')) return 'CATEGORY_KEYS';
+  if (n.includes('VOCAL') || n.includes('VOX') || n.includes('VOZ') || n.includes('CHOIR')) return 'CATEGORY_VOCAL';
   return n; // Fallback al nombre normalizado si no hay categoría
+};
+
+// Función para mostrar nombres limpios y profesionales en la consola
+const getStandardName = (rawName) => {
+  const cat = getTrackCategory(rawName);
+  if (cat === 'CATEGORY_CLICK') return 'CLICK';
+  if (cat === 'CATEGORY_CUE') return 'CUES';
+  if (cat === 'CATEGORY_DRUMS') return 'DRUMS';
+  if (cat === 'CATEGORY_BASS') return 'BASS';
+  if (cat === 'CATEGORY_GTR') return 'GUITAR';
+  if (cat === 'CATEGORY_KEYS') return 'KEYS';
+  if (cat === 'CATEGORY_VOCAL') return 'VOCALS';
+  
+  // Si no pertenece a los clásicos, intentamos dejarlo lo más limpio posible
+  return rawName.replace(/^[0-9_.-]+/, '').substring(0, 12).toUpperCase(); 
 };
 
 const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading }) => (
@@ -687,13 +702,14 @@ export default function ProMixer({ session }) {
         const rawName = stem.original_name || stem.instrument_label || 'Inst';
         const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
         const trackKey = getTrackCategory(cleanName);
+        const displayName = getStandardName(cleanName);
         const saved = mixerProfile[trackKey] || {};
 
         return {
-          id: stem.id, name: cleanName, peak: 0, 
-          outputIdx: saved.outputIdx !== undefined ? saved.outputIdx : 1, 
+          id: stem.id, name: displayName, peak: 0, 
+          outputIdx: saved.outputIdx !== undefined ? saved.outputIdx : 0, 
           volume: saved.volume !== undefined ? saved.volume : 1,
-          isStereo: saved.isStereo !== undefined ? saved.isStereo : false,
+          isStereo: saved.isStereo !== undefined ? saved.isStereo : true,
           muted: saved.muted !== undefined ? saved.muted : false,
           solo: saved.solo !== undefined ? saved.solo : false,
           color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
@@ -709,9 +725,22 @@ export default function ProMixer({ session }) {
           const songDir = song.id.toString();
           const syncStemsNatively = async (songId, stemsList) => {
             try {
+              const stemsWithState = stemsList.map(s => {
+                const rt = resTracks.find(r => r.id === s.id) || {};
+                return {
+                  id: s.id.toString(),
+                  original_name: s.original_name || 'track',
+                  volume: rt.volume !== undefined ? rt.volume : 1.0,
+                  output_idx: rt.outputIdx !== undefined ? rt.outputIdx : 0,
+                  is_stereo: rt.isStereo !== undefined ? rt.isStereo : true,
+                  is_muted: rt.muted !== undefined ? rt.muted : false,
+                  is_soloed: rt.solo !== undefined ? rt.solo : false
+                };
+              });
+
               await safeInvoke('sync_stems_to_engine', { 
                 songId: songId.toString(), 
-                stems: stemsList.map(s => ({ id: s.id, original_name: s.original_name })) 
+                stems: stemsWithState 
               });
               return true;
             } catch (err) {
@@ -727,25 +756,24 @@ export default function ProMixer({ session }) {
             await syncStemsNatively(song.id, stems);
           }
 
-          // Aplicar estados globales guardados al backend de Rust
-          // CRÍTICO: Rust carga en background, debemos esperar a que tracks_loading sea 0
+          // Aplicar estados guardados (Persistencia)
           const applyStatesToRust = async () => {
-            let retries = 40; // max 20 segundos
-            while (retries > 0) {
+            // Un par de reintentos cortos para asegurar que el motor recibió los tracks
+            for (let i = 0; i < 15; i++) {
               const report = await safeInvoke('get_engine_report').catch(() => null);
               if (report && report.tracks_loading === 0) {
+                // Aplicar ruteos y volúmenes solo una vez cuando la carga termine
                 for (const t of resTracks) {
-                  if (t.volume !== undefined && t.volume !== 1) safeInvoke('set_track_volume', { trackId: t.id, volume: t.volume }).catch(()=>{});
-                  if (t.outputIdx !== undefined && t.outputIdx !== 1) safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(()=>{});
-                  if (t.isStereo !== undefined && t.isStereo !== false) safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(()=>{});
-                  if (t.muted !== undefined && t.muted !== false) safeInvoke('set_track_mute', { trackId: t.id, muted: t.muted }).catch(()=>{});
-                  if (t.solo !== undefined && t.solo !== false) safeInvoke('set_track_solo', { trackId: t.id, soloed: t.solo }).catch(()=>{});
+                   safeInvoke('set_track_volume', { trackId: t.id, volume: t.volume }).catch(()=>{});
+                   safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(()=>{});
+                   safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(()=>{});
+                   safeInvoke('set_track_mute', { trackId: t.id, muted: t.muted }).catch(()=>{});
                 }
                 break;
               }
               await new Promise(r => setTimeout(r, 500));
-              retries--;
             }
+            setIsLoadingStems(false);
           };
           applyStatesToRust();
         } catch (err) {

@@ -8,7 +8,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
   const [localVol, setLocalVol] = useState(track.volume !== undefined ? Math.round(track.volume * 100) : 100);
   const [isMuted, setIsMuted] = useState(track.muted || false);
   const [isSolo, setIsSolo] = useState(track.solo || false);
-  const [isStereo, setIsStereo] = useState(true);
+  const [isStereo, setIsStereo] = useState(track.isStereo !== undefined ? track.isStereo : true);
   const [localOutputIdx, setLocalOutputIdx] = useState(track.outputIdx || 0);
 
   // Sincronizar estado local cuando cambia la prop (vital para ruteo simultáneo)
@@ -16,14 +16,15 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
     setLocalOutputIdx(track.outputIdx || 0);
   }, [track.outputIdx]);
 
-  // Sincronizar volumen inicial al cambiar de canción
+  // Sincronizar estado local al cambiar de canción
   useEffect(() => {
     if (track.volume !== undefined) {
       setLocalVol(Math.round(track.volume * 100));
     }
     setIsMuted(track.muted || false);
     setIsSolo(track.solo || false);
-  }, [track.volume, track.muted, track.solo]);
+    setIsStereo(track.isStereo !== undefined ? track.isStereo : true);
+  }, [track.volume, track.muted, track.solo, track.isStereo]);
   
   // Sincronización Senior: Validar límites de salida al cambiar modo de paneo
   useEffect(() => {

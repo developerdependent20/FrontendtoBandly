@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo } from 'react';
 import { safeInvoke } from '../../utils/tauri';
-import { Flag, ChevronRight, AlertCircle, Search, Plus, Trash2, Maximize2, Timer } from 'lucide-react';
+import { Flag, ChevronRight, AlertCircle, Search, Plus, Trash2, Maximize2, Timer, Magnet } from 'lucide-react';
 import WaveformVisualizer from './WaveformVisualizer';
 
 const CueTimeline = memo(({ 
@@ -22,6 +22,7 @@ const CueTimeline = memo(({
   const [vZoom, setVZoom] = useState(1); 
   const [showModal, setShowModal] = useState(false);
   const [markerLabel, setMarkerLabel] = useState('');
+  const [snapEnabled, setSnapEnabled] = useState(true);
 
   // Cálculos de barras y compás actual
   const samplesPerBeat = (sampleRate * 60) / bpm;
@@ -121,21 +122,37 @@ const CueTimeline = memo(({
 
       {/* Barra de Herramientas de Timeline */}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px', gap: '10px', alignItems: 'center', marginBottom: '6px' }}>
-          <button 
-            onClick={() => {
-              setMarkerLabel(`Marker ${markers.length + 1}`);
-              setShowModal(true);
-            }}
-            className="tech-btn"
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 16px', 
-              background: 'rgba(34, 211, 238, 0.1)', color: 'var(--daw-cyan)', 
-              border: '1px solid rgba(34, 211, 238, 0.3)', borderRadius: '4px'
-            }}
-          >
-            <Plus size={16} />
-            <span style={{ fontSize: '0.75rem', fontWeight: '900', letterSpacing: '1px' }}>AÑADIR MARKER</span>
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => {
+                setMarkerLabel(`Marker ${markers.length + 1}`);
+                setShowModal(true);
+              }}
+              className="tech-btn"
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 16px', 
+                background: 'rgba(34, 211, 238, 0.1)', color: 'var(--daw-cyan)', 
+                border: '1px solid rgba(34, 211, 238, 0.3)', borderRadius: '4px'
+              }}
+            >
+              <Plus size={16} />
+              <span style={{ fontSize: '0.75rem', fontWeight: '900', letterSpacing: '1px' }}>AÑADIR MARKER</span>
+            </button>
+            <button 
+              onClick={() => setSnapEnabled(!snapEnabled)}
+              className="tech-btn"
+              style={{ 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', padding: '0',
+                background: snapEnabled ? 'rgba(34, 211, 238, 0.15)' : 'rgba(255, 255, 255, 0.05)', 
+                color: snapEnabled ? 'var(--daw-cyan)' : 'rgba(255, 255, 255, 0.3)', 
+                border: `1px solid ${snapEnabled ? 'var(--daw-cyan)' : 'transparent'}`, 
+                borderRadius: '6px', transition: 'all 0.2s'
+              }}
+              title={`Snap to Grid (${snapEnabled ? 'On' : 'Off'})`}
+            >
+              <Magnet size={16} />
+            </button>
+          </div>
 
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '4px 15px', borderRadius: '20px' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -167,7 +184,7 @@ const CueTimeline = memo(({
         <WaveformVisualizer 
           progress={progress} peaks={masterWaveform} onSeek={onSeek}
           zoom={zoom} scrollOffset={scrollOffset} setScrollOffset={setScrollOffset}
-          vZoom={vZoom} totalBars={totalBars}
+          vZoom={vZoom} totalBars={totalBars} snapToGrid={snapEnabled}
         />
         
         <div style={{ position: 'absolute', inset: '0 20px', pointerEvents: 'none', overflow: 'hidden' }}>
