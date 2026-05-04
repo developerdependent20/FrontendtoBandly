@@ -87,7 +87,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <div style={{ 
               marginTop: '4rem', 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
               gap: '1.5rem', 
               maxWidth: '900px', 
               width: '100%',
@@ -150,12 +150,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       </section>
 
       {/* Pro Player Showcase Section */}
-      <section id="multitrack" className="pro-player-showcase" style={{ padding: '8rem 8%', background: 'linear-gradient(to bottom, #0f172a, #020617)' }}>
-        <div style={{ display: 'flex', gap: '5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1', minWidth: '350px', order: 2 }}>
-            <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
-              El Único Reproductor de Multitracks Nativo <br/>
-              <span className="serif-accent" style={{ fontSize: '2.5rem' }}>para Windows y Mac.</span>
+      <section id="multitrack" className="pro-player-showcase">
+        <div className="pro-player-flex">
+          <div style={{ flex: '1', minWidth: '300px', order: 2 }}>
+            <h2 className="hero-main-title-large" style={{ textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
+              El Único Reproductor de Multitracks Nativo <br className="hide-mobile" />
+              <span className="serif-accent" style={{ fontSize: '1.1em' }}>para Windows y Mac.</span>
             </h2>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '2rem' }}>
               A diferencia de otras plataformas web, Bandly cuenta con su propio motor de audio instalable. Gestiona todos tus multitracks simultáneos con latencia cero. Diseñado específicamente para músicos que necesitan fiabilidad absoluta en el escenario.
@@ -176,22 +176,20 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               ))}
             </ul>
           </div>
-          <div style={{ flex: '1.2', minWidth: '350px', order: 1 }}>
+          <div style={{ flex: '1.2', minWidth: '300px', order: 1 }}>
             <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, rgba(139,92,246,0.1), transparent)', zIndex: 2, pointerEvents: 'none' }}></div>
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-04-29%20121603.png" 
                 alt="Pro Player Interface" 
                 style={{ 
-                  width: '100%', 
-                  height: '550px', 
-                  objectFit: 'cover', 
-                  objectPosition: 'top left', 
-                  transition: 'transform 0.5s ease',
-                  display: 'block'
-                }}
-                onMouseOver={e => e.currentTarget.style.transform='scale(1.05)'}
-                onMouseOut={e => e.currentTarget.style.transform='scale(1)'}
+                   width: '100%', 
+                   height: 'auto', 
+                   objectFit: 'cover', 
+                   objectPosition: 'left center', 
+                   transform: 'scale(1.1) translateX(-2%)', 
+                   display: 'block' 
+                }} 
               />
             </div>
           </div>

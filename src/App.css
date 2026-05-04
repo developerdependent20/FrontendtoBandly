@@ -58,6 +58,19 @@ h1, h2, h3, h4 {
 }
 
 /* --- Landing Page Styles --- */
+.pro-player-flex {
+  display: flex;
+  gap: 5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .pro-player-flex {
+    gap: 2rem;
+  }
+}
+
 .landing-container {
   min-height: 100vh;
   background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent),
