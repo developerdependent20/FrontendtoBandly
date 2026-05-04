@@ -69,6 +69,13 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       const mainSequence = sequences && sequences.length > 0 ? sequences[0] : null;
 
       if (mainSequence && (mainSequence.sequence_stems?.length > 0)) {
+        const plan = (profile?.organizations?.plan || 'free').toLowerCase();
+        if (plan === 'free') {
+          alert("El Reproductor Multi-Track es una función exclusiva para planes de pago (Starter, Pro, Elite). ¡Haz upgrade para escucharlo!");
+          setLoadingSeq(null);
+          return;
+        }
+
         if (isTauri()) {
           // ESCRITORIO: Navegar a la pestaña DAW y cargar ahí
           localStorage.setItem('bandly_load_song_id', song.id);
@@ -129,9 +136,25 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   };
   
   const handleDelete = async (id) => {
-    if(!confirm("¿Estás seguro de eliminar esta canción del repertorio?")) return;
-    await supabase.from('songs').delete().eq('id', id);
-    if (refreshData) refreshData();
+    if(!confirm("¿Estás seguro de eliminar esta canción del repertorio? Se borrarán también los multitracks asociados para ahorrar espacio en la nube.")) return;
+    try {
+      const { data: sequences } = await supabase.from('sequences').select('id').eq('song_id', id);
+      if (sequences && sequences.length > 0) {
+        const { data: { session } } = await supabase.auth.getSession();
+        for (const seq of sequences) {
+          try {
+            await fetch(`${API_URL}/api/sequences/${seq.id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${session?.access_token}` }
+            });
+          } catch(e) { console.error('Error borrando secuencia de R2', e); }
+        }
+      }
+      await supabase.from('songs').delete().eq('id', id);
+      if (refreshData) refreshData();
+    } catch (e) {
+      alert("Error al eliminar la canción.");
+    }
   };
 
   return (

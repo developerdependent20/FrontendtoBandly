@@ -45,7 +45,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         {canAccessLibrary && (
           <div 
             className={`nav-item ${activeTab === 'daw' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('daw')}
+            onClick={() => {
+              if (isTauri()) {
+                const plan = (profile?.organizations?.plan || 'free').toLowerCase();
+                if (plan === 'free') {
+                  alert("La App de Escritorio (DAW) es una herramienta profesional exclusiva para planes de pago (Starter, Pro, Elite). Haz upgrade en la versión web para desbloquearla.");
+                  return;
+                }
+              }
+              setActiveTab('daw');
+            }}
             title={isTauri() ? 'Bandly DAW' : 'Subir Secuencias'}
             style={{ color: 'var(--primary)', filter: activeTab === 'daw' ? 'drop-shadow(0 0 8px var(--primary))' : 'none' }}
           >
@@ -104,18 +113,45 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             </div>
           )}
 
+          {profile?.role === 'director' && profile?.organizations && (
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: '4px',
+              padding: '6px 12px', borderRadius: '12px',
+              background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
+              minWidth: '130px', marginRight: '8px'
+            }} title="Almacenamiento Usado">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', fontWeight: '900', letterSpacing: '1px' }}>
+                <span>ALMACENAMIENTO</span>
+                <span>
+                  {Math.round((profile.organizations.storage_used_mb || 0)/1024 * 10)/10}GB / {Math.round((profile.organizations.storage_limit_mb || 300)/1024 * 10)/10}GB
+                </span>
+              </div>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ 
+                  height: '100%', 
+                  width: `${Math.min(100, ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) * 100)}%`, 
+                  background: ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) > 0.85 ? '#ef4444' : 'var(--primary)'
+                }} />
+              </div>
+            </div>
+          )}
+
           <div 
             onClick={() => {
-              const option = window.prompt("Escribe '1' para unirte a otra banda con un código, o '2' para registrar una nueva banda (solo planes PRO):");
-              if (option === '1') {
-                if (handleJoinTeam) handleJoinTeam();
-              } else if (option === '2') {
-                if (profile?.organizations?.plan === 'pro' || profile?.organizations?.plan === 'premium') {
-                  window.alert("Creación multi-banda en proceso. Pronto habilitaremos el panel para alternar entre tus bandas.");
-                } else {
-                  window.alert("Necesitas un plan PRO o superior para administrar múltiples bandas.");
-                  setShowSubscription(true);
+              if (profile?.role === 'director') {
+                const option = window.prompt("Escribe '1' para unirte a otra banda con código, o '2' para crear una nueva banda (Solo planes PRO):");
+                if (option === '1') {
+                  if (handleJoinTeam) handleJoinTeam();
+                } else if (option === '2') {
+                  if (profile?.organizations?.plan === 'pro' || profile?.organizations?.plan === 'elite') {
+                    window.alert("Creación multi-banda en proceso. Pronto habilitaremos el panel para alternar entre tus bandas.");
+                  } else {
+                    window.alert("Necesitas un plan PRO o superior para administrar múltiples bandas.");
+                    setShowSubscription(true);
+                  }
                 }
+              } else {
+                if (handleJoinTeam) handleJoinTeam();
               }
             }}
             style={{ 
@@ -125,11 +161,11 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               transition: 'all 0.2s'
             }}
             className="hover-scale"
-            title="Opciones de Banda"
+            title={profile?.role === 'director' ? "Opciones de Banda" : "Unirse a una banda"}
           >
             <Plus size={14} color="#fff" />
             <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#fff', letterSpacing: '1px' }}>
-              BANDA
+              {profile?.role === 'director' ? 'BANDA' : 'UNIRSE'}
             </span>
           </div>
 

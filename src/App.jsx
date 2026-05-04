@@ -128,8 +128,20 @@ export default function App() {
     if (!code) return;
     try {
       const cleanCode = code.includes('?join=') ? code.split('?join=')[1] : code;
-      const { data: org, error: orgError } = await supabase.from('organizations').select('id').eq('invite_code', cleanCode.toUpperCase()).single();
+      const { data: org, error: orgError } = await supabase.from('organizations').select('id, plan').eq('invite_code', cleanCode.toUpperCase()).single();
       if (orgError || !org) throw new Error('Código no encontrado. Asegúrate de escribirlo bien.');
+      
+      // Validar Límite de Usuarios según el Plan
+      const { count: memberCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('org_id', org.id);
+      
+      let userLimit = 10; // Gratis
+      if (org.plan === 'starter') userLimit = 25;
+      if (org.plan === 'pro') userLimit = 75;
+      if (org.plan === 'elite') userLimit = 999999; // Ilimitado
+
+      if (memberCount >= userLimit) {
+        throw new Error(`Esta banda ha alcanzado su límite máximo de miembros (${userLimit}). El director debe mejorar el plan para añadir más personas.`);
+      }
       
       const { error: updateErr } = await supabase.from('profiles').update({ org_id: org.id }).eq('id', profile.id);
       if (updateErr) throw updateErr;

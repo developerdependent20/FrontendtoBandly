@@ -571,11 +571,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                {(song?.has_sequence || (song?.sequences && song.sequences.length > 0)) && (
                                   <button
                                     onClick={() => {
-                                      const plan = (profile?.organizations?.plan || profile?.plan_id || 'starter').toLowerCase();
-                                      if (plan === 'pro' || plan === 'elite' || plan === 'premium') {
+                                      const plan = (profile?.organizations?.plan || 'free').toLowerCase();
+                                      if (plan !== 'free') {
                                         setSeqPlayerSong(song);
                                       } else {
-                                        alert("La Sala de Ensayo Virtual (Reproductor Multi-Track) es una función exclusiva para planes PRO y ELITE. ¡Haz upgrade a tu banda para habilitar esta sala de práctica para todos tus músicos!");
+                                        alert("La Sala de Ensayo Virtual (Reproductor Multi-Track) es una función exclusiva para planes de pago (Starter, Pro, Elite). ¡Haz upgrade a tu banda para habilitarla!");
                                       }
                                     }}
                                     style={{

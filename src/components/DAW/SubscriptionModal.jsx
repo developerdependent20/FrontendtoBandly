@@ -30,7 +30,9 @@ const SubscriptionModal = ({ profile, onClose }) => {
       id: 'starter',
       name: 'Starter',
       monthly: 9,
-      yearly: 89,
+      originalMonthly: 19,
+      yearly: 75,
+      originalYearly: 190,
       features: ['Hasta 3 bandas', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Multitracks', 'Reproductor en la app'],
       recommended: true
     },
@@ -38,14 +40,18 @@ const SubscriptionModal = ({ profile, onClose }) => {
       id: 'pro',
       name: 'Pro',
       monthly: 19,
+      originalMonthly: 39,
       yearly: 159,
+      originalYearly: 390,
       features: ['Hasta 10 bandas', 'Hasta 75 usuarios', '45 GB almacenamiento', 'Todo lo de Starter', 'Sala de previsualización', 'Player de secuencias']
     },
     {
       id: 'elite',
       name: 'Elite',
       monthly: 39,
+      originalMonthly: 79,
       yearly: 329,
+      originalYearly: 790,
       features: ['Bandas ilimitadas', 'Usuarios ilimitados', '100 GB almacenamiento', 'Todo lo de Pro', 'Roles y permisos', 'Prioridad en soporte', 'Acceso anticipado']
     }
   ];
@@ -130,8 +136,15 @@ const SubscriptionModal = ({ profile, onClose }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', opacity: 0.8 }}>{plan.name.toUpperCase()}</h3>
                     </div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '950', marginBottom: '2px' }}>
-                      {plan.monthly === 0 ? 'Gratis' : `$${billingPeriod === 'monthly' ? plan.monthly : plan.yearly}`}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                      {plan.monthly > 0 && (
+                        <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 500, alignSelf: 'flex-end', paddingBottom: '4px' }}>
+                          ${billingPeriod === 'monthly' ? plan.originalMonthly : plan.originalYearly}
+                        </span>
+                      )}
+                      <div style={{ fontSize: '2.2rem', fontWeight: '950' }}>
+                        {plan.monthly === 0 ? 'Gratis' : `$${billingPeriod === 'monthly' ? plan.monthly : plan.yearly}`}
+                      </div>
                     </div>
                     <div style={{ fontSize: '0.9rem', opacity: 0.5, marginBottom: '4px' }}>
                       {plan.monthly === 0 ? '0/mes' : `$${billingPeriod === 'monthly' ? plan.monthly : plan.yearly}/mes`}

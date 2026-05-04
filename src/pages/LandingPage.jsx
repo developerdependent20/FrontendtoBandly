@@ -83,6 +83,16 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                 onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
               />
             </div>
+            
+            <div style={{ marginTop: '2rem', padding: '1.2rem 2rem', background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '16px', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#c4b5fd', fontWeight: '800', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                 <ShieldCheck size={18} /> Una plataforma, dos propósitos
+               </div>
+               <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                 Usa la <strong>Versión Web</strong> para organizar eventos, planear repertorios y ensayar desde tu celular. <br className="hide-mobile" />
+                 Descarga la <strong>App Nativa (Mac/Windows)</strong> para tocar tus secuencias en vivo con latencia cero y máxima estabilidad.
+               </p>
+            </div>
           </div>
         </div>
       </main>
@@ -105,12 +115,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       <section id="multitrack" className="pro-player-showcase" style={{ padding: '8rem 8%', background: 'linear-gradient(to bottom, #0f172a, #020617)' }}>
         <div style={{ display: 'flex', gap: '5rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ flex: '1', minWidth: '350px', order: 2 }}>
-            <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem' }}>
-              Mezclador Pro. <br/>
-              <span className="serif-accent">Potencia Nativa.</span>
+            <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
+              El Único Reproductor de Multitracks Nativo <br/>
+              <span className="serif-accent" style={{ fontSize: '2.5rem' }}>para Windows y Mac.</span>
             </h2>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '2rem' }}>
-              Nuestro motor de audio de alto rendimiento te permite gestionar todos tus multitracks simultáneos con latencia cero. Diseñado específicamente para músicos que necesitan fiabilidad absoluta en el escenario.
+              A diferencia de otras plataformas web, Bandly cuenta con su propio motor de audio instalable. Gestiona todos tus multitracks simultáneos con latencia cero. Diseñado específicamente para músicos que necesitan fiabilidad absoluta en el escenario.
             </p>
             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
@@ -306,7 +316,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <p className="section-subtitle">Empieza gratis y escala cuando necesites más usuarios, más almacenamiento y herramientas avanzadas para preparar cada presentación.</p>
           
           {/* Billing Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '3rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '1rem', marginBottom: '1rem' }}>
             <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem' }}>Mensual</span>
             <div 
               onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
@@ -362,9 +372,19 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <div className="pricing-card featured">
             <div className="pricing-badge-popular">RECOMENDADO</div>
             <h3>Starter</h3>
-            <div className="price">
-              {billingPeriod === 'monthly' ? '$9' : '$75'}
-              <span>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+            <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+              {billingPeriod === 'monthly' ? (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$19</span>
+                  $9
+                </>
+              ) : (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$190</span>
+                  $75
+                </>
+              )}
+              <span style={{ marginBottom: '6px' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
               {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $6.2 / mes'}
@@ -386,9 +406,19 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <div className="pricing-card">
             <div className="pricing-badge">PRO</div>
             <h3>Pro</h3>
-            <div className="price">
-              {billingPeriod === 'monthly' ? '$19' : '$159'}
-              <span>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+            <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+              {billingPeriod === 'monthly' ? (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$39</span>
+                  $19
+                </>
+              ) : (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$390</span>
+                  $159
+                </>
+              )}
+              <span style={{ marginBottom: '6px' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
               {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $13.2 / mes'}
@@ -408,9 +438,19 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <div className="pricing-card">
             <div className="pricing-badge">ELITE</div>
             <h3>Elite</h3>
-            <div className="price">
-              {billingPeriod === 'monthly' ? '$39' : '$329'}
-              <span>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+            <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+              {billingPeriod === 'monthly' ? (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$79</span>
+                  $39
+                </>
+              ) : (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$790</span>
+                  $329
+                </>
+              )}
+              <span style={{ marginBottom: '6px' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
               {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $27.4 / mes'}
