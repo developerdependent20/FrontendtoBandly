@@ -115,22 +115,35 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
 
           {profile?.role === 'director' && profile?.organizations && (
             <div style={{
-              display: 'flex', flexDirection: 'column', gap: '4px',
-              padding: '6px 12px', borderRadius: '12px',
-              background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
-              minWidth: '130px', marginRight: '8px'
+              display: 'flex', flexDirection: 'column', gap: '6px',
+              padding: '8px 14px', borderRadius: '14px',
+              background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6))', 
+              border: '1px solid rgba(255,255,255,0.05)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+              minWidth: '160px', marginRight: '8px'
             }} title="Almacenamiento Usado">
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', fontWeight: '900', letterSpacing: '1px' }}>
-                <span>ALMACENAMIENTO</span>
-                <span>
-                  {Math.round((profile.organizations.storage_used_mb || 0)/1024 * 10)/10}GB / {Math.round((profile.organizations.storage_limit_mb || 300)/1024 * 10)/10}GB
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6rem', color: 'rgba(255,255,255,0.7)', fontWeight: '800', letterSpacing: '0.5px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Cloud size={10} color="var(--primary)" /> ALMACENAMIENTO
+                </span>
+                <span style={{ color: 'white', fontFamily: 'var(--font-mono)' }}>
+                  {(() => {
+                    const used = profile.organizations.storage_used_mb || 0;
+                    const limit = profile.organizations.storage_limit_mb || 300;
+                    const format = (mb) => mb >= 1000 ? `${(mb/1024).toFixed(1)}GB` : `${Math.round(mb)}MB`;
+                    return `${format(used)} / ${format(limit)}`;
+                  })()}
                 </span>
               </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: '5px', background: 'rgba(0,0,0,0.5)', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{ 
                   height: '100%', 
                   width: `${Math.min(100, ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) * 100)}%`, 
-                  background: ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) > 0.85 ? '#ef4444' : 'var(--primary)'
+                  background: ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) > 0.85 
+                    ? 'linear-gradient(90deg, #ef4444, #f87171)' 
+                    : 'linear-gradient(90deg, var(--primary), var(--accent))',
+                  boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
+                  transition: 'width 0.5s ease-out'
                 }} />
               </div>
             </div>
