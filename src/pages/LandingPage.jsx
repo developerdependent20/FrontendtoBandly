@@ -48,7 +48,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             Organiza shows, repertorios, multitracks y secuencias <br className="hide-mobile" /> desde una sola plataforma.
           </p>
           <p className="hero-clarifier" style={{ marginTop: '2rem', opacity: 0.6 }}>
-            Eventos <span className="dot">•</span> Repertorios <span className="dot">•</span> Recursos <span className="dot">•</span> Multitracks <span className="dot">•</span> Secuencias
+            <span>Eventos</span> <span className="dot">•</span> <span>Repertorios</span> <span className="dot">•</span> <span>Recursos</span> <span className="dot">•</span> <span>Multitracks</span> <span className="dot">•</span> <span>Secuencias</span>
           </p>
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', marginTop: '3.5rem' }}>
@@ -84,11 +84,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               />
             </div>
             
-            <div style={{ 
+            <div className="purpose-grid" style={{ 
               marginTop: '4rem', 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-              gap: '1.5rem', 
               maxWidth: '900px', 
               width: '100%',
               textAlign: 'left'

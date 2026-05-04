@@ -504,21 +504,47 @@ h1, h2, h3, h4 {
   line-height: 1.6;
 }
 
+.purpose-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
 @media (max-width: 768px) {
+  .purpose-grid {
+    grid-template-columns: 1fr !important;
+  }
   .premium-statement {
-    padding: 6rem 8%;
+    padding: 6rem 5% !important;
   }
   .hero-main-title-large {
     font-size: 2.2rem !important;
     letter-spacing: -1px;
     line-height: 1.2;
+    padding: 0 1rem;
+  }
+  .hero-content-full p {
+    padding: 0 1rem;
   }
   .hero-clarifier {
-    font-size: 0.65rem;
-    letter-spacing: 1px;
+    font-size: 0.6rem;
+    letter-spacing: 0px;
     margin-top: 1.5rem;
     padding: 0 1rem;
-    display: block;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .hero-clarifier .dot {
+    display: none;
+  }
+  .hero-clarifier span:not(.dot)::after {
+    content: " • ";
+    opacity: 0.5;
+  }
+  .hero-clarifier span:not(.dot):last-child::after {
+    content: "";
   }
 
   .hide-mobile {
