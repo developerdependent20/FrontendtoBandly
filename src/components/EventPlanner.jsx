@@ -400,6 +400,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     } catch (e) { alert("Error al confirmar."); }
   };
 
+  const handleRemoveFromRoster = async (rosterId) => {
+    if (!confirm('¿Seguro que quieres eliminar a este usuario del evento?')) return;
+    try {
+      await supabase.from('event_roster').delete().eq('id', rosterId);
+      if (refreshData) refreshData();
+    } catch (e) { alert("Error al eliminar."); }
+  };
+
   const closeModal = () => { setShowModal(false); setEditingEventId(null); setSaving(false); };
 
   if (!profile || !members) return <div style={{ padding: '4rem', textAlign: 'center' }}>Cargando equipo...</div>;
@@ -484,10 +492,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             </div>
           )}
 
-          {userSlots.some(s => s.status === 'pending') && !isPast && (
+          {userSlots.length > 0 && !isPast && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '1rem' }}>
-              <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')} className="btn-primary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Confirmar Todo</button>
-              <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')} className="btn-secondary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Declinar</button>
+              {userSlots.some(s => s.status !== 'confirmed') && (
+                <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')} className="btn-primary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Confirmar Todo</button>
+              )}
+              {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
+                <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')} className="btn-secondary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Declinar</button>
+              )}
             </div>
           )}
           
@@ -501,8 +513,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Equipo Completo</div>
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem', marginBottom: '2rem' }}>
                   {(ev.event_roster || []).map((s, i) => (
-                    <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                      {userRole === 'director' && (
+                        <button 
+                          onClick={() => handleRemoveFromRoster(s.id)} 
+                          style={{ position: 'absolute', top: '8px', right: '8px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                          title="Eliminar de la alineación"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', paddingRight: '20px' }}>
                         <span style={{ fontSize: '1rem' }}>{getInstrumentIcon(s.instrument)}</span>
                         <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase' }}>
                           {getBilingualName(s.instrument)}

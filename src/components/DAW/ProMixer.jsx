@@ -19,9 +19,9 @@ const {
 } = Icons;
 
 const sortTracks = (tracksList) => {
-  const priority = (name) => {
-    if (!name) return 10;
-    const n = name.toUpperCase();
+  const priority = (rawName) => {
+    if (!rawName) return 10;
+    const n = normalizeTrackName(rawName);
     if (n.includes('CLICK') || n.includes('METRO')) return 1;
     if (n.includes('CUE') || n.includes('GUIA')) return 2;
     if (n.includes('DRUM') || n.includes('PERC') || n.includes('BATERIA')) return 3;
@@ -40,6 +40,18 @@ const normalizeTrackName = (name) => {
     .toUpperCase()
     .replace(/[^A-Z]/g, ''); // Remove numbers, spaces, symbols
   return clean.length > 0 ? clean : name.toUpperCase().replace(/\s/g, '');
+};
+
+const getTrackCategory = (rawName) => {
+  const n = normalizeTrackName(rawName);
+  if (n.includes('CLICK') || n.includes('METRO')) return 'CATEGORY_CLICK';
+  if (n.includes('CUE') || n.includes('GUIA')) return 'CATEGORY_CUE';
+  if (n.includes('DRUM') || n.includes('PERC') || n.includes('BATERIA')) return 'CATEGORY_DRUMS';
+  if (n.includes('BASS') || n.includes('BAJO')) return 'CATEGORY_BASS';
+  if (n.includes('GTR') || n.includes('GUITAR')) return 'CATEGORY_GTR';
+  if (n.includes('PIANO') || n.includes('KEY') || n.includes('TECLA')) return 'CATEGORY_KEYS';
+  if (n.includes('VOCAL') || n.includes('VOX') || n.includes('VOZ')) return 'CATEGORY_VOCAL';
+  return n; // Fallback al nombre normalizado si no hay categoría
 };
 
 const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading }) => (
@@ -597,11 +609,11 @@ export default function ProMixer({ session }) {
         if (type === 'panMode') next.isStereo = isStereo;
         if (type === 'output') next.outputIdx = output;
 
-        // Persistencia global por nombre de track
+        // Persistencia global por nombre de track (categorizado)
         try {
           const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
           const profile = JSON.parse(profileStr);
-          const trackKey = normalizeTrackName(next.name);
+          const trackKey = getTrackCategory(next.name);
           if (!profile[trackKey]) profile[trackKey] = {};
           if (type === 'volume') profile[trackKey].volume = volume;
           if (type === 'output') profile[trackKey].outputIdx = output;
@@ -632,12 +644,18 @@ export default function ProMixer({ session }) {
     // Usaremos isLoadingStems para que sea transparente y rápido en el botón Play.
     const targetBpm = parseFloat(song.bpm) || 120;
     setMetronome(prev => {
-      const next = { ...prev, bpm: targetBpm };
+      // Intentar cargar la configuración guardada del metrónomo
+      let savedMetro = { ...prev };
+      try {
+        const savedData = localStorage.getItem('bandly_metronome_profile');
+        if (savedData) savedMetro = { ...savedMetro, ...JSON.parse(savedData) };
+      } catch (e) {}
+
+      const next = { ...savedMetro, bpm: targetBpm };
       if (isTauri()) {
-        // Solo actualizamos el BPM — el enabled lo controla el usuario manualmente
-        safeInvoke('set_metronome', { enabled: false, volume: next.volume, bpm: next.bpm, outputCh: 0, standalone: true });
+        safeInvoke('set_metronome', { enabled: false, volume: next.volume, bpm: next.bpm, outputCh: next.outputCh, standalone: true });
       }
-      return { ...next, enabled: false }; // Resetear el metrónomo al cambiar de canción — usuario lo activa si quiere
+      return { ...next, enabled: false };
     });
     try {
       setIsPlaying(false);
@@ -668,7 +686,7 @@ export default function ProMixer({ session }) {
       const resTracks = stems.map((stem) => {
         const rawName = stem.original_name || stem.instrument_label || 'Inst';
         const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
-        const trackKey = normalizeTrackName(cleanName);
+        const trackKey = getTrackCategory(cleanName);
         const saved = mixerProfile[trackKey] || {};
 
         return {
@@ -822,6 +840,7 @@ export default function ProMixer({ session }) {
           onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
+          try { localStorage.setItem('bandly_metronome_profile', JSON.stringify({ volume: next.volume, outputCh: next.outputCh })); } catch(e){}
           if (isTauri()) await safeInvoke('set_metronome', { enabled: next.enabled, volume: next.volume, bpm: next.bpm, outputCh: next.outputCh, standalone: true });
         }}
       />

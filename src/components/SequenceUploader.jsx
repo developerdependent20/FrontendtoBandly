@@ -122,9 +122,9 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validar tamaño (200MB máximo)
-    if (file.size > 200 * 1024 * 1024) {
-      setError('El archivo ZIP excede el límite de 200MB');
+    // Validar tamaño (500MB máximo)
+    if (file.size > 500 * 1024 * 1024) {
+      setError('El archivo ZIP excede el límite de 500MB');
       return;
     }
 
@@ -160,7 +160,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
             status: 'pending' // pending | encoding | uploading | done | error
           };
         })
-        .slice(0, 24); // Máximo 24 stems
+        .slice(0, 32); // Máximo 32 stems
 
       if (audioFiles.length === 0) {
         setError('No se encontraron archivos de audio en el ZIP (.wav, .mp3, .aif, .ogg, .flac)');
