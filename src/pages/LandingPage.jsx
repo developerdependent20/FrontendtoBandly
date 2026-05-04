@@ -1,5 +1,5 @@
 import React from 'react';
-import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2 } from 'lucide-react';
+import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = React.useState('annual');
@@ -84,14 +84,52 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               />
             </div>
             
-            <div style={{ marginTop: '2rem', padding: '1.2rem 2rem', background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '16px', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#c4b5fd', fontWeight: '800', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                 <ShieldCheck size={18} /> Una plataforma, dos propósitos
-               </div>
-               <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                 Usa la <strong>Versión Web</strong> para organizar eventos, planear repertorios y ensayar desde tu celular. <br className="hide-mobile" />
-                 Descarga la <strong>App Nativa (Mac/Windows)</strong> para tocar tus secuencias en vivo con latencia cero y máxima estabilidad.
-               </p>
+            <div style={{ 
+              marginTop: '4rem', 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '1.5rem', 
+              maxWidth: '900px', 
+              width: '100%',
+              textAlign: 'left'
+            }}>
+              {/* Web Card */}
+              <div className="hover-scale" style={{ 
+                padding: '2rem', 
+                background: 'rgba(255, 255, 255, 0.02)', 
+                border: '1px solid rgba(255, 255, 255, 0.05)', 
+                borderRadius: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                <div style={{ color: 'rgba(255,255,255,0.4)' }}><Cloud size={32} strokeWidth={1.5} /></div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>Gestión & Ensayo Web</h3>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                    Organiza tus eventos, planea repertorios y ensaya con tus stems desde cualquier navegador.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Desktop Card */}
+              <div className="hover-scale" style={{ 
+                padding: '2rem', 
+                background: 'rgba(139, 92, 246, 0.05)', 
+                border: '1px solid rgba(139, 92, 246, 0.2)', 
+                borderRadius: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                <div style={{ color: 'var(--primary)' }}><Monitor size={32} strokeWidth={1.5} /></div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>App Nativa (Windows / Mac)</h3>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                    La herramienta profesional para <strong>reproducir</strong> tus secuencias en vivo con latencia cero y máxima estabilidad.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
