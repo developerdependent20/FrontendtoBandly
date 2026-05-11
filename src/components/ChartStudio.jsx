@@ -53,8 +53,11 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
 
   // ── Auto-Scroll (Teleprompter) ──
   const [autoScrolling, setAutoScrolling] = useState(false);
-  const [scrollSpeed, setScrollSpeed] = useState(1); // 0.5, 1, 1.5, 2, 3
+  const [scrollSpeed, setScrollSpeed] = useState(1);
+  // Frames de espera entre cada px de scroll (mayor número = más lento)
+  // A 60fps: 60 = 1px/seg, 30 = 2px/seg, etc.
   const SCROLL_SPEEDS = [0.5, 1, 1.5, 2, 3];
+  const FRAMES_PER_PX = { 0.5: 80, 1: 40, 1.5: 20, 2: 10, 3: 5 };
 
   useEffect(() => {
     if (!autoScrolling) {
@@ -64,22 +67,28 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     const container = containerRef.current;
     if (!container) return;
 
-    const pixelsPerFrame = scrollSpeed * 0.8; // Base speed tuned for readability
-    
+    const delay = FRAMES_PER_PX[scrollSpeed] ?? 40; // Frames a esperar entre cada px
+    let frameCount = 0;
+
     const tick = () => {
       if (!container) return;
       const maxScroll = container.scrollHeight - container.clientHeight;
       if (container.scrollTop >= maxScroll) {
-        setAutoScrolling(false); // Stop at bottom
+        setAutoScrolling(false); // Parar al llegar al fondo
         return;
       }
-      container.scrollTop += pixelsPerFrame;
+      frameCount++;
+      if (frameCount >= delay) {
+        container.scrollTop += 1;
+        frameCount = 0;
+      }
       scrollRef.current = requestAnimationFrame(tick);
     };
     
     scrollRef.current = requestAnimationFrame(tick);
     return () => { if (scrollRef.current) cancelAnimationFrame(scrollRef.current); };
   }, [autoScrolling, scrollSpeed]);
+
 
   // ── Insert chord at cursor ──
   const insertAtCursor = (text) => {
@@ -277,6 +286,10 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                 <span className="cs-key-badge">Tono: {getCurrentKey()}</span>
               )}
             </div>
+          </div>
+          {/* ── Centered Title ── */}
+          <div className="cs-header-center">
+            <h1>{song?.title || 'Chart'}</h1>
           </div>
           <div className="cs-header-actions">
             {/* Transpose */}

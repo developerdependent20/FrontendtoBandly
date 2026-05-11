@@ -624,19 +624,30 @@ export default function ProMixer({ session }) {
         if (type === 'panMode') next.isStereo = isStereo;
         if (type === 'output') next.outputIdx = output;
 
-        // Persistencia global por nombre de track (categorizado)
-        try {
-          const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
-          const profile = JSON.parse(profileStr);
-          const trackKey = getTrackCategory(next.name);
-          if (!profile[trackKey]) profile[trackKey] = {};
-          if (type === 'volume') profile[trackKey].volume = volume;
-          if (type === 'output') profile[trackKey].outputIdx = output;
-          if (type === 'panMode') profile[trackKey].isStereo = isStereo;
-          if (type === 'mute') profile[trackKey].muted = muted;
-          if (type === 'solo') profile[trackKey].solo = solo;
-          localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
-        } catch(e) {}
+        // Persistencia global por nombre de track (categorizado) para Ruteo/Paneo/Mute
+        if (type !== 'volume') {
+          try {
+            const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
+            const profile = JSON.parse(profileStr);
+            const trackKey = getTrackCategory(next.name);
+            if (!profile[trackKey]) profile[trackKey] = {};
+            if (type === 'output') profile[trackKey].outputIdx = output;
+            if (type === 'panMode') profile[trackKey].isStereo = isStereo;
+            if (type === 'mute') profile[trackKey].muted = muted;
+            if (type === 'solo') profile[trackKey].solo = solo;
+            localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
+          } catch(e) {}
+        }
+        
+        // Persistencia local (Volumen) independiente por canal (stem)
+        if (type === 'volume') {
+          try {
+            const volsStr = localStorage.getItem('bandly_mixer_volumes') || '{}';
+            const vols = JSON.parse(volsStr);
+            vols[trackId] = volume;
+            localStorage.setItem('bandly_mixer_volumes', JSON.stringify(vols));
+          } catch(e) {}
+        }
 
         return next;
       }
@@ -692,10 +703,12 @@ export default function ProMixer({ session }) {
       setActiveSequenceId(sequence.id);
       setMarkers(sequence.markers || []);
 
-      // Recuperar perfil global de mezcla
+      // Recuperar perfil global de mezcla y volumenes individuales
       let mixerProfile = {};
+      let mixerVolumes = {};
       try {
         mixerProfile = JSON.parse(localStorage.getItem('bandly_mixer_profile') || '{}');
+        mixerVolumes = JSON.parse(localStorage.getItem('bandly_mixer_volumes') || '{}');
       } catch(e) {}
 
       const resTracks = stems.map((stem) => {
@@ -703,15 +716,16 @@ export default function ProMixer({ session }) {
         const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
         const trackKey = getTrackCategory(cleanName);
         const displayName = getStandardName(cleanName);
-        const saved = mixerProfile[trackKey] || {};
+        const savedGlobal = mixerProfile[trackKey] || {};
+        const savedVol = mixerVolumes[stem.id];
 
         return {
           id: stem.id, name: displayName, peak: 0, 
-          outputIdx: saved.outputIdx !== undefined ? saved.outputIdx : 0, 
-          volume: saved.volume !== undefined ? saved.volume : 1,
-          isStereo: saved.isStereo !== undefined ? saved.isStereo : true,
-          muted: saved.muted !== undefined ? saved.muted : false,
-          solo: saved.solo !== undefined ? saved.solo : false,
+          outputIdx: savedGlobal.outputIdx !== undefined ? savedGlobal.outputIdx : 0, 
+          volume: savedVol !== undefined ? savedVol : (savedGlobal.volume !== undefined ? savedGlobal.volume : 1),
+          isStereo: savedGlobal.isStereo !== undefined ? savedGlobal.isStereo : true,
+          muted: savedGlobal.muted !== undefined ? savedGlobal.muted : false,
+          solo: savedGlobal.solo !== undefined ? savedGlobal.solo : false,
           color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
