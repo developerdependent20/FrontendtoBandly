@@ -249,7 +249,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase();
     if (i.includes('voz') || i.includes('voice') || i.includes('coro')) return 'VOCES';
-    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logística') || i.includes('roadie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografía') || i.includes('camara') || i.includes('cámara') || i.includes('kids') || i.includes('interce') || i.includes('decoraci')) return 'PRODUCCIÓN / STAFF';
+    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logística') || i.includes('logistica') || i.includes('roadie') || i.includes('rodie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografía') || i.includes('fotografia') || i.includes('camara') || i.includes('cámara') || i.includes('kids') || i.includes('interce') || i.includes('decoraci') || i.includes('director') || i.includes('líder') || i.includes('lider')) return 'PRODUCCIÓN / STAFF';
     return 'BANDA';
   };
 
@@ -470,20 +470,29 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           boxShadow: isPast ? 'none' : `0 15px 40px -20px ${theme.glass}`
         }}>
           <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between' }}>
-            <div>
+            <div style={{ flex: '1 1 300px', minWidth: 0 }}>
               <h4 style={{ fontSize: '1.3rem', margin: 0, color: 'white' }}>{ev.name}</h4>
-              <span style={{ fontSize: '0.9rem', color: theme.main, fontWeight: '700', display: 'block', marginBottom: ev.description ? '0.8rem' : '0' }}>{formatEventDate(ev.date)}</span>
+              <span style={{ fontSize: '0.9rem', color: theme.main, fontWeight: '700' }}>{formatEventDate(ev.date)}</span>
+              
               {ev.description && (
                 <div style={{ 
+                  marginTop: '1rem',
                   fontSize: '0.85rem', 
                   color: 'var(--text-muted)', 
-                  lineHeight: '1.5',
+                  lineHeight: '1.6',
                   whiteSpace: 'pre-wrap',
-                  background: 'rgba(0,0,0,0.15)',
-                  padding: '0.8rem',
+                  fontFamily: 'inherit',
+                  background: 'rgba(0,0,0,0.3)',
+                  padding: '1rem',
                   borderRadius: '8px',
-                  borderLeft: `2px solid ${theme.main}`
-                }}>
+                  border: '1px solid rgba(255,255,255,0.04)',
+                  borderLeft: `3px solid ${theme.main}`,
+                  maxHeight: '120px',
+                  overflowY: 'auto',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                className="custom-scrollbar"
+                >
                   {ev.description}
                 </div>
               )}
