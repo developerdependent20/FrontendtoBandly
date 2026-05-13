@@ -69,7 +69,7 @@ const getStandardName = (rawName) => {
   return rawName.replace(/^[0-9_.-]+/, '').substring(0, 12).toUpperCase(); 
 };
 
-const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading }) => (
+const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading, downloadProgress, handleSyncOffline }) => (
   <aside style={{ 
     position: 'absolute', right: 0, top: 0, bottom: 0,
     width: '300px', background: 'rgba(15, 23, 42, 0.4)', 
@@ -81,6 +81,36 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, lo
         <Icons.Layout size={18} />
         <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px' }}>SETLIST MANAGER</span>
       </div>
+    </div>
+
+    {/* PANEL DE SINCRONIZACIÓN OFFLINE */}
+    <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      {downloadProgress?.active ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: '800', color: 'var(--daw-cyan)' }}>
+            <span>SINCRONIZANDO AUDIO PARA OFFLINE</span>
+            <span>{downloadProgress.done} / {downloadProgress.total}</span>
+          </div>
+          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: `${(downloadProgress.done / Math.max(1, downloadProgress.total)) * 100}%`, height: '100%', background: 'var(--daw-cyan)', transition: 'width 0.3s ease' }} />
+          </div>
+        </div>
+      ) : (
+        <button 
+          onClick={handleSyncOffline}
+          style={{ 
+            width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
+            color: 'white', fontSize: '0.7rem', fontWeight: '800', borderRadius: '8px', cursor: 'pointer',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          title="Descargar todos los audios del setlist a la computadora"
+        >
+          <Icons.DownloadCloud size={14} />
+          PREPARAR SHOW OFFLINE
+        </button>
+      )}
     </div>
     
     <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column' }}>
@@ -156,7 +186,7 @@ const MemoizedTransportUI = React.memo(({
   engineReady, tracksLoadingCount, rawDbg, 
   metronome, onMetronomeUpdate, deviceChannels,
   showPads, setShowPads,
-  playbackSample, sampleRate,
+  playbackSample, sampleRate, totalSamples,
   reconnectAudio, setIsConfigured,
   isLoadingStems,
   masterVolume, setMasterVolume
@@ -169,12 +199,24 @@ const MemoizedTransportUI = React.memo(({
   const bar = Math.floor(playbackSample / samplesPerBar) + 1;
   const beat = Math.floor((playbackSample % samplesPerBar) / samplesPerBeat) + 1;
 
+  // Formateador de Tiempo (MM:SS)
+  const formatTime = (seconds) => {
+    if (isNaN(seconds) || seconds < 0) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const currentTime = formatTime(playbackSample / sr);
+  const totalTime = formatTime((totalSamples || 0) / sr);
+
   return (
     <header style={{ 
-      height: '64px', background: 'rgba(8, 10, 16, 0.8)', 
+      minHeight: '64px', background: 'rgba(8, 10, 16, 0.8)', 
       borderBottom: '1px solid rgba(255,255,255,0.04)',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-      padding: '0 24px', backdropFilter: 'blur(10px)', zIndex: 100
+      padding: '0 16px', backdropFilter: 'blur(10px)', zIndex: 100,
+      flexWrap: 'wrap', gap: '8px', overflow: 'visible'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -194,7 +236,7 @@ const MemoizedTransportUI = React.memo(({
           background: 'rgba(255,255,255,0.03)', padding: '6px 20px', 
           borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' 
         }}>
-          <button onClick={handleRestart} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><SkipBack size={16} fill="currentColor" /></button>
+          <button onClick={handleRestart} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><Icons.SkipBack size={16} fill="currentColor" /></button>
           
           <button 
             onClick={togglePlay} 
@@ -209,36 +251,40 @@ const MemoizedTransportUI = React.memo(({
               transition: 'all 0.2s'
             }}
           >
-            {isPlaying ? <Pause size={16} fill="#ef4444" color="#ef4444" /> : <Play size={16} fill="white" color="white" />}
+            {isPlaying ? <Icons.Pause size={16} fill="#ef4444" color="#ef4444" /> : <Icons.Play size={16} fill="white" color="white" />}
             <span style={{ fontWeight: '900', fontSize: '0.75rem', color: isPlaying ? '#ef4444' : 'white' }}>
               {isLoadingStems ? 'LOADING' : (isPlaying ? 'PAUSE' : 'PLAY')}
             </span>
           </button>
 
-          <button onClick={handleStop} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><Square size={16} fill="currentColor" /></button>
+          <button onClick={handleStop} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><Icons.Square size={16} fill="currentColor" /></button>
         </div>
       </div>
 
-      {/* CONTADOR BAR / BEAT - ESTILO PREMIUM */}
+      {/* CONTADOR - TIME arriba, BAR|BEAT abajo */}
       <div style={{ 
-        display: 'flex', gap: '1.2rem', alignItems: 'center', 
-        background: 'rgba(0,0,0,0.3)', padding: '6px 20px', 
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+        background: 'rgba(0,0,0,0.3)', padding: '6px 24px', 
         borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)',
         boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
-        minWidth: '180px', justifyContent: 'center'
+        minWidth: '160px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>BAR</span>
-          <span className="mono-data" style={{ fontSize: '1.2rem', fontWeight: '950', color: '#fff' }}>
-            {bar}
-          </span>
-        </div>
-        <span style={{ color: 'rgba(255,255,255,0.1)', fontWeight: '900' }}>|</span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>BEAT</span>
-          <span className="mono-data" style={{ fontSize: '1.2rem', fontWeight: '950', color: '#fff' }}>
-            {beat}
-          </span>
+        {/* Fila 1: Tiempo */}
+        <span className="mono-data" style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--daw-cyan)', lineHeight: 1 }}>
+          {currentTime}
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginLeft: '4px' }}>/ {totalTime}</span>
+        </span>
+        {/* Fila 2: Bar y Beat */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>BAR</span>
+            <span className="mono-data" style={{ fontSize: '0.9rem', fontWeight: '950', color: 'rgba(255,255,255,0.7)' }}>{bar}</span>
+          </div>
+          <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>BEAT</span>
+            <span className="mono-data" style={{ fontSize: '0.9rem', fontWeight: '950', color: 'rgba(255,255,255,0.7)' }}>{beat}</span>
+          </div>
         </div>
       </div>
 
@@ -271,7 +317,8 @@ const MemoizedTransportUI = React.memo(({
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '6px 15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.03)', padding: '6px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+        {/* Bell toggle */}
         <button 
           onClick={() => onMetronomeUpdate('enabled', !metronome.enabled)}
           className={`transport-btn ${metronome.enabled ? 'active-cyan' : ''}`}
@@ -280,8 +327,9 @@ const MemoizedTransportUI = React.memo(({
           {metronome.enabled ? <Bell size={18} fill="currentColor" /> : <BellOff size={18} />}
         </button>
         
-        <div style={{ display: 'flex', flexDirection: 'column', width: '60px' }}>
-          <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>TEMPO</span>
+        {/* TEMPO */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: '52px' }}>
+          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>TEMPO</span>
           <input 
             type="number"
             value={metronome.bpm}
@@ -291,17 +339,13 @@ const MemoizedTransportUI = React.memo(({
           />
         </div>
 
-        {/* SELECTOR DE SALIDA DEL CLICK */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: '85px', marginLeft: '10px' }}>
-          <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>OUT CLICK</span>
+        {/* OUT CLICK */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: '78px' }}>
+          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>OUT CLICK</span>
           <select 
             value={metronome.outputCh}
             onChange={(e) => onMetronomeUpdate('outputCh', parseInt(e.target.value))}
-            style={{
-              background: 'transparent', border: 'none', color: 'white', 
-              fontWeight: '900', fontSize: '0.75rem', outline: 'none',
-              cursor: 'pointer'
-            }}
+            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '900', fontSize: '0.72rem', outline: 'none', cursor: 'pointer' }}
           >
             {Array.from({ length: deviceChannels }).map((_, idx) => (
               <option key={idx} value={idx} style={{ background: '#020617' }}>CH {idx + 1} (MONO)</option>
@@ -309,48 +353,41 @@ const MemoizedTransportUI = React.memo(({
           </select>
         </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>METRONOME VOLUME</span>
-              <input 
-                type="range" min="0" max="1.5" step="0.01" 
-                value={metronome.volume} 
-                onChange={(e) => onMetronomeUpdate('volume', parseFloat(e.target.value))}
-                style={{ width: '100px', height: '4px', accentColor: '#ffffff' }} 
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', marginLeft: '10px' }}>
-              <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>TAP TEMPO</span>
-              <button 
-                onClick={() => {
-                  const now = Date.now();
-                  const taps = window._bandlyTaps || [];
-                  const newTaps = [...taps.filter(t => now - t < 2000), now];
-                  window._bandlyTaps = newTaps;
-                  
-                  if (newTaps.length >= 2) {
-                    const diffs = [];
-                    for(let i = 1; i < newTaps.length; i++) diffs.push(newTaps[i] - newTaps[i-1]);
-                    const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-                    const calculatedBpm = Math.round(60000 / avg);
-                    if (calculatedBpm >= 40 && calculatedBpm <= 250) {
-                      onMetronomeUpdate('bpm', calculatedBpm);
-                    }
-                  }
-                }}
-                className="tap-btn"
-                style={{ 
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white', fontWeight: '950', fontSize: '0.65rem', 
-                  padding: '6px 12px', borderRadius: '4px', cursor: 'pointer',
-                  transition: 'all 0.1s active:scale-95'
-                }}
-              >
-                TAP
-              </button>
-            </div>
-          </div>
-    </div>
+        {/* METRONOME VOLUME */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>MET VOL</span>
+          <input 
+            type="range" min="0" max="1.5" step="0.01" 
+            value={metronome.volume} 
+            onChange={(e) => onMetronomeUpdate('volume', parseFloat(e.target.value))}
+            style={{ width: '80px', height: '4px', accentColor: '#ffffff' }} 
+          />
+        </div>
+
+        {/* TAP TEMPO */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>TAP</span>
+          <button 
+            onClick={() => {
+              const now = Date.now();
+              const taps = window._bandlyTaps || [];
+              const newTaps = [...taps.filter(t => now - t < 2000), now];
+              window._bandlyTaps = newTaps;
+              if (newTaps.length >= 2) {
+                const diffs = [];
+                for(let i = 1; i < newTaps.length; i++) diffs.push(newTaps[i] - newTaps[i-1]);
+                const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+                const calculatedBpm = Math.round(60000 / avg);
+                if (calculatedBpm >= 40 && calculatedBpm <= 250) onMetronomeUpdate('bpm', calculatedBpm);
+              }
+            }}
+            className="tap-btn"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '950', fontSize: '0.65rem', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            TAP
+          </button>
+        </div>
+      </div>
 
     <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '8px' }}>
@@ -464,29 +501,48 @@ export default function ProMixer({ session }) {
     }
   }, []);
 
-  // Fase 3: Pre-descarga silenciosa de todos los ZIPs del setlist
-  useEffect(() => {
+  const [downloadProgress, setDownloadProgress] = useState({ active: false, total: 0, done: 0 });
+
+  // Sincronización Offline de Audios (Reemplaza la pre-descarga silenciosa)
+  const handleSyncOffline = async () => {
     if (!songs.length || !isTauri()) return;
-    const prefetchAll = async () => {
-      const token = session?.access_token || '';
-      for (const song of songs) {
+    const token = session?.access_token || '';
+    
+    // Contar cuántas canciones necesitan descarga
+    const sequencesToDownload = [];
+    for (const song of songs) {
+      const { data: seq } = await supabase.from('sequences').select('id, r2_zip_key').eq('song_id', song.id).maybeSingle();
+      if (seq?.r2_zip_key) sequencesToDownload.push({ song, seq });
+    }
+
+    if (sequencesToDownload.length > 0) {
+      setDownloadProgress({ active: true, total: sequencesToDownload.length, done: 0 });
+      let doneCount = 0;
+
+      for (const item of sequencesToDownload) {
         try {
-          const { data: seq } = await supabase.from('sequences').select('id, r2_zip_key').eq('song_id', song.id).maybeSingle();
-          if (!seq?.r2_zip_key) continue;
-          const songDir = song.id.toString();
-          // Intentar sincronización silenciosa (si ya está extraído, el file_manager usa la caché)
-          const zipUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${seq.r2_zip_key}`;
+          const songDir = item.song.id.toString();
+          const zipUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${item.seq.r2_zip_key}`;
           const zipPath = await safeInvoke('download_multitrack', { url: zipUrl, songId: songDir, fileName: 'multitrack.zip', token }).catch(() => null);
           if (zipPath) {
             await safeInvoke('extract_multitrack_zip', { zipPath, songId: songDir }).catch(() => null);
           }
-        } catch(e) { /* Silencioso */ }
-        // Pausa entre descargas para no saturar la red
-        await new Promise(r => setTimeout(r, 500));
+        } catch(e) { /* Fallo silencioso por track */ }
+        
+        doneCount++;
+        setDownloadProgress(prev => ({ ...prev, done: doneCount }));
       }
-    };
-    // Lanzar en background sin bloquear la UI
-    setTimeout(prefetchAll, 3000);
+      
+      // Ocultar mensaje 3 segundos después de terminar
+      setTimeout(() => {
+        setDownloadProgress({ active: false, total: 0, done: 0 });
+      }, 3000);
+    }
+  };
+
+  useEffect(() => {
+    // Sincronizar automáticamente 2 segundos después de abrir el setlist
+    setTimeout(handleSyncOffline, 2000);
   }, [songs]);
 
   const reconnectAudio = async () => {
@@ -876,7 +932,7 @@ export default function ProMixer({ session }) {
           handleRestart={handleRestart} activeSong={activeSong} loading={loading} engineReady={engineReady}
           tracksLoadingCount={tracksLoadingCount} rawDbg={rawDbg} setShowCloudBrowser={setShowCloudBrowser}
           metronome={metronome} deviceChannels={deviceChannels} showPads={showPads} setShowPads={setShowPads}
-          playbackSample={playbackSample} sampleRate={playbackSR}
+          playbackSample={playbackSample} sampleRate={playbackSR} totalSamples={totalSamples}
           reconnectAudio={reconnectAudio} setIsConfigured={setIsConfigured}
           isLoadingStems={isLoadingStems} masterVolume={masterVolume} setMasterVolume={setMasterVolume}
           onMetronomeUpdate={async (type, val) => {
@@ -891,7 +947,7 @@ export default function ProMixer({ session }) {
           flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', 
           paddingRight: '300px' 
         }}>
-          <div style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.1)', borderBottom: '1px solid var(--daw-border)' }}>
+          <div style={{ padding: '0.5rem 0', background: 'rgba(0,0,0,0.1)', borderBottom: '1px solid var(--daw-border)' }}>
             <CueTimeline 
               progress={totalSamples > 0 ? playbackSample / totalSamples : 0} totalSamples={totalSamples} 
               playbackSample={playbackSample} bpm={metronome.bpm} sampleRate={playbackSR} 
@@ -905,7 +961,7 @@ export default function ProMixer({ session }) {
           </div>
              {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
           </div>
-        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} />
+        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
       </main>
       {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); handleSyncSong(s); setShowCloudBrowser(false); }} />}
       {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}

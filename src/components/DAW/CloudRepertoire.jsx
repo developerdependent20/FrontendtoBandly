@@ -113,7 +113,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
             const progress = syncingProgress[song.id];
 
             return (
-              <button 
+              <div 
                 key={song.id} 
                 onClick={() => onSelect(song)}
                 className="repertoire-item"
@@ -157,6 +157,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
                     <div 
                       onClick={(e) => handleSync(e, song)}
                       className="sync-btn"
+                      title="Descargar audio para uso offline"
                       style={{ 
                         padding: '6px', 
                         borderRadius: '6px', 
@@ -174,7 +175,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
             );
           })}
           {filteredSongs?.length === 0 && (

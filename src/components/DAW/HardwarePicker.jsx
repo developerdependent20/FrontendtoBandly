@@ -15,13 +15,15 @@ export default function HardwarePicker({ onConfigured }) {
       const list = await safeInvoke('get_audio_devices');
       if (list && Array.isArray(list)) setDevices(list);
       else if (!isTauri()) {
-        // Mock de dispositivos para entorno web (visualización pro)
         setDevices([
           { id: 'mock-1', name: 'Virtual Studio Interfaz (Modo Demo)', host: 'WebAudio' },
           { id: 'mock-2', name: 'Navegador Loopback', host: 'WebAudio' }
         ]);
       }
-      // Intentar recuperar el último dispositivo usado
+      // Forzar buffer máximo (2048) siempre — solo playback, latencia no importa
+      safeInvoke('set_audio_buffer_size', { size: 2048 }).catch(() => {});
+      localStorage.setItem('bandly_buffer_size', '2048');
+
       const lastId = localStorage.getItem('bandly_last_audio_device');
       if (lastId && list) {
         const found = list.find(d => d.id === lastId);
@@ -66,7 +68,7 @@ export default function HardwarePicker({ onConfigured }) {
           <Settings size={30} color="white" />
         </div>
         <h2 style={{ fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-1px' }}>Configuración de Audio</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Selecciona tu interfaz para una experiencia de baja latencia.</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Selecciona tu interfaz de audio para comenzar.</p>
       </div>
 
       {error ? (
@@ -129,38 +131,6 @@ export default function HardwarePicker({ onConfigured }) {
         </div>
       </div>
 
-      <div style={{ marginBottom: '2rem' }}>
-        <label style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '1rem', display: 'block' }}>Optimización de Rendimiento</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          {[512, 1024, 2048].map(size => (
-            <div 
-              key={size}
-              onClick={() => {
-                safeInvoke('set_audio_buffer_size', { size });
-                localStorage.setItem('bandly_buffer_size', size.toString());
-              }}
-              style={{
-                padding: '0.8rem',
-                textAlign: 'center',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                background: localStorage.getItem('bandly_buffer_size') === size.toString() ? 'rgba(34, 211, 238, 0.1)' : 'rgba(255,255,255,0.03)',
-                border: '1px solid',
-                borderColor: localStorage.getItem('bandly_buffer_size') === size.toString() ? '#22d3ee' : 'rgba(255,255,255,0.1)',
-                color: localStorage.getItem('bandly_buffer_size') === size.toString() ? '#22d3ee' : 'var(--text-muted)'
-              }}
-            >
-              {size === 2048 ? 'Estable' : size === 1024 ? 'Estándar' : 'Baja Lat.'}
-              <div style={{ fontSize: '0.6rem', opacity: 0.5 }}>{size} samples</div>
-            </div>
-          ))}
-        </div>
-        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.8rem' }}>
-          💡 Si escuchas cortes, selecciona **Estable (2048)**.
-        </p>
-      </div>
 
       <button 
         className="btn-primary" 
@@ -171,20 +141,7 @@ export default function HardwarePicker({ onConfigured }) {
         {loading ? 'CONECTANDO...' : 'INICIAR MOTOR DE AUDIO'}
       </button>
 
-      <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <button 
-          onClick={() => {
-            localStorage.clear();
-            window.location.reload();
-          }}
-          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', textDecoration: 'underline', cursor: 'pointer' }}
-        >
-          RESETEAR APP Y LIMPIAR CACHÉ
-        </button>
-        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-          Recomendamos usar controladores **ASIO** en Windows para obtener la latencia más baja posible.
-        </p>
-      </div>
+
     </div>
   );
 }

@@ -81,6 +81,19 @@ export default function App() {
 
   const fetchProfile = async (userId) => {
     try {
+      // 1. Intentar usar caché si no hay internet (Modo Offline)
+      if (!navigator.onLine) {
+        console.log('[Offline] Usando perfil en caché');
+        const cached = localStorage.getItem('bandly_profile_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setProfile(parsed);
+          if (!parsed.accepted_terms) setShowLegalBlocking(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*, organizations(*)')
@@ -88,13 +101,25 @@ export default function App() {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error; 
+      
       setProfile(data || null);
+      
+      // 2. Guardar en caché para el Modo Offline
+      if (data) {
+        localStorage.setItem('bandly_profile_cache', JSON.stringify(data));
+      }
+      
       if (data && !data.accepted_terms) {
         setShowLegalBlocking(true);
       }
     } catch (e) {
-      console.error(e);
-      setProfile(null);
+      console.error('Error fetching profile, falling back to cache:', e);
+      const cached = localStorage.getItem('bandly_profile_cache');
+      if (cached) {
+        setProfile(JSON.parse(cached));
+      } else {
+        setProfile(null);
+      }
     } finally {
       setLoading(false);
     }

@@ -423,8 +423,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const userRole = (profile?.role || '').toLowerCase();
   const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId)));
 
-  const upcomingEvents = eventsToShow.filter(ev => !ev.date || new Date(ev.date) >= new Date().setHours(0,0,0,0));
-  const pastEvents = eventsToShow.filter(ev => ev.date && new Date(ev.date) < new Date().setHours(0,0,0,0));
+  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el día completo del evento siempre se muestra en próximos)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const upcomingEvents = eventsToShow.filter(ev => {
+    if (!ev.date) return true; // Sin fecha → siempre próximo
+    const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
+    return evDate >= todayStart;
+  });
+
+  const pastEvents = eventsToShow.filter(ev => {
+    if (!ev.date) return false;
+    const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
+    return evDate < todayStart; // Solo pasa a "pasados" cuando el día del evento ya terminó
+  });
 
   // [ESTABLE] Temas Joya Premium
   const cardThemes = [
