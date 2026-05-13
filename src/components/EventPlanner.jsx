@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
@@ -423,7 +423,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const userRole = (profile?.role || '').toLowerCase();
   const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId)));
 
-  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el dÃ­a completo del evento siempre se muestra en prÃ³ximos)
+  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el dÃ­a completo del evento siempre se muestra en proximos)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -466,8 +466,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const renderEventList = (list, isPast = false) => {
     if (list.length === 0) return (
       <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-        <CalendarIcon size={32} style={{ opacity: 0.2, marginBottom: '0.8rem', display: 'block', margin: '0 auto 0.8rem' }} />
-        No hay eventos prÃ³ximos
+        <CalendarIcon size={28} style={{ opacity: 0.15, display: 'block', margin: '0 auto 0.75rem' }} />
+        No hay eventos proximos
       </div>
     );
 
@@ -478,200 +478,149 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       const evDate = ev.date ? new Date(ev.date.split('T')[0] + 'T00:00:00') : null;
       const isToday = evDate && evDate.toDateString() === new Date().toDateString();
 
+      const statusLabel = (s) => s === 'confirmed' ? 'Confirmado' : (s === 'declined' || s === 'rejected') ? 'Rechazado' : 'Pendiente';
+      const statusDot  = (s) => s === 'confirmed' ? '#10b981' : (s === 'declined' || s === 'rejected') ? '#ef4444' : '#f59e0b';
+
       return (
         <div key={ev.id} style={{
           position: 'relative',
-          marginBottom: '1.2rem',
-          borderRadius: '20px',
+          marginBottom: '1rem',
+          borderRadius: '16px',
           overflow: 'hidden',
-          background: isPast
-            ? 'rgba(255,255,255,0.02)'
-            : `linear-gradient(145deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.85) 100%)`,
-          border: `1px solid ${isPast ? 'rgba(255,255,255,0.05)' : theme.light}`,
-          boxShadow: isPast ? 'none' : `0 8px 32px -8px ${theme.main}33, 0 2px 8px rgba(0,0,0,0.4)`,
-          opacity: isPast ? 0.6 : 1,
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-          backdropFilter: 'blur(20px)',
+          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.7)',
+          border: `1px solid ${isPast ? 'rgba(255,255,255,0.06)' : theme.light}`,
+          boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
+          opacity: isPast ? 0.55 : 1,
+          backdropFilter: 'blur(12px)',
+          transition: 'box-shadow 0.2s ease',
         }}>
-          {/* Barra de color izquierda */}
-          {!isPast && (
-            <div style={{
-              position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
-              background: `linear-gradient(180deg, ${theme.main}, ${theme.main}66)`,
-            }} />
-          )}
+          {/* Accent line left */}
+          {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
 
-          {/* Glow de fondo sutil */}
-          {!isPast && (
-            <div style={{
-              position: 'absolute', top: 0, right: 0, width: '200px', height: '100px',
-              background: `radial-gradient(ellipse at top right, ${theme.main}15, transparent 70%)`,
-              pointerEvents: 'none',
-            }} />
-          )}
+          <div style={{ padding: '1.25rem 1.25rem 1.25rem 1.6rem' }}>
 
-          <div style={{ padding: '1.4rem 1.4rem 1.4rem 1.8rem' }}>
-            {/* Cabecera */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-                {/* Badges superiores */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+            {/* ── TOP ROW ─────────────────────────────────── */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+
+                {/* Date chip + TODAY badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   {isToday && (
-                    <span style={{
-                      background: `linear-gradient(90deg, ${theme.main}, ${theme.main}bb)`,
-                      color: '#fff', fontSize: '0.6rem', fontWeight: '900',
-                      padding: '3px 10px', borderRadius: '20px', letterSpacing: '1.5px',
-                      boxShadow: `0 2px 8px ${theme.main}55`,
-                      textTransform: 'uppercase'
-                    }}>â— HOY</span>
+                    <span style={{ fontSize: '0.58rem', fontWeight: '900', color: '#fff', background: theme.main, padding: '2px 8px', borderRadius: '20px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                      HOY
+                    </span>
                   )}
-                  <span style={{
-                    background: theme.glass,
-                    color: theme.main, fontSize: '0.6rem', fontWeight: '800',
-                    padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px',
-                    border: `1px solid ${theme.light}`, textTransform: 'uppercase'
-                  }}>
-                    <CalendarIcon size={9} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                  <span style={{ fontSize: '0.68rem', fontWeight: '700', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {formatEventDate(ev.date)}
                   </span>
                 </div>
-                {/* TÃ­tulo */}
-                <h4 style={{
-                  fontSize: '1.25rem', margin: '0 0 2px 0', color: 'white',
-                  fontWeight: '800', letterSpacing: '-0.5px', lineHeight: 1.2
-                }}>{ev.name}</h4>
+
+                {/* Title */}
+                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+                  {ev.name}
+                </h4>
+
+                {/* Description — max 1 line */}
                 {ev.description && (
-                  <p style={{
-                    fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)',
-                    margin: '6px 0 0 0', lineHeight: 1.5,
-                    overflow: 'hidden', textOverflow: 'ellipsis',
-                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
-                  }}>{ev.description}</p>
+                  <p style={{ margin: '5px 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                    {ev.description}
+                  </p>
                 )}
               </div>
 
-              {/* Controles de Admin */}
+              {/* Admin buttons */}
               {!readOnly && (
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                   <button onClick={() => handleEditEvent(ev)}
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '7px', borderRadius: '10px', transition: 'all 0.2s', display: 'flex' }}
-                    onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                    title="Editar Evento">
-                    <Edit2 size={14} />
+                    title="Editar"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.color='white'; e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.4)'; e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}>
+                    <Edit2 size={13} />
                   </button>
-                  <button onClick={() => { if(confirm('Â¿Borrar este evento?')) { supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData()); } }}
-                    style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', color: 'rgba(239,68,68,0.6)', cursor: 'pointer', padding: '7px', borderRadius: '10px', transition: 'all 0.2s', display: 'flex' }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(239,68,68,0.6)'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
-                    title="Eliminar Evento">
-                    <Trash2 size={14} />
+                  <button onClick={() => { if(window.confirm('Borrar este evento?')) supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData()); }}
+                    title="Eliminar"
+                    style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.color='#ef4444'; e.currentTarget.style.background='rgba(239,68,68,0.15)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color='rgba(239,68,68,0.5)'; e.currentTarget.style.background='rgba(239,68,68,0.07)'; }}>
+                    <Trash2 size={13} />
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Tu AsignaciÃ³n */}
+            {/* ── ASSIGNMENT ROW ──────────────────────────── */}
             {userSlots.length > 0 && (
-              <div style={{ marginTop: '1.2rem', padding: '1rem', background: 'rgba(0,0,0,0.25)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.8rem' }}>Tu AsignaciÃ³n</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', flex: '1 1 auto' }}>
-                    {userSlots.map((slot, idx) => {
-                      const statusColor = slot.status === 'confirmed' ? '#10b981' : (slot.status === 'declined' || slot.status === 'rejected') ? '#ef4444' : '#f59e0b';
-                      const statusBg = slot.status === 'confirmed' ? 'rgba(16,185,129,0.12)' : (slot.status === 'declined' || slot.status === 'rejected') ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)';
-                      return (
-                        <div key={idx} style={{ padding: '6px 12px', background: statusBg, border: `1px solid ${statusColor}33`, borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '1rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                          <div>
-                            <div style={{ fontSize: '0.8rem', color: 'white', fontWeight: '700', lineHeight: 1.2 }}>{getBilingualName(slot.instrument)}</div>
-                            <div style={{ fontSize: '0.58rem', fontWeight: '900', textTransform: 'uppercase', color: statusColor, letterSpacing: '0.5px' }}>
-                              {slot.status === 'confirmed' ? 'âœ“ Confirmado' : (slot.status === 'declined' || slot.status === 'rejected') ? 'âœ— Rechazado' : 'â— Pendiente'}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {!isPast && (
-                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                      {userSlots.some(s => s.status !== 'confirmed') && (
-                        <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')}
-                          style={{ padding: '7px 14px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', borderRadius: '8px', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.2s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.25)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(16,185,129,0.15)'}>
-                          <Check size={12} /> Confirmar
-                        </button>
-                      )}
-                      {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
-                        <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')}
-                          style={{ padding: '7px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', borderRadius: '8px', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.2s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.2)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}>
-                          <X size={12} /> Declinar
-                        </button>
-                      )}
+              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                {/* Slot pills */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: '1 1 auto' }}>
+                  {userSlots.map((slot, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
+                      <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
                     </div>
-                  )}
+                  ))}
                 </div>
+
+                {/* Confirm/Decline */}
+                {!isPast && (
+                  <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                    {userSlots.some(s => s.status !== 'confirmed') && (
+                      <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')}
+                        style={{ padding: '5px 12px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Check size={11} /> Confirmar
+                      </button>
+                    )}
+                    {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
+                      <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')}
+                        style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <X size={11} /> Declinar
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* BotÃ³n Expandir */}
+            {/* ── EXPAND BUTTON ───────────────────────────── */}
             <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))}
-              style={{
-                width: '100%', marginTop: '1rem', padding: '0.65rem',
-                background: isExpanded ? `${theme.glass}` : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${isExpanded ? theme.light : 'rgba(255,255,255,0.06)'}`,
-                borderRadius: '12px', color: isExpanded ? theme.main : 'rgba(255,255,255,0.35)',
-                fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                transition: 'all 0.2s', letterSpacing: '0.5px', textTransform: 'uppercase'
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = theme.glass; e.currentTarget.style.color = theme.main; e.currentTarget.style.borderColor = theme.light; }}
-              onMouseLeave={e => { e.currentTarget.style.background = isExpanded ? theme.glass : 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = isExpanded ? theme.main : 'rgba(255,255,255,0.35)'; e.currentTarget.style.borderColor = isExpanded ? theme.light : 'rgba(255,255,255,0.06)'; }}>
-              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {isExpanded ? 'Ocultar Detalles' : 'Ver Equipo y Canciones'}
+              style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid ${isExpanded ? theme.light : 'rgba(255,255,255,0.06)'}`, borderRadius: '10px', color: isExpanded ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = theme.light; e.currentTarget.style.color = theme.main; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isExpanded ? theme.light : 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = isExpanded ? theme.main : 'rgba(255,255,255,0.3)'; }}>
+              {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              {isExpanded ? 'Ocultar' : 'Ver equipo y canciones'}
             </button>
 
-            {/* SecciÃ³n expandida */}
+            {/* ── EXPANDED SECTION ────────────────────────── */}
             {isExpanded && (
-              <div style={{ marginTop: '1.2rem', borderTop: `1px solid ${theme.light}`, paddingTop: '1.2rem' }}>
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid rgba(255,255,255,0.06)` }}>
+                {/* Team */}
                 {(() => {
-                  const groupedSaved = { 'BANDA': [], 'VOCES': [], 'PRODUCCIÃ“N / STAFF': [] };
+                  const groups = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
                   (ev.event_roster || []).forEach(s => {
                     const g = getRoleGroup(s.instrument);
-                    if (!groupedSaved[g]) groupedSaved[g] = [];
-                    groupedSaved[g].push(s);
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(s);
                   });
-                  return Object.entries(groupedSaved).filter(([_, items]) => items.length > 0).map(([groupName, items]) => (
-                    <div key={groupName} style={{ marginBottom: '1.2rem' }}>
-                      <div style={{ fontSize: '0.6rem', color: theme.main, fontWeight: '900', marginBottom: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.8 }}>{groupName}</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.6rem' }}>
+                  return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => (
+                    <div key={groupName} style={{ marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {items.map((s, i) => {
-                          const statusColor = s.status === 'confirmed' ? '#10b981' : (s.status === 'declined' || s.status === 'rejected') ? '#ef4444' : '#f59e0b';
+                          const dot = statusDot(s.status);
+                          const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
                           return (
-                            <div key={i} style={{ background: 'rgba(0,0,0,0.25)', padding: '0.7rem 0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', position: 'relative' }}>
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
                               {userRole === 'director' && (
                                 <button onClick={() => handleRemoveFromRoster(s.id)}
-                                  style={{ position: 'absolute', top: '6px', right: '6px', background: 'transparent', border: 'none', color: 'rgba(239,68,68,0.4)', cursor: 'pointer', padding: '2px', transition: 'color 0.2s', display: 'flex' }}
-                                  onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.4)'}>
-                                  <X size={12} />
+                                  style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>
+                                  <X size={8} />
                                 </button>
                               )}
-                              <div style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{getInstrumentIcon(s.instrument)}</div>
-                              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.58rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }} title={getBilingualName(s.instrument)}>
-                                {getBilingualName(s.instrument)}
-                              </div>
-                              <strong style={{ fontSize: '0.82rem', color: 'white', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={members.find(m => m.id === s.profile_id)?.full_name}>
-                                {members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--'}
-                              </strong>
-                              {s.profile_id && (
-                                <div style={{ fontSize: '0.55rem', color: statusColor, fontWeight: '900', marginTop: '3px', letterSpacing: '0.3px' }}>
-                                  {s.status === 'confirmed' ? 'âœ“ Confirmado' : (s.status === 'declined' || s.status === 'rejected') ? 'âœ— Rechazado' : 'â— Pendiente'}
-                                </div>
-                              )}
+                              <span style={{ fontSize: '0.8rem' }}>{getInstrumentIcon(s.instrument)}</span>
+                              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{memberName}</span>
+                              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} />
                             </div>
                           );
                         })}
@@ -680,50 +629,46 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   ));
                 })()}
 
+                {/* Setlist */}
                 {ev.event_songs && ev.event_songs.length > 0 && (
-                  <>
-                    <div style={{ fontSize: '0.6rem', color: theme.main, fontWeight: '900', marginBottom: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.8 }}>Setlist / Repertorio</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>SETLIST</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {[...ev.event_songs].sort((a,b) => a.order_index - b.order_index).map((es, i) => {
                         const song = songs?.find(s => s.id === es.song_id);
                         const leader = members?.find(m => m.id === es.lead_id);
                         return (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.7rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                              <span style={{ fontSize: '0.75rem', fontWeight: '900', color: theme.main, width: '18px', flexShrink: 0 }}>{i + 1}</span>
-                              <div style={{ minWidth: 0, flex: 1 }}>
-                                <div style={{ fontSize: '0.88rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'CanciÃ³n Desconocida'}</div>
-                                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>
-                                  {leader?.full_name?.split(' ')[0] || '--'} â€¢ <span style={{ color: theme.main, fontWeight: '800' }}>{es.selected_key || '--'}</span>
-                                </div>
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                              <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.main, width: '16px', flexShrink: 0 }}>{i + 1}</span>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Cancion desconocida'}</div>
+                                <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{leader?.full_name?.split(' ')[0] || '--'} &bull; <span style={{ color: theme.main }}>{es.selected_key || '--'}</span></div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
-                              {(song?.has_sequence || (song?.sequences && song.sequences.length > 0)) && (
-                                <button onClick={() => { const plan = (profile?.organizations?.plan || 'free').toLowerCase(); if (plan !== 'free') { setSeqPlayerSong(song); } else { alert("La Sala de Ensayo Virtual es exclusiva para planes de pago."); } }}
-                                  style={{ padding: '5px', borderRadius: '7px', border: 'none', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }}
-                                  title="Sala de Ensayo Virtual (Requiere PRO)">
-                                  <Headphones size={13} />
+                            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                              {(song?.has_sequence || song?.sequences?.length > 0) && (
+                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alert('Requiere plan PRO'); }}
+                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
+                                  <Headphones size={12} />
                                 </button>
                               )}
                               {song?.youtube_link && (
                                 <button onClick={() => setActiveYoutubeUrl(song.youtube_link)}
-                                  style={{ padding: '5px', borderRadius: '7px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }}
-                                  title="Ver en YouTube">
-                                  <Play size={13} fill="#ef4444" />
+                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer', display: 'flex' }}>
+                                  <Play size={12} fill="#ef4444" />
                                 </button>
                               )}
                               <button onClick={() => setChartSong(song)}
-                                style={{ padding: '5px', borderRadius: '7px', border: 'none', background: theme.glass, color: theme.main, cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }}
-                                title="Ver Cifrado">
-                                <FileText size={13} />
+                                style={{ padding: '4px', borderRadius: '6px', border: 'none', background: theme.glass, color: theme.main, cursor: 'pointer', display: 'flex' }}>
+                                <FileText size={12} />
                               </button>
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -733,17 +678,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     });
   };
 
-
   return (
     <section id="planner-top">
       <div className="tutorial-banner">
         <div style={{ background: 'var(--accent)', padding: '1rem', borderRadius: '15px' }}><CalendarIcon size={24} color="#0f172a" /></div>
-        <div style={{ marginLeft: '1rem' }}><h4>Calendario & PlaneaciÃ³n</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
+        <div style={{ marginLeft: '1rem' }}><h4>Calendario & Planeación</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
       </div>
 
       <section id="upcoming-events" className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> PrÃ³xima Agenda</h3>
+          <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
           {!readOnly && (
             <button onClick={() => handleNewEvent('')} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
               <Plus size={16} /> Nuevo Evento
@@ -751,7 +695,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-           <div><h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>PrÃ³ximos Eventos</h4>{renderEventList(upcomingEvents)}</div>
+           <div><h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>proximos Eventos</h4>{renderEventList(upcomingEvents)}</div>
            {pastEvents.length > 0 && (
              <div>
                <button onClick={() => setShowPastEvents(!showPastEvents)} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: 'none', borderRadius: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
