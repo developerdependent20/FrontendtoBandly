@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
@@ -216,6 +216,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [dbHistory, setDbHistory] = useState([]);
   const [pendingTemplate, setPendingTemplate] = useState(null);
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
+  const [descModalEv, setDescModalEv] = useState(null);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -520,11 +521,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {ev.name}
                 </h4>
 
-                {/* Description — max 1 line */}
+                {/* Description — button + expandable panel */}
                 {ev.description && (
-                  <p style={{ margin: '5px 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-                    {ev.description}
-                  </p>
+                  <div style={{ marginTop: '6px' }}>
+                    <button
+                      onClick={() => setDescModalEv(descModalEv === ev.id ? null : ev.id)}
+                      style={{ background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: descModalEv === ev.id ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.68rem', fontWeight: '700', transition: 'color 0.15s', letterSpacing: '0.3px' }}
+                      onMouseEnter={e => e.currentTarget.style.color = theme.main}
+                      onMouseLeave={e => e.currentTarget.style.color = descModalEv === ev.id ? theme.main : 'rgba(255,255,255,0.3)'}
+                    >
+                      <ChevronDown size={11} style={{ transform: descModalEv === ev.id ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                      {descModalEv === ev.id ? 'Ocultar descripcion' : 'Ver descripcion'}
+                    </button>
+                    {descModalEv === ev.id && (
+                      <div style={{ marginTop: '8px', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: `1px solid ${theme.light}`, maxHeight: '160px', overflowY: 'auto', fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }} className="custom-scrollbar">
+                        {ev.description}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
