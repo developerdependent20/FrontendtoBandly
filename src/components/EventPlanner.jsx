@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
-  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp
+  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
@@ -477,7 +477,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <div style={{ flex: '1 1 300px', minWidth: 0 }}>
               <h4 style={{ fontSize: '1.4rem', margin: '0 0 4px 0', color: 'white', fontWeight: '800', letterSpacing: '-0.5px' }}>{ev.name}</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.main, fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                <Calendar size={14} />
+                <CalendarIcon size={14} />
                 <span>{formatEventDate(ev.date)}</span>
               </div>
             </div>
