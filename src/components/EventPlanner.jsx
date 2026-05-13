@@ -617,30 +617,52 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     if (!groups[g]) groups[g] = [];
                     groups[g].push(s);
                   });
-                  return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => (
-                    <div key={groupName} style={{ marginBottom: '1rem' }}>
-                      <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {items.map((s, i) => {
-                          const dot = statusDot(s.status);
-                          const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
-                          return (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
-                              {userRole === 'director' && (
-                                <button onClick={() => handleRemoveFromRoster(s.id)}
-                                  style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>
-                                  <X size={8} />
-                                </button>
-                              )}
-                              <span style={{ fontSize: '0.8rem' }}>{getInstrumentIcon(s.instrument)}</span>
-                              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{memberName}</span>
-                              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} />
-                            </div>
-                          );
-                        })}
+                  return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
+                    // Sort by Spanish ordinal if instrument name contains one
+                    const ordinalRank = (name = '') => {
+                      const n = name.toLowerCase();
+                      if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                      if (n.includes('segundo') || n.includes('second')) return 2;
+                      if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                      if (n.includes('cuarto') || n.includes('fourth')) return 4;
+                      if (n.includes('quinto') || n.includes('fifth')) return 5;
+                      if (n.includes('sexto') || n.includes('sixth')) return 6;
+                      if (n.includes('septimo') || n.includes('seventh')) return 7;
+                      return 99;
+                    };
+                    const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
+                    return (
+                      <div key={groupName} style={{ marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {sorted.map((s, i) => {
+                            const dot = statusDot(s.status);
+                            const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
+                            const roleName = getBilingualName(s.instrument);
+                            return (
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
+                                {userRole === 'director' && (
+                                  <button onClick={() => handleRemoveFromRoster(s.id)}
+                                    style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <X size={8} />
+                                  </button>
+                                )}
+                                <span style={{ fontSize: '0.78rem' }}>{getInstrumentIcon(s.instrument)}</span>
+                                {/* Role label */}
+                                <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{roleName}</span>
+                                {/* Separator */}
+                                <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                                {/* Member name */}
+                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
+                                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ));
+                    );
+                  });
+
                 })()}
 
                 {/* Setlist */}
