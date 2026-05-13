@@ -127,7 +127,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
           <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '500px', margin: '0 auto' }}>
             <h3 className="section-title">Datos de tu Banda</h3>
             <div className="input-group">
-              <input type="text" placeholder="Nombre (Ej: Adoradores Central)" className="input-field" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
+              <input type="text" placeholder="Ej: The Groove Collective" className="input-field" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
               <input type="text" placeholder="Crea tu Código Secreto (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} />
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
