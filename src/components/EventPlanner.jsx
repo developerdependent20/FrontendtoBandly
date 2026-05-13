@@ -243,14 +243,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
     if (i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('media') || i.includes('streaming')) return <Video size={20} />;
     if (i.includes('leader') || i.includes('direc') || i.includes('md') || i.includes('musical')) return <Shield size={20} />;
-    if (i.includes('logÃ­stica') || i.includes('staff') || i.includes('roadie')) return <Users size={20} />;
+    if (i.includes('logistica') || i.includes('staff') || i.includes('roadie')) return <Users size={20} />;
     return <User size={20} />;
   };
 
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase();
     if (i.includes('voz') || i.includes('voice') || i.includes('coro')) return 'VOCES';
-    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logÃ­stica') || i.includes('logistica') || i.includes('roadie') || i.includes('rodie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografÃ­a') || i.includes('fotografia') || i.includes('camara') || i.includes('cÃ¡mara') || i.includes('kids') || i.includes('interce') || i.includes('decoraci') || i.includes('director') || i.includes('lÃ­der') || i.includes('lider')) return 'PRODUCCIÃ“N / STAFF';
+    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logistica') || i.includes('logistica') || i.includes('roadie') || i.includes('rodie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografia') || i.includes('fotografia') || i.includes('camara') || i.includes('camara') || i.includes('kids') || i.includes('interce') || i.includes('decoraci') || i.includes('director') || i.includes('lider') || i.includes('lider')) return 'PRODUCCION / STAFF';
     return 'BANDA';
   };
 
@@ -799,7 +799,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
                 {/* Roster Agrupado */}
                 {(() => {
-                  const groupedRoster = { 'BANDA': [], 'VOCES': [], 'PRODUCCIÃ“N / STAFF': [] };
+                  const groupedRoster = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
                   roster.forEach(r => {
                     const g = getRoleGroup(r.instrument);
                     if (!groupedRoster[g]) groupedRoster[g] = [];
@@ -807,9 +807,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   });
 
                   const quickAddPresets = {
-                    'BANDA': ['Guitarra El.', 'Guitarra Ac.', 'Bajo', 'BaterÃ­a', 'Teclados', 'PercusiÃ³n'],
+                    'BANDA': ['Guitarra El.', 'Guitarra Ac.', 'Bajo', 'Bateria', 'Teclados', 'Percusion'],
                     'VOCES': ['Voz', 'Coro'],
-                    'PRODUCCIÃ“N / STAFF': ['Audio', 'Pantallas', 'CÃ¡maras', 'Staff', 'Roadie', 'Director']
+                    'PRODUCCION / STAFF': ['Audio', 'Pantallas', 'Camaras', 'Staff', 'Roadie', 'Director']
                   };
 
                   const handleQuickAdd = (baseName, cat) => {
