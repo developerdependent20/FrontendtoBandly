@@ -458,83 +458,140 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       const userSlots = ev.event_roster?.filter(r => String(r.profile_id) === String(currentUserId)) || [];
 
       return (
-        <div key={ev.id} className="list-item" style={{ 
+        <div key={ev.id} style={{ 
+          display: 'flex',
           flexDirection: 'column', 
-          alignItems: 'flex-start', 
           padding: '1.5rem', 
-          background: isPast ? 'rgba(255,255,255,0.01)' : `linear-gradient(135deg, ${theme.glass} 0%, rgba(15, 23, 42, 0.4) 100%)`, 
-          borderLeft: isPast ? '4px solid rgba(255,255,255,0.1)' : `5px solid ${theme.main}`, 
+          background: isPast ? 'rgba(255,255,255,0.02)' : `linear-gradient(145deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.8) 100%)`, 
+          border: '1px solid rgba(255,255,255,0.05)',
+          borderLeft: isPast ? '4px solid rgba(255,255,255,0.1)' : `4px solid ${theme.main}`, 
           opacity: isPast ? 0.7 : 1, 
-          marginBottom: '1rem', 
-          borderRadius: '12px',
-          boxShadow: isPast ? 'none' : `0 15px 40px -20px ${theme.glass}`
+          marginBottom: '1.2rem', 
+          borderRadius: '16px',
+          boxShadow: isPast ? 'none' : '0 10px 30px -10px rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(10px)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
         }}>
-          <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between' }}>
+          {/* Cabecera del Evento */}
+          <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: '1 1 300px', minWidth: 0 }}>
-              <h4 style={{ fontSize: '1.3rem', margin: 0, color: 'white' }}>{ev.name}</h4>
-              <span style={{ fontSize: '0.9rem', color: theme.main, fontWeight: '700' }}>{formatEventDate(ev.date)}</span>
-              
-              {ev.description && (
-                <div style={{ 
-                  marginTop: '1rem',
-                  fontSize: '0.85rem', 
-                  color: 'var(--text-muted)', 
-                  lineHeight: '1.6',
-                  whiteSpace: 'pre-wrap',
-                  fontFamily: 'inherit',
-                  background: 'rgba(0,0,0,0.3)',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.04)',
-                  borderLeft: `3px solid ${theme.main}`,
-                  maxHeight: '120px',
-                  overflowY: 'auto',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-                }}
-                className="custom-scrollbar"
-                >
-                  {ev.description}
-                </div>
-              )}
+              <h4 style={{ fontSize: '1.4rem', margin: '0 0 4px 0', color: 'white', fontWeight: '800', letterSpacing: '-0.5px' }}>{ev.name}</h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.main, fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <Calendar size={14} />
+                <span>{formatEventDate(ev.date)}</span>
+              </div>
             </div>
+            
+            {/* Controles de Admin */}
             {!readOnly && (
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <span onClick={() => handleEditEvent(ev)} style={{ cursor: 'pointer', fontSize: '1.2rem' }}>✏️</span>
-                <span onClick={() => { if(confirm('¿Borrar?')) { supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData()); } }} style={{ cursor: 'pointer', fontSize: '1.2rem' }}>🗑️</span>
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0, background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <button onClick={() => handleEditEvent(ev)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '6px', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }} title="Editar Evento">
+                  <Edit2 size={16} />
+                </button>
+                <button onClick={() => { if(confirm('¿Borrar este evento definitivamente?')) { supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData()); } }} style={{ background: 'transparent', border: 'none', color: 'rgba(239, 68, 68, 0.7)', cursor: 'pointer', padding: '6px', borderRadius: '6px', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'rgba(239, 68, 68, 0.7)'; e.currentTarget.style.background = 'transparent'; }} title="Eliminar Evento">
+                  <Trash2 size={16} />
+                </button>
               </div>
             )}
           </div>
 
-          {userSlots.length > 0 && (
-            <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem' }}>
-              {userSlots.map((slot, idx) => (
-                <div key={idx} style={{ padding: '0.6rem 1rem', background: isPast ? 'rgba(255,255,255,0.03)' : `${theme.glass}`, border: `1px solid ${theme.light}`, borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '1.2rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                  <div>
-                    <div style={{ fontSize: '0.6rem', color: theme.main, fontWeight: '800', textTransform: 'uppercase' }}>Tu Posición</div>
-                    <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{slot.instrument}</div>
-                  </div>
-                  <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: slot.status === 'confirmed' ? '#10b981' : (slot.status === 'declined' || slot.status === 'rejected') ? '#ef4444' : '#f59e0b', fontWeight: '800' }}>
-                    {slot.status === 'confirmed' ? '✓' : (slot.status === 'declined' || slot.status === 'rejected') ? '✗' : '?'}
-                  </span>
-                </div>
-              ))}
+          {/* Descripción */}
+          {ev.description && (
+            <div style={{ 
+              marginTop: '1.2rem',
+              fontSize: '0.85rem', 
+              color: 'rgba(255,255,255,0.7)', 
+              lineHeight: '1.6',
+              whiteSpace: 'pre-wrap',
+              background: 'rgba(0,0,0,0.25)',
+              padding: '1rem',
+              borderRadius: '10px',
+              border: '1px solid rgba(255,255,255,0.03)',
+              maxHeight: '100px',
+              overflowY: 'auto',
+              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
+            }}
+            className="custom-scrollbar"
+            >
+              {ev.description}
             </div>
           )}
 
-          {userSlots.length > 0 && !isPast && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '1rem' }}>
-              {userSlots.some(s => s.status !== 'confirmed') && (
-                <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')} className="btn-primary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Confirmar Todo</button>
-              )}
-              {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
-                <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')} className="btn-secondary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>Declinar</button>
-              )}
+          {/* Sección "Tu Posición" y Acciones */}
+          {userSlots.length > 0 && (
+            <div style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem' }}>Tu Asignación</div>
+              
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', flex: '1 1 auto' }}>
+                  {userSlots.map((slot, idx) => (
+                    <div key={idx} style={{ 
+                      padding: '0.6rem 1rem', 
+                      background: slot.status === 'confirmed' ? 'rgba(16, 185, 129, 0.1)' : slot.status === 'declined' || slot.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+                      border: `1px solid ${slot.status === 'confirmed' ? 'rgba(16, 185, 129, 0.3)' : slot.status === 'declined' || slot.status === 'rejected' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`, 
+                      borderRadius: '10px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px' 
+                    }}>
+                      <div style={{ 
+                        width: '32px', height: '32px', borderRadius: '8px', 
+                        background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: slot.status === 'confirmed' ? '#10b981' : slot.status === 'declined' || slot.status === 'rejected' ? '#ef4444' : '#f59e0b'
+                      }}>
+                        {getInstrumentIcon(slot.instrument)}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{getBilingualName(slot.instrument)}</div>
+                        <div style={{ fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', color: slot.status === 'confirmed' ? '#10b981' : slot.status === 'declined' || slot.status === 'rejected' ? '#ef4444' : '#f59e0b' }}>
+                          {slot.status === 'confirmed' ? 'CONFIRMADO' : slot.status === 'declined' || slot.status === 'rejected' ? 'RECHAZADO' : 'PENDIENTE'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Botones de Confirmación */}
+                {!isPast && (
+                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                    {userSlots.some(s => s.status !== 'confirmed') && (
+                      <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')} className="btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.75rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Check size={14} /> Confirmar
+                      </button>
+                    )}
+                    {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
+                      <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')} className="btn-secondary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.75rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+                        <X size={14} /> Declinar
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
-          
-          <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))} style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '1.2rem', cursor: 'pointer', padding: '0.6rem 1rem', borderRadius: '10px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+
+          {/* Botón Ver Detalles */}
+          <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))} style={{ 
+            background: isExpanded ? 'rgba(255,255,255,0.05)' : 'transparent', 
+            border: '1px solid rgba(255,255,255,0.05)', 
+            color: isExpanded ? 'white' : 'var(--text-muted)', 
+            fontSize: '0.75rem', 
+            marginTop: '1.5rem', 
+            cursor: 'pointer', 
+            padding: '0.8rem 1rem', 
+            borderRadius: '10px', 
+            fontWeight: '700', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'white'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = isExpanded ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = isExpanded ? 'white' : 'var(--text-muted)'; }}
+          >
+            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             {isExpanded ? ' OCULTAR DETALLES' : ' VER EQUIPO Y CANCIONES'}
           </button>
 
