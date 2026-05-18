@@ -149,6 +149,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
   const audioCtxRef = useRef(null);
   const sourcesRef = useRef([]);
   const gainNodesRef = useRef([]);
+  const masterCompressorRef = useRef(null);
   const startTimeRef = useRef(0);
   const pauseOffsetRef = useRef(0);
   const rafRef = useRef(null);
@@ -307,9 +308,21 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       // Regla de oro: click y cues primero, luego agrupar por familia
       const sortedStems = sortStems(validStems);
 
+      // Master Compressor (Auto-Gain & Limiter)
+      if (!masterCompressorRef.current) {
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -24; // Empieza a comprimir a -24dB (sube lo bajito)
+        comp.knee.value = 30; // Compresión suave
+        comp.ratio.value = 12; // Ratio alto para controlar picos
+        comp.attack.value = 0.003; // Ataque rápido para atajar golpes (batería)
+        comp.release.value = 0.25; // Release musical
+        comp.connect(ctx.destination);
+        masterCompressorRef.current = comp;
+      }
+
       gainNodesRef.current = sortedStems.map(() => {
         const g = ctx.createGain();
-        g.connect(ctx.destination);
+        g.connect(masterCompressorRef.current);
         return g;
       });
 

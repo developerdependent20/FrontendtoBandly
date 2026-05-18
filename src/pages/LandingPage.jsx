@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { landingDict } from './landingDict';
 import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
-  const [billingPeriod, setBillingPeriod] = React.useState('annual');
+  const [billingPeriod, setBillingPeriod] = useState('annual');
+  const [lang, setLang] = useState('es');
+  const t = landingDict[lang];
 
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -20,15 +23,16 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           </div>
 
           <div className="landing-nav-center hide-mobile">
-            <a href="#multitrack">Funciones</a>
-            <a href="#pricing">Planes</a>
-            <a href="#community">Comunidad</a>
-            <a href="#support">Soporte</a>
+            <a href="#multitrack">{t.navFeatures}</a>
+            <a href="#pricing">{t.navPricing}</a>
+            <a href="#community">{t.navCommunity}</a>
+            <a href="#support">{t.navSupport}</a>
           </div>
 
           <div className="landing-nav-links">
-            <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>Iniciar Sesión</button>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>Probar Gratis</button>
+            <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>{lang === 'es' ? 'EN' : 'ES'}</button>
+            <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>{t.btnLogin}</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
           </div>
         </nav>
 
@@ -41,25 +45,25 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             />
           </div>
           <h1 className="hero-main-title-large" style={{ marginTop: '-1rem' }}>
-            Toda tu música. <br/>
-            <span className="serif-accent">Bajo control.</span>
+            {t.heroMain} <br/>
+            <span className="serif-accent">{t.heroSub}</span>
           </h1>
           <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-muted)', maxWidth: '700px', margin: '1.5rem auto 0 auto', lineHeight: '1.6', fontWeight: '500' }}>
-            Organiza shows, repertorios, multitracks y secuencias <br className="hide-mobile" /> desde una sola plataforma.
+            {t.heroDesc.split(' multitracks')[0]} multitracks <br className="hide-mobile" /> {t.heroDesc.split('multitracks ')[1]}
           </p>
           <p className="hero-clarifier" style={{ marginTop: '2rem', opacity: 0.6 }}>
-            <span>Eventos</span> <span className="dot">•</span> <span>Repertorios</span> <span className="dot">•</span> <span>Recursos</span> <span className="dot">•</span> <span>Multitracks</span> <span className="dot">•</span> <span>Secuencias</span>
+            <span>{t.heroTags.split(' • ')[0]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[1]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[2]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[3]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[4]}</span>
           </p>
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', marginTop: '3.5rem' }}>
             <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '800' }}>Empezar Ahora</button>
-              <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '800' }}>Ver planes</button>
+              <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '800' }}>{t.btnStart}</button>
+              <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '800' }}>{t.btnViewPlans}</button>
             </div>
           </div>
           
           <div className="compatibility-badges-centered" style={{ marginTop: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
-            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '4px' }}>Disponible en</span>
+            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '4px' }}>{t.availableOn}</span>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/BadgeMacOS.png" 
@@ -102,9 +106,9 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               }}>
                 <div style={{ color: 'rgba(255,255,255,0.4)' }}><Cloud size={32} strokeWidth={1.5} /></div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>Gestión & Ensayo Web</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.webTitle}</h3>
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                    Organiza tus eventos, planea repertorios y ensaya con tus stems desde cualquier navegador.
+                    {t.webDesc}
                   </p>
                 </div>
               </div>
@@ -121,9 +125,9 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               }}>
                 <div style={{ color: 'var(--primary)' }}><Monitor size={32} strokeWidth={1.5} /></div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>App Nativa (Windows / Mac)</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.desktopTitle}</h3>
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                    La herramienta profesional para <strong>reproducir</strong> tus secuencias en vivo con latencia cero y máxima estabilidad.
+                    {t.lang === 'es' ? <>{t.desktopDesc.split('reproducir')[0]}<strong>reproducir</strong>{t.desktopDesc.split('reproducir')[1]}</> : <>{t.desktopDesc.split('play')[0]}<strong>play</strong>{t.desktopDesc.split('play')[1]}</>}
                   </p>
                 </div>
               </div>
@@ -135,13 +139,13 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Frase Heroica Expandida (Premium Statement) */}
       <section className="premium-statement">
         <div className="statement-content">
-          <p className="statement-mini">HECHO PARA EQUIPOS MUSICALES</p>
+          <p className="statement-mini">{t.premiumMini}</p>
           <h2 className="statement-main">
-            Organiza eventos, reúne tus recursos <br/>
-            y ensaya con secuencias desde <span className="serif-accent">una sola plataforma.</span>
+            {t.premiumMain1} <br/>
+            {t.premiumMain2} <span className="serif-accent">{t.premiumMain3}</span>
           </h2>
           <p className="statement-support">
-            Pensado para bandas y equipos musicales que quieren trabajar con <span className="serif-accent">más orden, menos caos</span> y una experiencia más completa.
+            {t.premiumSupport1} <span className="serif-accent">{t.premiumSupport2}</span> {t.premiumSupport3}
           </p>
         </div>
       </section>
@@ -151,17 +155,17 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         <div className="pro-player-flex">
           <div style={{ flex: '1', minWidth: '300px', order: 2 }}>
             <h2 className="hero-main-title-large" style={{ textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
-              El Único Reproductor de Multitracks Nativo <br className="hide-mobile" />
-              <span className="serif-accent" style={{ fontSize: '1.1em' }}>para Windows y Mac.</span>
+              {t.proPlayerTitle1} <br className="hide-mobile" />
+              <span className="serif-accent" style={{ fontSize: '1.1em' }}>{t.proPlayerTitle2}</span>
             </h2>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '2rem' }}>
-              A diferencia de otras plataformas web, Bandly cuenta con su propio motor de audio instalable. Gestiona todos tus multitracks simultáneos con latencia cero. Diseñado específicamente para músicos que necesitan fiabilidad absoluta en el escenario.
+              {t.proPlayerDesc}
             </p>
             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
-                { title: 'Audio Multicanal', desc: 'Control independiente de volumen y ruteo por track.' },
-                { title: 'Sincronización Local', desc: 'Descarga y reproduce sin depender del internet.' },
-                { title: 'Resiliencia de Hardware', desc: 'Recuperación instantánea ante desconexiones.' }
+                { title: t.proFeat1, desc: t.proFeat1Desc },
+                { title: t.proFeat2, desc: t.proFeat2Desc },
+                { title: t.proFeat3, desc: t.proFeat3Desc }
               ].map((item, i) => (
                 <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</div>
@@ -239,7 +243,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             z-index: 20;
             box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.2);
           }
-          @media (max-width: 900px) {
+          @media (max-width: 1024px) {
             .virtues-gallery {
               flex-direction: column;
               gap: 3rem;
@@ -253,8 +257,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         `}</style>
 
         <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
-          <h2 className="section-title-large">Todo tu equipo, <span className="serif-accent">en tu bolsillo.</span></h2>
-          <p className="section-subtitle">Visualiza la agenda, ensaya con la secuencia virtual, y revisa cada detalle desde cualquier dispositivo. La experiencia móvil definitiva para músicos.</p>
+          <h2 className="section-title-large">{t.mobileTitle1} <span className="serif-accent">{t.mobileTitle2}</span></h2>
+          <p className="section-subtitle">{t.mobileDesc}</p>
         </div>
 
         <div className="virtues-gallery">
@@ -276,28 +280,28 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         <div className="features-flex-container">
           <div className="feature-card">
             <div className="feature-icon"><Speaker size={32} /></div>
-            <h3>Reproductor Nativo</h3>
-            <p>Reproduce multitracks y secuencias con control total desde una experiencia diseñada para músicos.</p>
+            <h3>{t.feat1Title}</h3>
+            <p>{t.feat1Desc}</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon"><Activity size={32} /></div>
-            <h3>Sala de Previsualización</h3>
-            <p>Ensaya y revisa tus secuencias antes del show con una vista clara para preparar cada detalle.</p>
+            <h3>{t.feat2Title}</h3>
+            <p>{t.feat2Desc}</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon"><Cloud size={32} /></div>
-            <h3>Central de Multitracks</h3>
-            <p>Sube, organiza y accede a tus pistas, stems y recursos desde un solo lugar.</p>
+            <h3>{t.feat3Title}</h3>
+            <p>{t.feat3Desc}</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon"><CalendarIcon size={32} /></div>
-            <h3>Eventos y Shows</h3>
-            <p>Organiza fechas, ensayos y presentaciones para que todo tu equipo esté alineado.</p>
+            <h3>{t.feat4Title}</h3>
+            <p>{t.feat4Desc}</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon"><Music size={32} /></div>
-            <h3>Repertorios y Recursos</h3>
-            <p>Centraliza canciones, charts, letras, links y materiales clave para cada presentación.</p>
+            <h3>{t.feat5Title}</h3>
+            <p>{t.feat5Desc}</p>
           </div>
         </div>
       </section>
@@ -305,27 +309,27 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Comparison Section (The "Why Bandly" Factor) */}
       <section className="comparison-section" style={{ padding: '8rem 2rem', background: 'rgba(255,255,255,0.02)' }}>
         <div className="section-header-centered">
-          <h2 className="section-title-large">¿Por qué elegir <span className="serif-accent">Bandly</span>?</h2>
-          <p className="section-subtitle">A diferencia de otras soluciones que fragmentan tus recursos y cobran por cada función, nosotros lo unificamos todo en un solo ecosistema diseñado para músicos.</p>
+          <h2 className="section-title-large">{t.whyTitle} <span className="serif-accent">Bandly</span>?</h2>
+          <p className="section-subtitle">{t.whyDesc}</p>
         </div>
 
         <div style={{ maxWidth: '1000px', margin: '4rem auto 0', overflowX: 'auto' }}>
           <table className="comparison-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#fff', fontSize: '1rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <th style={{ textAlign: 'left', padding: '1.5rem', opacity: 0.5 }}>CARACTERÍSTICAS</th>
+                <th style={{ textAlign: 'left', padding: '1.5rem', opacity: 0.5 }}>{t.tableFeat}</th>
                 <th style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--primary)', fontWeight: 800 }}>BANDLY</th>
-                <th style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>OTRAS APPS</th>
+                <th style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>{t.tableOthers}</th>
               </tr>
             </thead>
             <tbody>
               {[
-                { feature: "Reproductor de Multitracks & DAW Nativo", bandly: true, others: "No disponible (App aparte)" },
-                { feature: "Usuarios / Miembros", bandly: "Ilimitados (Elite)", others: "Limitado (Max 1000)" },
-                { feature: "Almacenamiento para Stems/Pistas", bandly: "Hasta 50 GB", others: "Limitado (2GB - 11GB)" },
-                { feature: "Eventos y Ensayos", bandly: "Ilimitados", others: "Limitado por plan" },
-                { feature: "Charts en PDF y Letras", bandly: true, others: true },
-                { feature: "Costo para Equipos Grandes", bandly: "$39/mes", others: "$135+/mes" }
+                { feature: "t.f1", bandly: true, others: t.f1O },
+                { feature: t.f2, bandly: t.f2B, others: t.f2O },
+                { feature: t.f3, bandly: t.f3B, others: t.f3O },
+                { feature: t.f4, bandly: t.f4B, others: t.f4O },
+                { feature: t.f5, bandly: true, others: true },
+                { feature: t.f6, bandly: "$39/mes", others: "$135+/mes" }
               ].map((item, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1.2rem', fontWeight: 500 }}>{item.feature}</td>
@@ -345,12 +349,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Pricing Section */}
       <section id="pricing" className="landing-pricing-section">
         <div className="section-header-centered">
-          <h2 className="section-title-large">Planes diseñados para cada etapa de tu equipo</h2>
-          <p className="section-subtitle">Empieza gratis y escala cuando necesites más usuarios, más almacenamiento y herramientas avanzadas para preparar cada presentación.</p>
+          <h2 className="section-title-large">{t.navPricing} diseñados para cada etapa de tu equipo</h2>
+          <p className="section-subtitle">{t.pricingDesc}</p>
           
           {/* Billing Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '1rem', marginBottom: '1rem' }}>
-            <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem' }}>Mensual</span>
+            <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem' }}>{t.monthly}</span>
             <div 
               onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
               style={{ 
@@ -377,7 +381,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             </div>
             <span style={{ color: billingPeriod === 'annual' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               Anual
-              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>AHORRA 30%</span>
+              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>{t.save}</span>
             </span>
           </div>
         </div>
@@ -386,25 +390,25 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           {/* Plan Básico */}
           <div className="pricing-card">
             <div className="pricing-badge">BÁSICO</div>
-            <h3>Gratis</h3>
-            <div className="price">0<span>/mes</span></div>
-            <p style={{fontSize:'0.75rem', opacity:0.6, marginTop:'-1rem', marginBottom:'1.5rem'}}>Ideal para bandas nuevas</p>
+            <h3>{t.freePlan}</h3>
+            <div className="price">0<span>{t.monthLabel}</span></div>
+            <p style={{fontSize:'0.75rem', opacity:0.6, marginTop:'-1rem', marginBottom:'1.5rem'}}>{t.freeSub}</p>
             <ul className="pricing-features">
-              <li><ShieldCheck size={16} /> 1 banda u organización</li>
-              <li><ShieldCheck size={16} /> Hasta 10 usuarios</li>
-              <li><ShieldCheck size={16} /> 300 MB almacenamiento</li>
-              <li><ShieldCheck size={16} /> Calendario de eventos</li>
-              <li><ShieldCheck size={16} /> Repertorios básicos</li>
+              <li><ShieldCheck size={16} /> {t.f_band1}</li>
+              <li><ShieldCheck size={16} /> {t.f_user10}</li>
+              <li><ShieldCheck size={16} /> {t.f_stor300}</li>
+              <li><ShieldCheck size={16} /> {t.f_cal}</li>
+              <li><ShieldCheck size={16} /> {t.f_rep}</li>
               <li><ShieldCheck size={16} /> Letras</li>
-              <li><ShieldCheck size={16} /> Enlaces de YouTube</li>
+              <li><ShieldCheck size={16} /> {t.f_yt}</li>
             </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">Empezar gratis</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.ctaBtn}</button>
           </div>
 
           {/* Plan Starter */}
           <div className="pricing-card featured">
             <div className="pricing-badge-popular">RECOMENDADO</div>
-            <h3>Starter</h3>
+            <h3>{t.starterPlan}</h3>
             <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
               {billingPeriod === 'monthly' ? (
                 <>
@@ -417,28 +421,28 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                   $75
                 </>
               )}
-              <span style={{ marginBottom: '6px' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+              <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $6.2 / mes'}
+              {billingPeriod === 'monthly' ? t.starterSubMo : t.starterSubYr}
             </p>
             <ul className="pricing-features">
-              <li><Crown size={16} color="var(--primary)" /> Hasta 3 bandas</li>
-              <li><Crown size={16} color="var(--primary)" /> Hasta 25 usuarios</li>
-              <li><Crown size={16} color="var(--primary)" /> 10 GB almacenamiento</li>
-              <li><Crown size={16} color="var(--primary)" /> Charts en PDF</li>
-              <li><Crown size={16} color="var(--primary)" /> Gestión de repertorios</li>
-              <li><Crown size={16} color="var(--primary)" /> Recursos por canción</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_band3}</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_user25}</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_stor10}</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_pdf}</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_mgr}</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_res}</li>
               <li><Crown size={16} color="var(--primary)" /> Multitracks</li>
-              <li><Crown size={16} color="var(--primary)" /> Reproductor en la app</li>
+              <li><Crown size={16} color="var(--primary)" /> {t.f_player}</li>
             </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary">Elegir Starter</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary">{t.chooseStarter}</button>
           </div>
 
           {/* Plan Pro */}
           <div className="pricing-card">
             <div className="pricing-badge">PRO</div>
-            <h3>Pro</h3>
+            <h3>{t.proPlan}</h3>
             <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
               {billingPeriod === 'monthly' ? (
                 <>
@@ -451,26 +455,26 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                   $159
                 </>
               )}
-              <span style={{ marginBottom: '6px' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+              <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $13.2 / mes'}
+              {billingPeriod === 'monthly' ? t.proSubMo : t.proSubYr}
             </p>
             <ul className="pricing-features">
-              <li><Crown size={16} color="var(--accent)" /> Hasta 10 bandas</li>
-              <li><Crown size={16} color="var(--accent)" /> Hasta 75 usuarios</li>
-              <li><Crown size={16} color="var(--accent)" /> 45 GB almacenamiento</li>
-              <li><Crown size={16} color="var(--accent)" /> Todo lo de Starter</li>
-              <li><Crown size={16} color="var(--accent)" /> Sala de previsualización</li>
-              <li><Crown size={16} color="var(--accent)" /> Player de secuencias</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_band10}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_user75}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_stor45}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_allStarter}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_preview}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_seqPlayer}</li>
             </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">Elegir Pro</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.choosePro}</button>
           </div>
 
           {/* Plan Elite */}
           <div className="pricing-card">
             <div className="pricing-badge">ELITE</div>
-            <h3>Elite</h3>
+            <h3>{t.elitePlan}</h3>
             <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
               {billingPeriod === 'monthly' ? (
                 <>
@@ -483,41 +487,41 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                   $329
                 </>
               )}
-              <span style={{ marginBottom: '6px' }}>/{billingPeriod === 'monthly' ? 'mes' : 'año'}</span>
+              <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
             </div>
             <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? 'Facturado mensualmente' : 'Equivale a $27.4 / mes'}
+              {billingPeriod === 'monthly' ? t.eliteSubMo : t.eliteSubYr}
             </p>
             <ul className="pricing-features">
-              <li><Crown size={16} color="var(--accent)" /> Bandas ilimitadas</li>
-              <li><Crown size={16} color="var(--accent)" /> Usuarios ilimitados</li>
-              <li><Crown size={16} color="var(--accent)" /> 100 GB almacenamiento</li>
-              <li><Crown size={16} color="var(--accent)" /> Todo lo de Pro</li>
-              <li><Crown size={16} color="var(--accent)" /> Roles y permisos</li>
-              <li><Crown size={16} color="var(--accent)" /> Prioridad en soporte</li>
-              <li><Crown size={16} color="var(--accent)" /> Acceso anticipado</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_bandUl}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_userUl}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_stor100}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_allPro}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_roles}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_support}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_early}</li>
             </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">Elegir Elite</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.chooseElite}</button>
           </div>
         </div>
       </section>
 
       {/* CTA Final */}
       <section className="landing-cta-box" style={{ padding: '8rem 2rem' }}>
-        <h2 style={{ fontSize: '3rem', letterSpacing: '-2px' }}>¿Listo para llevar tu banda a otro nivel?</h2>
-        <p style={{ fontSize: '1.2rem', marginBottom: '2.5rem' }}>Organiza mejor cada show, centraliza tus recursos y ensaya con más control desde una sola plataforma.</p>
-        <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 4rem', fontSize: '1.1rem', borderRadius: '50px' }}>Comenzar gratis</button>
+        <h2 style={{ fontSize: '3rem', letterSpacing: '-2px' }}>{t.ctaTitle}</h2>
+        <p style={{ fontSize: '1.2rem', marginBottom: '2.5rem' }}>{t.ctaDesc}</p>
+        <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 4rem', fontSize: '1.1rem', borderRadius: '50px' }}>{t.ctaBtn}</button>
       </section>
 
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-links" style={{ fontSize: '0.65rem' }}>
-            <span onClick={() => onNavigate('legal_terms')} style={{ cursor: 'pointer' }}>Términos</span>
-            <span onClick={() => onNavigate('legal_privacy')} style={{ cursor: 'pointer' }}>Privacidad</span>
-            <a href="mailto:dependent.mix@gmail.com">Contacto</a>
+            <span onClick={() => onNavigate('legal_terms')} style={{ cursor: 'pointer' }}>{t.footTerms}</span>
+            <span onClick={() => onNavigate('legal_privacy')} style={{ cursor: 'pointer' }}>{t.footPriv}</span>
+            <a href="mailto:dependent.mix@gmail.com">{t.footContact}</a>
           </div>
-          <p style={{ margin: '0.5rem 0', opacity: 0.8 }}>Operado por Johan Sebastian Jimenez Calderon • Bogotá, Colombia</p>
-          <p style={{ opacity: 0.5, fontSize: '0.6rem' }}>© 2026 Bandly Live Engine. Todos los derechos reservados.</p>
+          <p style={{ margin: '0.5rem 0', opacity: 0.8 }}>{t.footOp}</p>
+          <p style={{ opacity: 0.5, fontSize: '0.6rem' }}>{t.footRights}</p>
         </div>
       </footer>
     </div>

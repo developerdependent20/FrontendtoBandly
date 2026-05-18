@@ -6,6 +6,7 @@ import '../DAW/DAW.css';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
   const [showSubscription, setShowSubscription] = React.useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const isSuperAdmin = profile?.email === 'dependent.mix@gmail.com';
   const userFunctions = profile?.functions || [];
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
@@ -81,10 +82,61 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           </div>
         )}
 
-        <div className="nav-item" style={{ marginTop: 'auto', marginBottom: '0' }} onClick={onLogout} title="Cerrar Sesión">
+        <div
+          className="nav-item"
+          style={{ marginTop: 'auto', marginBottom: '0' }}
+          onClick={() => setShowLogoutConfirm(true)}
+          title="Cerrar Sesion"
+        >
           <LogOut size={20} />
         </div>
       </nav>
+
+      {/* ── Logout confirm modal ── */}
+      {showLogoutConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }} onClick={() => setShowLogoutConfirm(false)}>
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px', padding: '2rem', width: '320px',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'
+          }} onClick={e => e.stopPropagation()}>
+            {/* Icon */}
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LogOut size={22} color="#ef4444" />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'white' }}>Cerrar sesion</h3>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                Tu sesion quedara guardada.<br />Puedes volver cuando quieras.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '0.5rem' }}>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
+                style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+              >
+                Cerrar sesion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="main-content">
         <header style={{ 
@@ -114,7 +166,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           )}
 
           {profile?.role === 'director' && profile?.organizations && (
-            <div style={{
+            <div className="storage-meter" style={{
               display: 'flex', flexDirection: 'column', gap: '6px',
               padding: '8px 14px', borderRadius: '14px',
               background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6))', 
