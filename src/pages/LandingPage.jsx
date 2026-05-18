@@ -404,7 +404,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
           {/* Plan Starter */}
           <div className="pricing-card featured">
-            <div className="pricing-badge-popular">RECOMENDADO</div>
+            <div className="pricing-badge-popular" style={{background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)', animation: 'pulse 2s infinite'}}>🔥 OFERTA DE LANZAMIENTO</div>
             <h3>{t.starterPlan}</h3>
             <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
               {billingPeriod === 'monthly' ? (

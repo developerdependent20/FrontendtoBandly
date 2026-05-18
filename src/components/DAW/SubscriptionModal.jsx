@@ -29,28 +29,29 @@ const SubscriptionModal = ({ profile, onClose }) => {
     {
       id: 'starter',
       name: 'Starter',
-      monthly: 9,
+      monthly: 7,
       originalMonthly: 19,
-      yearly: 75,
+      yearly: 59,
       originalYearly: 190,
       features: ['Hasta 3 bandas', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Reproductor en la app'],
+      promo: true,
       recommended: true
     },
     {
       id: 'pro',
       name: 'Pro',
-      monthly: 19,
+      monthly: 17,
       originalMonthly: 39,
-      yearly: 159,
+      yearly: 145,
       originalYearly: 390,
       features: ['Hasta 10 bandas', 'Hasta 75 usuarios', '45 GB almacenamiento', 'Todo lo de Starter', 'Sala de previsualización', 'Player de secuencias']
     },
     {
       id: 'elite',
       name: 'Elite',
-      monthly: 39,
+      monthly: 37,
       originalMonthly: 79,
-      yearly: 329,
+      yearly: 310,
       originalYearly: 790,
       features: ['Bandas ilimitadas', 'Usuarios ilimitados', '100 GB almacenamiento', 'Todo lo de Pro', 'Roles y permisos', 'Prioridad en soporte', 'Acceso anticipado']
     }
@@ -127,10 +128,12 @@ const SubscriptionModal = ({ profile, onClose }) => {
                   }}>
                     {plan.recommended && (
                       <div style={{ 
-                        position: 'absolute', top: '-12px', right: '12px', background: '#a855f7', color: '#fff', 
-                        padding: '4px 12px', borderRadius: '20px', fontSize: '0.6rem', fontWeight: '900' 
+                        position: 'absolute', top: '-12px', right: '12px', background: plan.promo ? '#ef4444' : '#a855f7', color: '#fff', 
+                        padding: '4px 12px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900',
+                        boxShadow: plan.promo ? '0 0 15px rgba(239, 68, 68, 0.5)' : 'none',
+                        animation: plan.promo ? 'pulse 2s infinite' : 'none'
                       }}>
-                        RECOMENDADO
+                        {plan.promo ? '🔥 OFERTA DE LANZAMIENTO' : 'RECOMENDADO'}
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>

@@ -40,15 +40,26 @@ const INSTRUMENT_DISPLAY_MAP = {
   'instr:sonido_media': 'VISUALS / PANTALLAS'
 };
 
+const cleanEncoding = (str) => {
+  if (!str) return str;
+  return str
+    .replace(/BATERÃ A/g, 'BATERÍA')
+    .replace(/PERCUSIÃ“N/g, 'PERCUSIÓN')
+    .replace(/ELÃ‰CTRICA/g, 'ELÉCTRICA')
+    .replace(/ACÃšSTICA/g, 'ACÚSTICA')
+    .replace(/LOGÃ STICA/g, 'LOGÍSTICA')
+    .replace(/DIRECCIÃ“N/g, 'DIRECCIÓN')
+    .replace(/baterÃ­a/g, 'batería')
+    .replace(/VacÃ­os/g, 'Vacíos');
+};
+
 const getBilingualName = (inst) => {
   const normalized = (inst || '').toLowerCase();
-  // Primero buscamos si es una etiqueta interna directa
-  if (INSTRUMENT_DISPLAY_MAP[normalized]) return INSTRUMENT_DISPLAY_MAP[normalized];
-  // Si no, buscamos en el mapa de coincidencia para ver quÃ© etiqueta le corresponde
+  if (INSTRUMENT_DISPLAY_MAP[normalized]) return cleanEncoding(INSTRUMENT_DISPLAY_MAP[normalized]);
   const tag = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k)) 
     ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k))] 
     : null;
-  return INSTRUMENT_DISPLAY_MAP[tag] || inst;
+  return cleanEncoding(INSTRUMENT_DISPLAY_MAP[tag] || inst);
 };
 
 const getSuggestedMembers = (roleName, members) => {
