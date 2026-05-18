@@ -127,7 +127,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                 <div>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.desktopTitle}</h3>
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                    {t.lang === 'es' ? <>{t.desktopDesc.split('reproducir')[0]}<strong>reproducir</strong>{t.desktopDesc.split('reproducir')[1]}</> : <>{t.desktopDesc.split('play')[0]}<strong>play</strong>{t.desktopDesc.split('play')[1]}</>}
+                    {lang === 'es' ? <>{t.desktopDesc.split('reproducir')[0]}<strong>reproducir</strong>{t.desktopDesc.split('reproducir')[1]}</> : <>{t.desktopDesc.split('play')[0]}<strong>play</strong>{t.desktopDesc.split('play')[1]}</>}
                   </p>
                 </div>
               </div>
@@ -324,7 +324,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             </thead>
             <tbody>
               {[
-                { feature: "t.f1", bandly: true, others: t.f1O },
+                { feature: t.f1, bandly: true, others: t.f1O },
                 { feature: t.f2, bandly: t.f2B, others: t.f2O },
                 { feature: t.f3, bandly: t.f3B, others: t.f3O },
                 { feature: t.f4, bandly: t.f4B, others: t.f4O },
