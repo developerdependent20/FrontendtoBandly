@@ -235,9 +235,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const getInstrumentIcon = (inst) => {
     const i = (inst || '').toLowerCase();
-    if (i.includes('drums') || i.includes('baterÃ­a') || i.includes('perc')) return <Drum size={20} />;
+    if (i.includes('drums') || i.includes('batería') || i.includes('perc')) return <Drum size={20} />;
     if (i.includes('bass') || i.includes('bajo')) return <Zap size={20} />;
-    if (i.includes('gtr') || i.includes('guitar') || i.includes('elÃ©ctrica') || i.includes('acÃºstica')) return <Music size={20} />;
+    if (i.includes('gtr') || i.includes('guitar') || i.includes('eléctrica') || i.includes('acústica')) return <Music size={20} />;
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
@@ -250,21 +250,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase();
     if (i.includes('voz') || i.includes('voice') || i.includes('coro')) return 'VOCES';
-    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logistica') || i.includes('logistica') || i.includes('roadie') || i.includes('rodie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografia') || i.includes('fotografia') || i.includes('camara') || i.includes('camara') || i.includes('kids') || i.includes('interce') || i.includes('decoraci') || i.includes('director') || i.includes('lider') || i.includes('lider')) return 'PRODUCCION / STAFF';
+    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logistica') || i.includes('roadie') || i.includes('rodie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografia') || i.includes('camara') || i.includes('kids') || i.includes('niño') || i.includes('nino') || i.includes('profe') || i.includes('maestro') || i.includes('interce') || i.includes('decoraci') || i.includes('director') || i.includes('lider')) return 'PRODUCCION / STAFF';
     return 'BANDA';
   };
 
   const generateTemplate = (fmt) => {
     let musicLabels = [];
     if (fmt === 'full') {
-      musicLabels = ['DRUMS / BATERÃA', 'PERC / PERCUSIÃ“N', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÃ‰CTRICA', 'A. GTR / GT. ACÃšSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS'];
+      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS'];
     } else if (fmt === 'acoustic') {
-      musicLabels = ['PERC / PERCUSIÃ“N', 'BASS / BAJO', 'PIANO / KEYS', 'A. GTR / GT. ACÃšSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3'];
+      musicLabels = ['PERC / PERCUSIÓN', 'BASS / BAJO', 'PIANO / KEYS', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3'];
     } else { // general
-      musicLabels = ['DRUMS / BATERÃA', 'PERC / PERCUSIÃ“N', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÃ‰CTRICA', 'A. GTR / GT. ACÃšSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
+      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
     }
     
-    const service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÃSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÃ“N MUSICAL'];
+    const service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÍSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÓN MUSICAL'];
     const base = musicLabels.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'music', status: 'pending' }));
     const srv = service.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'service', status: 'pending' }));
     return [...base, ...srv];
@@ -276,7 +276,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventDate(ev.date || '');
     setDescription(ev.description || '');
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
-    const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'BaterÃ­a', 'Bajo'].includes(r.instrument));
+    const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
     setFormat(detectedFormat);
     let merged = generateTemplate(detectedFormat);
@@ -827,7 +827,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           className="btn-secondary" 
                           style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
                         >
-                          <X size={14} /> Limpiar Roles VacÃ­os
+                          <X size={14} /> Limpiar Roles Vacíos
                         </button>
                       </div>
                       

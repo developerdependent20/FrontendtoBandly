@@ -25,8 +25,6 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <div className="landing-nav-center hide-mobile">
             <a href="#multitrack">{t.navFeatures}</a>
             <a href="#pricing">{t.navPricing}</a>
-            <a href="#community">{t.navCommunity}</a>
-            <a href="#support">{t.navSupport}</a>
           </div>
 
           <div className="landing-nav-links">
@@ -186,10 +184,9 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                 style={{ 
                    width: '100%', 
                    height: 'auto', 
-                   objectFit: 'cover', 
-                   objectPosition: 'left center', 
-                   transform: 'scale(1.1) translateX(-2%)', 
-                   display: 'block' 
+                   display: 'block',
+                   borderRadius: '12px',
+                   border: '1px solid rgba(255,255,255,0.05)'
                 }} 
               />
             </div>
