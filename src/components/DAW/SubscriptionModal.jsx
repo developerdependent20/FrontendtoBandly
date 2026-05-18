@@ -33,7 +33,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
       originalMonthly: 19,
       yearly: 75,
       originalYearly: 190,
-      features: ['Hasta 3 bandas', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Multitracks', 'Reproductor en la app'],
+      features: ['Hasta 3 bandas', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Reproductor en la app'],
       recommended: true
     },
     {

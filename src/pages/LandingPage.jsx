@@ -433,7 +433,6 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               <li><Crown size={16} color="var(--primary)" /> {t.f_pdf}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_mgr}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_res}</li>
-              <li><Crown size={16} color="var(--primary)" /> Multitracks</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_player}</li>
             </ul>
             <button onClick={() => onGetStarted('signup')} className="btn-primary">{t.chooseStarter}</button>
