@@ -410,12 +410,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {billingPeriod === 'monthly' ? (
                 <>
                   <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$19</span>
-                  $9
+                  $7
                 </>
               ) : (
                 <>
                   <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$190</span>
-                  $75
+                  $59
                 </>
               )}
               <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
@@ -443,12 +443,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {billingPeriod === 'monthly' ? (
                 <>
                   <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$39</span>
-                  $19
+                  $17
                 </>
               ) : (
                 <>
                   <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$390</span>
-                  $159
+                  $145
                 </>
               )}
               <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
@@ -475,12 +475,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {billingPeriod === 'monthly' ? (
                 <>
                   <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$79</span>
-                  $39
+                  $37
                 </>
               ) : (
                 <>
                   <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$790</span>
-                  $329
+                  $310
                 </>
               )}
               <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>

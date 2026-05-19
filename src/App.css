@@ -1922,7 +1922,7 @@ input[type="datetime-local"] {
    ============================================================ */
 
 /* Nav landing */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .landing-nav-center { display: none; }
   .landing-nav { justify-content: space-between; }
 }
