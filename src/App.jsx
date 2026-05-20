@@ -19,6 +19,7 @@ import { DirectorView, MemberView } from './components/layout/RoleViews';
 
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
+import OneSignal from 'react-onesignal';
 
 /**
  * App - Versión de Estabilidad Garantizada
@@ -33,11 +34,33 @@ export default function App() {
   const [showLegalBlocking, setShowLegalBlocking] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
   const [inspectedOrg, setInspectedOrg] = useState(null);
+  const [oneSignalInitialized, setOneSignalInitialized] = useState(false);
 
   // Org Data Hook
   const effectiveOrgId = inspectedOrg?.id || profile?.org_id;
   const { members, events, songs, fetchData } = useOrgData(effectiveOrgId);
   const orgData = React.useMemo(() => ({ members, events, songs, fetchData }), [members, events, songs, fetchData]);
+
+  useEffect(() => {
+    // Initialize OneSignal Push Notifications
+    OneSignal.init({
+      appId: "d25fbf40-e87c-4c35-9ae9-753dc088eb64",
+      allowLocalhostAsSecureOrigin: true,
+      notifyButton: { enable: false }
+    }).then(() => {
+      setOneSignalInitialized(true);
+      // If user is already logged in when SDK loads, link and prompt immediately
+      supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+        if (existingSession?.user?.id) {
+          OneSignal.login(existingSession.user.id).catch(() => {});
+          // Small delay so the UI loads first before showing the prompt
+          setTimeout(() => {
+            OneSignal.Slidedown.promptPush({ force: false }).catch(() => {});
+          }, 3000);
+        }
+      });
+    }).catch(e => console.error("OneSignal Init Error:", e));
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,6 +92,18 @@ export default function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (oneSignalInitialized) {
+      if (session?.user?.id) {
+        OneSignal.login(session.user.id).catch(e => console.error("OneSignal Login Error:", e));
+        // Pedir permisos si no los ha dado
+        OneSignal.Slidedown.promptPush().catch(e => console.error("OneSignal Prompt Error:", e));
+      } else {
+        OneSignal.logout().catch(e => console.error("OneSignal Logout Error:", e));
+      }
+    }
+  }, [session, oneSignalInitialized]);
 
   // Persistence
   useEffect(() => {

@@ -281,9 +281,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase();
-    if (i.includes('voz') || i.includes('voice') || i.includes('coro')) return 'VOCES';
-    if (i.includes('audio') || i.includes('sonido') || i.includes('video') || i.includes('pantalla') || i.includes('visual') || i.includes('streaming') || i.includes('staff') || i.includes('logistica') || i.includes('roadie') || i.includes('rodie') || i.includes('predicador') || i.includes('preacher') || i.includes('fotografia') || i.includes('camara') || i.includes('kids') || i.includes('niño') || i.includes('nino') || i.includes('profe') || i.includes('maestro') || i.includes('interce') || i.includes('decoraci') || i.includes('director') || i.includes('lider')) return 'PRODUCCION / STAFF';
-    return 'BANDA';
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
+    return 'OTROS';
   };
 
   const generateTemplate = (fmt) => {
@@ -410,6 +411,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         description: notifyData.description, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
+          profile_id: r.profile_id || r.id, // Ensure profile_id is sent
           email: r.email, 
           name: r.name, 
           instrument: r.instrument 
@@ -884,7 +886,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   )}
 
                   {(() => {
-                    const groupedRoster = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
+                    const groupedRoster = { 'MÚSICOS': [], 'PRODUCCIÓN / MEDIA': [], 'LOGÍSTICA / STAFF': [], 'OTROS': [] };
                     roster.forEach(r => {
                       const g = getRoleGroup(r.instrument);
                       if (!groupedRoster[g]) groupedRoster[g] = [];
