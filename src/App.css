@@ -208,6 +208,23 @@ h1, h2, h3, h4 {
   text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
 }
 
+.showcase-title {
+  font-size: clamp(2rem, 3.8vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  letter-spacing: -2px;
+  color: white;
+}
+
+.showcase-title span {
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
 .serif-accent {
   font-family: 'Playfair Display', serif;
   font-style: italic;

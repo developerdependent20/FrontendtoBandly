@@ -41,10 +41,10 @@ export default function App() {
   const orgData = React.useMemo(() => ({ members, events, songs, fetchData }), [members, events, songs, fetchData]);
 
   useEffect(() => {
-    // Initialize OneSignal Push Notifications via window object
-    window.OneSignal = window.OneSignal || [];
-    window.OneSignal.push(() => {
-      window.OneSignal.init({
+    // Initialize OneSignal Push Notifications via window object (v16 uses OneSignalDeferred)
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push((OneSignal) => {
+      OneSignal.init({
         appId: "d25fbf40-e87c-4c35-9ae9-753dc088eb64",
         allowLocalhostAsSecureOrigin: true,
         notifyButton: { enable: false }
@@ -53,10 +53,10 @@ export default function App() {
         // If user is already logged in when SDK loads, link and prompt immediately
         supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
           if (existingSession?.user?.id) {
-            window.OneSignal.login(existingSession.user.id).catch(() => {});
+            OneSignal.login(existingSession.user.id).catch(() => {});
             // Small delay so the UI loads first before showing the prompt
             setTimeout(() => {
-              window.OneSignal.Slidedown.promptPush({ force: false }).catch(() => {});
+              OneSignal.Slidedown.promptPush({ force: false }).catch(() => {});
             }, 3000);
           }
         });

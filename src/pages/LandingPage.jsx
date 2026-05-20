@@ -152,7 +152,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       <section id="multitrack" className="pro-player-showcase">
         <div className="pro-player-flex">
           <div style={{ flex: '1', minWidth: '300px', order: 2 }}>
-            <h2 className="hero-main-title-large" style={{ textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
+            <h2 className="showcase-title" style={{ textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
               {t.proPlayerTitle1} <br className="hide-mobile" />
               <span className="serif-accent" style={{ fontSize: '1.1em' }}>{t.proPlayerTitle2}</span>
             </h2>

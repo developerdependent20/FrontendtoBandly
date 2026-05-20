@@ -17,16 +17,20 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 // [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
-// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
+// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas alineadas con la base de datos
 const INSTRUMENT_MATCH_MAP = {
   'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
   'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
   'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
-  'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz',
-  'sonido': 'instr:sonido', 'audio': 'instr:sonido',
-  'streaming': 'instr:sonido_media', 'video': 'instr:sonido_media', 'pantalla': 'instr:sonido_media', 'media': 'instr:sonido_media',
-  'roadie': 'instr:roadie', 'logistica': 'instr:roadie', 'staff': 'instr:roadie'
+  'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz', 'coro': 'instr:voz',
+  'sonido': 'audio', 'audio': 'audio', 'foh': 'audio',
+  'luces': 'media', 'pantalla': 'media', 'camara': 'media', 'video': 'media', 'streaming': 'media', 'transmision': 'media', 'visual': 'media', 'media': 'media',
+  'coordinador': 'coordinador',
+  'bienvenida': 'bienvenida', 'ujier': 'bienvenida',
+  'kids': 'kids', 'nino': 'kids', 'maestro': 'kids',
+  'oracion': 'oracion', 'intercesion': 'oracion',
+  'staff': 'staff', 'roadie': 'staff', 'logistica': 'staff'
 };
 
 // [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
@@ -65,12 +69,24 @@ const getBilingualName = (inst) => {
 const getSuggestedMembers = (roleName, members) => {
   if (!roleName || !members) return { suggested: [], others: (members || []) };
   const normalizedRole = roleName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const tagToFind = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k)) 
-    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k))] 
-    : null;
-  if (!tagToFind) return { suggested: [], others: (members || []) };
-  const suggested = (members || []).filter(m => (m.functions || []).includes(tagToFind));
-  const others = (members || []).filter(m => !(m.functions || []).includes(tagToFind));
+  
+  // Buscar todas las tags correspondientes
+  const matchingKeys = Object.keys(INSTRUMENT_MATCH_MAP).filter(k => normalizedRole.includes(k));
+  const tagsToFind = matchingKeys.map(k => INSTRUMENT_MATCH_MAP[k]);
+  
+  // Caso especial: para sonido y audio incluir también 'instr:sonido'
+  if (normalizedRole.includes('sonido') || normalizedRole.includes('audio') || normalizedRole.includes('foh')) {
+    tagsToFind.push('instr:sonido');
+  }
+
+  if (tagsToFind.length === 0) return { suggested: [], others: (members || []) };
+
+  const suggested = (members || []).filter(m => 
+    (m.functions || []).some(f => tagsToFind.includes(f))
+  );
+  const others = (members || []).filter(m => 
+    !(m.functions || []).some(f => tagsToFind.includes(f))
+  );
   return { suggested, others };
 };
 
@@ -312,19 +328,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
     setFormat(detectedFormat);
-    let merged = generateTemplate(detectedFormat);
-    activeRosterFromDb.forEach(er => {
-       const slot = merged.find(m => m.instrument === er.instrument);
-       if (slot) {
-         slot.event_roster_id = er.id;
-         slot.profile_id = er.profile_id;
-         slot.status = er.status || 'pending';
-       } else {
-         merged.push({ id: Math.random().toString(), event_roster_id: er.id, instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: er.status || 'pending' });
-       }
-    });
-    setRoster(merged);
-    setInitialRoster(JSON.parse(JSON.stringify(merged)));
+
+    // Cargar únicamente los registros activos guardados en la base de datos sin mezclar con plantillas
+    const loadedRoster = activeRosterFromDb.map(er => ({
+      id: er.id,
+      event_roster_id: er.id,
+      instrument: er.instrument,
+      profile_id: er.profile_id,
+      category: er.category || 'custom',
+      status: er.status || 'pending'
+    }));
+
+    setRoster(loadedRoster);
+    setInitialRoster(JSON.parse(JSON.stringify(loadedRoster)));
     setDbHistory(ev.event_roster || []);
     setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
     setModalTab('info');
@@ -337,9 +353,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventDate(selectedDate || '');
     setDescription('');
     setFormat('full');
-    const template = generateTemplate('full');
-    setRoster(template);
-    setInitialRoster(JSON.parse(JSON.stringify(template)));
+    // Por default el equipo viene completamente limpio/vacío
+    setRoster([]);
+    setInitialRoster([]);
     setDbHistory([]);
     setSetlist([]);
     setModalTab('info');
