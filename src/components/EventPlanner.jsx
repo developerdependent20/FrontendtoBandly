@@ -79,7 +79,7 @@ const ROLE_BANK = [
     category: 'MÚSICOS',
     color: 'var(--primary)',
     bg: 'rgba(59,130,246,0.1)',
-    roles: ['Voz Lider', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión']
+    roles: ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión']
   },
   {
     category: 'PRODUCCIÓN / MEDIA',
@@ -91,7 +91,7 @@ const ROLE_BANK = [
     category: 'LOGÍSTICA / STAFF',
     color: '#fbbf24',
     bg: 'rgba(251,191,36,0.1)',
-    roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Seguridad', 'Oración', 'Ujieres']
+    roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración']
   }
 ];
 
@@ -795,78 +795,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
             )}
             {modalTab === 'equipo' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
                 
-                {/* 1. EL SERVICIO DE HOY (Roster Actual) */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                    <h3 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle2 size={16} color="var(--primary)" /> El Servicio
-                    </h3>
-                    <button 
-                      onClick={() => setRoster(roster.filter(r => r.profile_id))}
-                      className="btn-secondary" 
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <X size={14} /> Limpiar Vacíos
-                    </button>
-                  </div>
-                  
-                  {roster.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                      Aún no hay roles en el servicio.
-                    </div>
-                  )}
-
-                  {(() => {
-                    const groupedRoster = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
-                    roster.forEach(r => {
-                      const g = getRoleGroup(r.instrument);
-                      if (!groupedRoster[g]) groupedRoster[g] = [];
-                      groupedRoster[g].push(r);
-                    });
-
-                    return (
-                      <div>
-                        {Object.entries(groupedRoster).map(([groupName, items]) => items.length > 0 && (
-                          <div key={groupName} style={{ marginBottom: '1.5rem' }}>
-                            <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                              {items.map(r => (
-                                <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-                                  <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
-                                  <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
-                                    <input 
-                                      className="input-field"
-                                      placeholder="Nombre del rol..."
-                                      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
-                                      value={r.instrument}
-                                      onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
-                                    />
-                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
-                                  </div>
-                                  <button 
-                                    onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
-                                    style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'rgba(239, 68, 68, 0.5)', cursor: 'pointer', padding: '4px', transition: 'color 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(239, 68, 68, 0.5)'}
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* 2. BANCO DE ROLES (Tienda) */}
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '1rem' }}>
+                {/* 1. BANCO DE ROLES (Tienda) - AHORA ARRIBA */}
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Plus size={18} color="var(--primary)" /> Añadir al Servicio
+                    <Plus size={18} color="var(--primary)" /> Añadir al Equipo
                   </h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
@@ -926,6 +860,72 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       <Plus size={14} /> Añadir Rol Personalizado
                     </button>
                   </div>
+                </div>
+
+                {/* 2. EQUIPO SELECCIONADO (Roster Actual) - AHORA ABAJO */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CheckCircle2 size={16} color="var(--primary)" /> Equipo Seleccionado
+                    </h3>
+                    <button 
+                      onClick={() => setRoster(roster.filter(r => r.profile_id))}
+                      className="btn-secondary" 
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <X size={14} /> Limpiar Vacíos
+                    </button>
+                  </div>
+                  
+                  {roster.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                      Aún no has añadido roles. Añádelos desde el menú de arriba.
+                    </div>
+                  )}
+
+                  {(() => {
+                    const groupedRoster = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
+                    roster.forEach(r => {
+                      const g = getRoleGroup(r.instrument);
+                      if (!groupedRoster[g]) groupedRoster[g] = [];
+                      groupedRoster[g].push(r);
+                    });
+
+                    return (
+                      <div>
+                        {Object.entries(groupedRoster).map(([groupName, items]) => items.length > 0 && (
+                          <div key={groupName} style={{ marginBottom: '1.5rem' }}>
+                            <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                              {items.map(r => (
+                                <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                                  <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
+                                  <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
+                                    <input 
+                                      className="input-field"
+                                      placeholder="Nombre del rol..."
+                                      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
+                                      value={r.instrument}
+                                      onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
+                                    />
+                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
+                                  </div>
+                                  <button 
+                                    onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
+                                    style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'rgba(239, 68, 68, 0.5)', cursor: 'pointer', padding: '4px', transition: 'color 0.2s' }}
+                                    onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(239, 68, 68, 0.5)'}
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
               </div>
