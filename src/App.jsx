@@ -19,7 +19,6 @@ import { DirectorView, MemberView } from './components/layout/RoleViews';
 
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
-import OneSignal from 'react-onesignal';
 
 /**
  * App - Versión de Estabilidad Garantizada
@@ -42,24 +41,27 @@ export default function App() {
   const orgData = React.useMemo(() => ({ members, events, songs, fetchData }), [members, events, songs, fetchData]);
 
   useEffect(() => {
-    // Initialize OneSignal Push Notifications
-    OneSignal.init({
-      appId: "d25fbf40-e87c-4c35-9ae9-753dc088eb64",
-      allowLocalhostAsSecureOrigin: true,
-      notifyButton: { enable: false }
-    }).then(() => {
-      setOneSignalInitialized(true);
-      // If user is already logged in when SDK loads, link and prompt immediately
-      supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-        if (existingSession?.user?.id) {
-          OneSignal.login(existingSession.user.id).catch(() => {});
-          // Small delay so the UI loads first before showing the prompt
-          setTimeout(() => {
-            OneSignal.Slidedown.promptPush({ force: false }).catch(() => {});
-          }, 3000);
-        }
-      });
-    }).catch(e => console.error("OneSignal Init Error:", e));
+    // Initialize OneSignal Push Notifications via window object
+    window.OneSignal = window.OneSignal || [];
+    window.OneSignal.push(() => {
+      window.OneSignal.init({
+        appId: "d25fbf40-e87c-4c35-9ae9-753dc088eb64",
+        allowLocalhostAsSecureOrigin: true,
+        notifyButton: { enable: false }
+      }).then(() => {
+        setOneSignalInitialized(true);
+        // If user is already logged in when SDK loads, link and prompt immediately
+        supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+          if (existingSession?.user?.id) {
+            window.OneSignal.login(existingSession.user.id).catch(() => {});
+            // Small delay so the UI loads first before showing the prompt
+            setTimeout(() => {
+              window.OneSignal.Slidedown.promptPush({ force: false }).catch(() => {});
+            }, 3000);
+          }
+        });
+      }).catch(e => console.error("OneSignal Init Error:", e));
+    });
   }, []);
 
   useEffect(() => {
@@ -94,13 +96,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (oneSignalInitialized) {
+    if (oneSignalInitialized && window.OneSignal) {
       if (session?.user?.id) {
-        OneSignal.login(session.user.id).catch(e => console.error("OneSignal Login Error:", e));
+        window.OneSignal.login(session.user.id).catch(e => console.error("OneSignal Login Error:", e));
         // Pedir permisos si no los ha dado
-        OneSignal.Slidedown.promptPush().catch(e => console.error("OneSignal Prompt Error:", e));
+        window.OneSignal.Slidedown.promptPush().catch(e => console.error("OneSignal Prompt Error:", e));
       } else {
-        OneSignal.logout().catch(e => console.error("OneSignal Logout Error:", e));
+        window.OneSignal.logout().catch(e => console.error("OneSignal Logout Error:", e));
       }
     }
   }, [session, oneSignalInitialized]);
