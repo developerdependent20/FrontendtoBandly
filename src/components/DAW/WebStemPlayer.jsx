@@ -154,12 +154,14 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
   const pauseOffsetRef = useRef(0);
   const rafRef = useRef(null);
   const isPlayingRef = useRef(false);
+  const buffersRef = useRef({});
 
   useEffect(() => {
     return () => {
       stopAll();
       if (audioCtxRef.current) audioCtxRef.current.close();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      buffersRef.current = {};
     };
   }, []);
 
@@ -287,13 +289,15 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
         try {
           const ab = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
           const buffer = await ctx.decodeAudioData(ab);
+          const stemId = stemMeta.id || i;
+          buffersRef.current[stemId] = buffer;
+          
           validStems.push({
-            id: stemMeta.id || i,
+            id: stemId,
             original_name: targetName,
             instrument_label: stemMeta.instrument_label || 'Pista',
             instrument_type: stemMeta.instrument_type || 'unknown',
             color: stemMeta.color || '#8b5cf6',
-            buffer,
             volume: 1,
           });
         } catch (decodeErr) {
@@ -327,7 +331,8 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       });
 
       setStems(sortedStems);
-      setDuration(Math.max(...sortedStems.map(s => s.buffer.duration)));
+      const allDurations = Object.values(buffersRef.current).map(b => b.duration);
+      setDuration(allDurations.length > 0 ? Math.max(...allDurations) : 0);
       setLoadProgress(100);
       setStatus('ready');
     } catch (e) {
@@ -354,7 +359,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
     const anySolo = Object.values(soloMap).some(Boolean);
     sourcesRef.current = stems.map((stem, i) => {
       const src = ctx.createBufferSource();
-      src.buffer = stem.buffer;
+      src.buffer = buffersRef.current[stem.id];
       src.connect(gainNodesRef.current[i]);
       const effectiveMute = muteMap[stem.id] || (anySolo && !soloMap[stem.id]);
       gainNodesRef.current[i].gain.value = effectiveMute ? 0 : (volumeMap[stem.id] ?? 1);

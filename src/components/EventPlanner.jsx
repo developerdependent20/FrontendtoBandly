@@ -297,10 +297,38 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase();
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff') || i.includes('logistica')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media') || i.includes('streaming')) return 'PRODUCCIÓN / MEDIA';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('teclado') || i.includes('piano') || i.includes('keys') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('perc') || i.includes('drums') || i.includes('bass') || i.includes('voice') || i.includes('cantante') || i.includes('lead')) return 'MÚSICOS';
     return 'OTROS';
+  };
+
+  const getInstrumentWeight = (inst) => {
+    const i = (inst || '').toLowerCase();
+    // Músicos (orden estándar de banda)
+    if (i.includes('bateria') || i.includes('drums')) return 1;
+    if (i.includes('percusion') || i.includes('perc')) return 2;
+    if (i.includes('bajo') || i.includes('bass')) return 3;
+    if (i.includes('teclado') || i.includes('piano') || i.includes('keys')) return 4;
+    if (i.includes('guitarra') || i.includes('gtr') || i.includes('guitar')) return 5;
+    if (i.includes('voz') || i.includes('voice') || i.includes('cantante') || i.includes('lead')) return 6;
+    if (i.includes('coro')) return 7;
+    // Producción
+    if (i.includes('director') || i.includes('md')) return 10;
+    if (i.includes('sonido') || i.includes('audio') || i.includes('foh')) return 11;
+    if (i.includes('pantalla') || i.includes('visual') || i.includes('media')) return 12;
+    if (i.includes('luces')) return 13;
+    if (i.includes('camara') || i.includes('video')) return 14;
+    if (i.includes('transmis') || i.includes('streaming')) return 15;
+    if (i.includes('roadie')) return 16;
+    // Logística
+    if (i.includes('coordinador')) return 20;
+    if (i.includes('bienvenida') || i.includes('ujier')) return 21;
+    if (i.includes('seguridad')) return 22;
+    if (i.includes('maestro') || i.includes('niño') || i.includes('kids')) return 23;
+    if (i.includes('oraci') || i.includes('intercesi')) return 24;
+    if (i.includes('staff') || i.includes('logistica')) return 25;
+    return 99;
   };
 
   const generateTemplate = (fmt) => {
@@ -911,11 +939,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
                     return (
                       <div>
-                        {Object.entries(groupedRoster).map(([groupName, items]) => items.length > 0 && (
-                          <div key={groupName} style={{ marginBottom: '1.5rem' }}>
-                            <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                              {items.map(r => (
+                        {Object.entries(groupedRoster).map(([groupName, items]) => {
+                          if (items.length === 0) return null;
+                          const sortedItems = [...items].sort((a, b) => {
+                            const wA = getInstrumentWeight(a.instrument);
+                            const wB = getInstrumentWeight(b.instrument);
+                            if (wA !== wB) return wA - wB;
+                            return (a.instrument || '').localeCompare(b.instrument || '');
+                          });
+                          
+                          return (
+                            <div key={groupName} style={{ marginBottom: '1.5rem' }}>
+                              <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                                {sortedItems.map(r => (
                                 <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                                   <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
                                   <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
@@ -940,7 +977,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               ))}
                             </div>
                           </div>
-                        ))}
+                        );
+                      })}
                       </div>
                     );
                   })()}
