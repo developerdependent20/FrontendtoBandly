@@ -169,7 +169,12 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
   const unlockAudioContext = async () => {
     if (!audioCtxRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtxRef.current = new AudioContext();
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      try {
+        audioCtxRef.current = new AudioContext(isMobile ? { sampleRate: 22050 } : undefined);
+      } catch (e) {
+        audioCtxRef.current = new AudioContext(); // Fallback for old browsers
+      }
     }
     const ctx = audioCtxRef.current;
     
@@ -257,9 +262,11 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       setLoadingMsg('Descomprimiendo...');
       const { unzip } = await import('fflate');
       const uint8 = new Uint8Array(zipBuffer);
-      const unzipped = await new Promise((resolve, reject) => {
+      let unzipped = await new Promise((resolve, reject) => {
         unzip(uint8, (err, result) => err ? reject(err) : resolve(result));
       });
+      // LIBERAR MEMORIA ORIGINAL ZIP
+      zipBuffer = null;
       setLoadProgress(70);
 
       const ctx = audioCtxRef.current;
@@ -274,20 +281,28 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
         const targetName = stemMeta.original_name;
         setLoadingMsg(`Preparando: ${stemMeta.instrument_label || targetName}`);
 
-        const zipEntry = Object.entries(unzipped).find(([path]) =>
+        const zipEntryKey = Object.keys(unzipped).find((path) =>
           path.split('/').pop() === targetName || path === targetName
         );
-        if (!zipEntry) {
+        if (!zipEntryKey) {
           console.warn(`[WebStemPlayer] Stem "${targetName}" no encontrado en ZIP`);
           continue;
         }
 
-        const [, fileData] = zipEntry;
+        const fileData = unzipped[zipEntryKey];
         const ext = targetName.toLowerCase().substring(targetName.lastIndexOf('.'));
-        if (!audioExtensions.includes(ext)) continue;
+        if (!audioExtensions.includes(ext)) {
+          delete unzipped[zipEntryKey];
+          continue;
+        }
 
         try {
+          // Copiar a un ArrayBuffer nuevo para poder decodificarlo
           const ab = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
+          
+          // LIBERAR LA ENTRADA DESCOMPRIMIDA INMEDIATAMENTE
+          delete unzipped[zipEntryKey];
+          
           const buffer = await ctx.decodeAudioData(ab);
           const stemId = stemMeta.id || i;
           buffersRef.current[stemId] = buffer;
