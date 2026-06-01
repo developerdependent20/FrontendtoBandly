@@ -34,7 +34,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
       return;
     }
 
-    const confirm = window.confirm(`¿Estás seguro de que quieres eliminar a ${member.full_name} de la banda?`);
+    const confirm = window.confirm(`¿Estás seguro de que quieres eliminar a ${member.full_name} de la organización?`);
     if (!confirm) return;
 
     try {
@@ -55,7 +55,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
 
   const functionsList = [
     { id: 'admin_eventos', label: 'Admin Eventos', icon: '📅' },
-    { id: 'admin_musica', label: 'Admin Banda', icon: '🎧' },
+    { id: 'admin_musica', label: 'Admin Música', icon: '🎸' },
     { id: 'admin_logistica', label: 'Admin Logística', icon: '📋' },
     { id: 'admin_produccion', label: 'Admin Producción', icon: '💻' },
     { id: 'musico', label: 'Músico', icon: '🎸' },
@@ -124,7 +124,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
       </div>
 
       <section className="glass-panel" style={{ padding: '2rem' }}>
-        <h3 className="section-title"><Users size={20} color="var(--primary)" /> Miembros de la Banda</h3>
+        <h3 className="section-title"><Users size={20} color="var(--primary)" /> Miembros de la Organización</h3>
         
         <AvatarPicker 
           isOpen={!!selectedMember} 
@@ -135,7 +135,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
 
         <div className="member-list-container">
           {members?.length === 0 ? (
-            <p className="empty-msg">Manda el código de acceso a tu banda para empezar a sumar talentos.</p>
+            <p className="empty-msg">Manda el código de acceso a tu organización para empezar a sumar talentos.</p>
           ) : (
             members?.map(m => {
               const mFunctions = m.functions || [];
@@ -203,7 +203,6 @@ export default function TeamList({ members, isDirector, refreshData }) {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            window.alert("¡CLICK DETECTADO! Intentando borrar a: " + m.full_name);
                             handleDeleteMember(m);
                           }}
                           style={{ 
@@ -223,7 +222,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
                             boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
                           }}
                           className="hover-scale"
-                          title="Eliminar de la banda"
+                          title="Eliminar de la organización"
                         >
                           <Trash2 size={22} />
                         </button>

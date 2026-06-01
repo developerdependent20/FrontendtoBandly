@@ -6,9 +6,9 @@
 }
 
 :root {
-  --primary: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --accent: #0ea5e9;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --accent: #2563eb;
   --bg-dark: #020617;
   --bg-panel: rgba(15, 23, 42, 0.6);
   --border-light: rgba(255, 255, 255, 0.08);
@@ -101,7 +101,7 @@ h1, h2, h3, h4 {
   left: 5%;
   right: 5%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), rgba(14, 165, 233, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.3), rgba(37, 99, 235, 0.3), transparent);
 }
 
 .landing-nav-center {
@@ -205,7 +205,7 @@ h1, h2, h3, h4 {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+  text-shadow: 0 0 40px rgba(37, 99, 235, 0.3);
 }
 
 .showcase-title {
@@ -222,7 +222,7 @@ h1, h2, h3, h4 {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+  text-shadow: 0 0 40px rgba(37, 99, 235, 0.3);
 }
 
 .serif-accent {
@@ -268,7 +268,7 @@ h1, h2, h3, h4 {
 }
 
 .comp-item-badge:hover {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(37, 99, 235, 0.1);
   border-color: var(--primary);
   transform: translateY(-2px);
 }
@@ -321,11 +321,11 @@ h1, h2, h3, h4 {
 }
 
 .pricing-card.featured {
-  background: rgba(139, 92, 246, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   border: 2px solid var(--primary);
   transform: scale(1.02);
   z-index: 10;
-  box-shadow: 0 20px 50px -10px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 20px 50px -10px rgba(37, 99, 235, 0.2);
 }
 
 .pricing-card.featured:hover {
@@ -436,9 +436,9 @@ h1, h2, h3, h4 {
 
 .feature-card:hover {
   transform: translateY(-8px);
-  background: rgba(139, 92, 246, 0.04);
+  background: rgba(37, 99, 235, 0.04);
   border-color: var(--primary);
-  box-shadow: 0 20px 40px -15px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.2);
 }
 
 .feature-icon {
@@ -892,8 +892,8 @@ input[type="datetime-local"] {
 
 @media (max-width: 768px) {
   .sidebar .nav-item.active {
-    background: rgba(139, 92, 246, 0.15);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+    background: rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.1);
     transform: translateY(-2px);
   }
 }
@@ -971,7 +971,7 @@ input[type="datetime-local"] {
 
 .upload-zone:hover {
   border-color: var(--primary);
-  background: rgba(139, 92, 246, 0.05);
+  background: rgba(37, 99, 235, 0.05);
 }
 
 .list-item {
@@ -1037,7 +1037,7 @@ input[type="datetime-local"] {
 
 /* --- Tutorial & Identity Sections --- */
 .tutorial-banner {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 1.5rem 2rem;
@@ -1103,15 +1103,15 @@ input[type="datetime-local"] {
 }
 
 .song-action-btn.sequence-btn {
-  background: rgba(14, 165, 233, 0.1);
+  background: rgba(37, 99, 235, 0.1);
   color: #38bdf8;
-  border-color: rgba(14, 165, 233, 0.2);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
 .song-action-btn.sequence-btn:hover {
-  background: rgba(14, 165, 233, 0.2);
+  background: rgba(37, 99, 235, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 /* --- Floating Aesthetic Elements (Tripleten Style) --- */
@@ -1320,7 +1320,7 @@ input[type="datetime-local"] {
   .song-action-btn.sequence-btn {
     grid-column: span 2 !important; /* Ocupa todo el ancho para que no se pierda */
     padding: 1rem !important;
-    background: rgba(14, 165, 233, 0.2) !important;
+    background: rgba(37, 99, 235, 0.2) !important;
     border: 1px solid var(--accent) !important;
     font-size: 0.9rem !important;
   }
@@ -1349,8 +1349,8 @@ input[type="datetime-local"] {
 }
 
 .song-library-item:hover {
-  background: rgba(139, 92, 246, 0.05);
-  border-color: rgba(139, 92, 246, 0.2);
+  background: rgba(37, 99, 235, 0.05);
+  border-color: rgba(37, 99, 235, 0.2);
   transform: translateX(4px);
 }
 
@@ -1445,7 +1445,7 @@ input[type="datetime-local"] {
 .yt-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(139, 92, 246, 0.4);
+  background: rgba(37, 99, 235, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1523,7 +1523,7 @@ input[type="datetime-local"] {
     grid-column: span 2 !important;
     background: var(--primary) !important;
     color: white !important;
-    box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3) !important;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3) !important;
   }
 
   .song-action-btn.sequence-btn.ready {
@@ -1596,13 +1596,13 @@ input[type="datetime-local"] {
 
 .member-card:hover {
   background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(139, 92, 246, 0.2);
+  border-color: rgba(37, 99, 235, 0.2);
   transform: translateY(-2px);
 }
 
 .member-card.is-director {
   border-left: 4px solid var(--primary);
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);
 }
 
 .member-identity {
@@ -1629,7 +1629,7 @@ input[type="datetime-local"] {
 }
 
 .member-card.is-director .member-avatar {
-  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  background: linear-gradient(135deg, var(--primary), #1d4ed8);
   border-color: rgba(255,255,255,0.2);
 }
 
@@ -1672,8 +1672,8 @@ input[type="datetime-local"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
   border-radius: 24px;
   gap: 2rem;
 }
@@ -1735,7 +1735,7 @@ input[type="datetime-local"] {
 .director-badge {
   font-size: 0.6rem;
   font-weight: 900;
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(37, 99, 235, 0.15);
   color: var(--primary);
   padding: 2px 8px;
   border-radius: 4px;
@@ -1815,7 +1815,7 @@ input[type="datetime-local"] {
 }
 
 .role-chip.active {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(37, 99, 235, 0.1);
   border-color: var(--primary);
   color: white;
 }
@@ -1827,11 +1827,11 @@ input[type="datetime-local"] {
 .static-role-chip {
   padding: 6px 14px;
   border-radius: 50px;
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(37, 99, 235, 0.1);
   color: var(--primary);
   font-size: 0.7rem;
   font-weight: 800;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1913,7 +1913,7 @@ input[type="datetime-local"] {
 .modal-tab-btn.active {
   color: var(--primary);
   border-bottom-color: var(--primary);
-  text-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+  text-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
 }
 
 .modal-tab-btn i, .modal-tab-btn svg {

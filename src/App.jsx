@@ -182,11 +182,11 @@ export default function App() {
   const handleCopyLink = () => {
     const link = `${window.location.origin}/?join=${profile.organizations?.invite_code}`;
     navigator.clipboard.writeText(link);
-    alert('¡Link mágico copiado! Envíaselo a los de tu banda.');
+    alert('¡Link mágico copiado! Envíaselo a los miembros de tu organización.');
   };
 
   const handleJoinTeam = async () => {
-    const code = prompt("Pega el CÓDIGO o LINK MÁGICO de la banda a la que te quieres unir (Ej. BANDA24):");
+    const code = prompt("Pega el CÓDIGO o LINK MÁGICO de la organización a la que te quieres unir (Ej. TEAM24):");
     if (!code) return;
     try {
       const cleanCode = code.includes('?join=') ? code.split('?join=')[1] : code;
@@ -202,7 +202,7 @@ export default function App() {
       if (org.plan === 'elite') userLimit = 999999; // Ilimitado
 
       if (memberCount >= userLimit) {
-        throw new Error(`Esta banda ha alcanzado su límite máximo de miembros (${userLimit}). El director de la organización debe mejorar el plan para añadir más personas.`);
+        throw new Error(`Esta organización ha alcanzado su límite máximo de miembros (${userLimit}). El director debe mejorar el plan para añadir más personas.`);
       }
       
       const { error: updateErr } = await supabase.from('profiles').update({ org_id: org.id }).eq('id', profile.id);

@@ -27,7 +27,7 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
     const n = (name || '').toLowerCase();
     if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return { bg: 'rgba(99, 102, 241, 0.2)', text: '#818cf8', border: 'rgba(99, 102, 241, 0.4)' }; 
     if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return { bg: 'rgba(16, 185, 129, 0.2)', text: '#34d399', border: 'rgba(16, 185, 129, 0.4)' }; 
-    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return { bg: 'rgba(139, 92, 246, 0.2)', text: '#a78bfa', border: 'rgba(139, 92, 246, 0.4)' }; 
+    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return { bg: 'rgba(37, 99, 235, 0.2)', text: '#a78bfa', border: 'rgba(37, 99, 235, 0.4)' }; 
     if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return { bg: 'rgba(249, 115, 22, 0.2)', text: '#fb923c', border: 'rgba(249, 115, 22, 0.4)' }; 
     return { bg: 'rgba(6, 182, 212, 0.2)', text: '#22d3ee', border: 'rgba(6, 182, 212, 0.4)' }; 
   };

@@ -63,7 +63,7 @@ export default function MyProfile({ profile, session }) {
         
         <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '2rem', lineHeight: 1.5 }}>
           Añade las fechas en las que <strong>no estarás disponible</strong> por viajes, trabajo u otros compromisos. 
-          El director de la banda no podrá asignarte a eventos en estos días.
+          El director de la organización no podrá asignarte a eventos en estos días.
         </p>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '2rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>

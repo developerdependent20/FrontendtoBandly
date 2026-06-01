@@ -64,7 +64,7 @@ export default function HardwarePicker({ onConfigured }) {
   return (
     <div className="glass-panel" style={{ maxWidth: '600px', margin: '4rem auto', padding: '2.5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <div style={{ background: 'var(--primary)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)' }}>
+        <div style={{ background: 'var(--primary)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 0 20px rgba(37, 99, 235, 0.3)' }}>
           <Settings size={30} color="white" />
         </div>
         <h2 style={{ fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-1px' }}>Configuración de Audio</h2>
@@ -103,7 +103,7 @@ export default function HardwarePicker({ onConfigured }) {
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center',
-                  background: selectedDevice?.id === device.id ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255,255,255,0.03)',
+                  background: selectedDevice?.id === device.id ? 'rgba(37, 99, 235, 0.15)' : 'rgba(255,255,255,0.03)',
                   borderColor: selectedDevice?.id === device.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
                   borderWidth: '1px',
                   borderStyle: 'solid',

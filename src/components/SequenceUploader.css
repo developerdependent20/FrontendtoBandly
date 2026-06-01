@@ -58,7 +58,7 @@
 
 .su-song-name {
   font-size: 0.75rem;
-  color: #8b5cf6;
+  color: #2563eb;
   font-weight: 600;
   display: block;
   margin-top: 2px;
@@ -97,7 +97,7 @@
   transition: color 0.2s;
 }
 
-.su-step.active { color: #8b5cf6; }
+.su-step.active { color: #2563eb; }
 .su-step.completed { color: #22c55e; }
 
 .su-step-num {
@@ -112,7 +112,7 @@
   font-weight: 800;
 }
 
-.su-step.active .su-step-num { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+.su-step.active .su-step-num { background: rgba(37, 99, 235, 0.2); color: #2563eb; }
 .su-step.completed .su-step-num { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
 
 .su-step-arrow { color: #334155; flex-shrink: 0; }
@@ -142,7 +142,7 @@
 
 /* Select Zone (Step 1) */
 .su-select-zone {
-  border: 2px dashed rgba(139, 92, 246, 0.25);
+  border: 2px dashed rgba(37, 99, 235, 0.25);
   border-radius: 16px;
   padding: 4rem 2rem;
   text-align: center;
@@ -152,8 +152,8 @@
 }
 
 .su-select-zone:hover {
-  border-color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.04);
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.04);
 }
 
 .su-select-zone h3 {
@@ -170,7 +170,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  color: #8b5cf6;
+  color: #2563eb;
 }
 
 /* Review (Step 2) */
@@ -204,7 +204,7 @@
   transition: border-color 0.2s;
 }
 
-.su-input:focus { border-color: #8b5cf6; }
+.su-input:focus { border-color: #2563eb; }
 
 /* Stem List */
 .su-stem-list { margin-bottom: 1.5rem; }
@@ -293,7 +293,7 @@
 .su-btn-upload {
   width: 100%;
   padding: 0.9rem;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  background: linear-gradient(135deg, #2563eb, #6366f1);
   border: none;
   border-radius: 12px;
   color: white;
@@ -308,21 +308,21 @@
   font-family: inherit;
 }
 
-.su-btn-upload:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }
+.su-btn-upload:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3); }
 
 /* Uploading Progress (Step 3) */
 .su-status-bar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #8b5cf6;
+  color: #2563eb;
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
   padding: 0.75rem 1rem;
-  background: rgba(139, 92, 246, 0.06);
+  background: rgba(37, 99, 235, 0.06);
   border-radius: 10px;
-  border: 1px solid rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.15);
 }
 
 .su-stem-progress-list {
@@ -342,7 +342,7 @@
 }
 
 .su-stem-progress.done { background: rgba(34, 197, 94, 0.05); }
-.su-stem-progress.encoding { background: rgba(139, 92, 246, 0.05); }
+.su-stem-progress.encoding { background: rgba(37, 99, 235, 0.05); }
 .su-stem-progress.uploading { background: rgba(59, 130, 246, 0.05); }
 
 .su-stem-color-dot {

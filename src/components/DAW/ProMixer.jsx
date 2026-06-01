@@ -873,7 +873,7 @@ export default function ProMixer({ session, events }) {
           isStereo: savedGlobal.isStereo !== undefined ? savedGlobal.isStereo : true,
           muted: savedGlobal.muted !== undefined ? savedGlobal.muted : false,
           solo: savedGlobal.solo !== undefined ? savedGlobal.solo : false,
-          color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
+          color: stem.color || '#2563eb', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
       setTracks(sortTracks(resTracks));

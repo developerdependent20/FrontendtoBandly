@@ -75,9 +75,9 @@ export default function WebUploadStudio({ songs = [], orgId, session, profile, r
       }}>
         <div style={{
           width: '52px', height: '52px', borderRadius: '16px',
-          background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+          background: 'linear-gradient(135deg, #2563eb, #6366f1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 24px rgba(139,92,246,0.4)',
+          boxShadow: '0 0 24px rgba(37, 99, 235,0.4)',
           flexShrink: 0,
         }}>
           <CloudUpload size={26} color="white" />
@@ -156,8 +156,8 @@ export default function WebUploadStudio({ songs = [], orgId, session, profile, r
                   width: '100%',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(139,92,246,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(139,92,246,0.35)';
+                  e.currentTarget.style.background = 'rgba(37, 99, 235,0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(37, 99, 235,0.35)';
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
@@ -167,13 +167,13 @@ export default function WebUploadStudio({ songs = [], orgId, session, profile, r
                 {/* Color dot / status */}
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0,
-                  background: hasSeq ? 'rgba(34,197,94,0.15)' : 'rgba(139,92,246,0.12)',
+                  background: hasSeq ? 'rgba(34,197,94,0.15)' : 'rgba(37, 99, 235,0.12)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${hasSeq ? 'rgba(34,197,94,0.3)' : 'rgba(139,92,246,0.2)'}`,
+                  border: `1px solid ${hasSeq ? 'rgba(34,197,94,0.3)' : 'rgba(37, 99, 235,0.2)'}`,
                 }}>
                   {hasSeq
                     ? <ShieldCheck size={18} color="#22c55e" />
-                    : <CloudUpload size={18} color="#8b5cf6" />
+                    : <CloudUpload size={18} color="#2563eb" />
                   }
                 </div>
 

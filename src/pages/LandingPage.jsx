@@ -16,7 +16,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         <nav className="landing-nav">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <img 
-              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/LOGO%20BANDLY%20SIN%20FONDO.png" 
+              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" 
               alt="Bandly" 
               style={{ height: '50px', width: 'auto' }}
             />
@@ -38,8 +38,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         <div className="hero-content-full">
           <div style={{ marginBottom: '1rem', animation: 'dropdownFadeIn 0.8s ease-out' }}>
             <img 
-              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Logotipo%20sin%20Fondo.png" 
-              style={{ height: '140px', filter: 'drop-shadow(0 0 30px rgba(139, 92, 246, 0.4))' }} 
+              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" 
+              style={{ height: '140px', filter: 'drop-shadow(0 0 30px rgba(37, 99, 235, 0.4))' }} 
             />
           </div>
           <h1 className="hero-main-title-large" style={{ marginTop: '-1rem' }}>
@@ -114,8 +114,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {/* Desktop Card */}
               <div className="hover-scale" style={{ 
                 padding: '2rem', 
-                background: 'rgba(139, 92, 246, 0.05)', 
-                border: '1px solid rgba(139, 92, 246, 0.2)', 
+                background: 'rgba(37, 99, 235, 0.05)', 
+                border: '1px solid rgba(37, 99, 235, 0.2)', 
                 borderRadius: '24px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -177,7 +177,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           </div>
           <div style={{ flex: '1.2', minWidth: '300px', order: 1 }}>
             <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, rgba(139,92,246,0.1), transparent)', zIndex: 2, pointerEvents: 'none' }}></div>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, rgba(37, 99, 235,0.1), transparent)', zIndex: 2, pointerEvents: 'none' }}></div>
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-04-29%20121603.png" 
                 alt="Pro Player Interface" 
@@ -232,7 +232,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           .virtue-center {
             max-width: 320px;
             z-index: 10;
-            box-shadow: 0 30px 60px rgba(139,92,246,0.3), 0 0 0 2px rgba(139,92,246,0.5);
+            box-shadow: 0 30px 60px rgba(37, 99, 235,0.3), 0 0 0 2px rgba(37, 99, 235,0.5);
           }
           .virtue-img-wrapper:hover {
             transform: translateY(-15px) scale(1.05);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
-  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check, Copy
+  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
@@ -84,7 +84,7 @@ const ROLE_BANK = [
   {
     category: 'PRODUCCIÓN / MEDIA',
     color: 'var(--accent)',
-    bg: 'rgba(139,92,246,0.1)',
+    bg: 'rgba(37, 99, 235,0.1)',
     roles: ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical']
   },
   {
@@ -95,116 +95,7 @@ const ROLE_BANK = [
   }
 ];
 
-  // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
-const SongSelector = ({ value, onChange, songs, placeholder, getLastPlayedText }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const selectedSong = songs?.find(s => String(s.id) === String(value));
-  
-  const filteredSongs = songs?.filter(s => 
-    s.title.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-
-  return (
-    <div style={{ position: 'relative', flex: 2 }}>
-      <div 
-        onClick={() => setIsOpen(!isOpen)}
-        className="input-field"
-        style={{ 
-          cursor: 'pointer', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          background: 'rgba(255,255,255,0.03)',
-          border: isOpen ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.05)',
-          padding: '0.6rem 0.8rem',
-          minHeight: '40px',
-          borderRadius: '8px'
-        }}
-      >
-        <span style={{ color: selectedSong ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selectedSong ? selectedSong.title : placeholder || 'Seleccionar Canción...'}
-        </span>
-        <ChevronDown size={14} style={{ opacity: 0.5, flexShrink: 0 }} />
-      </div>
-
-      {isOpen && (
-        <>
-          <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} />
-          <div style={{ 
-            position: 'absolute', 
-            top: '105%', 
-            left: 0, 
-            width: '100%', 
-            minWidth: '280px',
-            background: '#1a2133', 
-            border: '1px solid rgba(255,255,255,0.1)', 
-            borderRadius: '12px', 
-            zIndex: 101, 
-            boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
-            display: 'flex',
-            flexDirection: 'column',
-            maxHeight: '300px'
-          }}>
-            <div style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <input 
-                type="text"
-                autoFocus
-                placeholder="Buscar canción..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '6px',
-                  padding: '8px 12px',
-                  color: 'white',
-                  fontSize: '0.85rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-            <div style={{ overflowY: 'auto', padding: '4px' }}>
-              {filteredSongs.length === 0 ? (
-                <div style={{ padding: '12px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>No se encontraron canciones</div>
-              ) : (
-                filteredSongs.map(s => {
-                  const lastPlayed = getLastPlayedText ? getLastPlayedText(s.id) : 'Nunca';
-                  const isRecent = lastPlayed === 'Hoy' || lastPlayed === 'Ayer' || lastPlayed.includes('días') || lastPlayed.includes('1 sem') || lastPlayed.includes('2 sem');
-                  return (
-                    <div 
-                      key={s.id}
-                      onClick={() => { onChange(s.id); setIsOpen(false); setSearchQuery(''); }}
-                      style={{
-                        padding: '10px 12px',
-                        cursor: 'pointer',
-                        borderRadius: '6px',
-                        transition: 'background 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '4px'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <span style={{ fontSize: '0.9rem', color: 'white' }}>{s.title}</span>
-                      <span style={{ fontSize: '0.75rem', color: isRecent ? '#f87171' : 'var(--primary)', fontWeight: '600' }}>
-                        Tocado: {lastPlayed}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
+// [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
 const MemberSelector = ({ value, onChange, members, roleName, placeholder, eventDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -212,34 +103,30 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
   const selectedMember = members?.find(m => m.id === value);
   const { suggested, others } = getSuggestedMembers(roleName, members);
 
-  const parsedEventDate = eventDate ? eventDate.split('T')[0] : null;
   const isBlocked = (member) => {
-    if (!parsedEventDate || !member.profiles?.blocked_dates) return false;
-    return member.profiles.blocked_dates.includes(parsedEventDate);
+    if (!eventDate || !member.availability) return false;
+    const dateStr = eventDate.split('T')[0];
+    return member.availability.includes(dateStr);
   };
 
-  const handleSelect = (member) => {
+  const handleSelect = (member, e) => {
     if (isBlocked(member)) {
       alert(`${member.full_name} no está disponible en esta fecha.`);
       return;
     }
-    onChange(member.id);
+    onChange(member.id, e?.shiftKey);
     setIsOpen(false);
     setShowAll(false);
+    setSearchQuery('');
   };
 
-  const toggleOpen = () => {
-    if (!isOpen) setSearchQuery('');
-    setIsOpen(!isOpen);
-  };
-
-  const listToRender = (suggested.length > 0 && !showAll && !searchQuery) ? suggested : (showAll || searchQuery ? [...suggested, ...others] : others);
-  const filteredList = listToRender.filter(m => m.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const allMembers = [...suggested, ...others];
+  const filteredList = allMembers.filter(m => m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
       <div 
-        onClick={toggleOpen}
+        onClick={() => setIsOpen(!isOpen)}
         className="input-field"
         style={{ 
           cursor: 'pointer', 
@@ -286,7 +173,7 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
             position: 'absolute', 
             top: '115%', 
             left: 0, 
-            minWidth: '220px', 
+            minWidth: '250px', 
             background: '#1a2133', 
             border: '1px solid rgba(255,255,255,0.1)', 
             borderRadius: '16px', 
@@ -294,77 +181,83 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
             maxHeight: '300px', 
             overflowY: 'auto', 
             boxShadow: '0 20px 60px rgba(0,0,0,0.8)', 
-            padding: '8px', 
+            padding: '12px', 
             animation: 'dropdownFadeIn 0.2s ease-out' 
           }}>
-            <input 
-              type="text" 
-              placeholder="Escribe para buscar..." 
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setShowAll(true); }}
-              autoFocus
-              className="input-field"
-              style={{ width: '100%', marginBottom: '10px', background: 'rgba(255,255,255,0.03)', fontSize: '0.8rem', padding: '8px' }}
-              onClick={e => e.stopPropagation()}
-            />
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: 'rgba(255,255,255,0.3)' }} />
+              <input 
+                autoFocus
+                placeholder="Buscar miembro..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ width: '100%', padding: '8px 8px 8px 30px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '0.8rem' }}
+              />
+            </div>
+
+            {suggested.length > 0 && !showAll && !searchQuery && (
+              <div style={{ marginBottom: '0.8rem' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '4px' }}>Recomendados ({roleName})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {suggested.map(m => {
+                    const blocked = isBlocked(m);
+                    return (
+                    <div 
+                      key={m.id} 
+                      onClick={(e) => handleSelect(m, e)} 
+                      style={{ 
+                        padding: '10px 14px', 
+                        borderRadius: '12px', 
+                        cursor: blocked ? 'not-allowed' : 'pointer', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px', 
+                        background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
+                        transition: 'all 0.2s',
+                        opacity: blocked ? 0.4 : 1
+                      }}
+                      onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
+                      onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.transform = 'scale(1)'; } }}
+                    >
+                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
+                    </div>
+                  )})}
+                </div>
+              </div>
+            )}
             {filteredList.length === 0 ? (
               <div style={{ padding: '10px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>No se encontraron resultados</div>
             ) : (
-              filteredList.map(m => {
-                const blocked = isBlocked(m);
-                return (
-                <div 
-                  key={m.id} 
-                  onClick={() => handleSelect(m)} 
-                  style={{ 
-                    padding: '10px 14px', 
-                    borderRadius: '12px', 
-                    cursor: blocked ? 'not-allowed' : 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    transition: 'all 0.15s',
-                    opacity: blocked ? 0.4 : 1,
-                    background: m.id === value ? 'var(--primary)' : 'transparent',
-                    color: m.id === value ? 'white' : 'rgba(255,255,255,0.8)',
-                    fontWeight: m.id === value ? '700' : '500'
-                  }}
-                  onMouseEnter={e => { if (!blocked && m.id !== value) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'white'; } }}
-                  onMouseLeave={e => { if (!blocked && m.id !== value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; } }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: m.id === value ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800', flexShrink: 0 }}>
-                      {m.full_name[0]}
-                    </div>
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>{m.full_name}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {filteredList.map(m => {
+                  const blocked = isBlocked(m);
+                  return (
+                  <div 
+                    key={m.id} 
+                    onClick={(e) => handleSelect(m, e)} 
+                    style={{ 
+                      padding: '10px 14px', 
+                      borderRadius: '12px', 
+                      cursor: blocked ? 'not-allowed' : 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px', 
+                      background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent',
+                      border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
+                      transition: 'all 0.2s',
+                      opacity: blocked ? 0.4 : 1
+                    }}
+                    onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
+                    onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; } }}
+                  >
+                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
+                    {selectedMember?.id === m.id && <Check size={14} style={{ marginLeft: 'auto' }} />}
                   </div>
-                  {m.id === value && <Check size={16} />}
-                  {blocked && <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 'bold' }}>No Disponible</span>}
-                </div>
-              );
-              })
-            )}
-            {suggested.length > 0 && !showAll && !searchQuery && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
-                style={{ 
-                  width: '100%', 
-                  padding: '12px', 
-                  background: 'rgba(255,255,255,0.03)', 
-                  border: 'none', 
-                  color: 'var(--primary)', 
-                  fontSize: '0.7rem', 
-                  fontWeight: '900', 
-                  cursor: 'pointer', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1.5px', 
-                  borderRadius: '12px', 
-                  marginTop: '6px',
-                  border: '1px dashed rgba(59,130,246,0.3)'
-                }}
-              >
-                + Mostrar resto del equipo
-              </button>
+                )})}
+              </div>
             )}
           </div>
         </>
@@ -373,127 +266,28 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
   );
 };
 
-const CustomDatePicker = ({ value, onChange, placeholder, formatEventDate }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    if (value) return new Date(value + 'T12:00:00');
-    return new Date();
-  });
-
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfMonth = new Date(year, month, 1).getDay();
-
-  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  const weekDays = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
-
-  const calendarDays = [];
-  for (let i = 0; i < firstDayOfMonth; i++) calendarDays.push(null);
-  for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
-
-  const handleSelect = (day) => {
-    const d = new Date(year, month, day);
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(d - tzOffset)).toISOString().split('T')[0];
-    onChange(localISOTime);
-    setIsOpen(false);
-  };
-
-  const toggleOpen = () => {
-    if (!isOpen && value) setCurrentMonth(new Date(value + 'T12:00:00'));
-    setIsOpen(!isOpen);
-  };
+const RoleInput = ({ value, onChange }) => {
+  const [localValue, setLocalValue] = React.useState(value);
+  
+  React.useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
-      <div 
-        onClick={toggleOpen}
-        className="input-field"
-        style={{ 
-          cursor: 'pointer', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          background: value ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
-          padding: '0.9rem',
-          border: isOpen ? '1px solid var(--primary)' : (value ? '1px solid rgba(59,130,246,0.3)' : '1px solid rgba(255,255,255,0.05)'),
-          borderRadius: '12px',
-          transition: 'all 0.2s ease',
-        }}
-      >
-        <span style={{ color: value ? 'var(--primary)' : 'rgba(255,255,255,0.4)', fontWeight: value ? '700' : 'normal', fontSize: '0.9rem' }}>
-          {value ? `Fecha: ${formatEventDate(value)}` : placeholder || 'Seleccionar Fecha...'}
-        </span>
-        <CalendarIcon size={18} style={{ opacity: value ? 1 : 0.5, color: value ? 'var(--primary)' : 'white' }} />
-      </div>
-
-      {isOpen && (
-        <>
-          <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} />
-          <div style={{ 
-            position: 'absolute', 
-            top: '105%', 
-            left: 0, 
-            width: '280px', 
-            background: '#1a2133', 
-            border: '1px solid rgba(255,255,255,0.1)', 
-            borderRadius: '16px', 
-            zIndex: 101, 
-            boxShadow: '0 20px 60px rgba(0,0,0,0.8)', 
-            padding: '16px', 
-            animation: 'dropdownFadeIn 0.2s ease-out' 
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <button onClick={(e) => { e.stopPropagation(); setCurrentMonth(new Date(year, month - 1, 1)); }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}><ChevronDown size={16} style={{ transform: 'rotate(90deg)' }} /></button>
-              <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'white' }}>{monthNames[month]} {year}</span>
-              <button onClick={(e) => { e.stopPropagation(); setCurrentMonth(new Date(year, month + 1, 1)); }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}><ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} /></button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px', textAlign: 'center' }}>
-              {weekDays.map(d => <span key={d} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>{d}</span>)}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-              {calendarDays.map((day, i) => {
-                if (!day) return <div key={`empty-${i}`} style={{ aspectRatio: '1' }} />;
-                const isSelected = value && new Date(value + 'T12:00:00').getDate() === day && new Date(value + 'T12:00:00').getMonth() === month && new Date(value + 'T12:00:00').getFullYear() === year;
-                const isToday = new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
-                
-                return (
-                  <button 
-                    key={day}
-                    onClick={(e) => { e.stopPropagation(); handleSelect(day); }}
-                    style={{
-                      aspectRatio: '1',
-                      borderRadius: '8px',
-                      background: isSelected ? 'var(--primary)' : (isToday ? 'rgba(255,255,255,0.1)' : 'transparent'),
-                      border: isToday && !isSelected ? '1px solid rgba(255,255,255,0.2)' : 'none',
-                      color: isSelected ? 'white' : 'rgba(255,255,255,0.8)',
-                      fontWeight: isSelected || isToday ? 'bold' : 'normal',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.85rem',
-                      transition: 'all 0.15s'
-                    }}
-                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isToday ? 'rgba(255,255,255,0.1)' : 'transparent' }}
-                  >
-                    {day}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+    <input 
+      className="input-field"
+      placeholder="Nombre del rol..."
+      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
+      value={localValue}
+      onChange={e => setLocalValue(e.target.value)}
+      onBlur={() => { if (localValue !== value) onChange(localValue); }}
+      onKeyDown={e => { if (e.key === 'Enter') { e.target.blur(); } }}
+    />
   );
 };
 
 export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
   const [showModal, setShowModal] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState(null);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [description, setDescription] = useState('');
@@ -515,9 +309,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [pendingTemplate, setPendingTemplate] = useState(null);
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
-  const [showCreationModal, setShowCreationModal] = useState(false);
-  const [creationMode, setCreationMode] = useState(null); // 'scratch' or 'duplicate'
-  const [duplicateSourceId, setDuplicateSourceId] = useState('');
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -532,27 +323,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
       return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
     } catch (e) { return 'Error fecha'; }
-  };
-
-  const getLastPlayedText = (songId) => {
-    if (!events || events.length === 0) return 'Nunca';
-    const now = new Date();
-    const pastPlays = events.filter(ev => 
-      new Date(ev.date) < now && 
-      ev.event_songs?.some(es => String(es.song_id) === String(songId))
-    );
-    if (pastPlays.length === 0) return 'Nunca';
-    pastPlays.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const lastDate = new Date(pastPlays[0].date);
-    const diffTime = Math.abs(now - lastDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Hoy';
-    if (diffDays === 1) return 'Ayer';
-    if (diffDays < 7) return `Hace ${diffDays} días`;
-    if (diffDays < 30) return `Hace ${Math.floor(diffDays/7)} sem`;
-    if (diffDays < 365) return `Hace ${Math.floor(diffDays/30)} meses`;
-    return `Hace >1 año`;
   };
 
   const getInstrumentIcon = (inst) => {
@@ -570,40 +340,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const getRoleGroup = (inst) => {
-    if (!inst) return 'OTROS';
-    const i = inst.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff') || i.includes('logistica')) return 'LOGÍSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media') || i.includes('streaming') || i.includes('produc')) return 'PRODUCCIÓN / MEDIA';
-    if (i.includes('bateri') || i.includes('drum') || i.includes('bajo') || i.includes('bajista') || i.includes('bass') || i.includes('guitar') || i.includes('gtr') || i.includes('teclad') || i.includes('piano') || i.includes('keys') || i.includes('voz') || i.includes('vocal') || i.includes('coro') || i.includes('percusi') || i.includes('perc') || i.includes('voice') || i.includes('cantante') || i.includes('lead') || i.includes('trompeta') || i.includes('sax') || i.includes('violin') || i.includes('cello')) return 'MÚSICOS';
+    const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
     return 'OTROS';
   };
 
   const generateTemplate = (fmt) => {
-    if (fmt === 'vacio') return [];
-    
     let musicLabels = [];
     if (fmt === 'full') {
       musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS'];
     } else if (fmt === 'acoustic') {
       musicLabels = ['PERC / PERCUSIÓN', 'BASS / BAJO', 'PIANO / KEYS', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3'];
-    } else if (fmt === 'ensayo') {
-      musicLabels = ['DRUMS / BATERÍA', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2'];
-    } else if (fmt === 'jovenes') {
-      musicLabels = ['DRUMS / BATERÍA', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'VOICE 1 / VOZ 1'];
-    } else if (fmt === 'especial') {
-      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
-    } else if (fmt === 'admin') {
-      musicLabels = []; // Solo admin/staff
     } else { // general
       musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
     }
     
-    let service = [];
-    if (fmt === 'admin') {
-      service = ['STAFF / LOGÍSTICA', 'COORDINADOR', 'BIENVENIDA', 'MD / DIRECCIÓN MUSICAL'];
-    } else {
-      service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÍSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÓN MUSICAL'];
-    }
+    const service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÍSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÓN MUSICAL'];
     const base = musicLabels.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'music', status: 'pending' }));
     const srv = service.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'service', status: 'pending' }));
     return [...base, ...srv];
@@ -615,20 +369,25 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventDate(ev.date || '');
     setDescription(ev.description || '');
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
-    const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
-    const detectedFormat = isFullBand ? 'full' : 'acoustic';
-    setFormat(detectedFormat);
-    let merged = generateTemplate(detectedFormat);
-    activeRosterFromDb.forEach(er => {
-       const slot = merged.find(m => m.instrument === er.instrument);
-       if (slot) {
-         slot.event_roster_id = er.id;
-         slot.profile_id = er.profile_id;
-         slot.status = er.status || 'pending';
-       } else {
-         merged.push({ id: Math.random().toString(), event_roster_id: er.id, instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: er.status || 'pending' });
-       }
-    });
+    setFormat('full');
+    let merged;
+    if (activeRosterFromDb.length > 0) {
+      // Event already has saved roster: show ONLY those items, no empty template slots
+      merged = activeRosterFromDb.map(er => ({
+        id: Math.random().toString(),
+        event_roster_id: er.id,
+        instrument: er.instrument,
+        profile_id: er.profile_id,
+        category: er.category || 'custom',
+        status: er.status || 'pending'
+      }));
+    } else {
+      // No saved roster yet: load the default template so user has a starting point
+      const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
+      const detectedFormat = isFullBand ? 'full' : 'acoustic';
+      setFormat(detectedFormat);
+      merged = generateTemplate(detectedFormat);
+    }
     setRoster(merged);
     setInitialRoster(JSON.parse(JSON.stringify(merged)));
     setDbHistory(ev.event_roster || []);
@@ -637,65 +396,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setShowModal(true);
   };
 
-  const handleNewEvent = (initialFormat = 'general', selectedDate = '') => {
+  const handleNewEvent = (selectedDate) => {
     setEditingEventId(null);
     setEventName('');
     setEventDate(selectedDate || '');
     setDescription('');
-    setFormat(initialFormat);
-    
-    let initialRoster = [];
-    if (initialFormat === 'all_members') {
-      initialRoster = members.map(m => ({
-        id: Math.random().toString(),
-        instrument: 'ASISTENTE',
-        profile_id: m.id,
-        category: 'service',
-        status: 'pending'
-      }));
-    } else {
-      initialRoster = generateTemplate(initialFormat);
-    }
-    
-    setRoster(initialRoster);
-    setInitialRoster(JSON.parse(JSON.stringify(initialRoster)));
+    setFormat('full');
+    const template = generateTemplate('full');
+    setRoster(template);
+    setInitialRoster(JSON.parse(JSON.stringify(template)));
     setDbHistory([]);
     setSetlist([]);
-    setShowCreationModal(false);
-    setCreationMode(null);
-    setModalTab('info');
-    setShowModal(true);
-  };
-
-  const handleDuplicateEvent = (sourceEventId) => {
-    const ev = events.find(e => e.id === sourceEventId);
-    if (!ev) return;
-    setEditingEventId(null);
-    setEventName(ev.name + ' (Copia)');
-    setEventDate('');
-    setDescription(ev.description || '');
-    setFormat('full');
-    
-    const clonedRoster = (ev.event_roster || []).filter(r => !r.is_removed).map(er => ({
-      id: Math.random().toString(),
-      instrument: er.instrument,
-      profile_id: er.profile_id,
-      category: er.category || 'music',
-      status: 'pending'
-    }));
-    setRoster(clonedRoster);
-    setInitialRoster(JSON.parse(JSON.stringify(clonedRoster)));
-    
-    const clonedSetlist = (ev.event_songs || []).sort((a,b)=>a.order_index - b.order_index).map(es => ({
-      song_id: es.song_id,
-      lead_id: es.lead_id || '',
-      selected_key: es.selected_key || ''
-    }));
-    setSetlist(clonedSetlist);
-    
-    setDbHistory([]);
-    setShowCreationModal(false);
-    setCreationMode(null);
     setModalTab('info');
     setShowModal(true);
   };
@@ -717,16 +428,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     });
     initial.forEach(active => {
       if (active.profile_id && !currentActive.some(curr => String(curr.profile_id) === String(active.profile_id) && curr.instrument === active.instrument)) {
-        if (active.event_roster_id) diff.softDeleted.push({ 
-            id: active.event_roster_id, 
-            event_id: eventId,
-            profile_id: active.profile_id,
-            instrument: active.instrument,
-            category: active.category || 'music',
-            status: active.status || 'pending',
-            is_removed: true, 
-            removed_at: new Date().toISOString() 
-          });
+        if (active.event_roster_id) diff.softDeleted.push({ id: active.event_roster_id, event_id: active.event_id, profile_id: active.profile_id, instrument: active.instrument, category: active.category, status: active.status, is_removed: true, removed_at: new Date().toISOString() });
       }
     });
     return diff;
@@ -774,7 +476,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         description: notifyData.description, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
-          profile_id: r.profile_id || r.id, // Ensure profile_id is sent
+          profile_id: r.profile_id || r.id,
           email: r.email, 
           name: r.name, 
           instrument: r.instrument 
@@ -805,16 +507,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     } catch (e) { alert("Error al confirmar."); }
   };
 
-  const handleRemoveFromRoster = (rosterId) => {
-    setConfirmDialog({
-      message: '¿Seguro que quieres eliminar a este usuario del evento?',
-      onConfirm: async () => {
-        try {
-          await supabase.from('event_roster').delete().eq('id', rosterId);
-          if (refreshData) refreshData();
-        } catch (e) { alert("Error al eliminar."); }
-      }
-    });
+  const handleRemoveFromRoster = async (rosterId) => {
+    if (!confirm('¿Seguro que quieres eliminar a este usuario del evento?')) return;
+    try {
+      await supabase.from('event_roster').delete().eq('id', rosterId);
+      if (refreshData) refreshData();
+    } catch (e) { alert("Error al eliminar."); }
   };
 
   const closeModal = () => { setShowModal(false); setEditingEventId(null); setSaving(false); };
@@ -825,43 +523,36 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const userRole = (profile?.role || '').toLowerCase();
   const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId)));
 
-  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el día completo del evento siempre se muestra en proximos)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
   const upcomingEvents = eventsToShow.filter(ev => {
-    if (!ev.date) return true; // Sin fecha â†’ siempre próximo
-    const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
+    if (!ev.date) return true;
+    const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
     return evDate >= todayStart;
   });
 
   const pastEvents = eventsToShow.filter(ev => {
     if (!ev.date) return false;
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
-    return evDate < todayStart; // Solo pasa a "pasados" cuando el día del evento ya terminó
+    return evDate < todayStart;
   });
 
-  // [ESTABLE] Temas Joya Premium
   const cardThemes = [
-    { main: '#6366f1', glass: 'rgba(99, 102, 241, 0.1)', light: 'rgba(99, 102, 241, 0.3)' }, // Indigo
-    { main: '#10b981', glass: 'rgba(16, 185, 129, 0.1)', light: 'rgba(16, 185, 129, 0.3)' }, // Emerald
-    { main: '#f43f5e', glass: 'rgba(244, 63, 94, 0.1)', light: 'rgba(244, 63, 94, 0.3)' },    // Rose
-    { main: '#f59e0b', glass: 'rgba(245, 158, 11, 0.1)', light: 'rgba(245, 158, 11, 0.3)' },  // Amber
-    { main: '#8b5cf6', glass: 'rgba(139, 92, 246, 0.1)', light: 'rgba(139, 92, 246, 0.3)' },  // Violet
-    { main: '#06b6d4', glass: 'rgba(6, 182, 212, 0.1)', light: 'rgba(6, 182, 212, 0.3)' },   // Cyan
+    { main: '#6366f1', glass: 'rgba(99, 102, 241, 0.1)', light: 'rgba(99, 102, 241, 0.3)' },
+    { main: '#10b981', glass: 'rgba(16, 185, 129, 0.1)', light: 'rgba(16, 185, 129, 0.3)' },
+    { main: '#f43f5e', glass: 'rgba(244, 63, 94, 0.1)', light: 'rgba(244, 63, 94, 0.3)' },
+    { main: '#f59e0b', glass: 'rgba(245, 158, 11, 0.1)', light: 'rgba(245, 158, 11, 0.3)' },
+    { main: '#2563eb', glass: 'rgba(37, 99, 235, 0.1)', light: 'rgba(37, 99, 235, 0.3)' },
+    { main: '#06b6d4', glass: 'rgba(6, 182, 212, 0.1)', light: 'rgba(6, 182, 212, 0.3)' },
   ];
 
   const getEventTheme = (name) => {
     const n = (name || '').toLowerCase();
-    // Indigo para Servicios
     if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return cardThemes[0]; 
-    // Emerald para Oración
     if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return cardThemes[1];
-    // Violet para Reuniones
     if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[4];
-    // Orange/Amber para Especiales
     if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return cardThemes[3];
-    // Cyan por defecto
     return cardThemes[5];
   };
 
@@ -896,16 +587,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           backdropFilter: 'blur(12px)',
           transition: 'box-shadow 0.2s ease',
         }}>
-          {/* Accent line left */}
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
 
           <div style={{ padding: '1.25rem 1.25rem 1.25rem 1.6rem' }}>
 
-            {/* ── TOP ROW ─────────────────────────────────── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
 
-                {/* Date chip + TODAY badge */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   {isToday && (
                     <span style={{ fontSize: '0.58rem', fontWeight: '900', color: '#fff', background: theme.main, padding: '2px 8px', borderRadius: '20px', letterSpacing: '1px', textTransform: 'uppercase' }}>
@@ -917,12 +605,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </span>
                 </div>
 
-                {/* Title */}
                 <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
                   {ev.name}
                 </h4>
 
-                {/* Description — button + expandable panel */}
                 {ev.description && (
                   <div style={{ marginTop: '6px' }}>
                     <button
@@ -943,7 +629,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 )}
               </div>
 
-              {/* Admin buttons */}
               {!readOnly && (
                 <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                   <button onClick={() => handleEditEvent(ev)}
@@ -953,14 +638,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.4)'; e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}>
                     <Edit2 size={13} />
                   </button>
-                  <button onClick={() => {
-                      setConfirmDialog({
-                        message: '¿Borrar este evento? Esta acción no se puede deshacer.',
-                        onConfirm: () => {
-                          supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData());
-                        }
-                      });
-                    }}
+                  <button onClick={() => { if(window.confirm('Borrar este evento?')) supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData()); }}
                     title="Eliminar"
                     style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.color='#ef4444'; e.currentTarget.style.background='rgba(239,68,68,0.15)'; }}
@@ -971,10 +649,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               )}
             </div>
 
-            {/* ── ASSIGNMENT ROW ──────────────────────────── */}
             {userSlots.length > 0 && (
               <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                {/* Slot pills */}
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: '1 1 auto' }}>
                   {userSlots.map((slot, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
@@ -985,7 +661,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   ))}
                 </div>
 
-                {/* Confirm/Decline */}
                 {!isPast && (
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     {userSlots.some(s => s.status !== 'confirmed') && (
@@ -1005,7 +680,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
             )}
 
-            {/* ── EXPAND BUTTON ───────────────────────────── */}
             <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))}
               style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid ${isExpanded ? theme.light : 'rgba(255,255,255,0.06)'}`, borderRadius: '10px', color: isExpanded ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.light; e.currentTarget.style.color = theme.main; }}
@@ -1014,37 +688,34 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               {isExpanded ? 'Ocultar' : 'Ver equipo y canciones'}
             </button>
 
-            {/* ── EXPANDED SECTION ────────────────────────── */}
             {isExpanded && (
               <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid rgba(255,255,255,0.06)` }}>
-                {/* Team */}
                 {(() => {
-                  const groups = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
+                  const groups = { 'MÚSICOS': [], 'PRODUCCIÓN / MEDIA': [], 'LOGÍSTICA / STAFF': [], 'OTROS': [] };
                   (ev.event_roster || []).forEach(s => {
                     const g = getRoleGroup(s.instrument);
                     if (!groups[g]) groups[g] = [];
                     groups[g].push(s);
                   });
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
-                    // Sort by Spanish ordinal if instrument name contains one
-                    const ordinalRank = (name = '') => {
-                      const n = name.toLowerCase();
-                      if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
-                      if (n.includes('segundo') || n.includes('second')) return 2;
-                      if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
-                      if (n.includes('cuarto') || n.includes('fourth')) return 4;
-                      if (n.includes('quinto') || n.includes('fifth')) return 5;
-                      if (n.includes('sexto') || n.includes('sixth')) return 6;
-                      if (n.includes('septimo') || n.includes('seventh')) return 7;
-                      return 99;
-                    };
                     const sorted = [...items].sort((a, b) => {
-                        const nameA = (a.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
-                        const nameB = (b.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
-                        if (nameA < nameB) return -1;
-                        if (nameA > nameB) return 1;
-                        return ordinalRank(a.instrument) - ordinalRank(b.instrument);
-                      });
+                      const nameA = (a.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
+                      const nameB = (b.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
+                      if (nameA < nameB) return -1;
+                      if (nameA > nameB) return 1;
+                      const ordinalRank = (name = '') => {
+                        const n = name.toLowerCase();
+                        const match = n.match(/\d+/);
+                        if (match) return parseInt(match[0], 10);
+                        if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                        if (n.includes('segundo') || n.includes('second')) return 2;
+                        if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                        if (n.includes('cuarto') || n.includes('fourth')) return 4;
+                        if (n.includes('quinto') || n.includes('fifth')) return 5;
+                        return 99;
+                      };
+                      return ordinalRank(a.instrument) - ordinalRank(b.instrument);
+                    });
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
@@ -1062,11 +733,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   </button>
                                 )}
                                 <span style={{ fontSize: '0.78rem' }}>{getInstrumentIcon(s.instrument)}</span>
-                                {/* Role label */}
                                 <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{roleName}</span>
-                                {/* Separator */}
                                 <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                                {/* Member name */}
                                 <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
                                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
                               </div>
@@ -1076,10 +744,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </div>
                     );
                   });
-
                 })()}
 
-                {/* Setlist */}
                 {ev.event_songs && ev.event_songs.length > 0 && (
                   <div style={{ marginTop: '0.5rem' }}>
                     <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>SETLIST</div>
@@ -1099,7 +765,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
                                 <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alert('Requiere plan PRO'); }}
-                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
+                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(37, 99, 235,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
                                   <Headphones size={12} />
                                 </button>
                               )}
@@ -1139,7 +805,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
           {!readOnly && (
-            <button onClick={() => { setCreationMode(null); setShowCreationModal(true); }} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
+            <button onClick={() => handleNewEvent('')} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
               <Plus size={16} /> Nuevo Evento
             </button>
           )}
@@ -1171,34 +837,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
-                
-                <select className="input-field" value={format} onChange={e => {
-                  setFormat(e.target.value);
-                  if(!editingEventId) {
-                    const template = generateTemplate(e.target.value);
-                    setRoster(template);
-                    setInitialRoster(JSON.parse(JSON.stringify(template)));
-                  }
-                }} style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}>
-                  <option value="general">Reunión General</option>
-                  <option value="ensayo">Ensayo</option>
-                  <option value="jovenes">Jóvenes</option>
-                  <option value="especial">Evento Especial</option>
-                  <option value="admin">Reunión Administrativa / Staff</option>
-                </select>
-                <CustomDatePicker value={eventDate} onChange={setEventDate} placeholder="Seleccionar Fecha" formatEventDate={formatEventDate} />
+                <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
+                <input type="date" className="input-field" value={eventDate} onChange={e => setEventDate(e.target.value)} style={{ width: '100%' }} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
               </div>
             )}
             {modalTab === 'equipo' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                
-                {/* 1. BANCO DE ROLES (Tienda) - AHORA ARRIBA */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Plus size={18} color="var(--primary)" /> Añadir al Equipo
                   </h3>
-                  
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
                     {ROLE_BANK.map(cat => (
                       <div key={cat.category}>
@@ -1247,7 +896,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </div>
                     ))}
                   </div>
-                  
                   <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
                     <button 
                       onClick={() => setRoster([...roster, { id: Math.random().toString(), instrument: 'Nuevo Rol', profile_id: '', category: 'custom' }])}
@@ -1258,7 +906,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </div>
                 </div>
 
-                {/* 2. EQUIPO SELECCIONADO (Roster Actual) - AHORA ABAJO */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
                     <h3 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1289,22 +936,52 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
                     return (
                       <div>
-                        {Object.entries(groupedRoster).map(([groupName, items]) => items.length > 0 && (
+                        {Object.entries(groupedRoster).map(([groupName, items]) => {
+                          if (items.length === 0) return null;
+                          const sortedItems = [...items].sort((a, b) => {
+                            const nameA = (a.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
+                            const nameB = (b.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
+                            if (nameA < nameB) return -1;
+                            if (nameA > nameB) return 1;
+                            const ordinalRank = (name = '') => {
+                              const n = name.toLowerCase();
+                              const match = n.match(/\d+/);
+                              if (match) return parseInt(match[0], 10);
+                              if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                              if (n.includes('segundo') || n.includes('second')) return 2;
+                              if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                              if (n.includes('cuarto') || n.includes('fourth')) return 4;
+                              if (n.includes('quinto') || n.includes('fifth')) return 5;
+                              return 99;
+                            };
+                            return ordinalRank(a.instrument) - ordinalRank(b.instrument);
+                          });
+
+                          return (
                           <div key={groupName} style={{ marginBottom: '1.5rem' }}>
                             <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                              {items.map(r => (
+                              {sortedItems.map(r => (
                                 <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                                   <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
                                   <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
-                                    <input 
-                                      className="input-field"
-                                      placeholder="Nombre del rol..."
-                                      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
+                                    <RoleInput 
                                       value={r.instrument}
-                                      onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
+                                      onChange={(newVal) => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: newVal } : x))}
                                     />
-                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} eventDate={eventDate} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
+                                    <MemberSelector 
+                                      value={r.profile_id} 
+                                      members={members} 
+                                      roleName={r.instrument} 
+                                      eventDate={eventDate} 
+                                      onChange={(v, shiftKey) => {
+                                        if (shiftKey) {
+                                          setRoster([...roster, { id: Math.random().toString(), instrument: r.instrument, profile_id: v, category: r.category || 'MÚSICOS', status: 'pending' }]);
+                                        } else {
+                                          setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x));
+                                        }
+                                      }} 
+                                    />
                                   </div>
                                   <button 
                                     onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
@@ -1318,7 +995,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               ))}
                             </div>
                           </div>
-                        ))}
+                        );})}
                       </div>
                     );
                   })()}
@@ -1329,14 +1006,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'setlist' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {setlist.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, zIndex: 50 - idx }}>
-                    <SongSelector
-                      value={item.song_id}
-                      onChange={(newVal) => { const n = [...setlist]; n[idx].song_id = newVal; setSetlist(n); }}
-                      songs={songs}
-                      placeholder="Seleccionar Canción"
-                      getLastPlayedText={getLastPlayedText}
-                    />
+                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, overflow: 'hidden' }}>
+                    <select 
+                      className="input-field" 
+                      value={item.song_id} 
+                      onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
+                      style={{ flex: 2, background: 'none' }}
+                    >
+                      <option value="">Seleccionar Canción</option>
+                      {songs.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    </select>
 
                     {/* NUEVO: Selector de Tono (Tonality) */}
                     <div style={{ flex: 1 }}>
@@ -1362,8 +1041,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </select>
                     </div>
 
-                    <div style={{ flex: 1.5, minWidth: 0 }}>
-                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" eventDate={eventDate} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                    <div style={{ flex: 1.5, minWidth: 0, overflow: 'hidden' }}>
+                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>
@@ -1379,51 +1058,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         </div>
       )}
 
-      {showCreationModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '450px', padding: '2.5rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
-            <CalendarIcon size={32} color="var(--primary)" style={{ marginBottom: '1rem' }} />
-            <h3 style={{ marginBottom: '1rem' }}>Crear Nuevo Evento</h3>
-            
-            {!creationMode && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
-                <button onClick={() => handleNewEvent('vacio')} className="btn-primary" style={{ padding: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                  <FileText size={18} /> Crear Evento Vacío
-                </button>
-                <button onClick={() => handleNewEvent('general')} className="btn-secondary" style={{ padding: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'rgba(255,255,255,0.05)' }}>
-                  <Plus size={18} /> Usar Plantilla (Reunión, Ensayo...)
-                </button>
-                <button onClick={() => handleNewEvent('all_members')} className="btn-secondary" style={{ padding: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                  <Users size={18} /> Reunión con Toda la Organización
-                </button>
-                <button onClick={() => setCreationMode('duplicate')} className="btn-secondary" style={{ padding: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'rgba(255,255,255,0.05)' }}>
-                  <Copy size={18} /> Duplicar Evento Pasado
-                </button>
-                <button onClick={() => setShowCreationModal(false)} className="btn-secondary" style={{ marginTop: '0.5rem', padding: '0.6rem', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)' }}>
-                  Cancelar
-                </button>
-              </div>
-            )}
-
-            {creationMode === 'duplicate' && (
-              <div style={{ marginTop: '1.5rem', textAlign: 'left' }}>
-                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginBottom: '1rem' }}>Selecciona un evento pasado para copiar su equipo y canciones.</p>
-                <select className="input-field" value={duplicateSourceId} onChange={e => setDuplicateSourceId(e.target.value)} style={{ width: '100%', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)' }}>
-                  <option value="">-- Selecciona un Evento --</option>
-                  {[...events].sort((a,b) => new Date(b.date) - new Date(a.date)).map(ev => (
-                    <option key={ev.id} value={ev.id}>{ev.name} ({formatEventDate(ev.date)})</option>
-                  ))}
-                </select>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setCreationMode(null)} className="btn-secondary" style={{ flex: 1 }}>Atrás</button>
-                  <button onClick={() => handleDuplicateEvent(duplicateSourceId)} className="btn-primary" style={{ flex: 1 }} disabled={!duplicateSourceId}>Continuar</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {showNotifyModal && notifyData && (
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
@@ -1435,7 +1069,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   Enviar solo a nuevos ({notifyData.candidates.length})
                 </button>
                 
-                <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
+                <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(37, 99, 235, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
                   Notificar a todo el equipo ({notifyData.allRoster.length})
                 </button>
 
@@ -1511,35 +1145,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           session={session}
           onClose={() => setSeqPlayerSong(null)}
         />
-      )}
-
-      {/* Custom Confirm Dialog Modal */}
-      {confirmDialog && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '400px', padding: '2.5rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'white', fontSize: '1.1rem' }}>Confirmación</h3>
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem', fontSize: '0.9rem' }}>{confirmDialog.message}</p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setConfirmDialog(null)} 
-                className="btn-secondary" 
-                style={{ flex: 1 }}
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={() => {
-                  confirmDialog.onConfirm();
-                  setConfirmDialog(null);
-                }} 
-                className="btn-primary" 
-                style={{ flex: 1, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.5)', color: '#ef4444' }}
-              >
-                Aceptar
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </section>
   );

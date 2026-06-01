@@ -24,7 +24,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
       name: 'Gratis',
       monthly: 0,
       yearly: 0,
-      features: ['1 banda u organización', 'Hasta 10 usuarios', '300 MB almacenamiento', 'Calendario de eventos', 'Repertorios básicos', 'Letras', 'Enlaces de YouTube']
+      features: ['1 organización', 'Hasta 10 usuarios', '300 MB almacenamiento', 'Calendario de eventos', 'Repertorios básicos', 'Letras', 'Enlaces de YouTube']
     },
     {
       id: 'starter',
@@ -33,7 +33,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
       originalMonthly: 19,
       yearly: 59,
       originalYearly: 190,
-      features: ['Hasta 3 bandas', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Reproductor en la app'],
+      features: ['Hasta 3 organizaciones', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Reproductor en la app'],
       promo: true,
       recommended: true
     },
@@ -44,7 +44,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
       originalMonthly: 39,
       yearly: 145,
       originalYearly: 390,
-      features: ['Hasta 10 bandas', 'Hasta 75 usuarios', '45 GB almacenamiento', 'Todo lo de Starter', 'Sala de previsualización', 'Player de secuencias']
+      features: ['Hasta 10 organizaciones', 'Hasta 75 usuarios', '45 GB almacenamiento', 'Todo lo de Starter', 'Sala de previsualización', 'Player de secuencias']
     },
     {
       id: 'elite',
@@ -53,7 +53,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
       originalMonthly: 79,
       yearly: 310,
       originalYearly: 790,
-      features: ['Bandas ilimitadas', 'Usuarios ilimitados', '100 GB almacenamiento', 'Todo lo de Pro', 'Roles y permisos', 'Prioridad en soporte', 'Acceso anticipado']
+      features: ['Organizaciones ilimitadas', 'Usuarios ilimitados', '100 GB almacenamiento', 'Todo lo de Pro', 'Roles y permisos', 'Prioridad en soporte', 'Acceso anticipado']
     }
   ];
 
@@ -72,7 +72,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
         <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px' }}>ELIGE TU PLAN</h2>
-            <p style={{ margin: '4px 0 0', opacity: 0.5, fontSize: '0.8rem' }}>Impulsa tu banda al siguiente nivel con Bandly.</p>
+            <p style={{ margin: '4px 0 0', opacity: 0.5, fontSize: '0.8rem' }}>Impulsa tu organización al siguiente nivel con Bandly.</p>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5 }}>
             <X size={24} />

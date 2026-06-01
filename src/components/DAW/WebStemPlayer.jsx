@@ -81,7 +81,7 @@ function StemChannel({ stem, onVolumeChange, onMuteToggle, onSoloToggle, isMuted
       {/* Icono */}
       <div style={{
         width: '36px', height: '36px', borderRadius: '50%',
-        background: stem.color || '#8b5cf6',
+        background: stem.color || '#2563eb',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         boxShadow: isSoloed ? `0 0 16px ${stem.color}88` : 'none',
         transition: 'box-shadow 0.2s',
@@ -106,7 +106,7 @@ function StemChannel({ stem, onVolumeChange, onMuteToggle, onSoloToggle, isMuted
           style={{
             writingMode: 'vertical-lr', direction: 'rtl',
             height: '110px', width: '22px', cursor: 'pointer',
-            accentColor: stem.color || '#8b5cf6',
+            accentColor: stem.color || '#2563eb',
           }}
         />
         <Volume2 size={11} color="rgba(255,255,255,0.25)" />
@@ -312,7 +312,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
             original_name: targetName,
             instrument_label: stemMeta.instrument_label || 'Pista',
             instrument_type: stemMeta.instrument_type || 'unknown',
-            color: stemMeta.color || '#8b5cf6',
+            color: stemMeta.color || '#2563eb',
             volume: 1,
           });
         } catch (decodeErr) {
@@ -475,7 +475,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       <div style={{
         width: '100%', maxWidth: '1100px',
         background: 'linear-gradient(160deg, #0d1117 0%, #0f172a 50%, #1a0f2e 100%)',
-        border: '1px solid rgba(139,92,246,0.25)',
+        border: '1px solid rgba(37, 99, 235,0.25)',
         borderRadius: '20px', overflow: 'hidden',
         boxShadow: '0 40px 80px rgba(0,0,0,0.8)',
         display: 'flex', flexDirection: 'column',
@@ -487,18 +487,18 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(139,92,246,0.06)',
+          background: 'rgba(37, 99, 235,0.06)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               width: '38px', height: '38px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+              background: 'linear-gradient(135deg, #2563eb, #6366f1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Headphones size={18} color="white" />
             </div>
             <div>
-              <div style={{ fontSize: '0.55rem', fontWeight: '800', color: '#8b5cf6', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.55rem', fontWeight: '800', color: '#2563eb', letterSpacing: '2px', textTransform: 'uppercase' }}>
                 Sala de Previsualizacion
               </div>
               <div style={{ fontSize: '1rem', fontWeight: '800', color: 'white' }}>{song?.title}</div>
@@ -522,21 +522,21 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
               <div style={{
                 width: '64px', height: '64px', borderRadius: '50%',
-                background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+                background: 'rgba(37, 99, 235,0.15)', border: '1px solid rgba(37, 99, 235,0.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 1.5rem',
               }}>
-                <Headphones size={28} color="#8b5cf6" />
+                <Headphones size={28} color="#2563eb" />
               </div>
               <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                 Toca el boton para cargar los stems desde la nube.
               </p>
               <button onClick={handleStartLoad} style={{
-                background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                background: 'linear-gradient(135deg, #2563eb, #6366f1)',
                 border: 'none', color: 'white', padding: '14px 32px',
                 borderRadius: '14px', fontSize: '0.95rem', fontWeight: '800',
                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '10px',
-                boxShadow: '0 8px 24px rgba(139,92,246,0.4)',
+                boxShadow: '0 8px 24px rgba(37, 99, 235,0.4)',
               }}>
                 <Play size={18} /> Cargar Secuencia
               </button>
@@ -550,12 +550,12 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
           {/* LOADING con barra de progreso */}
           {status === 'loading' && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-              <Loader2 size={36} style={{ animation: 'wspin 1s linear infinite', marginBottom: '1rem', color: '#8b5cf6' }} />
+              <Loader2 size={36} style={{ animation: 'wspin 1s linear infinite', marginBottom: '1rem', color: '#2563eb' }} />
               <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem' }}>{loadingMsg}</p>
               <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', borderRadius: '10px',
-                  background: 'linear-gradient(90deg, #8b5cf6, #6366f1)',
+                  background: 'linear-gradient(90deg, #2563eb, #6366f1)',
                   width: `${loadProgress}%`, transition: 'width 0.3s ease',
                 }} />
               </div>
@@ -572,7 +572,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
               <AlertCircle size={44} />
               <p style={{ fontSize: '0.95rem', fontWeight: '700' }}>{errorMsg}</p>
               <button onClick={handleStartLoad} style={{
-                background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+                background: 'rgba(37, 99, 235,0.15)', border: '1px solid rgba(37, 99, 235,0.3)',
                 color: '#a78bfa', padding: '10px 24px', borderRadius: '12px',
                 cursor: 'pointer', fontWeight: '700',
               }}>Reintentar</button>
@@ -606,7 +606,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', minWidth: '32px' }}>{fmtTime(currentTime)}</span>
               <input type="range" min="0" max={duration || 1} step="0.1" value={currentTime} onChange={handleSeek}
-                style={{ flex: 1, accentColor: '#8b5cf6', cursor: 'pointer' }} />
+                style={{ flex: 1, accentColor: '#2563eb', cursor: 'pointer' }} />
               <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', minWidth: '32px', textAlign: 'right' }}>{fmtTime(duration)}</span>
             </div>
 
@@ -621,11 +621,11 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
                 <RotateCcw size={15} />
               </button>
               <button onClick={handlePlayPause} style={{
-                background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                background: 'linear-gradient(135deg, #2563eb, #6366f1)',
                 border: 'none', color: 'white',
                 width: '54px', height: '54px', borderRadius: '50%', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 20px rgba(139,92,246,0.5)',
+                boxShadow: '0 0 20px rgba(37, 99, 235,0.5)',
               }}>
                 {status === 'playing' ? <Pause size={20} /> : <Play size={20} style={{ marginLeft: '2px' }} />}
               </button>

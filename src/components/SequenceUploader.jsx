@@ -11,7 +11,7 @@ const INSTRUMENT_MAP = [
   { keywords: ['cue', 'cues'],                          type: 'cue',      label: '🔔 Cues',       color: '#f59e0b' },
   { keywords: ['ac gtr', 'acoustic', 'acustic', 'acgtr'], type: 'ac_gtr', label: '🎸 AC GTR',     color: '#22c55e' },
   { keywords: ['e gtr', 'electric', 'dist', 'egtr', 'lead gtr', 'rhythm gtr'], type: 'e_gtr', label: '🎸 E GTR', color: '#3b82f6' },
-  { keywords: ['bass', 'bajo'],                          type: 'bass',     label: '🎸 Bajo',       color: '#8b5cf6' },
+  { keywords: ['bass', 'bajo'],                          type: 'bass',     label: '🎸 Bajo',       color: '#2563eb' },
   { keywords: ['keys', 'piano', 'pno', 'kb', 'keyboard'], type: 'keys', label: '🎹 Teclado',     color: '#06b6d4' },
   { keywords: ['drums', 'bateria', 'drum'],              type: 'drums',    label: '🥁 Batería',    color: '#f97316' },
   { keywords: ['vox', 'vocal', 'voice', 'voz', 'choir'], type: 'vocal', label: '🎙️ Vocal',       color: '#ec4899' },
@@ -429,7 +429,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
                 <p style={{ marginTop: '1.5rem', fontWeight: '800' }}>{globalStatus}</p>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginTop: '2rem', overflow: 'hidden' }}>
-                 <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '10px' }} className="su-upload-progress-bar" />
+                 <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #2563eb, #d946ef)', borderRadius: '10px' }} className="su-upload-progress-bar" />
               </div>
             </div>
           )}

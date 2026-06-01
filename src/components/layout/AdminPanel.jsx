@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Building2, Database, HardDrive, Search, Users, Mail, ShieldCheck, Calendar } from 'lucide-react';
 
 const getToken = () => {
@@ -144,7 +144,7 @@ const AdminPanel = ({ onInspect }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', gap: '10px', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-              <input type="text" placeholder="Buscar banda o codigo..." value={orgsSearch} onChange={e => setOrgsSearch(e.target.value)}
+              <input type="text" placeholder="Buscar organización o código..." value={orgsSearch} onChange={e => setOrgsSearch(e.target.value)}
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 12px 9px 36px', borderRadius: '10px', color: '#fff', width: '260px', fontSize: '0.8rem' }} />
             </div>
             <button onClick={handleSync} style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.3)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>
