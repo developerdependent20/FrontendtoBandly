@@ -69,7 +69,7 @@ const getStandardName = (rawName) => {
   return rawName.replace(/^[0-9_.-]+/, '').substring(0, 12).toUpperCase(); 
 };
 
-const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading, downloadProgress, handleSyncOffline }) => (
+const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading, downloadProgress, handleSyncOffline, onShowEventPicker, loadedEventId }) => (
   <aside style={{ 
     position: 'absolute', right: 0, top: 0, bottom: 0,
     width: '300px', background: 'rgba(15, 23, 42, 0.4)', 
@@ -111,6 +111,21 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, lo
           PREPARAR SHOW OFFLINE
         </button>
       )}
+
+      <button 
+        onClick={onShowEventPicker}
+        style={{ 
+          width: '100%', padding: '8px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', 
+          color: '#60a5fa', fontSize: '0.7rem', fontWeight: '800', borderRadius: '8px', cursor: 'pointer',
+          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.2s', marginTop: '8px'
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+        title="Importar setlist de un evento programado"
+      >
+        <Icons.Calendar size={14} />
+        IMPORTAR DE EVENTO
+      </button>
     </div>
     
     <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column' }}>
@@ -408,7 +423,7 @@ const MemoizedTransportUI = React.memo(({
   );
 });
 
-export default function ProMixer({ session }) {
+export default function ProMixer({ session, events }) {
   // isConfigured arranca en false — la auto-reconexión lo pone en true si el motor responde OK
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -427,6 +442,9 @@ export default function ProMixer({ session }) {
   const [showPads, setShowPads] = useState(true); 
   const [markers, setMarkers] = useState([]);
   const [activeSequenceId, setActiveSequenceId] = useState(null);
+  const [showEventPicker, setShowEventPicker] = useState(false);
+  const [loadedEventId, setLoadedEventId] = useState(() => localStorage.getItem('promixer_loaded_event') || null);
+  const [eventSetlistHash, setEventSetlistHash] = useState(() => localStorage.getItem('promixer_event_hash') || null);
   
   const [totalSamples, setTotalSamples] = useState(0);
   const [playbackSample, setPlaybackSample] = useState(0);
@@ -480,6 +498,78 @@ export default function ProMixer({ session }) {
   }, []);
 
   useEffect(() => {
+    if (!loadedEventId || songs.length === 0) return;
+    
+    const checkEventUpdate = async () => {
+      try {
+        const { data: eventSongs } = await supabase
+          .from('event_songs')
+          .select('song_id, selected_key, order_index')
+          .eq('event_id', loadedEventId)
+          .order('order_index');
+          
+        if (eventSongs) {
+          const newHash = JSON.stringify(eventSongs);
+          if (eventSetlistHash && eventSetlistHash !== newHash) {
+            if (window.confirm('El setlist del evento cargado ha sido modificado en la nube. ¿Deseas actualizar el setlist y descargar los audios nuevos?')) {
+              await loadEventSetlist(loadedEventId, eventSongs, newHash);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error verificando actualización de evento:', e);
+      }
+    };
+    checkEventUpdate();
+  }, [loadedEventId, songs]);
+
+  const loadEventSetlist = async (eventId, eventSongsData = null, newHash = null) => {
+    if (songs.length === 0) {
+      alert("Aún sincronizando el repertorio global con la nube. Por favor, intenta de nuevo en un par de segundos.");
+      return;
+    }
+    setLoading(true);
+    setShowEventPicker(false);
+    try {
+      let eSongs = eventSongsData;
+      if (!eSongs) {
+        const { data } = await supabase
+          .from('event_songs')
+          .select('song_id, selected_key, order_index')
+          .eq('event_id', eventId)
+          .order('order_index');
+        eSongs = data;
+      }
+      
+      if (eSongs) {
+        const hash = newHash || JSON.stringify(eSongs);
+        const mappedSetlist = eSongs.map(es => {
+          const song = songs.find(s => s.id === es.song_id);
+          return song ? { ...song, requested_key: es.selected_key } : null;
+        }).filter(Boolean);
+        
+        setSetlist(mappedSetlist);
+        setLoadedEventId(eventId);
+        setEventSetlistHash(hash);
+        localStorage.setItem('promixer_loaded_event', eventId);
+        localStorage.setItem('promixer_event_hash', hash);
+        
+        if (mappedSetlist.length > 0) {
+          setTimeout(() => {
+            if (window.confirm(`Setlist cargado correctamente con ${mappedSetlist.length} canciones. ¿Deseas descargar los audios para uso Offline ahora mismo?`)) {
+              handleSyncOfflineForSetlist(mappedSetlist);
+            }
+          }, 500);
+        }
+      }
+    } catch (e) {
+      alert('Error cargando el evento: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (isTauri()) {
       const lastDevice = localStorage.getItem('bandly_last_audio_device');
       const savedBuffer = localStorage.getItem('bandly_buffer_size');
@@ -505,12 +595,16 @@ export default function ProMixer({ session }) {
 
   // Sincronización Offline de Audios (Reemplaza la pre-descarga silenciosa)
   const handleSyncOffline = async () => {
-    if (!songs.length || !isTauri()) return;
+    handleSyncOfflineForSetlist(setlist);
+  };
+
+  const handleSyncOfflineForSetlist = async (targetSetlist) => {
+    if (!targetSetlist || targetSetlist.length === 0 || !isTauri()) return;
     const token = session?.access_token || '';
     
     // Contar cuántas canciones necesitan descarga
     const sequencesToDownload = [];
-    for (const song of songs) {
+    for (const song of targetSetlist) {
       const { data: seq } = await supabase.from('sequences').select('id, r2_zip_key').eq('song_id', song.id).maybeSingle();
       if (seq?.r2_zip_key) sequencesToDownload.push({ song, seq });
     }
@@ -540,10 +634,7 @@ export default function ProMixer({ session }) {
     }
   };
 
-  useEffect(() => {
-    // Sincronizar automáticamente 2 segundos después de abrir el setlist
-    setTimeout(handleSyncOffline, 2000);
-  }, [songs]);
+  // Removido auto-sync fantasma por estabilidad
 
   const reconnectAudio = async () => {
     const lastDevice = localStorage.getItem('bandly_last_audio_device');
@@ -787,7 +878,6 @@ export default function ProMixer({ session }) {
       });
       setTracks(sortTracks(resTracks));
       setActiveSong(song);
-      setActiveSong(song);
       if (isTauri()) {
         try {
           setIsLoadingStems(true); // Fase 2: Mostrar estado de carga
@@ -961,9 +1051,79 @@ export default function ProMixer({ session }) {
           </div>
              {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
           </div>
-        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
+        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} onShowEventPicker={() => setShowEventPicker(true)} loadedEventId={loadedEventId} />
       </main>
-      {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); handleSyncSong(s); setShowCloudBrowser(false); }} />}
+
+      {showCloudBrowser && (
+        <CloudRepertoire 
+          songs={songs} 
+          onClose={() => setShowCloudBrowser(false)}
+          onAddSong={(song) => setSetlist([...setlist, song])}
+        />
+      )}
+
+      {showEventPicker && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '16px', padding: '2rem', width: '100%', maxWidth: '600px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '80vh'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Icons.Calendar size={24} color="#60a5fa" /> Importar Setlist de Evento
+                </h2>
+                <p style={{ margin: '5px 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                  Selecciona un próximo evento. Esto reemplazará tu setlist actual y preparará las pistas.
+                </p>
+              </div>
+              <button onClick={() => setShowEventPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                <Icons.X size={24} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: 1, paddingRight: '10px' }}>
+              {!events || events.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+                  No hay próximos eventos programados.
+                </div>
+              ) : (
+                events.map(ev => {
+                  const evDate = new Date(ev.date + 'T12:00:00');
+                  const isPast = evDate < new Date(new Date().setHours(0,0,0,0));
+                  if (isPast) return null; // No mostrar eventos pasados
+                  return (
+                    <div 
+                      key={ev.id}
+                      onClick={() => loadEventSetlist(ev.id)}
+                      style={{
+                        padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                    >
+                      <div>
+                        <div style={{ fontWeight: '800', fontSize: '1.1rem' }}>{ev.name}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
+                          {evDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </div>
+                      </div>
+                      <Icons.ChevronRight size={20} color="rgba(255,255,255,0.4)" />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
       
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import '../DAW/DAW.css';
@@ -12,7 +12,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
   // Ahora todos pueden ver el Planner, pero se validará lectura/escritura adentro
   const canAccessPlanner = true;
-  const canAccessTeam = profile?.role === 'director' || (userFunctions && userFunctions.includes('admin'));
+  const canAccessTeam = profile?.role === 'director' || (userFunctions && userFunctions.some(f => f.startsWith('admin_') || f === 'admin'));
 
   return (
     <div className="dashboard-layout">
@@ -82,9 +82,18 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           </div>
         )}
 
+        <div 
+          className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('profile')}
+          title="Mi Perfil / Disponibilidad"
+          style={{ marginTop: 'auto', marginBottom: '10px' }}
+        >
+          <UserCircle size={22} />
+        </div>
+
         <div
           className="nav-item"
-          style={{ marginTop: 'auto', marginBottom: '0' }}
+          style={{ marginBottom: '0' }}
           onClick={() => setShowLogoutConfirm(true)}
           title="Cerrar Sesion"
         >
@@ -204,14 +213,14 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           <div 
             onClick={() => {
               if (profile?.role === 'director') {
-                const option = window.prompt("Escribe '1' para unirte a otra banda con código, o '2' para crear una nueva banda (Solo planes PRO):");
+                const option = window.prompt("Escribe '1' para unirte a otro equipo con código, o '2' para crear un nuevo equipo (Solo planes PRO):");
                 if (option === '1') {
                   if (handleJoinTeam) handleJoinTeam();
                 } else if (option === '2') {
                   if (profile?.organizations?.plan === 'pro' || profile?.organizations?.plan === 'elite') {
-                    window.alert("Creación multi-banda en proceso. Pronto habilitaremos el panel para alternar entre tus bandas.");
+                    window.alert("Creación multi-equipo en proceso. Pronto habilitaremos el panel para alternar entre tus equipos.");
                   } else {
-                    window.alert("Necesitas un plan PRO o superior para administrar múltiples bandas.");
+                    window.alert("Necesitas un plan PRO o superior para administrar múltiples equipos.");
                     setShowSubscription(true);
                   }
                 }
@@ -226,7 +235,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               transition: 'all 0.2s'
             }}
             className="hover-scale"
-            title={profile?.role === 'director' ? "Opciones de Banda" : "Unirse a una banda"}
+            title={profile?.role === 'director' ? "Opciones de Equipo" : "Unirse a un equipo"}
           >
             <Plus size={14} color="#fff" />
             <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#fff', letterSpacing: '1px' }}>

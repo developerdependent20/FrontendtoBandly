@@ -30,7 +30,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
       return;
     }
     if (member.role === 'director' && members.filter(m => m.role === 'director').length === 1) {
-      alert("No puedes eliminar al único director de la banda.");
+      alert("No puedes eliminar al único director de la organización.");
       return;
     }
 
@@ -54,6 +54,9 @@ export default function TeamList({ members, isDirector, refreshData }) {
   };
 
   const functionsList = [
+    { id: 'admin_musica', label: 'Admin Banda', icon: '👑' },
+    { id: 'admin_logistica', label: 'Admin Logística', icon: '📅' },
+    { id: 'admin_produccion', label: 'Admin Producción', icon: '🎬' },
     { id: 'musico', label: 'Músico', icon: '🎸' },
     { id: 'audio', label: 'Audio', icon: '🎚️' },
     { id: 'media', label: 'Media', icon: '📽️' },
@@ -115,7 +118,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
         </div>
         <div>
           <h4>Gestión de Equipo Multi-Rol</h4>
-          <p>Organiza a tu equipo asignando múltiples funciones. Solo tú como Director puedes hacer estos cambios.</p>
+          <p>Organiza a tu equipo asignando múltiples funciones. Solo tú como Director Global puedes hacer estos cambios.</p>
         </div>
       </div>
 
@@ -175,7 +178,7 @@ export default function TeamList({ members, isDirector, refreshData }) {
                     <div className="member-info">
                       <div className="member-name-row">
                         <span className="member-name">{m.full_name}</span>
-                        {isUserDirector && <span className="director-badge">DIRECTOR</span>}
+                        {isUserDirector && <span className="director-badge" style={{ fontSize: '0.6rem' }}>DIR. ORGANIZACIÓN</span>}
                       </div>
                       <div className="member-email">{m.email}</div>
                     </div>
@@ -186,10 +189,10 @@ export default function TeamList({ members, isDirector, refreshData }) {
                           type="button"
                           onClick={() => handleToggleDirector(m.id, m.role)}
                           className={`director-toggle-btn ${isUserDirector ? 'active' : ''}`}
-                          title={isUserDirector ? 'Quitar rol de director' : 'Hacer director'}
+                          title={isUserDirector ? 'Quitar rol de director global' : 'Hacer director global'}
                           style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '0.7rem' }}
                         >
-                          {isUserDirector ? 'ADMIN' : 'PROMOVER'}
+                          {isUserDirector ? 'GLOBAL' : 'HACER GLOBAL'}
                         </button>
                       )}
 

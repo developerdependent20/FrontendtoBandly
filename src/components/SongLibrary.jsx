@@ -29,6 +29,13 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   const [youtubeLink, setYoutubeLink] = useState('');
   const [editingSongId, setEditingSongId] = useState(null);
 
+  const userFunctions = (() => {
+    try {
+      return profile?.functions ? JSON.parse(profile.functions) : [];
+    } catch { return []; }
+  })();
+  const canEditSongs = profile?.role === 'director' || userFunctions.includes('admin_musica');
+
   const openEditModal = (song) => {
     setEditingSongId(song.id);
     setTitle(song.title || '');
@@ -85,7 +92,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
           setSeqMixerData(mainSequence);
         }
       } else {
-        if (!readOnly) {
+        if (canEditSongs && !readOnly) {
           setSeqUploadSong(song);
         } else {
           alert('Esta canción no tiene secuencia subida aún.');
@@ -190,7 +197,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
       <section className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio Grupal</h3>
-        {!readOnly && (
+        {canEditSongs && !readOnly && (
           <button onClick={() => { setEditingSongId(null); setShowModal(true); }} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
             <Plus size={16} /> Añadir Canción
           </button>
@@ -203,7 +210,7 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
               <div className="song-identity">
                 <div className="song-header">
                   <strong className="song-title">{s.title}</strong>
-                  {!readOnly && (
+                  {canEditSongs && !readOnly && (
                     <div className="song-manage-icons">
                       <button 
                         onClick={() => openEditModal(s)} 
@@ -212,14 +219,12 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
                       >
                         <Settings size={14} /> 
                       </button>
-                      {profile?.role === 'director' && (
-                        <button 
-                          onClick={() => handleDelete(s.id)} 
-                          className="icon-btn-subtle delete"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => handleDelete(s.id)} 
+                        className="icon-btn-subtle delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   )}
                 </div>

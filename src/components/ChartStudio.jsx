@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import ChordSheetJS from 'chordsheetjs';
 import { 
   X, ChevronUp, ChevronDown, Pencil, Eraser,
@@ -269,7 +270,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   };
 
   // ── Render ──
-  return (
+  const modalContent = (
     <div className="cs-overlay cs-fullscreen">
       <div className="cs-container cs-container-full">
         
@@ -462,4 +463,6 @@ También puedes escribir directamente: [Acorde]
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

@@ -6,6 +6,7 @@ import SongLibrary from '../SongLibrary';
 import TeamList from '../TeamList';
 import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
+import MyProfile from '../MyProfile';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
@@ -95,7 +96,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
           </div>
           <div>
             <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: '900', letterSpacing: '-2px' }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
-            <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '1.2rem' }}>Bienvenido de nuevo a tu centro de control musical.</p>
+            <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '1.2rem' }}>Bienvenido de nuevo a tu centro de control de eventos.</p>
           </div>
         </div>
 
@@ -137,7 +138,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.35)'}
           >
             <span style={{ fontSize: '1rem' }}>🚪</span>
-            <span style={{ fontSize: '0.65rem', letterSpacing: '1px' }}>SALIR DE ESTA BANDA</span>
+            <span style={{ fontSize: '0.65rem', letterSpacing: '1px' }}>SALIR DE ESTE EQUIPO</span>
           </button>
         </div>
       </div>
@@ -157,7 +158,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>👋</div>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.8rem', fontWeight: '900' }}>¿Abandonar Equipo?</h3>
             <p style={{ opacity: 0.7, marginBottom: '2.5rem', lineHeight: '1.6' }}>
-              Estás a punto de salir de <strong>{profile?.organizations?.name || 'la banda'}</strong>. 
+              Estás a punto de salir de <strong>{profile?.organizations?.name || 'el equipo'}</strong>. 
               No podrás volver a ver la información de este equipo hasta que te vuelvan a invitar.
             </p>
             <div style={{ display: 'flex', gap: '15px' }}>
@@ -186,7 +187,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
         {/* Widget 1: Team */}
         <div onClick={() => setActiveTab('team')} className="glass-panel hover-scale" style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }}>
           <span style={{ fontSize: '0.7rem', fontWeight: '900', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Current Team</span>
-          <h3 style={{ fontSize: '1.5rem', margin: '10px 0 5px' }}>{profile?.organizations?.name || 'Tu Banda'}</h3>
+          <h3 style={{ fontSize: '1.5rem', margin: '10px 0 5px' }}>{profile?.organizations?.name || 'Tu Equipo'}</h3>
           <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '20px' }}>{members.length} Members</p>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {members.slice(0, 3).map((m, i) => (
@@ -275,11 +276,15 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
       {activeTab === 'daw' && (
         isTauri()
           // En la app de escritorio: DAW completo con ProMixer
-          ? <ProMixer songs={songs} session={session} profile={profile} />
+          ? <ProMixer songs={songs} events={events} session={session} profile={profile} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
-
+      {activeTab === 'profile' && (
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <MyProfile profile={profile} session={session} />
+        </div>
+      )}
     </div>
   );
 }
@@ -310,11 +315,15 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       {activeTab === 'daw' && canAccessLibrary && (
         isTauri()
           // En la app de escritorio: DAW completo con ProMixer
-          ? <ProMixer songs={songs} session={session} profile={profile} />
+          ? <ProMixer songs={songs} events={events} session={session} profile={profile} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
-
+      {activeTab === 'profile' && (
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <MyProfile profile={profile} session={session} />
+        </div>
+      )}
     </div>
   );
 }

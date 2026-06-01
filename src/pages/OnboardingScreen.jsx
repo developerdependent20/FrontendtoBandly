@@ -32,7 +32,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   };
 
   const createOrganization = async () => {
-    if(!orgName || !inviteCodeInput) { alert("Por favor ingresa nombre y un código para la banda."); return; }
+    if(!orgName || !inviteCodeInput) { alert("Por favor ingresa nombre y un código para el equipo."); return; }
     if(!termsAccepted) { alert("Debes aceptar los términos de servicio."); return; }
     setLoading(true);
     try {
@@ -43,7 +43,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         .select().single();
       
       if (orgError) {
-        if (orgError.code === '23505') throw new Error('Ese código de banda ya está en uso en otra parte del mundo. ¡Elige otro!');
+        if (orgError.code === '23505') throw new Error('Ese código de equipo ya está en uso en otra parte del mundo. ¡Elige otro!');
         throw orgError;
       }
 
@@ -114,18 +114,18 @@ export default function OnboardingScreen({ session, fetchProfile }) {
           <>
             <div className="glass-panel role-card" onClick={() => setRoleMode('director')}>
               <div className="role-icon"><ShieldCheck size={32} /></div>
-              <h3>Director</h3>
-              <p style={{ color: 'var(--text-muted)' }}>Crea y administra la banda.</p>
+              <h3>Director de la Organización</h3>
+              <p style={{ color: 'var(--text-muted)' }}>Crea y administra el equipo.</p>
             </div>
             <div className="glass-panel role-card" onClick={() => setRoleMode('member')}>
               <div className="role-icon"><Users size={32} /></div>
               <h3>Staff / Músico</h3>
-              <p style={{ color: 'var(--text-muted)' }}>Conéctate a una banda existente con código.</p>
+              <p style={{ color: 'var(--text-muted)' }}>Conéctate a un equipo existente con código.</p>
             </div>
           </>
         ) : roleMode === 'director' ? (
           <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '500px', margin: '0 auto' }}>
-            <h3 className="section-title">Datos de tu Banda</h3>
+            <h3 className="section-title">Datos de tu Equipo</h3>
             <div className="input-group">
               <input type="text" placeholder="Ej: The Groove Collective" className="input-field" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
               <input type="text" placeholder="Crea tu Código Secreto (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} />
@@ -137,7 +137,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
                  </span>
               </div>
 
-              <button onClick={createOrganization} className="btn-primary">Registrar Banda</button>
+              <button onClick={createOrganization} className="btn-primary">Registrar Equipo</button>
               <button onClick={() => setRoleMode(null)} className="btn-secondary">Volver</button>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
           <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '600px', margin: '0 auto' }}>
             <h3 className="section-title">Ingreso al Equipo</h3>
             <div className="input-group">
-              <input type="text" placeholder="Código de la Banda (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} disabled={!!magicCode}/>
+              <input type="text" placeholder="Código del Equipo (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} disabled={!!magicCode}/>
               
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem', marginTop: '1rem' }}>
                 Selecciona tus funciones (puedes elegir varias):

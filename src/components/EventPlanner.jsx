@@ -17,20 +17,16 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 // [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
-// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas alineadas con la base de datos
+// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
 const INSTRUMENT_MATCH_MAP = {
   'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
   'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
   'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
-  'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz', 'coro': 'instr:voz',
-  'sonido': 'audio', 'audio': 'audio', 'foh': 'audio',
-  'luces': 'media', 'pantalla': 'media', 'camara': 'media', 'video': 'media', 'streaming': 'media', 'transmision': 'media', 'visual': 'media', 'media': 'media',
-  'coordinador': 'coordinador',
-  'bienvenida': 'bienvenida', 'ujier': 'bienvenida',
-  'kids': 'kids', 'nino': 'kids', 'maestro': 'kids',
-  'oracion': 'oracion', 'intercesion': 'oracion',
-  'staff': 'staff', 'roadie': 'staff', 'logistica': 'staff'
+  'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz',
+  'sonido': 'instr:sonido', 'audio': 'instr:sonido',
+  'streaming': 'instr:sonido_media', 'video': 'instr:sonido_media', 'pantalla': 'instr:sonido_media', 'media': 'instr:sonido_media',
+  'roadie': 'instr:roadie', 'logistica': 'instr:roadie', 'staff': 'instr:roadie'
 };
 
 // [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
@@ -69,24 +65,12 @@ const getBilingualName = (inst) => {
 const getSuggestedMembers = (roleName, members) => {
   if (!roleName || !members) return { suggested: [], others: (members || []) };
   const normalizedRole = roleName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  // Buscar todas las tags correspondientes
-  const matchingKeys = Object.keys(INSTRUMENT_MATCH_MAP).filter(k => normalizedRole.includes(k));
-  const tagsToFind = matchingKeys.map(k => INSTRUMENT_MATCH_MAP[k]);
-  
-  // Caso especial: para sonido y audio incluir también 'instr:sonido'
-  if (normalizedRole.includes('sonido') || normalizedRole.includes('audio') || normalizedRole.includes('foh')) {
-    tagsToFind.push('instr:sonido');
-  }
-
-  if (tagsToFind.length === 0) return { suggested: [], others: (members || []) };
-
-  const suggested = (members || []).filter(m => 
-    (m.functions || []).some(f => tagsToFind.includes(f))
-  );
-  const others = (members || []).filter(m => 
-    !(m.functions || []).some(f => tagsToFind.includes(f))
-  );
+  const tagToFind = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k)) 
+    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k))] 
+    : null;
+  if (!tagToFind) return { suggested: [], others: (members || []) };
+  const suggested = (members || []).filter(m => (m.functions || []).includes(tagToFind));
+  const others = (members || []).filter(m => !(m.functions || []).includes(tagToFind));
   return { suggested, others };
 };
 
@@ -112,14 +96,24 @@ const ROLE_BANK = [
 ];
 
 // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
-const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => {
+const MemberSelector = ({ value, onChange, members, roleName, placeholder, eventDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const selectedMember = members?.find(m => m.id === value);
   const { suggested, others } = getSuggestedMembers(roleName, members);
 
-  const handleSelect = (id) => {
-    onChange(id);
+  const parsedEventDate = eventDate ? eventDate.split('T')[0] : null;
+  const isBlocked = (member) => {
+    if (!parsedEventDate || !member.profiles?.blocked_dates) return false;
+    return member.profiles.blocked_dates.includes(parsedEventDate);
+  };
+
+  const handleSelect = (member) => {
+    if (isBlocked(member)) {
+      alert(`${member.full_name} no está disponible en esta fecha.`);
+      return;
+    }
+    onChange(member.id);
     setIsOpen(false);
     setShowAll(false);
   };
@@ -187,32 +181,39 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => 
             padding: '8px', 
             animation: 'dropdownFadeIn 0.2s ease-out' 
           }}>
-            {listToRender.map(m => (
+            {listToRender.map(m => {
+              const blocked = isBlocked(m);
+              return (
               <div 
                 key={m.id} 
-                onClick={() => handleSelect(m.id)} 
+                onClick={() => handleSelect(m)} 
                 style={{ 
                   padding: '10px 14px', 
                   borderRadius: '12px', 
-                  cursor: 'pointer', 
+                  cursor: blocked ? 'not-allowed' : 'pointer', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: '12px', 
-                  background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
-                  marginBottom: '4px',
-                  transition: 'all 0.2s ease'
-                }} 
-                className="dropdown-item-custom"
+                  justifyContent: 'space-between', 
+                  transition: 'all 0.15s',
+                  opacity: blocked ? 0.4 : 1,
+                  background: m.id === value ? 'var(--primary)' : 'transparent',
+                  color: m.id === value ? 'white' : 'rgba(255,255,255,0.8)',
+                  fontWeight: m.id === value ? '700' : '500'
+                }}
+                onMouseEnter={e => { if (!blocked && m.id !== value) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'white'; } }}
+                onMouseLeave={e => { if (!blocked && m.id !== value) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; } }}
               >
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-                  {m.full_name?.[0]}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: m.id === value ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800', flexShrink: 0 }}>
+                    {m.full_name[0]}
+                  </div>
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>{m.full_name}</span>
                 </div>
-                <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {m.full_name}
-                </div>
-                {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }}>✨</span>}
+                {m.id === value && <Check size={16} />}
+                {blocked && <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 'bold' }}>No Disponible</span>}
               </div>
-            ))}
+            );
+            })}
             {suggested.length > 0 && !showAll && (
               <button 
                 onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
@@ -296,39 +297,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const getRoleGroup = (inst) => {
-    const i = (inst || '').toLowerCase();
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff') || i.includes('logistica')) return 'LOGÍSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media') || i.includes('streaming')) return 'PRODUCCIÓN / MEDIA';
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('teclado') || i.includes('piano') || i.includes('keys') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('perc') || i.includes('drums') || i.includes('bass') || i.includes('voice') || i.includes('cantante') || i.includes('lead')) return 'MÚSICOS';
+    if (!inst) return 'OTROS';
+    const i = inst.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff') || i.includes('logistica')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media') || i.includes('streaming') || i.includes('produc')) return 'PRODUCCIÓN / MEDIA';
+    if (i.includes('bateri') || i.includes('drum') || i.includes('bajo') || i.includes('bajista') || i.includes('bass') || i.includes('guitar') || i.includes('gtr') || i.includes('teclad') || i.includes('piano') || i.includes('keys') || i.includes('voz') || i.includes('vocal') || i.includes('coro') || i.includes('percusi') || i.includes('perc') || i.includes('voice') || i.includes('cantante') || i.includes('lead') || i.includes('trompeta') || i.includes('sax') || i.includes('violin') || i.includes('cello')) return 'MÚSICOS';
     return 'OTROS';
-  };
-
-  const getInstrumentWeight = (inst) => {
-    const i = (inst || '').toLowerCase();
-    // Músicos (orden estándar de banda)
-    if (i.includes('bateria') || i.includes('drums')) return 1;
-    if (i.includes('percusion') || i.includes('perc')) return 2;
-    if (i.includes('bajo') || i.includes('bass')) return 3;
-    if (i.includes('teclado') || i.includes('piano') || i.includes('keys')) return 4;
-    if (i.includes('guitarra') || i.includes('gtr') || i.includes('guitar')) return 5;
-    if (i.includes('voz') || i.includes('voice') || i.includes('cantante') || i.includes('lead')) return 6;
-    if (i.includes('coro')) return 7;
-    // Producción
-    if (i.includes('director') || i.includes('md')) return 10;
-    if (i.includes('sonido') || i.includes('audio') || i.includes('foh')) return 11;
-    if (i.includes('pantalla') || i.includes('visual') || i.includes('media')) return 12;
-    if (i.includes('luces')) return 13;
-    if (i.includes('camara') || i.includes('video')) return 14;
-    if (i.includes('transmis') || i.includes('streaming')) return 15;
-    if (i.includes('roadie')) return 16;
-    // Logística
-    if (i.includes('coordinador')) return 20;
-    if (i.includes('bienvenida') || i.includes('ujier')) return 21;
-    if (i.includes('seguridad')) return 22;
-    if (i.includes('maestro') || i.includes('niño') || i.includes('kids')) return 23;
-    if (i.includes('oraci') || i.includes('intercesi')) return 24;
-    if (i.includes('staff') || i.includes('logistica')) return 25;
-    return 99;
   };
 
   const generateTemplate = (fmt) => {
@@ -356,19 +330,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
     setFormat(detectedFormat);
-
-    // Cargar únicamente los registros activos guardados en la base de datos sin mezclar con plantillas
-    const loadedRoster = activeRosterFromDb.map(er => ({
-      id: er.id,
-      event_roster_id: er.id,
-      instrument: er.instrument,
-      profile_id: er.profile_id,
-      category: er.category || 'custom',
-      status: er.status || 'pending'
-    }));
-
-    setRoster(loadedRoster);
-    setInitialRoster(JSON.parse(JSON.stringify(loadedRoster)));
+    let merged = generateTemplate(detectedFormat);
+    activeRosterFromDb.forEach(er => {
+       const slot = merged.find(m => m.instrument === er.instrument);
+       if (slot) {
+         slot.event_roster_id = er.id;
+         slot.profile_id = er.profile_id;
+         slot.status = er.status || 'pending';
+       } else {
+         merged.push({ id: Math.random().toString(), event_roster_id: er.id, instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: er.status || 'pending' });
+       }
+    });
+    setRoster(merged);
+    setInitialRoster(JSON.parse(JSON.stringify(merged)));
     setDbHistory(ev.event_roster || []);
     setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
     setModalTab('info');
@@ -381,9 +355,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventDate(selectedDate || '');
     setDescription('');
     setFormat('full');
-    // Por default el equipo viene completamente limpio/vacío
-    setRoster([]);
-    setInitialRoster([]);
+    const template = generateTemplate('full');
+    setRoster(template);
+    setInitialRoster(JSON.parse(JSON.stringify(template)));
     setDbHistory([]);
     setSetlist([]);
     setModalTab('info');
@@ -939,20 +913,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
                     return (
                       <div>
-                        {Object.entries(groupedRoster).map(([groupName, items]) => {
-                          if (items.length === 0) return null;
-                          const sortedItems = [...items].sort((a, b) => {
-                            const wA = getInstrumentWeight(a.instrument);
-                            const wB = getInstrumentWeight(b.instrument);
-                            if (wA !== wB) return wA - wB;
-                            return (a.instrument || '').localeCompare(b.instrument || '');
-                          });
-                          
-                          return (
-                            <div key={groupName} style={{ marginBottom: '1.5rem' }}>
-                              <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                                {sortedItems.map(r => (
+                        {Object.entries(groupedRoster).map(([groupName, items]) => items.length > 0 && (
+                          <div key={groupName} style={{ marginBottom: '1.5rem' }}>
+                            <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                              {items.map(r => (
                                 <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                                   <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
                                   <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
@@ -963,7 +928,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                       value={r.instrument}
                                       onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
                                     />
-                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
+                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} eventDate={eventDate} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
                                   </div>
                                   <button 
                                     onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
@@ -977,8 +942,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               ))}
                             </div>
                           </div>
-                        );
-                      })}
+                        ))}
                       </div>
                     );
                   })()}
@@ -989,7 +953,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'setlist' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {setlist.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, overflow: 'hidden' }}>
+                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0 }}>
                     <select 
                       className="input-field" 
                       value={item.song_id} 
@@ -1024,8 +988,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </select>
                     </div>
 
-                    <div style={{ flex: 1.5, minWidth: 0, overflow: 'hidden' }}>
-                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                    <div style={{ flex: 1.5, minWidth: 0 }}>
+                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" eventDate={eventDate} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>

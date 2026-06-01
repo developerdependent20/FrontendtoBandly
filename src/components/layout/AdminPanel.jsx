@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Building2, Database, HardDrive, Search, Users, Mail, ShieldCheck, Calendar } from 'lucide-react';
 
 const getToken = () => {
@@ -179,7 +179,7 @@ const AdminPanel = ({ onInspect }) => {
                    </div>
                    <button onClick={() => onInspect?.(org)}
                      style={{ width: '100%', padding: '7px', borderRadius: '8px', border: '1px solid rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.08)', color: '#a855f7', fontSize: '0.72rem', cursor: 'pointer', fontWeight: '800' }}>
-                     Inspeccionar Banda
+                     Inspeccionar Equipo
                    </button>
                  </div>
                );
@@ -194,7 +194,7 @@ const AdminPanel = ({ onInspect }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', gap: '10px', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-              <input type="text" placeholder="Buscar por nombre, email o banda..." value={usersSearch} onChange={e => setUsersSearch(e.target.value)}
+              <input type="text" placeholder="Buscar por nombre, email o equipo..." value={usersSearch} onChange={e => setUsersSearch(e.target.value)}
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 12px 9px 36px', borderRadius: '10px', color: '#fff', width: '300px', fontSize: '0.8rem' }} />
             </div>
             <button onClick={fetchUsers} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>
@@ -219,7 +219,7 @@ const AdminPanel = ({ onInspect }) => {
                 <span>Email</span>
                 <span>Rol</span>
                 <span>Plan</span>
-                <span>Banda</span>
+                <span>Equipo</span>
                 <span>Registro</span>
               </div>
               {filteredUsers.map((u, i) => (

@@ -36,6 +36,20 @@ export default function AuthScreen({ onBack, initialMode }) {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin // Vuelve a la app principal
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      setErrorMsg(error.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -109,7 +123,7 @@ export default function AuthScreen({ onBack, initialMode }) {
       
       <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem' }}>
         <h3 style={{ marginBottom: '2rem', textAlign: 'center' }}>
-          {isSignUp ? 'Crear Cuenta' : 'Acceso a tu Banda'}
+          {isSignUp ? 'Crear Cuenta' : 'Acceso a tu Equipo'}
         </h3>
         <form onSubmit={handleSubmit} className="input-group">
           {isSignUp && (
@@ -144,6 +158,24 @@ export default function AuthScreen({ onBack, initialMode }) {
             {loading ? <Loader2 className="spin" size={20}/> : (isSignUp ? 'Registrar' : 'Iniciar Sesión')}
           </button>
         </form>
+
+        <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>o continuar con</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+        </div>
+
+        <button 
+          onClick={handleGoogleLogin}
+          type="button"
+          className="btn-secondary" 
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'white', color: '#1a1a1a', border: 'none', padding: '0.8rem', borderRadius: '12px', fontWeight: '800', transition: 'all 0.2s', cursor: 'pointer' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+        >
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+          Google
+        </button>
         
         <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center' }}>
           {isSignUp ? '¿Ya tienes acceso?' : '¿No estás registrado?'} 

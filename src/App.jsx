@@ -202,7 +202,7 @@ export default function App() {
       if (org.plan === 'elite') userLimit = 999999; // Ilimitado
 
       if (memberCount >= userLimit) {
-        throw new Error(`Esta banda ha alcanzado su límite máximo de miembros (${userLimit}). El director debe mejorar el plan para añadir más personas.`);
+        throw new Error(`Esta banda ha alcanzado su límite máximo de miembros (${userLimit}). El director de la organización debe mejorar el plan para añadir más personas.`);
       }
       
       const { error: updateErr } = await supabase.from('profiles').update({ org_id: org.id }).eq('id', profile.id);
@@ -254,6 +254,15 @@ export default function App() {
 
   if (!profile) return <OnboardingScreen session={session} fetchProfile={fetchProfile} />;
 
+  const userFunctions = (() => {
+    try {
+      return profile?.functions ? JSON.parse(profile.functions) : [];
+    } catch { return []; }
+  })();
+  const isSectionalAdmin = userFunctions.some(f => f.startsWith('admin_') || f === 'admin');
+  const isGlobalDirector = profile?.role === 'director';
+  const hasAdminAccess = isGlobalDirector || isSectionalAdmin || inspectedOrg;
+
   return (
     <>
       {showLegalBlocking && (
@@ -289,7 +298,7 @@ export default function App() {
       >
         {activeTab === 'admin' ? (
           <AdminPanel onInspect={(org) => { setInspectedOrg(org); setActiveTab('planner'); }} />
-        ) : profile.role === 'director' || inspectedOrg ? (
+        ) : hasAdminAccess ? (
           <DirectorView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         ) : (
           <MemberView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
