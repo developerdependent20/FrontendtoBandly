@@ -14,7 +14,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
-export default function SongLibrary({ songs, orgId, readOnly, refreshData, session, profile, setActiveTab }) {
+export default function SongLibrary({ songs, events, orgId, readOnly, refreshData, session, profile, setActiveTab }) {
   const [showModal, setShowModal] = useState(false);
   const [chartSong, setChartSong] = useState(null);
   const [seqUploadSong, setSeqUploadSong] = useState(null);
@@ -28,6 +28,27 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
   const [bpm, setBpm] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [editingSongId, setEditingSongId] = useState(null);
+
+  const getLastPlayedText = (songId) => {
+    if (!events || events.length === 0) return 'Nunca';
+    const now = new Date();
+    const pastPlays = events.filter(ev => 
+      new Date(ev.date) < now && 
+      ev.event_songs?.some(es => String(es.song_id) === String(songId))
+    );
+    if (pastPlays.length === 0) return 'Nunca';
+    pastPlays.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const lastDate = new Date(pastPlays[0].date);
+    const diffTime = Math.abs(now - lastDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Hoy';
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    if (diffDays < 30) return `Hace ${Math.floor(diffDays/7)} sem`;
+    if (diffDays < 365) return `Hace ${Math.floor(diffDays/30)} meses`;
+    return `Hace >1 año`;
+  };
 
   const userFunctions = (() => {
     try {
@@ -234,6 +255,9 @@ export default function SongLibrary({ songs, orgId, readOnly, refreshData, sessi
                    <div className="meta-tag male">♂: <span>{s.key_male || '-'}</span></div>
                    <div className="meta-tag female">♀: <span>{s.key_female || '-'}</span></div>
                    <div className="meta-tag bpm">BPM: <span>{s.bpm || '-'}</span></div>
+                   <div className="meta-tag" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                     Tocado: <span style={{ fontWeight: '800' }}>{getLastPlayedText(s.id)}</span>
+                   </div>
                 </div>
               </div>
 

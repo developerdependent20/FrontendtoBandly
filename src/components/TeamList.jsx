@@ -54,16 +54,17 @@ export default function TeamList({ members, isDirector, refreshData }) {
   };
 
   const functionsList = [
-    { id: 'admin_musica', label: 'Admin Banda', icon: '👑' },
-    { id: 'admin_logistica', label: 'Admin Logística', icon: '📅' },
-    { id: 'admin_produccion', label: 'Admin Producción', icon: '🎬' },
+    { id: 'admin_eventos', label: 'Admin Eventos', icon: '📅' },
+    { id: 'admin_musica', label: 'Admin Banda', icon: '🎧' },
+    { id: 'admin_logistica', label: 'Admin Logística', icon: '📋' },
+    { id: 'admin_produccion', label: 'Admin Producción', icon: '💻' },
     { id: 'musico', label: 'Músico', icon: '🎸' },
     { id: 'audio', label: 'Audio', icon: '🎚️' },
-    { id: 'media', label: 'Media', icon: '📽️' },
-    { id: 'staff', label: 'Staff', icon: '📋' },
-    { id: 'bienvenida', label: 'Bienvenida', icon: '🤝' },
-    { id: 'maestro', label: 'Maestro', icon: '🎓' },
-    { id: 'voluntario', label: 'Voluntario', icon: '🌟' }
+    { id: 'media', label: 'Media', icon: '🖥️' },
+    { id: 'staff', label: 'Staff', icon: '👥' },
+    { id: 'bienvenida', label: 'Bienvenida', icon: '👋' },
+    { id: 'maestro', label: 'Maestro', icon: '📖' },
+    { id: 'voluntario', label: 'Voluntario', icon: '🤝' }
   ];
 
   const INSTRUMENTS_CATALOG = [
