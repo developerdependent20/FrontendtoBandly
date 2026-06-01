@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
-  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check
+  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check, Search
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
@@ -94,6 +94,137 @@ const ROLE_BANK = [
     roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración']
   }
 ];
+
+// Campo de fecha — calendario custom premium (no usa el picker nativo)
+const DatePickerField = ({ value, onChange, formatEventDate }) => {
+  const [open, setOpen] = React.useState(false);
+  const [viewDate, setViewDate] = React.useState(() => value ? new Date(value + 'T12:00:00') : new Date());
+  const wrapperRef = React.useRef(null);
+
+  // Cerrar al hacer click fuera
+  React.useEffect(() => {
+    const handler = (e) => { if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const today = new Date();
+  const selected = value ? new Date(value + 'T12:00:00') : null;
+
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const dayNames = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+
+  // Primer día del mes y total de días
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
+
+  const selectDay = (day) => {
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    onChange({ target: { value: `${year}-${mm}-${dd}` } });
+    setOpen(false);
+  };
+
+  const isToday = (day) => today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+  const isSelected = (day) => selected && selected.getDate() === day && selected.getMonth() === month && selected.getFullYear() === year;
+
+  // Build grid: empty slots + days
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'relative', width: '100%' }}>
+      {/* Trigger button */}
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          background: open ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${open ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`,
+          borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 16px', gap: '12px',
+          height: '50px', color: value ? 'white' : 'rgba(255,255,255,0.4)',
+          transition: 'all 0.2s', cursor: 'pointer',
+        }}
+      >
+        <CalendarIcon size={18} style={{ color: value ? 'var(--primary)' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+        <span style={{ fontSize: '0.9rem', fontWeight: '600', textTransform: 'capitalize', flex: 1 }}>
+          {value ? formatEventDate(value) : 'Seleccionar Fecha...'}
+        </span>
+        <ChevronDown size={14} style={{ opacity: 0.5, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </div>
+
+      {/* Custom Calendar Dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 2000,
+          background: 'linear-gradient(135deg, #0f172a, #1a2133)',
+          border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px',
+          padding: '20px', minWidth: '300px',
+          boxShadow: '0 30px 80px rgba(0,0,0,0.8)',
+          animation: 'dropdownFadeIn 0.2s ease-out',
+        }}>
+          {/* Month nav */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', padding: '6px 10px', fontSize: '1rem', lineHeight: 1 }}>‹</button>
+            <span style={{ fontWeight: '700', fontSize: '1rem', color: 'white', textTransform: 'capitalize' }}>{monthNames[month]} {year}</span>
+            <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', padding: '6px 10px', fontSize: '1rem', lineHeight: 1 }}>›</button>
+          </div>
+
+          {/* Day headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+            {dayNames.map(d => (
+              <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', padding: '4px 0' }}>{d}</div>
+            ))}
+          </div>
+
+          {/* Day grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+            {cells.map((day, idx) => (
+              <div key={idx}>
+                {day ? (
+                  <button
+                    onClick={() => selectDay(day)}
+                    style={{
+                      width: '100%', aspectRatio: '1', border: 'none', borderRadius: '10px',
+                      cursor: 'pointer', fontSize: '0.85rem', fontWeight: isSelected(day) ? '800' : '500',
+                      background: isSelected(day)
+                        ? 'linear-gradient(135deg, var(--primary), #6366f1)'
+                        : isToday(day)
+                          ? 'rgba(59,130,246,0.15)'
+                          : 'transparent',
+                      color: isSelected(day) ? 'white' : isToday(day) ? 'var(--primary)' : 'rgba(255,255,255,0.8)',
+                      outline: isToday(day) && !isSelected(day) ? '1px solid rgba(59,130,246,0.4)' : 'none',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { if (!isSelected(day)) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                    onMouseLeave={e => { if (!isSelected(day)) e.currentTarget.style.background = isToday(day) ? 'rgba(59,130,246,0.15)' : 'transparent'; }}
+                  >{day}</button>
+                ) : <div />}
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
+            <button onClick={() => { onChange({ target: { value: '' } }); setOpen(false); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}>Borrar</button>
+            <button onClick={() => {
+              const t = new Date();
+              const mm = String(t.getMonth()+1).padStart(2,'0');
+              const dd = String(t.getDate()).padStart(2,'0');
+              onChange({ target: { value: `${t.getFullYear()}-${mm}-${dd}` } });
+              setOpen(false);
+            }} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700' }}>Hoy</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
 const MemberSelector = ({ value, onChange, members, roleName, placeholder, eventDate }) => {
@@ -194,70 +325,108 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
                 style={{ width: '100%', padding: '8px 8px 8px 30px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '0.8rem' }}
               />
             </div>
-
-            {suggested.length > 0 && !showAll && !searchQuery && (
-              <div style={{ marginBottom: '0.8rem' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '4px' }}>Recomendados ({roleName})</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {suggested.map(m => {
-                    const blocked = isBlocked(m);
-                    return (
-                    <div 
-                      key={m.id} 
-                      onClick={(e) => handleSelect(m, e)} 
-                      style={{ 
-                        padding: '10px 14px', 
-                        borderRadius: '12px', 
-                        cursor: blocked ? 'not-allowed' : 'pointer', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '12px', 
-                        background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
-                        transition: 'all 0.2s',
-                        opacity: blocked ? 0.4 : 1
-                      }}
-                      onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
-                      onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                    >
-                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
-                      <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
+            {(!showAll && !searchQuery) ? (
+              <>
+                {suggested.length > 0 && (
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '4px' }}>Recomendados ({roleName})</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {suggested.map(m => {
+                        const blocked = isBlocked(m);
+                        return (
+                        <div 
+                          key={m.id} 
+                          onClick={(e) => handleSelect(m, e)} 
+                          style={{ 
+                            padding: '10px 14px', 
+                            borderRadius: '12px', 
+                            cursor: blocked ? 'not-allowed' : 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '12px', 
+                            background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)',
+                            border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
+                            transition: 'all 0.2s',
+                            opacity: blocked ? 0.4 : 1
+                          }}
+                          onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
+                          onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.transform = 'scale(1)'; } }}
+                        >
+                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
+                        </div>
+                      )})}
                     </div>
-                  )})}
-                </div>
-              </div>
-            )}
-            {filteredList.length === 0 ? (
-              <div style={{ padding: '10px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>No se encontraron resultados</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {filteredList.map(m => {
-                  const blocked = isBlocked(m);
-                  return (
-                  <div 
-                    key={m.id} 
-                    onClick={(e) => handleSelect(m, e)} 
-                    style={{ 
-                      padding: '10px 14px', 
-                      borderRadius: '12px', 
-                      cursor: blocked ? 'not-allowed' : 'pointer', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '12px', 
-                      background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent',
-                      border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
-                      transition: 'all 0.2s',
-                      opacity: blocked ? 0.4 : 1
-                    }}
-                    onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
-                    onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                  >
-                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
-                    <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
-                    {selectedMember?.id === m.id && <Check size={14} style={{ marginLeft: 'auto' }} />}
                   </div>
-                )})}
-              </div>
+                )}
+                {others.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '4px', marginTop: '12px' }}>Otros Miembros</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {others.map(m => {
+                        const blocked = isBlocked(m);
+                        return (
+                        <div 
+                          key={m.id} 
+                          onClick={(e) => handleSelect(m, e)} 
+                          style={{ 
+                            padding: '10px 14px', 
+                            borderRadius: '12px', 
+                            cursor: blocked ? 'not-allowed' : 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '12px', 
+                            background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent',
+                            border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
+                            transition: 'all 0.2s',
+                            opacity: blocked ? 0.4 : 1
+                          }}
+                          onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
+                          onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; } }}
+                        >
+                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
+                        </div>
+                      )})}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {filteredList.length === 0 ? (
+                  <div style={{ padding: '10px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>No se encontraron resultados</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {filteredList.map(m => {
+                      const blocked = isBlocked(m);
+                      return (
+                      <div 
+                        key={m.id} 
+                        onClick={(e) => handleSelect(m, e)} 
+                        style={{ 
+                          padding: '10px 14px', 
+                          borderRadius: '12px', 
+                          cursor: blocked ? 'not-allowed' : 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '12px', 
+                          background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent',
+                          border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
+                          transition: 'all 0.2s',
+                          opacity: blocked ? 0.4 : 1
+                        }}
+                        onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
+                        onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; } }}
+                      >
+                        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
+                        {selectedMember?.id === m.id && <Check size={14} style={{ marginLeft: 'auto' }} />}
+                      </div>
+                    )})}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </>
@@ -266,7 +435,135 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
   );
 };
 
+const SongPicker = ({ value, onChange, songs, events, editingEventId }) => {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+
+  const selectedSong = songs.find(s => String(s.id) === String(value));
+
+  // Build history map
+  const songHistory = React.useMemo(() => {
+    const map = {};
+    (events || []).forEach(ev => {
+      if (!ev.date) return;
+      (ev.event_songs || []).forEach(es => {
+        if (!map[es.song_id]) map[es.song_id] = [];
+        map[es.song_id].push({ date: ev.date, name: ev.name, eventId: ev.id });
+      });
+    });
+    Object.keys(map).forEach(k => map[k].sort((a, b) => new Date(b.date) - new Date(a.date)));
+    return map;
+  }, [events]);
+
+  const relDate = (dateStr) => {
+    const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
+    const diff = Math.round((new Date().setHours(0,0,0,0) - d) / 86400000);
+    if (diff === 0) return 'Hoy';
+    if (diff === 1) return 'Ayer';
+    if (diff < 7) return `${diff}d`;
+    if (diff < 30) return `${Math.round(diff/7)}sem`;
+    if (diff < 365) return `${Math.round(diff/30)}m`;
+    return `${Math.round(diff/365)}a`;
+  };
+
+  const filtered = [...songs]
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div style={{ flex: 1, position: 'relative' }}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'transparent', border: 'none', padding: '0', cursor: 'pointer', gap: '8px',
+        }}
+      >
+        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: selectedSong ? 'white' : 'rgba(255,255,255,0.3)', textAlign: 'left', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selectedSong ? selectedSong.title : '— Seleccionar Canción —'}
+        </span>
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', flexShrink: 0 }}>▼</span>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 200 }} />
+          <div style={{
+            position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 201,
+            background: '#101827', border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
+            maxHeight: '380px', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            minWidth: '320px',
+          }}>
+            {/* Search */}
+            <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <input
+                autoFocus
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Buscar canción..."
+                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '7px 12px', color: 'white', fontSize: '0.82rem', outline: 'none' }}
+              />
+            </div>
+
+            {/* List */}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {filtered.length === 0 && (
+                <div style={{ padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin resultados</div>
+              )}
+              {filtered.map(s => {
+                const hist = (songHistory[s.id] || []).filter(h => h.eventId !== editingEventId);
+                const last = hist[0];
+                const isSelected = String(s.id) === String(value);
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => { onChange(s.id); setOpen(false); setQuery(''); }}
+                    style={{
+                      padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: isSelected ? 'rgba(37,99,235,0.15)' : 'transparent',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    {/* Song title row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: isSelected ? 'var(--primary)' : 'white', flex: 1 }}>{s.title}</span>
+                      {s.key && <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'rgba(37,99,235,0.2)', color: '#60a5fa', padding: '2px 7px', borderRadius: '6px', flexShrink: 0 }}>{s.key}</span>}
+                      {s.bpm && <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '2px 7px', borderRadius: '6px', flexShrink: 0 }}>{s.bpm} BPM</span>}
+                    </div>
+                    {/* History pills */}
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                      {hist.length === 0 ? (
+                        <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>Primera vez 🎉</span>
+                      ) : (
+                        hist.slice(0, 4).map((h, hi) => (
+                          <span key={hi} style={{
+                            fontSize: '0.62rem', fontWeight: '700',
+                            background: hi === 0 ? 'rgba(37,99,235,0.2)' : 'rgba(255,255,255,0.05)',
+                            color: hi === 0 ? '#60a5fa' : 'rgba(255,255,255,0.35)',
+                            padding: '2px 7px', borderRadius: '10px', border: hi === 0 ? '1px solid rgba(37,99,235,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                          }}>📅 {relDate(h.date)} · {h.name.length > 18 ? h.name.slice(0,18)+'…' : h.name}</span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const RoleInput = ({ value, onChange }) => {
+
   const [localValue, setLocalValue] = React.useState(value);
   
   React.useEffect(() => {
@@ -307,6 +604,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [initialRoster, setInitialRoster] = useState([]);
   const [dbHistory, setDbHistory] = useState([]);
   const [pendingTemplate, setPendingTemplate] = useState(null);
+  const [showNewEventPicker, setShowNewEventPicker] = useState(false);
+  const [pendingNewDate, setPendingNewDate] = useState('');
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
 
@@ -343,7 +642,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
     if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('electric') || i.includes('acoustic') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
     return 'OTROS';
   };
 
@@ -397,16 +696,49 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleNewEvent = (selectedDate) => {
+    setPendingNewDate(selectedDate || '');
+    setShowNewEventPicker(true);
+  };
+
+  const openNewEventWithTemplate = (type, duplicateFrom) => {
+    setShowNewEventPicker(false);
     setEditingEventId(null);
     setEventName('');
-    setEventDate(selectedDate || '');
+    setEventDate(pendingNewDate);
     setDescription('');
-    setFormat('full');
-    const template = generateTemplate('full');
-    setRoster(template);
-    setInitialRoster(JSON.parse(JSON.stringify(template)));
     setDbHistory([]);
     setSetlist([]);
+
+    if (type === 'base') {
+      setFormat('full');
+      const t = generateTemplate('full');
+      setRoster(t);
+      setInitialRoster(JSON.parse(JSON.stringify(t)));
+    } else if (type === 'empty') {
+      setFormat('full');
+      setRoster([]);
+      setInitialRoster([]);
+    } else if (type === 'general') {
+      setFormat('general');
+      const r = (members || []).map(m => ({ id: Math.random().toString(), instrument: 'MIEMBRO', profile_id: m.id, category: 'general', status: 'pending' }));
+      setRoster(r);
+      setInitialRoster(JSON.parse(JSON.stringify(r)));
+    } else if (type === 'duplicate' && duplicateFrom) {
+      setFormat('full');
+      setEventName(duplicateFrom.name + ' (Copia)');
+      const activeRoster = (duplicateFrom.event_roster || []).filter(r => !r.is_removed).map(er => ({
+        id: Math.random().toString(),
+        instrument: er.instrument,
+        profile_id: er.profile_id,
+        category: er.category || 'custom',
+        status: 'pending'
+      }));
+      setRoster(activeRoster);
+      setInitialRoster(JSON.parse(JSON.stringify(activeRoster)));
+      const dupeSetlist = (duplicateFrom.event_songs || []).sort((a,b) => a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' }));
+      setSetlist(dupeSetlist);
+    }
+
     setModalTab('info');
     setShowModal(true);
   };
@@ -837,8 +1169,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
-                <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
-                <input type="date" className="input-field" value={eventDate} onChange={e => setEventDate(e.target.value)} style={{ width: '100%' }} />
+                  {/* Custom Date Picker Overlay */}
+                  <DatePickerField
+                    value={eventDate}
+                    onChange={e => setEventDate(e.target.value)}
+                    formatEventDate={formatEventDate}
+                  />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
               </div>
             )}
@@ -1003,53 +1339,159 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
               </div>
             )}
-            {modalTab === 'setlist' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {setlist.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, overflow: 'hidden' }}>
-                    <select 
-                      className="input-field" 
-                      value={item.song_id} 
-                      onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
-                      style={{ flex: 2, background: 'none' }}
-                    >
-                      <option value="">Seleccionar Canción</option>
-                      {songs.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-                    </select>
+            {modalTab === 'setlist' && (() => {
+              // Build a map: songId -> array of events where it was played (sorted newest first)
+              const songHistory = {};
+              (events || []).forEach(ev => {
+                if (!ev.date) return;
+                (ev.event_songs || []).forEach(es => {
+                  if (!songHistory[es.song_id]) songHistory[es.song_id] = [];
+                  songHistory[es.song_id].push({ date: ev.date, name: ev.name, eventId: ev.id });
+                });
+              });
+              // Sort each song's history newest first
+              Object.keys(songHistory).forEach(sid => {
+                songHistory[sid].sort((a, b) => new Date(b.date) - new Date(a.date));
+              });
 
-                    {/* NUEVO: Selector de Tono (Tonality) */}
-                    <div style={{ flex: 1 }}>
-                      <select 
-                        className="input-field" 
-                        value={item.selected_key || ''} 
-                        onChange={e => { const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n); }}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.75rem' }}
-                        disabled={!item.song_id}
-                      >
-                        <option value="">Tono</option>
-                        {(() => {
-                          const song = songs.find(s => String(s.id) === String(item.song_id));
-                          if (!song) return null;
-                          return (
-                            <>
-                              {song.key && <option value={song.key}>{song.key} (Orig)</option>}
-                              {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
-                              {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
-                            </>
-                          );
-                        })()}
-                      </select>
-                    </div>
+              const formatRelativeDate = (dateStr) => {
+                const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
+                const now = new Date();
+                now.setHours(0,0,0,0);
+                const diff = Math.round((now - d) / (1000*60*60*24));
+                if (diff === 0) return 'Hoy';
+                if (diff === 1) return 'Ayer';
+                if (diff < 7) return `Hace ${diff} días`;
+                if (diff < 30) return `Hace ${Math.round(diff/7)} sem.`;
+                if (diff < 365) return `Hace ${Math.round(diff/30)} mes${Math.round(diff/30)>1?'es':''}`;
+                return `Hace ${Math.round(diff/365)} año${Math.round(diff/365)>1?'s':''}`;
+              };
 
-                    <div style={{ flex: 1.5, minWidth: 0, overflow: 'hidden' }}>
-                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
-                    </div>
-                    <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
-                  </div>
-                ))}
-                <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])} className="btn-secondary" style={{ padding: '1rem' }}>+ Añadir Canción</button>
-              </div>
-            )}
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {setlist.map((item, idx) => {
+                    const song = songs.find(s => String(s.id) === String(item.song_id));
+                    const history = item.song_id ? (songHistory[item.song_id] || []).filter(h => h.eventId !== editingEventId) : [];
+                    const lastPlayed = history[0];
+
+                    return (
+                      <div key={idx} style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: '16px',
+                        overflow: 'visible', // Changed from hidden to allow dropdown
+                        transition: 'border-color 0.2s',
+                      }}>
+                        {/* Row 1: number + song selector + delete */}
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.85rem 1rem' }}>
+                          <div style={{
+                            width: '28px', height: '28px', borderRadius: '50%',
+                            background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.72rem', fontWeight: '900', color: 'var(--primary)', flexShrink: 0
+                          }}>{idx + 1}</div>
+
+                          <SongPicker
+                            value={item.song_id}
+                            onChange={(newId) => { const n = [...setlist]; n[idx].song_id = newId; n[idx].selected_key = ''; setSetlist(n); }}
+                            songs={songs}
+                            events={events}
+                            editingEventId={editingEventId}
+                          />
+
+                          <button onClick={() => setSetlist(setlist.filter((_,i) => i !== idx))}
+                            style={{ background: 'none', border: 'none', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '4px', transition: 'color 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.color='#ef4444'}
+                            onMouseLeave={e => e.currentTarget.style.color='rgba(239,68,68,0.5)'}
+                          ><Trash2 size={16}/></button>
+                        </div>
+
+                        {/* Row 2: song details + history (only when a song is selected) */}
+                        {song && (
+                          <div style={{ padding: '0 1rem 0.85rem 1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                            {/* Key picker */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '80px' }}>
+                              <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tono</span>
+                              <select
+                                className="input-field"
+                                value={item.selected_key || ''}
+                                onChange={e => { const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n); }}
+                                style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.8rem', padding: '6px 8px', borderRadius: '8px', border: '1px solid rgba(37,99,235,0.2)' }}
+                              >
+                                <option value="">–</option>
+                                {song.key && <option value={song.key}>{song.key} (Orig)</option>}
+                                {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
+                                {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
+                              </select>
+                            </div>
+
+                            {/* BPM */}
+                            {song.bpm && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>BPM</span>
+                                <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', fontWeight: '800', color: '#10b981' }}>{song.bpm}</div>
+                              </div>
+                            )}
+
+                            {/* Leader */}
+                            <div style={{ flex: 1, minWidth: '130px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Líder</span>
+                              <MemberSelector
+                                value={item.lead_id}
+                                members={members}
+                                roleName="Voz"
+                                placeholder="Asignar líder"
+                                onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }}
+                              />
+                            </div>
+
+                            {/* Last played history */}
+                            <div style={{ width: '100%', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                              <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                📅 Últimas veces que se tocó
+                              </span>
+                              {history.length === 0 ? (
+                                <div style={{ marginTop: '6px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>
+                                  Primera vez en el setlist 🎉
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                                  {history.slice(0, 5).map((h, hi) => (
+                                    <div key={hi} style={{
+                                      display: 'flex', alignItems: 'center', gap: '6px',
+                                      background: hi === 0 ? 'rgba(37,99,235,0.12)' : 'rgba(255,255,255,0.04)',
+                                      border: `1px solid ${hi === 0 ? 'rgba(37,99,235,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                                      borderRadius: '20px', padding: '4px 10px',
+                                    }}>
+                                      <span style={{ fontSize: '0.68rem', fontWeight: '700', color: hi === 0 ? 'var(--primary)' : 'rgba(255,255,255,0.4)' }}>
+                                        {formatRelativeDate(h.date)}
+                                      </span>
+                                      <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' }} />
+                                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {h.name}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button
+                    onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '1rem', background: 'transparent', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: '12px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='var(--primary)'; e.currentTarget.style.color='var(--primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.color='var(--text-muted)'; }}
+                  >
+                    <Plus size={16}/> Añadir Canción
+                  </button>
+                </div>
+              );
+            })()}
+
             <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
               <button onClick={closeModal} className="btn-secondary" style={{ flex: 1 }}>Cerrar</button>
               <button onClick={handleSave} className="btn-primary" style={{ flex: 2 }}>{saving ? 'Guardando...' : 'Guardar Cambios'}</button>
@@ -1093,7 +1535,93 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           </div>
         </div>
       )}
+
+      {/* ── NEW EVENT TEMPLATE PICKER ── */}
+      {showNewEventPicker && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.88)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
+          <div style={{ width: '100%', maxWidth: '760px', background: 'linear-gradient(135deg,#0f172a,#1a2133)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '28px', overflow: 'hidden', animation: 'modalFadeIn 0.3s ease-out', boxShadow: '0 40px 80px rgba(0,0,0,0.7)', maxHeight: '92vh', overflowY: 'auto', margin: 'auto' }}>
+            {/* Header */}
+            <div style={{ padding: '1.75rem 2rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'linear-gradient(135deg,rgba(37,99,235,0.15),transparent)' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px' }}>Nuevo Evento</div>
+              <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'white' }}>¿Cómo quieres empezar?</h3>
+              {pendingNewDate && <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>📅 {pendingNewDate}</p>}
+            </div>
+
+            {/* Options grid */}
+            <div style={{ padding: '1.5rem 2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              {[
+                { type: 'base', emoji: '🎸', label: 'Plantilla Base', desc: 'Banda completa con todos los roles estándar', color: '#2563eb', glow: 'rgba(37,99,235,0.25)' },
+                { type: 'empty', emoji: '✨', label: 'Vacío', desc: 'Empieza en blanco y añade lo que necesites', color: '#6366f1', glow: 'rgba(99,102,241,0.25)' },
+                { type: 'general', emoji: '👥', label: 'Reunión General', desc: 'Incluye automáticamente a todos los miembros', color: '#10b981', glow: 'rgba(16,185,129,0.25)' },
+              ].map(opt => (
+                <button
+                  key={opt.type}
+                  onClick={() => openNewEventWithTemplate(opt.type)}
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid rgba(255,255,255,0.08)`,
+                    borderRadius: '18px',
+                    padding: '1.2rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = opt.glow; e.currentTarget.style.borderColor = opt.color; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 30px ${opt.glow}`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  <div style={{ fontSize: '1.8rem' }}>{opt.emoji}</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'white' }}>{opt.label}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', lineHeight: '1.4' }}>{opt.desc}</div>
+                </button>
+              ))}
+
+              {/* Duplicate event - spans full width */}
+              <div style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '1.2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1.5rem' }}>📋</span>
+                  <div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'white' }}>Duplicar Evento</div>
+                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>Copia el equipo y setlist de un evento anterior</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
+                  {[...(events || [])].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 8).map(ev => (
+                    <button
+                      key={ev.id}
+                      onClick={() => openNewEventWithTemplate('duplicate', ev)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}
+                      onMouseEnter={e => { e.currentTarget.style.background='rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor='rgba(37,99,235,0.3)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.06)'; }}
+                    >
+                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'white' }}>{ev.name}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', flexShrink: 0, marginLeft: '8px' }}>
+                        {ev.date ? new Date(ev.date.split('T')[0]+'T00:00:00').toLocaleDateString('es', {day:'numeric',month:'short',year:'numeric'}) : ''}
+                      </span>
+                    </button>
+                  ))}
+                  {(!events || events.length === 0) && (
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>Aún no hay eventos para duplicar</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Cancel */}
+            <div style={{ padding: '0 2rem 1.5rem', textAlign: 'center' }}>
+              <button onClick={() => setShowNewEventPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', padding: '8px 20px', borderRadius: '20px', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.color='rgba(255,255,255,0.7)'}
+                onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.3)'}
+              >Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {pendingTemplate && (
+
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--primary)', animation: 'modalFadeIn 0.3s ease-out' }}>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>

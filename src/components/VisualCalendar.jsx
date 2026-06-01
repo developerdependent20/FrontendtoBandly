@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Circle, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
 
 export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  
+
   const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
@@ -11,9 +11,9 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const month = currentDate.getMonth();
   const days = daysInMonth(year, month);
   const startDay = firstDayOfMonth(year, month);
-  
-  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+  const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const weekDays = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
   const calendarDays = [];
   for (let i = 0; i < startDay; i++) calendarDays.push(null);
@@ -21,136 +21,203 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const goToday = () => setCurrentDate(new Date());
 
-  // Lógica de colores por categoría
-  const getEventStyle = (name) => {
+  const getEventColor = (name) => {
     const n = (name || '').toLowerCase();
-    if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return { bg: 'rgba(99, 102, 241, 0.2)', text: '#818cf8', border: 'rgba(99, 102, 241, 0.4)' }; 
-    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return { bg: 'rgba(16, 185, 129, 0.2)', text: '#34d399', border: 'rgba(16, 185, 129, 0.4)' }; 
-    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return { bg: 'rgba(37, 99, 235, 0.2)', text: '#a78bfa', border: 'rgba(37, 99, 235, 0.4)' }; 
-    if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return { bg: 'rgba(249, 115, 22, 0.2)', text: '#fb923c', border: 'rgba(249, 115, 22, 0.4)' }; 
-    return { bg: 'rgba(6, 182, 212, 0.2)', text: '#22d3ee', border: 'rgba(6, 182, 212, 0.4)' }; 
+    if (n.includes('servicio') || n.includes('dominical') || n.includes('culto'))
+      return { bg: 'linear-gradient(135deg,#6366f1,#4f46e5)', glow: '#6366f1' };
+    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda'))
+      return { bg: 'linear-gradient(135deg,#10b981,#059669)', glow: '#10b981' };
+    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo'))
+      return { bg: 'linear-gradient(135deg,#2563eb,#1d4ed8)', glow: '#2563eb' };
+    if (n.includes('especial') || n.includes('altar') || n.includes('conferencia'))
+      return { bg: 'linear-gradient(135deg,#f97316,#ea580c)', glow: '#f97316' };
+    return { bg: 'linear-gradient(135deg,#06b6d4,#0891b2)', glow: '#06b6d4' };
   };
 
   const categories = [
-    { name: 'Servicios', color: '#818cf8' },
-    { name: 'Oración', color: '#34d399' },
-    { name: 'Reuniones', color: '#a78bfa' },
-    { name: 'Especiales', color: '#fb923c' }
+    { name: 'Servicios', color: '#6366f1' },
+    { name: 'Oración', color: '#10b981' },
+    { name: 'Reuniones/Ensayos', color: '#2563eb' },
+    { name: 'Especiales', color: '#f97316' },
+    { name: 'Otros', color: '#06b6d4' },
   ];
 
-  // Exportar a formato universal .ics
   const exportToICS = () => {
     try {
       const monthEvents = events?.filter(e => e.date && e.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)) || [];
       if (monthEvents.length === 0) return alert('No hay eventos este mes para exportar.');
-
-      let icsContent = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PROID:-//Bandly//Calendar//ES',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH'
-      ];
-
+      let ics = ['BEGIN:VCALENDAR','VERSION:2.0','PROID:-//Bandly//Calendar//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
       monthEvents.forEach(ev => {
         const d = new Date(ev.date);
-        const dateStr = d.toISOString().replace(/-|:|\.\d+/g, '').split('T')[0];
-        icsContent.push('BEGIN:VEVENT');
-        icsContent.push(`SUMMARY:${ev.name}`);
-        icsContent.push(`DTSTART;VALUE=DATE:${dateStr}`);
-        icsContent.push(`DTEND;VALUE=DATE:${dateStr}`);
-        icsContent.push(`DESCRIPTION:${ev.description || 'Evento de Bandly'}`);
-        icsContent.push('STATUS:CONFIRMED');
-        icsContent.push('END:VEVENT');
+        const dateStr = d.toISOString().replace(/-|:|\\.\\d+/g,'').split('T')[0];
+        ics.push('BEGIN:VEVENT',`SUMMARY:${ev.name}`,`DTSTART;VALUE=DATE:${dateStr}`,`DTEND;VALUE=DATE:${dateStr}`,`DESCRIPTION:${ev.description||'Evento de Bandly'}`,'STATUS:CONFIRMED','END:VEVENT');
       });
-
-      icsContent.push('END:VCALENDAR');
-      
-      const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+      ics.push('END:VCALENDAR');
+      const blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Bandly_Agenda_${monthNames[month]}_${year}.ics`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (e) { alert('Error al exportar: ' + e.message); }
+      const a = document.createElement('a');
+      a.href = url; a.setAttribute('download', `Bandly_${monthNames[month]}_${year}.ics`);
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    } catch(e) { alert('Error: ' + e.message); }
   };
 
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
   return (
-    <div className="calendar-container" style={{ background: 'rgba(30, 41, 59, 0.3)', borderRadius: '24px', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
-      {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'white', fontWeight: '800', letterSpacing: '-0.5px' }}>{monthNames[month]} <span style={{ color: 'rgba(255,255,255,0.3)' }}>{year}</span></h3>
-        <div style={{ display: 'flex', gap: '0.8rem' }}>
-          <button onClick={prevMonth} className="btn-secondary" style={{ padding: '0.5rem', width: '36px', height: '36px', borderRadius: '10px' }}><ChevronLeft size={18}/></button>
-          <button onClick={nextMonth} className="btn-secondary" style={{ padding: '0.5rem', width: '36px', height: '36px', borderRadius: '10px' }}><ChevronRight size={18}/></button>
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%)',
+      borderRadius: '28px',
+      padding: '0',
+      border: '1px solid rgba(255,255,255,0.08)',
+      backdropFilter: 'blur(20px)',
+      overflow: 'hidden',
+      boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
+    }}>
+
+      {/* ── HEADER ── */}
+      <div style={{
+        padding: '1.5rem 1.75rem',
+        background: 'linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(99,102,241,0.08) 100%)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>
+            Calendario
+          </div>
+          <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>
+            {monthNames[month]} <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '400' }}>{year}</span>
+          </h3>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={goToday}
+            style={{ padding: '6px 14px', background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)', borderRadius: '20px', color: 'var(--primary)', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(37,99,235,0.3)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(37,99,235,0.15)'}
+          >Hoy</button>
+          <button onClick={prevMonth} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.12)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.05)'}
+          ><ChevronLeft size={16}/></button>
+          <button onClick={nextMonth} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.12)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.05)'}
+          ><ChevronRight size={16}/></button>
         </div>
       </div>
-      
-      {/* GRID */}
-      <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
-        {weekDays.map(d => <div key={d} style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', fontWeight: 'bold', paddingBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{d}</div>)}
-        
+
+      {/* ── WEEKDAY HEADERS ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', padding: '1rem 1rem 0' }}>
+        {weekDays.map((d, i) => (
+          <div key={d} style={{
+            textAlign: 'center',
+            fontSize: '0.65rem',
+            fontWeight: '800',
+            textTransform: 'uppercase',
+            letterSpacing: '1.5px',
+            paddingBottom: '0.75rem',
+            color: i === 0 || i === 6 ? 'rgba(249,115,22,0.6)' : 'rgba(255,255,255,0.25)',
+          }}>{d}</div>
+        ))}
+      </div>
+
+      {/* ── GRID ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '4px', padding: '0 1rem 1rem' }}>
         {calendarDays.map((day, idx) => {
-          const dateStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
-          const dayEvents = dateStr ? events?.filter(e => e.date && e.date.startsWith(dateStr)) : [];
-          const isToday = day && new Date().toDateString() === new Date(year, month, day).toDateString();
+          const col = idx % 7;
+          const isWeekend = col === 0 || col === 6;
+          const dateStr = day ? `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}` : null;
+          const dayEvents = dateStr ? (events || []).filter(e => e.date && e.date.startsWith(dateStr)) : [];
+          const isToday = dateStr === todayStr;
+          const hasPast = dateStr && dateStr < todayStr;
 
           return (
-            <div 
-              key={idx} 
-              onClick={() => day && onDayClick(dateStr)}
-              className={`calendar-day ${day ? "calendar-cell-active" : ""}`}
-              style={{ 
-                minHeight: '85px', 
-                background: day ? 'rgba(255,255,255,0.02)' : 'transparent', 
-                borderRadius: '12px',
-                border: isToday ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255,255,255,0.03)', 
-                position: 'relative', 
-                cursor: day ? 'pointer' : 'default', 
-                transition: 'all 0.2s ease', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                padding: '8px' 
+            <div
+              key={idx}
+              onClick={() => day && onDayClick && onDayClick(dateStr)}
+              style={{
+                minHeight: '90px',
+                borderRadius: '14px',
+                border: isToday
+                  ? '1.5px solid rgba(37,99,235,0.6)'
+                  : '1px solid rgba(255,255,255,0.04)',
+                background: isToday
+                  ? 'linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(99,102,241,0.08) 100%)'
+                  : day
+                    ? isWeekend
+                      ? 'rgba(249,115,22,0.03)'
+                      : 'rgba(255,255,255,0.025)'
+                    : 'transparent',
+                boxShadow: isToday ? '0 0 20px rgba(37,99,235,0.15) inset' : 'none',
+                cursor: day ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                display: 'flex', flexDirection: 'column', padding: '8px', position: 'relative',
+                opacity: hasPast && dayEvents.length === 0 ? 0.5 : 1,
               }}
+              onMouseEnter={e => { if (day) e.currentTarget.style.background = isToday ? 'linear-gradient(135deg,rgba(37,99,235,0.25),rgba(99,102,241,0.15))' : 'rgba(255,255,255,0.06)'; }}
+              onMouseLeave={e => { if (day) e.currentTarget.style.background = isToday ? 'linear-gradient(135deg,rgba(37,99,235,0.18),rgba(99,102,241,0.08))' : isWeekend ? 'rgba(249,115,22,0.03)' : 'rgba(255,255,255,0.025)'; }}
             >
               {day && (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.7rem', color: isToday ? 'var(--primary)' : 'rgba(255,255,255,0.3)', fontWeight: isToday ? '900' : '500' }}>{day}</span>
+                  {/* Day number */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{
+                      width: isToday ? '24px' : 'auto',
+                      height: isToday ? '24px' : 'auto',
+                      borderRadius: '50%',
+                      background: isToday ? 'var(--primary)' : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.72rem',
+                      fontWeight: isToday ? '900' : isWeekend ? '700' : '500',
+                      color: isToday ? 'white' : isWeekend ? 'rgba(249,115,22,0.8)' : 'rgba(255,255,255,0.45)',
+                      boxShadow: isToday ? '0 0 12px rgba(37,99,235,0.5)' : 'none',
+                      flexShrink: 0,
+                    }}>{day}</span>
+
+                    {/* "+" icon on hover for new event */}
+                    {dayEvents.length === 0 && (
+                      <Plus size={10} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                    )}
                   </div>
-                  <div className="calendar-events-container" style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', overflow: 'hidden' }}>
-                    {dayEvents.map(ev => {
-                      const style = getEventStyle(ev.name);
+
+                  {/* Events */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
+                    {dayEvents.slice(0, 3).map((ev, ei) => {
+                      const c = getEventColor(ev.name);
                       return (
-                        <div 
-                          key={ev.id} 
-                          onClick={(e) => { e.stopPropagation(); onEventClick(ev); }}
-                          style={{ 
-                            width: '100%', 
-                            padding: '4px 6px', 
-                            background: style.bg, 
-                            color: style.text, 
-                            borderLeft: `3px solid ${style.text}`,
-                            borderRadius: '4px', 
-                            fontSize: '0.65rem', 
-                            fontWeight: '700', 
-                            whiteSpace: 'nowrap', 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis', 
-                            textAlign: 'left',
-                            transition: 'transform 0.1s'
-                          }}
-                          className="calendar-pill-hover"
+                        <div
+                          key={ev.id}
+                          onClick={e => { e.stopPropagation(); onEventClick && onEventClick(ev); }}
                           title={ev.name}
-                        >
-                          {ev.name}
-                        </div>
+                          style={{
+                            padding: '3px 6px',
+                            background: c.bg,
+                            borderRadius: '6px',
+                            fontSize: '0.6rem',
+                            fontWeight: '700',
+                            color: 'white',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            boxShadow: `0 2px 8px ${c.glow}44`,
+                            transition: 'transform 0.15s, box-shadow 0.15s',
+                            textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.transform='scale(1.04)'; e.currentTarget.style.boxShadow=`0 4px 14px ${c.glow}88`; }}
+                          onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow=`0 2px 8px ${c.glow}44`; }}
+                        >{ev.name}</div>
                       );
                     })}
+                    {dayEvents.length > 3 && (
+                      <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textAlign: 'center', marginTop: '2px' }}>
+                        +{dayEvents.length - 3} más
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -159,48 +226,31 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
         })}
       </div>
 
-      {/* FOOTER / LEYENDA / EXPORT */}
-      <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.2rem' }}>
+      {/* ── FOOTER ── */}
+      <div style={{
+        padding: '1rem 1.75rem 1.25rem',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center',
+        background: 'rgba(0,0,0,0.15)',
+      }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
           {categories.map(cat => (
-            <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cat.color, boxShadow: `0 0 10px ${cat.color}66` }}></div>
-              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{cat.name}</span>
+            <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cat.color, boxShadow: `0 0 8px ${cat.color}88` }} />
+              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{cat.name}</span>
             </div>
           ))}
         </div>
-        
-        <button 
+
+        <button
           onClick={exportToICS}
-          style={{ 
-            background: 'rgba(99, 102, 241, 0.1)', 
-            border: '1px solid rgba(99, 102, 241, 0.3)', 
-            color: '#818cf8', 
-            padding: '0.5rem 1rem', 
-            borderRadius: '10px', 
-            fontSize: '0.7rem', 
-            fontWeight: '800', 
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s'
-          }}
-          className="btn-export-hover"
+          style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '7px 14px', background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.25)', borderRadius: '20px', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s' }}
+          onMouseEnter={e => { e.currentTarget.style.background='rgba(37,99,235,0.2)'; e.currentTarget.style.transform='translateY(-1px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(37,99,235,0.1)'; e.currentTarget.style.transform='translateY(0)'; }}
         >
-          <Download size={14} /> Sincronizar Calendario
+          <Download size={13}/> Exportar .ics
         </button>
       </div>
-
-      <style>{`
-        .calendar-cell-active:hover { background: rgba(255,255,255,0.05) !important; transform: translateY(-2px); }
-        .calendar-pill-hover:hover { transform: scale(1.02); filter: brightness(1.2); }
-        .btn-export-hover:hover { background: rgba(99, 102, 241, 0.2) !important; transform: translateY(-1px); border-color: rgba(99, 102, 241, 0.5) !important; }
-        @media (max-width: 480px) {
-          .calendar-day { min-height: 50px !important; padding: 4px !important; }
-          .calendar-pill-hover { font-size: 0 !important; height: 6px; padding: 0 !important; }
-        }
-      `}</style>
     </div>
   );
 }
