@@ -18,7 +18,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <img 
               src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" 
               alt="Bandly" 
-              style={{ height: '50px', width: 'auto' }}
+              style={{ height: '65px', width: 'auto' }}
             />
           </div>
 
@@ -36,13 +36,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
       <main className="landing-hero-centered">
         <div className="hero-content-full">
-          <div style={{ marginBottom: '1rem', animation: 'dropdownFadeIn 0.8s ease-out' }}>
-            <img 
-              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" 
-              style={{ height: '140px', filter: 'drop-shadow(0 0 30px rgba(37, 99, 235, 0.4))' }} 
-            />
-          </div>
-          <h1 className="hero-main-title-large" style={{ marginTop: '-1rem' }}>
+          <h1 className="hero-main-title-large" style={{ marginTop: '3rem' }}>
             {t.heroMain} <br/>
             <span className="serif-accent">{t.heroSub}</span>
           </h1>
@@ -60,7 +54,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             </div>
           </div>
           
-          <div className="compatibility-badges-centered" style={{ marginTop: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
+          <div className="compatibility-badges-centered" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
             <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '4px' }}>{t.availableOn}</span>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
               <img 
