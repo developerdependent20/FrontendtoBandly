@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 
 // [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
 // [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
-const INSTRUMENT_MATCH_MAP = {
+const DEFAULT_INSTRUMENT_MATCH_MAP = {
   'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
   'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
@@ -30,7 +30,7 @@ const INSTRUMENT_MATCH_MAP = {
 };
 
 // [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
-const INSTRUMENT_DISPLAY_MAP = {
+const DEFAULT_INSTRUMENT_DISPLAY_MAP = {
   'instr:bateria': 'DRUMS / BATERÍA',
   'instr:bajo': 'BASS / BAJO',
   'instr:piano': 'KEYS / TECLADO',
@@ -53,28 +53,24 @@ const cleanEncoding = (str) => {
     .replace(/Vacíos/g, 'Vacíos');
 };
 
-const getBilingualName = (inst) => {
+const getBilingualName = (inst, displayMap, matchMap) => {
   const normalized = (inst || '').toLowerCase();
-  if (INSTRUMENT_DISPLAY_MAP[normalized]) return cleanEncoding(INSTRUMENT_DISPLAY_MAP[normalized]);
-  const tag = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k)) 
-    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k))] 
-    : null;
-  return cleanEncoding(INSTRUMENT_DISPLAY_MAP[tag] || inst);
+  if (displayMap[normalized]) return cleanEncoding(displayMap[normalized]);
+  const tag = Object.keys(matchMap).find(k => normalized.includes(k)) ? matchMap[Object.keys(matchMap).find(k => normalized.includes(k))] : null;
+  return cleanEncoding(displayMap[tag] || inst);
 };
 
-const getSuggestedMembers = (roleName, members) => {
+const getSuggestedMembers = (roleName, members, matchMap) => {
   if (!roleName || !members) return { suggested: [], others: (members || []) };
   const normalizedRole = roleName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const tagToFind = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k)) 
-    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k))] 
-    : null;
+  const tagToFind = Object.keys(matchMap).find(k => normalizedRole.includes(k)) ? matchMap[Object.keys(matchMap).find(k => normalizedRole.includes(k))] : null;
   if (!tagToFind) return { suggested: [], others: (members || []) };
   const suggested = (members || []).filter(m => (m.functions || []).includes(tagToFind));
   const others = (members || []).filter(m => !(m.functions || []).includes(tagToFind));
   return { suggested, others };
 };
 
-const ROLE_BANK = [
+const DEFAULT_ROLE_BANK = [
   {
     category: 'MÚSICOS',
     color: 'var(--primary)',
@@ -232,7 +228,7 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
   const [showAll, setShowAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const selectedMember = members?.find(m => m.id === value);
-  const { suggested, others } = getSuggestedMembers(roleName, members);
+  const { suggested, others } = getSuggestedMembers(roleName, members, instrumentMatchMap);
 
   const isBlocked = (member) => {
     if (!eventDate || !member.availability) return false;
@@ -584,6 +580,38 @@ const RoleInput = ({ value, onChange }) => {
 };
 
 export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
+  const orgSettings = profile?.organizations?.settings || {};
+
+  const instrumentDisplayMap = React.useMemo(() => {
+    if (!orgSettings.instruments) return DEFAULT_INSTRUMENT_DISPLAY_MAP;
+    const customMap = { ...DEFAULT_INSTRUMENT_DISPLAY_MAP };
+    orgSettings.instruments.forEach(inst => {
+      customMap[`instr:${inst.id}`] = (inst.label || '').toUpperCase();
+    });
+    return customMap;
+  }, [orgSettings]);
+
+  const instrumentMatchMap = React.useMemo(() => {
+    if (!orgSettings.instruments) return DEFAULT_INSTRUMENT_MATCH_MAP;
+    const customMap = { ...DEFAULT_INSTRUMENT_MATCH_MAP };
+    orgSettings.instruments.forEach(inst => {
+      customMap[inst.label.toLowerCase()] = `instr:${inst.id}`;
+      customMap[inst.id.toLowerCase()] = `instr:${inst.id}`;
+    });
+    return customMap;
+  }, [orgSettings]);
+
+  const roleBank = React.useMemo(() => {
+    if (!orgSettings.roles && !orgSettings.instruments) return DEFAULT_ROLE_BANK;
+    const musicians = (orgSettings.instruments || []).map(i => i.label);
+    const admins = (orgSettings.roles || []).map(r => r.label);
+    return [
+      { category: 'MÚSICOS / INSTRUMENTOS', color: 'var(--primary)', bg: 'rgba(59,130,246,0.1)', roles: musicians.length ? musicians : DEFAULT_ROLE_BANK[0].roles },
+      { category: 'ADMINISTRADORES / ROLES', color: 'var(--accent)', bg: 'rgba(37, 99, 235,0.1)', roles: admins.length ? admins : DEFAULT_ROLE_BANK[1].roles }
+    ];
+  }, [orgSettings]);
+
+
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -987,7 +1015,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {userSlots.map((slot, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
                       <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument, instrumentDisplayMap, instrumentMatchMap)}</span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
                     </div>
                   ))}
@@ -1055,7 +1083,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           {sorted.map((s, i) => {
                             const dot = statusDot(s.status);
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
-                            const roleName = getBilingualName(s.instrument);
+                            const roleName = getBilingualName(s.instrument, instrumentDisplayMap, instrumentMatchMap);
                             return (
                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
@@ -1185,7 +1213,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     <Plus size={18} color="var(--primary)" /> Añadir al Equipo
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-                    {ROLE_BANK.map(cat => (
+                    {roleBank.map(cat => (
                       <div key={cat.category}>
                         <h4 style={{ fontSize: '0.8rem', color: cat.color, marginBottom: '1rem', borderBottom: `1px solid ${cat.color}33`, paddingBottom: '0.5rem', letterSpacing: '1px' }}>
                           {cat.category}
