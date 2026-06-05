@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import '../DAW/DAW.css';
@@ -44,6 +44,14 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             <Music size={22} />
           </div>
         )}
+
+        <div 
+          className={`nav-item ${activeTab === 'play' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('play')}
+          title="Herramientas / Play en Vivo"
+        >
+          <Headphones size={22} />
+        </div>
 
         {canAccessLibrary && (
           <div 

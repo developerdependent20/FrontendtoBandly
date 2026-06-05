@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { isTauri, safeInvoke } from '../../utils/tauri';
+import AnalogKnob from '../ui/AnalogKnob';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -202,10 +203,12 @@ export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
           </span>
         </div>
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <button onClick={() => setIsAmbient(!isAmbient)} style={{ padding: '4px 10px', fontSize: '0.58rem', fontWeight: '900', border: isAmbient ? '1px solid rgba(168,85,247,0.4)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: isAmbient ? '#ffffff' : 'rgba(255,255,255,0.3)', marginRight: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <button onClick={() => setIsAmbient(!isAmbient)} style={{ padding: '4px 10px', fontSize: '0.6rem', fontWeight: '900', border: isAmbient ? '1px solid var(--daw-cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', cursor: 'pointer', background: isAmbient ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.05)', color: isAmbient ? 'var(--daw-cyan)' : 'rgba(255,255,255,0.3)', marginRight: '8px', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: isAmbient ? '0 0 10px rgba(34,211,238,0.2)' : 'none' }}>
             {isAmbient ? 'AMBIENTAL: ON' : 'MODO DISPARO'}
           </button>
-          <span style={{ fontSize: '0.62rem', color: 'var(--daw-cyan)', fontWeight: '700', minWidth: '40px', textAlign: 'center', textShadow: '0 0 10px var(--daw-cyan)' }}>{activeKey || ''}</span>
+          <div style={{ background: '#020617', padding: '2px 8px', borderRadius: '4px', border: '1px inset rgba(255,255,255,0.1)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--daw-cyan)', fontWeight: '900', minWidth: '40px', textAlign: 'center', textShadow: '0 0 10px var(--daw-cyan)' }}>{activeKey || '---'}</span>
+          </div>
         </div>
       </div>
 
@@ -216,7 +219,7 @@ export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
           const sharp = note.includes('#');
           const isLoaded = loadedPads[note];
           return (
-            <button key={note} onClick={() => handleKey(note)} style={{ padding: '12px 0', border: '1px solid', borderColor: on ? '#a855f7' : sharp ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.09)', borderRadius: '6px', cursor: 'pointer', position: 'relative', fontFamily: 'monospace', fontWeight: '900', fontSize: '0.75rem', transition: 'all 0.14s', background: on ? 'linear-gradient(180deg, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0.1) 100%)' : sharp ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.055)', color: on ? '#ffffff' : sharp ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.65)', boxShadow: on ? '0 0 25px rgba(168,85,247,0.4)' : 'none', transform: on ? 'translateY(-1px)' : 'none', opacity: isLoaded === false ? 0.35 : 1 }}>
+            <button key={note} onClick={() => handleKey(note)} style={{ padding: '16px 0', border: '1px solid', borderColor: on ? 'var(--daw-cyan)' : sharp ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.09)', borderRadius: '8px', cursor: 'pointer', position: 'relative', fontFamily: 'var(--font-mono)', fontWeight: '900', fontSize: '0.8rem', transition: 'all 0.1s', background: on ? 'linear-gradient(180deg, rgba(34,211,238,0.4) 0%, rgba(34,211,238,0.1) 100%)' : sharp ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)', color: on ? '#ffffff' : sharp ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)', boxShadow: on ? '0 0 30px rgba(34,211,238,0.5), inset 0 0 10px rgba(255,255,255,0.5)' : 'inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 6px rgba(0,0,0,0.4)', transform: on ? 'scale(0.95)' : 'none', opacity: isLoaded === false ? 0.35 : 1 }}>
               {note}
               {isLoaded === false && <div style={{ position: 'absolute', top: '3px', right: '3px', width: '4px', height: '4px', background: '#ef4444', borderRadius: '50%' }} />}
               {isLoaded === undefined && <div style={{ position: 'absolute', top: '3px', right: '3px', width: '4px', height: '4px', background: '#fbbf24', borderRadius: '50%', animation: 'pulse 1s infinite' }} />}
@@ -227,9 +230,10 @@ export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
 
       {/* Controles */}
       <div style={{ display: 'flex', gap: '18px', alignItems: 'center', marginTop: '4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <span style={{ fontSize: '0.57rem', fontWeight: '900', color: '#fff', letterSpacing: '1.5px', minWidth: '50px' }}>VOL. PAD</span>
-          <input type="range" min="0" max="1" step="0.01" value={warmLevel} onChange={e => setWarmLevel(parseFloat(e.target.value))} style={{ width: '120px', height: '3px', accentColor: '#a855f7' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ transform: 'scale(0.7)', transformOrigin: 'left center' }}>
+            <AnalogKnob value={warmLevel} onChange={setWarmLevel} color="var(--daw-cyan)" label="MASTER" />
+          </div>
         </div>
 
         {activeKey && (

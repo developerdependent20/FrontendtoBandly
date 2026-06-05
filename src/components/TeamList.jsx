@@ -2,9 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { Users, Shield, CheckCircle2, Trash2, Crown, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { AvatarPicker } from './layout/AvatarPicker';
+import OrgSettingsModal from './OrgSettingsModal';
+import { Settings } from 'lucide-react';
 
 export default function TeamList({ members, isDirector, refreshData, orgSettings }) {
   const [selectedMember, setSelectedMember] = useState(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   
   const handleAvatarUpdate = async (url) => {
     if (!selectedMember) return;
@@ -276,7 +279,14 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
       <section className="glass-panel" style={{ padding: '2rem', background: 'transparent', border: 'none', boxShadow: 'none' }}>
         
-        <AvatarPicker 
+        <OrgSettingsModal 
+    isOpen={showSettingsModal} 
+    onClose={() => setShowSettingsModal(false)} 
+    orgId={members?.[0]?.org_id} 
+    orgSettings={orgSettings} 
+    refreshData={refreshData} 
+  />
+  <AvatarPicker 
           isOpen={!!selectedMember} 
           onClose={() => setSelectedMember(null)} 
           onSelect={handleAvatarUpdate}

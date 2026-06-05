@@ -4,6 +4,7 @@ import { supabase } from '../../supabaseClient';
 import EventPlanner from '../EventPlanner';
 import SongLibrary from '../SongLibrary';
 import TeamList from '../TeamList';
+import MusicianTools from '../MusicianTools';
 import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
 import MyProfile from '../MyProfile';
@@ -280,6 +281,9 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
+      {activeTab === 'play' && (
+        <MusicianTools />
+      )}
       {activeTab === 'profile' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <MyProfile profile={profile} session={session} />
@@ -318,6 +322,9 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
           ? <ProMixer songs={songs} events={events} session={session} profile={profile} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+      )}
+      {activeTab === 'play' && (
+        <MusicianTools />
       )}
       {activeTab === 'profile' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
