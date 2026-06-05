@@ -213,13 +213,13 @@ export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
       </div>
 
       {/* Pads */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '4px', marginBottom: '10px' }}>
+      <div className="pad-board-grid">
         {NOTES.map(note => {
           const on = activeKey === note;
           const sharp = note.includes('#');
           const isLoaded = loadedPads[note];
           return (
-            <button key={note} onClick={() => handleKey(note)} style={{ padding: '16px 0', border: '1px solid', borderColor: on ? 'var(--daw-cyan)' : sharp ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.09)', borderRadius: '8px', cursor: 'pointer', position: 'relative', fontFamily: 'var(--font-mono)', fontWeight: '900', fontSize: '0.8rem', transition: 'all 0.1s', background: on ? 'linear-gradient(180deg, rgba(34,211,238,0.4) 0%, rgba(34,211,238,0.1) 100%)' : sharp ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)', color: on ? '#ffffff' : sharp ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)', boxShadow: on ? '0 0 30px rgba(34,211,238,0.5), inset 0 0 10px rgba(255,255,255,0.5)' : 'inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 6px rgba(0,0,0,0.4)', transform: on ? 'scale(0.95)' : 'none', opacity: isLoaded === false ? 0.35 : 1 }}>
+            <button key={note} onClick={() => handleKey(note)} style={{ touchAction: 'none', padding: '16px 0', border: '1px solid', borderColor: on ? 'var(--daw-cyan)' : sharp ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.09)', borderRadius: '8px', cursor: 'pointer', position: 'relative', fontFamily: 'var(--font-mono)', fontWeight: '900', fontSize: '0.8rem', transition: 'all 0.1s', background: on ? 'linear-gradient(180deg, rgba(34,211,238,0.4) 0%, rgba(34,211,238,0.1) 100%)' : sharp ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)', color: on ? '#ffffff' : sharp ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)', boxShadow: on ? '0 0 30px rgba(34,211,238,0.5), inset 0 0 10px rgba(255,255,255,0.5)' : 'inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 6px rgba(0,0,0,0.4)', transform: on ? 'scale(0.95)' : 'none', opacity: isLoaded === false ? 0.35 : 1 }}>
               {note}
               {isLoaded === false && <div style={{ position: 'absolute', top: '3px', right: '3px', width: '4px', height: '4px', background: '#ef4444', borderRadius: '50%' }} />}
               {isLoaded === undefined && <div style={{ position: 'absolute', top: '3px', right: '3px', width: '4px', height: '4px', background: '#fbbf24', borderRadius: '50%', animation: 'pulse 1s infinite' }} />}

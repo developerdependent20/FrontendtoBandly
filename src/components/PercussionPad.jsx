@@ -208,7 +208,7 @@ export default function PercussionPad() {
       />
 
       {/* Hardware Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '2px solid rgba(0,0,0,0.3)', paddingBottom: '1.5rem' }}>
+      <div className="drum-pad-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <div 
             onClick={() => setPowerOn(!powerOn)}
@@ -244,14 +244,9 @@ export default function PercussionPad() {
       </div>
 
       {/* Pads Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '20px',
-        userSelect: 'none',
+      <div className="drum-pad-grid" style={{ 
         opacity: powerOn ? 1 : 0.4,
-        pointerEvents: powerOn ? 'auto' : 'none',
-        transition: 'opacity 0.3s'
+        pointerEvents: powerOn ? 'auto' : 'none'
       }}>
         {DRUM_PADS.map(pad => {
           const isActive = activePad === pad.id;
@@ -265,6 +260,7 @@ export default function PercussionPad() {
               onMouseEnter={() => setHoveredPad(pad.id)}
               onMouseLeave={() => setHoveredPad(null)}
               style={{
+                touchAction: 'none',
                 aspectRatio: '1',
                 background: isActive 
                   ? pad.color 
