@@ -941,9 +941,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           borderRadius: '16px',
           background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.95)',
           border: `1px solid ${isPast ? 'rgba(255,255,255,0.06)' : theme.light}`,
-          boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
-          transition: 'box-shadow 0.2s ease',
         }}>
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
 
@@ -1077,13 +1075,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        <div style={{ display: 'block' }}>
                           {sorted.map((s, i) => {
                             const dot = statusDot(s.status);
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
                             const roleName = getBilingualName(s.instrument, instrumentDisplayMap, instrumentMatchMap);
                             return (
-                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative', maxWidth: '100%', boxSizing: 'border-box', minWidth: 0 }}>
+                              <div key={i} style={{ display: 'inline-block', margin: '3px', padding: '4px 10px', background: '#2a3245', borderRadius: '4px', maxWidth: '100%', boxSizing: 'border-box', position: 'relative' }}>
                                 {userRole === 'director' && (
                                   <button onClick={() => handleRemoveFromRoster(s.id)}
                                     style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

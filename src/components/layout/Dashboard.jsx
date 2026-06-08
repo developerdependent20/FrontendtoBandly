@@ -278,7 +278,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           height: '60px', background: 'rgba(15, 23, 42, 0.2)', 
           borderBottom: '1px solid rgba(255,255,255,0.05)',
           display: 'flex', justifyContent: 'flex-end', alignItems: 'center', 
-          padding: '0 2rem', backdropFilter: 'blur(10px)', gap: '12px'
+          padding: '0 2rem', gap: '12px'
         }}>
 
           {profile?.role === 'director' && profile?.organizations?.invite_code && (
