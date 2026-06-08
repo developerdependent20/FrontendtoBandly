@@ -24,6 +24,28 @@ const SECTIONS = [
   { label: 'Outro', tag: '{start_of_verse: Outro}\n\n{end_of_verse}' },
 ];
 
+const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const FLAT_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+function transposeChordString(chord, delta) {
+  if (delta === 0) return chord;
+  // Extraer la nota base y el sufijo (ej: "C#m7" -> "C#", "m7")
+  const match = chord.match(/^([A-G][#b]?)(.*)$/);
+  if (!match) return chord; // No es un acorde estándar
+  
+  const note = match[1];
+  const suffix = match[2];
+  
+  let index = SHARP_NOTES.indexOf(note);
+  if (index === -1) index = FLAT_NOTES.indexOf(note);
+  if (index === -1) return chord;
+  
+  let newIndex = (index + delta) % 12;
+  if (newIndex < 0) newIndex += 12;
+  
+  return SHARP_NOTES[newIndex] + suffix;
+}
+
 export default function ChartStudio({ song, onClose, onSave, readOnly = false }) {
   // ── State ──
   const [source, setSource] = useState(song?.chart_data || '');
@@ -125,25 +147,27 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   };
 
   // ── Parse & Render ChordPro ──
-  const renderChart = useCallback(() => {
-    if (!source.trim()) return '<div class="cs-empty-state"><h3>Tu chart aparecerá aquí</h3><p>Escribe o pega tu letra en el editor y usa los botones de acordes para insertarlos.</p></div>';
-    try {
-      const parser = new ChordSheetJS.ChordProParser();
-      let parsedSong = parser.parse(source);
-      if (transposeDelta !== 0) {
-        parsedSong = parsedSong.transpose(transposeDelta);
-      }
-      
-      // En vez de usar el formateador HTML complejo que rompe los espacios de la gente,
-      // volvemos a generar el texto exacto con ChordProFormatter y lo pintamos manual
-      const textFormatter = new ChordSheetJS.ChordProFormatter();
-      const transposedText = textFormatter.format(parsedSong);
-      
-      return renderPlainChords(transposedText);
-    } catch (e) {
-      return renderPlainChords(source);
+  // Usamos debouncedSource para no bloquear la UI al escribir rápido
+  const [debouncedSource, setDebouncedSource] = useState(source);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSource(source), 300);
+    return () => clearTimeout(timer);
+  }, [source]);
+
+  const renderedHtml = React.useMemo(() => {
+    if (!debouncedSource.trim()) return '<div class="cs-empty-state"><h3>Tu chart aparecerá aquí</h3><p>Escribe o pega tu letra en el editor y usa los botones de acordes para insertarlos.</p></div>';
+    
+    // Transposición manual usando Regex para preservar TODOS los espacios y saltos de línea originales.
+    // Esto evita que ChordSheetJS colapse los espacios en blanco múltiples.
+    let processedText = debouncedSource;
+    if (transposeDelta !== 0) {
+      processedText = processedText.replace(/\[([^\]]+)\]/g, (match, chord) => {
+        return `[${transposeChordString(chord, transposeDelta)}]`;
+      });
     }
-  }, [source, transposeDelta]);
+    
+    return renderPlainChords(processedText);
+  }, [debouncedSource, transposeDelta]);
 
   function renderPlainChords(text) {
     const lines = text.split('\n');
@@ -445,7 +469,7 @@ También puedes escribir directamente: [Acorde]
           <div className={`cs-preview-pane ${mode === 'edit' ? '' : 'cs-preview-full'}`}>
             {drawingActive && <div className="cs-draw-banner">🖊️ Modo Anotación Activo — Dibuja sobre el chart</div>}
             <div className="cs-rendered-chart" ref={containerRef} style={{ position: 'relative' }}>
-              <div className="cs-chart-html" dangerouslySetInnerHTML={{ __html: renderChart() }} />
+              <div className="cs-chart-html" dangerouslySetInnerHTML={{ __html: renderedHtml }} />
               <canvas
                 ref={canvasRef}
                 className={`cs-canvas ${drawingActive ? 'cs-canvas-active' : ''}`}

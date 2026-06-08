@@ -1013,9 +1013,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: '1 1 auto' }}>
                   {userSlots.map((slot, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
-                      <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument, instrumentDisplayMap, instrumentMatchMap)}</span>
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)`, maxWidth: '100%', boxSizing: 'border-box' }}>
+                      <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{getInstrumentIcon(slot.instrument)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getBilingualName(slot.instrument, instrumentDisplayMap, instrumentMatchMap)}</span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
                     </div>
                   ))}
@@ -1085,17 +1085,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
                             const roleName = getBilingualName(s.instrument, instrumentDisplayMap, instrumentMatchMap);
                             return (
-                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative', maxWidth: '100%', boxSizing: 'border-box', minWidth: 0 }}>
                                 {userRole === 'director' && (
                                   <button onClick={() => handleRemoveFromRoster(s.id)}
                                     style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <X size={8} />
                                   </button>
                                 )}
-                                <span style={{ fontSize: '0.78rem' }}>{getInstrumentIcon(s.instrument)}</span>
-                                <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{roleName}</span>
+                                <span style={{ fontSize: '0.78rem', flexShrink: 0 }}>{getInstrumentIcon(s.instrument)}</span>
+                                <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0 }}>{roleName}</span>
                                 <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
+                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0 }}>{memberName}</span>
                                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
                               </div>
                             );

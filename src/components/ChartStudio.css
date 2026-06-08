@@ -446,7 +446,7 @@
 /* ── Rendered Chart (Dark Premium Theme) ── */
 .cs-rendered-chart {
   flex: 1 1 0;
-  overflow-y: auto;
+  overflow: auto;
   padding: 3rem 4rem;
   position: relative;
   background: #020617; /* Deep stage dark */
@@ -465,9 +465,10 @@
   color: #cbd5e1;
   position: relative;
   z-index: 1;
-  white-space: pre-wrap;
+  white-space: pre; /* MUST NOT BE PRE-WRAP or it breaks chords on mobile */
   max-width: 900px;
   margin: 0 auto;
+  overflow-x: auto;
 }
 
 .cs-chart-html h1 {
@@ -591,14 +592,30 @@
   .cs-header-center { display: none; }
   .cs-header::-webkit-scrollbar { display: none; }
   .cs-header-left h2 { font-size: 0.85rem; max-width: 100px; }
+  
   .cs-chord-palette { 
     padding: 0.5rem 0.75rem; 
-    overflow-x: auto; 
-    -webkit-overflow-scrolling: touch;
   }
+  
+  .cs-chord-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .cs-chord-row::-webkit-scrollbar { display: none; }
+  
+  .cs-chord-buttons {
+    flex-wrap: nowrap;
+  }
+  
   .cs-row-label { width: 40px; font-size: 0.55rem; }
-  .cs-chord-btn { padding: 3px 5px; font-size: 0.65rem; min-width: 26px; }
-  .cs-section-btn { padding: 3px 6px; font-size: 0.6rem; }
+  .cs-chord-btn { padding: 3px 5px; font-size: 0.65rem; min-width: 26px; flex-shrink: 0; }
+  .cs-section-btn { padding: 3px 6px; font-size: 0.6rem; flex-shrink: 0; }
+  
   .cs-rendered-chart { padding: 1.5rem; margin: 0; }
   .cs-chart-html { font-size: 0.95rem; line-height: 2; }
   .cs-textarea { font-size: 0.8rem; padding: 0.75rem; }

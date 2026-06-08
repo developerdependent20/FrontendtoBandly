@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, Music, Loader2, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
-import { unzipSync } from 'fflate';
+import { unzip } from 'fflate';
 import './SequenceUploader.css';
 
 // ─────────────────────────────────────────────
@@ -128,14 +128,31 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
       return;
     }
 
-    setGlobalStatus('Descomprimiendo ZIP...');
+    setGlobalStatus('Preparando archivo...');
     setError(null);
 
     try {
       setZipFile(file); // Guardamos para subirlo después
+      
+      // Damos tiempo a React para pintar el estado de "Cargando..."
+      await new Promise(r => setTimeout(r, 100));
+
       const arrayBuffer = await file.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
-      const unzipped = unzipSync(uint8);
+      
+      setGlobalStatus('Descomprimiendo ZIP (esto puede tomar unos segundos)...');
+      await new Promise(r => setTimeout(r, 100));
+
+      // Usar unzip asíncrono para no bloquear la UI
+      const unzipped = await new Promise((resolve, reject) => {
+        unzip(uint8, (err, data) => {
+          if (err) reject(err);
+          else resolve(data);
+        });
+      });
+
+      setGlobalStatus('Analizando stems...');
+      await new Promise(r => setTimeout(r, 50));
 
       // Filtrar solo archivos de audio
       const audioExtensions = ['.wav', '.aif', '.aiff', '.mp3', '.ogg', '.flac'];

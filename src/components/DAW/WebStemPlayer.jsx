@@ -275,51 +275,47 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       const audioExtensions = ['.wav', '.mp3', '.aif', '.aiff', '.ogg', '.flac'];
       const validStems = [];
 
-      // 4. Decodificar stems uno por uno (protege RAM en movil)
-      for (let i = 0; i < stemsMeta.length; i++) {
-        const stemMeta = stemsMeta[i];
-        const targetName = stemMeta.original_name;
-        setLoadingMsg(`Preparando: ${stemMeta.instrument_label || targetName}`);
+      // 4. Decodificar stems en lotes (chunks) de 4 para usar multithreading sin saturar la RAM móvil
+      const chunkSize = 4;
+      for (let i = 0; i < stemsMeta.length; i += chunkSize) {
+        const chunk = stemsMeta.slice(i, i + chunkSize);
+        
+        await Promise.all(chunk.map(async (stemMeta, chunkIdx) => {
+          const targetName = stemMeta.original_name;
+          const zipEntryKey = Object.keys(unzipped).find((path) =>
+            path.split('/').pop() === targetName || path === targetName
+          );
+          if (!zipEntryKey) return;
 
-        const zipEntryKey = Object.keys(unzipped).find((path) =>
-          path.split('/').pop() === targetName || path === targetName
-        );
-        if (!zipEntryKey) {
-          console.warn(`[WebStemPlayer] Stem "${targetName}" no encontrado en ZIP`);
-          continue;
-        }
+          const fileData = unzipped[zipEntryKey];
+          const ext = targetName.toLowerCase().substring(targetName.lastIndexOf('.'));
+          if (!audioExtensions.includes(ext)) {
+            delete unzipped[zipEntryKey];
+            return;
+          }
 
-        const fileData = unzipped[zipEntryKey];
-        const ext = targetName.toLowerCase().substring(targetName.lastIndexOf('.'));
-        if (!audioExtensions.includes(ext)) {
-          delete unzipped[zipEntryKey];
-          continue;
-        }
+          try {
+            const ab = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
+            delete unzipped[zipEntryKey];
+            
+            const buffer = await ctx.decodeAudioData(ab);
+            const stemId = stemMeta.id || (i + chunkIdx);
+            buffersRef.current[stemId] = buffer;
+            
+            validStems.push({
+              id: stemId,
+              original_name: targetName,
+              instrument_label: stemMeta.instrument_label || 'Pista',
+              instrument_type: stemMeta.instrument_type || 'unknown',
+              color: stemMeta.color || '#2563eb',
+              volume: 1,
+            });
+          } catch (decodeErr) {
+            console.warn(`[WebStemPlayer] No se pudo decodificar: ${targetName}`, decodeErr);
+          }
+        }));
 
-        try {
-          // Copiar a un ArrayBuffer nuevo para poder decodificarlo
-          const ab = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
-          
-          // LIBERAR LA ENTRADA DESCOMPRIMIDA INMEDIATAMENTE
-          delete unzipped[zipEntryKey];
-          
-          const buffer = await ctx.decodeAudioData(ab);
-          const stemId = stemMeta.id || i;
-          buffersRef.current[stemId] = buffer;
-          
-          validStems.push({
-            id: stemId,
-            original_name: targetName,
-            instrument_label: stemMeta.instrument_label || 'Pista',
-            instrument_type: stemMeta.instrument_type || 'unknown',
-            color: stemMeta.color || '#2563eb',
-            volume: 1,
-          });
-        } catch (decodeErr) {
-          console.warn(`[WebStemPlayer] No se pudo decodificar: ${targetName}`, decodeErr);
-        }
-
-        setLoadProgress(70 + Math.round(((i + 1) / stemsMeta.length) * 28));
+        setLoadProgress(70 + Math.round((Math.min(i + chunkSize, stemsMeta.length) / stemsMeta.length) * 28));
       }
 
       if (validStems.length === 0) throw new Error('No se pudo decodificar ningun stem del ZIP.');
