@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
-  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check, Search
+  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
@@ -18,7 +19,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 
 // [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
 // [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
-const DEFAULT_INSTRUMENT_MATCH_MAP = {
+const INSTRUMENT_MATCH_MAP = {
   'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
   'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
@@ -30,7 +31,7 @@ const DEFAULT_INSTRUMENT_MATCH_MAP = {
 };
 
 // [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
-const DEFAULT_INSTRUMENT_DISPLAY_MAP = {
+const INSTRUMENT_DISPLAY_MAP = {
   'instr:bateria': 'DRUMS / BATERÍA',
   'instr:bajo': 'BASS / BAJO',
   'instr:piano': 'KEYS / TECLADO',
@@ -53,24 +54,28 @@ const cleanEncoding = (str) => {
     .replace(/Vacíos/g, 'Vacíos');
 };
 
-const getBilingualName = (inst, displayMap, matchMap) => {
+const getBilingualName = (inst) => {
   const normalized = (inst || '').toLowerCase();
-  if (displayMap[normalized]) return cleanEncoding(displayMap[normalized]);
-  const tag = Object.keys(matchMap).find(k => normalized.includes(k)) ? matchMap[Object.keys(matchMap).find(k => normalized.includes(k))] : null;
-  return cleanEncoding(displayMap[tag] || inst);
+  if (INSTRUMENT_DISPLAY_MAP[normalized]) return cleanEncoding(INSTRUMENT_DISPLAY_MAP[normalized]);
+  const tag = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k)) 
+    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k))] 
+    : null;
+  return cleanEncoding(INSTRUMENT_DISPLAY_MAP[tag] || inst);
 };
 
-const getSuggestedMembers = (roleName, members, matchMap) => {
+const getSuggestedMembers = (roleName, members) => {
   if (!roleName || !members) return { suggested: [], others: (members || []) };
   const normalizedRole = roleName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const tagToFind = Object.keys(matchMap).find(k => normalizedRole.includes(k)) ? matchMap[Object.keys(matchMap).find(k => normalizedRole.includes(k))] : null;
+  const tagToFind = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k)) 
+    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k))] 
+    : null;
   if (!tagToFind) return { suggested: [], others: (members || []) };
   const suggested = (members || []).filter(m => (m.functions || []).includes(tagToFind));
   const others = (members || []).filter(m => !(m.functions || []).includes(tagToFind));
   return { suggested, others };
 };
 
-const DEFAULT_ROLE_BANK = [
+const ROLE_BANK = [
   {
     category: 'MÚSICOS',
     color: 'var(--primary)',
@@ -80,7 +85,7 @@ const DEFAULT_ROLE_BANK = [
   {
     category: 'PRODUCCIÓN / MEDIA',
     color: 'var(--accent)',
-    bg: 'rgba(37, 99, 235,0.1)',
+    bg: 'rgba(139,92,246,0.1)',
     roles: ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical']
   },
   {
@@ -91,163 +96,20 @@ const DEFAULT_ROLE_BANK = [
   }
 ];
 
-// Campo de fecha — calendario custom premium (no usa el picker nativo)
-const DatePickerField = ({ value, onChange, formatEventDate }) => {
-  const [open, setOpen] = React.useState(false);
-  const [viewDate, setViewDate] = React.useState(() => value ? new Date(value + 'T12:00:00') : new Date());
-  const wrapperRef = React.useRef(null);
-
-  // Cerrar al hacer click fuera
-  React.useEffect(() => {
-    const handler = (e) => { if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
-  const today = new Date();
-  const selected = value ? new Date(value + 'T12:00:00') : null;
-
-  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const dayNames = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
-
-  // Primer día del mes y total de días
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
-
-  const selectDay = (day) => {
-    const mm = String(month + 1).padStart(2, '0');
-    const dd = String(day).padStart(2, '0');
-    onChange({ target: { value: `${year}-${mm}-${dd}` } });
-    setOpen(false);
-  };
-
-  const isToday = (day) => today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-  const isSelected = (day) => selected && selected.getDate() === day && selected.getMonth() === month && selected.getFullYear() === year;
-
-  // Build grid: empty slots + days
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-
-  return (
-    <div ref={wrapperRef} style={{ position: 'relative', width: '100%' }}>
-      {/* Trigger button */}
-      <div
-        onClick={() => setOpen(!open)}
-        style={{
-          background: open ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${open ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`,
-          borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 16px', gap: '12px',
-          height: '50px', color: value ? 'white' : 'rgba(255,255,255,0.4)',
-          transition: 'all 0.2s', cursor: 'pointer',
-        }}
-      >
-        <CalendarIcon size={18} style={{ color: value ? 'var(--primary)' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-        <span style={{ fontSize: '0.9rem', fontWeight: '600', textTransform: 'capitalize', flex: 1 }}>
-          {value ? formatEventDate(value) : 'Seleccionar Fecha...'}
-        </span>
-        <ChevronDown size={14} style={{ opacity: 0.5, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-      </div>
-
-      {/* Custom Calendar Dropdown */}
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 2000,
-          background: 'linear-gradient(135deg, #0f172a, #1a2133)',
-          border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px',
-          padding: '20px', minWidth: '300px',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.8)',
-          animation: 'dropdownFadeIn 0.2s ease-out',
-        }}>
-          {/* Month nav */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', padding: '6px 10px', fontSize: '1rem', lineHeight: 1 }}>‹</button>
-            <span style={{ fontWeight: '700', fontSize: '1rem', color: 'white', textTransform: 'capitalize' }}>{monthNames[month]} {year}</span>
-            <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', padding: '6px 10px', fontSize: '1rem', lineHeight: 1 }}>›</button>
-          </div>
-
-          {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
-            {dayNames.map(d => (
-              <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', padding: '4px 0' }}>{d}</div>
-            ))}
-          </div>
-
-          {/* Day grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-            {cells.map((day, idx) => (
-              <div key={idx}>
-                {day ? (
-                  <button
-                    onClick={() => selectDay(day)}
-                    style={{
-                      width: '100%', aspectRatio: '1', border: 'none', borderRadius: '10px',
-                      cursor: 'pointer', fontSize: '0.85rem', fontWeight: isSelected(day) ? '800' : '500',
-                      background: isSelected(day)
-                        ? 'linear-gradient(135deg, var(--primary), #6366f1)'
-                        : isToday(day)
-                          ? 'rgba(59,130,246,0.15)'
-                          : 'transparent',
-                      color: isSelected(day) ? 'white' : isToday(day) ? 'var(--primary)' : 'rgba(255,255,255,0.8)',
-                      outline: isToday(day) && !isSelected(day) ? '1px solid rgba(59,130,246,0.4)' : 'none',
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { if (!isSelected(day)) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-                    onMouseLeave={e => { if (!isSelected(day)) e.currentTarget.style.background = isToday(day) ? 'rgba(59,130,246,0.15)' : 'transparent'; }}
-                  >{day}</button>
-                ) : <div />}
-              </div>
-            ))}
-          </div>
-          {/* Footer */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
-            <button onClick={() => { onChange({ target: { value: '' } }); setOpen(false); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}>Borrar</button>
-            <button onClick={() => {
-              const t = new Date();
-              const mm = String(t.getMonth()+1).padStart(2,'0');
-              const dd = String(t.getDate()).padStart(2,'0');
-              onChange({ target: { value: `${t.getFullYear()}-${mm}-${dd}` } });
-              setOpen(false);
-            }} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700' }}>Hoy</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
-const MemberSelector = ({ value, onChange, members, roleName, placeholder, eventDate, instrumentMatchMap }) => {
+const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const selectedMember = members?.find(m => m.id === value);
-  const { suggested, others } = getSuggestedMembers(roleName, members, instrumentMatchMap);
+  const { suggested, others } = getSuggestedMembers(roleName, members);
 
-  const isBlocked = (member) => {
-    if (!eventDate || !member.availability) return false;
-    const dateStr = eventDate.split('T')[0];
-    return member.availability.includes(dateStr);
-  };
-
-  const handleSelect = (member, e) => {
-    if (isBlocked(member)) {
-      alert(`${member.full_name} no está disponible en esta fecha.`);
-      return;
-    }
-    onChange(member.id, e?.shiftKey);
+  const handleSelect = (id) => {
+    onChange(id);
     setIsOpen(false);
     setShowAll(false);
-    setSearchQuery('');
   };
 
-  const allMembers = [...suggested, ...others];
-  const filteredList = allMembers.filter(m => m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const listToRender = (suggested.length > 0 && !showAll) ? suggested : (showAll ? [...suggested, ...others] : others);
 
   return (
     <div style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
@@ -299,129 +161,64 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
             position: 'absolute', 
             top: '115%', 
             left: 0, 
-            minWidth: '250px', 
+            minWidth: '220px', 
             background: '#1a2133', 
             border: '1px solid rgba(255,255,255,0.1)', 
             borderRadius: '16px', 
             zIndex: 101, 
-            maxHeight: '300px', 
+            maxHeight: '260px', 
             overflowY: 'auto', 
             boxShadow: '0 20px 60px rgba(0,0,0,0.8)', 
-            padding: '12px', 
+            padding: '8px', 
             animation: 'dropdownFadeIn 0.2s ease-out' 
           }}>
-            <div style={{ position: 'relative', marginBottom: '12px' }}>
-              <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: 'rgba(255,255,255,0.3)' }} />
-              <input 
-                autoFocus
-                placeholder="Buscar miembro..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '8px 8px 8px 30px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '0.8rem' }}
-              />
-            </div>
-            {(!showAll && !searchQuery) ? (
-              <>
-                {suggested.length > 0 && (
-                  <div style={{ marginBottom: '0.8rem' }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '4px' }}>Recomendados ({roleName})</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {suggested.map(m => {
-                        const blocked = isBlocked(m);
-                        return (
-                        <div 
-                          key={m.id} 
-                          onClick={(e) => handleSelect(m, e)} 
-                          style={{ 
-                            padding: '10px 14px', 
-                            borderRadius: '12px', 
-                            cursor: blocked ? 'not-allowed' : 'pointer', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '12px', 
-                            background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)',
-                            border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
-                            transition: 'all 0.2s',
-                            opacity: blocked ? 0.4 : 1
-                          }}
-                          onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
-                          onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                        >
-                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
-                        </div>
-                      )})}
-                    </div>
-                  </div>
-                )}
-                {others.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '4px', marginTop: '12px' }}>Otros Miembros</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {others.map(m => {
-                        const blocked = isBlocked(m);
-                        return (
-                        <div 
-                          key={m.id} 
-                          onClick={(e) => handleSelect(m, e)} 
-                          style={{ 
-                            padding: '10px 14px', 
-                            borderRadius: '12px', 
-                            cursor: blocked ? 'not-allowed' : 'pointer', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '12px', 
-                            background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent',
-                            border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
-                            transition: 'all 0.2s',
-                            opacity: blocked ? 0.4 : 1
-                          }}
-                          onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
-                          onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                        >
-                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
-                        </div>
-                      )})}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {filteredList.length === 0 ? (
-                  <div style={{ padding: '10px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>No se encontraron resultados</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {filteredList.map(m => {
-                      const blocked = isBlocked(m);
-                      return (
-                      <div 
-                        key={m.id} 
-                        onClick={(e) => handleSelect(m, e)} 
-                        style={{ 
-                          padding: '10px 14px', 
-                          borderRadius: '12px', 
-                          cursor: blocked ? 'not-allowed' : 'pointer', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '12px', 
-                          background: selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent',
-                          border: `1px solid ${selectedMember?.id === m.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
-                          transition: 'all 0.2s',
-                          opacity: blocked ? 0.4 : 1
-                        }}
-                        onMouseEnter={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1.02)'; } }}
-                        onMouseLeave={e => { if(!blocked) { e.currentTarget.style.background = selectedMember?.id === m.id ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                      >
-                        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '800' }}>{m.full_name[0]}</div>
-                        <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{m.full_name}</span>
-                        {selectedMember?.id === m.id && <Check size={14} style={{ marginLeft: 'auto' }} />}
-                      </div>
-                    )})}
-                  </div>
-                )}
-              </>
+            {listToRender.map(m => (
+              <div 
+                key={m.id} 
+                onClick={() => handleSelect(m.id)} 
+                style={{ 
+                  padding: '10px 14px', 
+                  borderRadius: '12px', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
+                  marginBottom: '4px',
+                  transition: 'all 0.2s ease'
+                }} 
+                className="dropdown-item-custom"
+              >
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                  {m.full_name?.[0]}
+                </div>
+                <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {m.full_name}
+                </div>
+                {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }}>✨</span>}
+              </div>
+            ))}
+            {suggested.length > 0 && !showAll && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
+                style={{ 
+                  width: '100%', 
+                  padding: '12px', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  border: 'none', 
+                  color: 'var(--primary)', 
+                  fontSize: '0.7rem', 
+                  fontWeight: '900', 
+                  cursor: 'pointer', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1.5px', 
+                  borderRadius: '12px', 
+                  marginTop: '6px',
+                  border: '1px dashed rgba(59,130,246,0.3)'
+                }}
+              >
+                + Mostrar resto del equipo
+              </button>
             )}
           </div>
         </>
@@ -430,186 +227,7 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, event
   );
 };
 
-const SongPicker = ({ value, onChange, songs, events, editingEventId }) => {
-  const [open, setOpen] = React.useState(false);
-  const [query, setQuery] = React.useState('');
-
-  const selectedSong = songs.find(s => String(s.id) === String(value));
-
-  // Build history map
-  const songHistory = React.useMemo(() => {
-    const map = {};
-    (events || []).forEach(ev => {
-      if (!ev.date) return;
-      (ev.event_songs || []).forEach(es => {
-        if (!map[es.song_id]) map[es.song_id] = [];
-        map[es.song_id].push({ date: ev.date, name: ev.name, eventId: ev.id });
-      });
-    });
-    Object.keys(map).forEach(k => map[k].sort((a, b) => new Date(b.date) - new Date(a.date)));
-    return map;
-  }, [events]);
-
-  const relDate = (dateStr) => {
-    const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
-    const diff = Math.round((new Date().setHours(0,0,0,0) - d) / 86400000);
-    if (diff === 0) return 'Hoy';
-    if (diff === 1) return 'Ayer';
-    if (diff < 7) return `${diff}d`;
-    if (diff < 30) return `${Math.round(diff/7)}sem`;
-    if (diff < 365) return `${Math.round(diff/30)}m`;
-    return `${Math.round(diff/365)}a`;
-  };
-
-  const filtered = [...songs]
-    .sort((a, b) => a.title.localeCompare(b.title))
-    .filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
-
-  return (
-    <div style={{ flex: 1, position: 'relative' }}>
-      {/* Trigger button */}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'transparent', border: 'none', padding: '0', cursor: 'pointer', gap: '8px',
-        }}
-      >
-        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: selectedSong ? 'white' : 'rgba(255,255,255,0.3)', textAlign: 'left', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selectedSong ? selectedSong.title : '— Seleccionar Canción —'}
-        </span>
-        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', flexShrink: 0 }}>▼</span>
-      </button>
-
-      {/* Dropdown */}
-      {open && (
-        <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 200 }} />
-          <div style={{
-            position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 201,
-            background: '#101827', border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
-            maxHeight: '380px', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            minWidth: '320px',
-          }}>
-            {/* Search */}
-            <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <input
-                autoFocus
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Buscar canción..."
-                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '7px 12px', color: 'white', fontSize: '0.82rem', outline: 'none' }}
-              />
-            </div>
-
-            {/* List */}
-            <div style={{ overflowY: 'auto', flex: 1 }}>
-              {filtered.length === 0 && (
-                <div style={{ padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin resultados</div>
-              )}
-              {filtered.map(s => {
-                const hist = (songHistory[s.id] || []).filter(h => h.eventId !== editingEventId);
-                const last = hist[0];
-                const isSelected = String(s.id) === String(value);
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => { onChange(s.id); setOpen(false); setQuery(''); }}
-                    style={{
-                      padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                      background: isSelected ? 'rgba(37,99,235,0.15)' : 'transparent',
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    {/* Song title row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: isSelected ? 'var(--primary)' : 'white', flex: 1 }}>{s.title}</span>
-                      {s.key && <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'rgba(37,99,235,0.2)', color: '#60a5fa', padding: '2px 7px', borderRadius: '6px', flexShrink: 0 }}>{s.key}</span>}
-                      {s.bpm && <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '2px 7px', borderRadius: '6px', flexShrink: 0 }}>{s.bpm} BPM</span>}
-                    </div>
-                    {/* History pills */}
-                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                      {hist.length === 0 ? (
-                        <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>Primera vez 🎉</span>
-                      ) : (
-                        hist.slice(0, 4).map((h, hi) => (
-                          <span key={hi} style={{
-                            fontSize: '0.62rem', fontWeight: '700',
-                            background: hi === 0 ? 'rgba(37,99,235,0.2)' : 'rgba(255,255,255,0.05)',
-                            color: hi === 0 ? '#60a5fa' : 'rgba(255,255,255,0.35)',
-                            padding: '2px 7px', borderRadius: '10px', border: hi === 0 ? '1px solid rgba(37,99,235,0.3)' : '1px solid rgba(255,255,255,0.06)',
-                          }}>📅 {relDate(h.date)} · {h.name.length > 18 ? h.name.slice(0,18)+'…' : h.name}</span>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-const RoleInput = ({ value, onChange }) => {
-
-  const [localValue, setLocalValue] = React.useState(value);
-  
-  React.useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  return (
-    <input 
-      className="input-field"
-      placeholder="Nombre del rol..."
-      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
-      value={localValue}
-      onChange={e => setLocalValue(e.target.value)}
-      onBlur={() => { if (localValue !== value) onChange(localValue); }}
-      onKeyDown={e => { if (e.key === 'Enter') { e.target.blur(); } }}
-    />
-  );
-};
-
 export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
-  const orgSettings = profile?.organizations?.settings || {};
-
-  const instrumentDisplayMap = React.useMemo(() => {
-    if (!orgSettings.instruments) return DEFAULT_INSTRUMENT_DISPLAY_MAP;
-    const customMap = { ...DEFAULT_INSTRUMENT_DISPLAY_MAP };
-    orgSettings.instruments.forEach(inst => {
-      customMap[`instr:${inst.id}`] = (inst.label || '').toUpperCase();
-    });
-    return customMap;
-  }, [orgSettings]);
-
-  const instrumentMatchMap = React.useMemo(() => {
-    if (!orgSettings.instruments) return DEFAULT_INSTRUMENT_MATCH_MAP;
-    const customMap = { ...DEFAULT_INSTRUMENT_MATCH_MAP };
-    orgSettings.instruments.forEach(inst => {
-      customMap[inst.label.toLowerCase()] = `instr:${inst.id}`;
-      customMap[inst.id.toLowerCase()] = `instr:${inst.id}`;
-    });
-    return customMap;
-  }, [orgSettings]);
-
-  const roleBank = React.useMemo(() => {
-    if (!orgSettings.roles && !orgSettings.instruments) return DEFAULT_ROLE_BANK;
-    const musicians = (orgSettings.instruments || []).map(i => i.label);
-    const admins = (orgSettings.roles || []).map(r => r.label);
-    return [
-      { category: 'MÚSICOS / INSTRUMENTOS', color: 'var(--primary)', bg: 'rgba(59,130,246,0.1)', roles: musicians.length ? musicians : DEFAULT_ROLE_BANK[0].roles },
-      { category: 'ADMINISTRADORES / ROLES', color: 'var(--accent)', bg: 'rgba(37, 99, 235,0.1)', roles: admins.length ? admins : DEFAULT_ROLE_BANK[1].roles }
-    ];
-  }, [orgSettings]);
-
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -632,8 +250,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [pendingTemplate, setPendingTemplate] = useState(null);
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
-  const [showNewEventPicker, setShowNewEventPicker] = useState(false);
-  const [pendingNewDate, setPendingNewDate] = useState('');
+  const [selectedEventDetails, setSelectedEventDetails] = useState(null);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -654,7 +271,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const i = (inst || '').toLowerCase();
     if (i.includes('drums') || i.includes('batería') || i.includes('perc')) return <Drum size={20} />;
     if (i.includes('bass') || i.includes('bajo')) return <Zap size={20} />;
-    if (i.includes('gtr') || i.includes('guitar') || i.includes('el├®ctrica') || i.includes('acústica')) return <Music size={20} />;
+    if (i.includes('gtr') || i.includes('guitar') || i.includes('eléctrica') || i.includes('acústica')) return <Music size={20} />;
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
@@ -717,36 +334,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleNewEvent = (selectedDate) => {
-    setPendingNewDate(selectedDate || '');
-    setShowNewEventPicker(true);
-  };
-
-  const openNewEventWithTemplate = (type, duplicateFrom) => {
-    setShowNewEventPicker(false);
     setEditingEventId(null);
     setEventName('');
-    setEventDate(pendingNewDate || '');
+    setEventDate(selectedDate || '');
     setDescription('');
-    
-    if (type === 'blank') {
-      setFormat('full');
-      setRoster([]);
-      setSetlist([]);
-      setInitialRoster([]);
-    } else if (type === 'duplicate' && duplicateFrom) {
-      setFormat('full');
-      setEventName(duplicateFrom.name + ' (Copia)');
-      setRoster(duplicateFrom.event_roster.map(r => ({ ...r, id: `temp-${Date.now()}-${Math.random()}`, status: 'pending' })));
-      setSetlist(duplicateFrom.event_songs || []);
-      setInitialRoster([]);
-    } else {
-      setFormat(type);
-      const template = generateTemplate(type);
-      setRoster(template);
-      setSetlist([]);
-      setInitialRoster(JSON.parse(JSON.stringify(template)));
-    }
+    setFormat('full');
+    const template = generateTemplate('full');
+    setRoster(template);
+    setInitialRoster(JSON.parse(JSON.stringify(template)));
     setDbHistory([]);
+    setSetlist([]);
     setModalTab('info');
     setShowModal(true);
   };
@@ -848,7 +445,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleRemoveFromRoster = async (rosterId) => {
-    if (!confirm('┬┐Seguro que quieres eliminar a este usuario del evento?')) return;
+    if (!confirm('¿Seguro que quieres eliminar a este usuario del evento?')) return;
     try {
       await supabase.from('event_roster').delete().eq('id', rosterId);
       if (refreshData) refreshData();
@@ -868,7 +465,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   todayStart.setHours(0, 0, 0, 0);
 
   const upcomingEvents = eventsToShow.filter(ev => {
-    if (!ev.date) return true; // Sin fecha ├óÔÇáÔÇÖ siempre próximo
+    if (!ev.date) return true; // Sin fecha â†’ siempre próximo
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
     return evDate >= todayStart;
   });
@@ -932,8 +529,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
           backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          transform: 'translateZ(0)',
           transition: 'box-shadow 0.2s ease',
         }}>
           {/* Accent line left */}
@@ -941,7 +536,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
           <div style={{ padding: '1.25rem 1.25rem 1.25rem 1.6rem' }}>
 
-            {/* ── TOP ROW ────────────────────────────────────────────────── */}
+            {/* ── TOP ROW ─────────────────────────────────── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -962,7 +557,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {ev.name}
                 </h4>
 
-                {/* Description ÔÇö button + expandable panel */}
+                {/* Description — button + expandable panel */}
                 {ev.description && (
                   <div style={{ marginTop: '6px' }}>
                     <button
@@ -1004,7 +599,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               )}
             </div>
 
-            {/* ÔöÇÔöÇ ASSIGNMENT ROW ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
+            {/* ── ASSIGNMENT ROW ──────────────────────────── */}
             {userSlots.length > 0 && (
               <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                 {/* Slot pills */}
@@ -1012,7 +607,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {userSlots.map((slot, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
                       <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument, instrumentDisplayMap, instrumentMatchMap)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
                     </div>
                   ))}
@@ -1038,7 +633,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
             )}
 
-            {/* ÔöÇÔöÇ EXPAND BUTTON ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
+            {/* ── EXPAND BUTTON ───────────────────────────── */}
             <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))}
               style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid ${isExpanded ? theme.light : 'rgba(255,255,255,0.06)'}`, borderRadius: '10px', color: isExpanded ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.light; e.currentTarget.style.color = theme.main; }}
@@ -1047,7 +642,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               {isExpanded ? 'Ocultar' : 'Ver equipo y canciones'}
             </button>
 
-            {/* ÔöÇÔöÇ EXPANDED SECTION ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
+            {/* ── EXPANDED SECTION ────────────────────────── */}
             {isExpanded && (
               <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid rgba(255,255,255,0.06)` }}>
                 {/* Team */}
@@ -1079,7 +674,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           {sorted.map((s, i) => {
                             const dot = statusDot(s.status);
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
-                            const roleName = getBilingualName(s.instrument, instrumentDisplayMap, instrumentMatchMap);
+                            const roleName = getBilingualName(s.instrument);
                             return (
                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
@@ -1188,50 +783,181 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         </div>
       </section>
 
-      {showNewEventPicker && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '8vh' }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', padding: '2rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}>
-            <h3 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Crear Nuevo Evento</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <button onClick={() => openNewEventWithTemplate('blank')} className="btn-primary" style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}>
-                📄 Evento en Blanco
-              </button>
-              <button onClick={() => openNewEventWithTemplate('full')} className="btn-primary" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--primary)', border: '1px solid rgba(59,130,246,0.3)' }}>
-                🎸 Plantilla Base (Banda Completa)
-              </button>
-              <button onClick={() => openNewEventWithTemplate('acoustic')} className="btn-primary" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
-                🪕 Plantilla Acústica
-              </button>
-              {pastEvents.length > 0 && (
-                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Duplicar evento pasado:</p>
-                  <select 
-                    className="input-field" 
-                    onChange={(e) => {
-                      if(e.target.value) {
-                        const ev = pastEvents.find(p => p.id === e.target.value);
-                        if(ev) openNewEventWithTemplate('duplicate', ev);
-                      }
-                    }}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="">Selecciona un evento...</option>
-                    {pastEvents.slice(0,5).map(p => (
-                      <option key={p.id} value={p.id}>{formatEventDate(p.date)} - {p.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-            <button onClick={() => setShowNewEventPicker(false)} style={{ marginTop: '1.5rem', width: '100%', padding: '0.8rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              Cancelar
-            </button>
+      {selectedEventDetails && createPortal((
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: '#0f172a', zIndex: 9999999, display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Header Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+             <button onClick={() => setSelectedEventDetails(null)} style={{ background: 'transparent', border: 'none', color: 'white', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem', cursor: 'pointer' }}>
+               <ChevronDown style={{ transform: 'rotate(90deg)' }} size={20} /> Volver
+             </button>
+             {!readOnly && (
+               <div style={{ display: 'flex', gap: '8px' }}>
+                 <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                   <Edit2 size={14} /> Editar
+                 </button>
+                 <button onClick={() => { if(window.confirm('¿Borrar?')) { supabase.from('events').delete().eq('id', selectedEventDetails.id).then(()=>refreshData()); setSelectedEventDetails(null); } }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                   <Trash2 size={14} />
+                 </button>
+               </div>
+             )}
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', paddingBottom: '4rem' }} className="custom-scrollbar">
+             
+             {/* Event Info */}
+             <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+               <div style={{ fontSize: '0.8rem', color: getEventTheme(selectedEventDetails.name).main, fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                 {formatEventDate(selectedEventDetails.date)}
+               </div>
+               <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: '0 0 1rem 0', color: 'white', lineHeight: 1.1 }}>{selectedEventDetails.name}</h2>
+               {selectedEventDetails.description && (
+                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                   {selectedEventDetails.description}
+                 </p>
+               )}
+             </div>
+
+             {/* Mi Participación */}
+             {(() => {
+                const userSlots = selectedEventDetails.event_roster?.filter(r => String(r.profile_id) === String(currentUserId)) || [];
+                if(userSlots.length === 0) return null;
+                const isPast = selectedEventDetails.date && new Date(selectedEventDetails.date.split('T')[0] + 'T00:00:00') < new Date().setHours(0,0,0,0);
+                
+                return (
+                  <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
+                     <h3 style={{ fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <User size={16} color="var(--primary)" /> Mi Participación
+                     </h3>
+                     
+                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                       {userSlots.map((s, i) => (
+                         <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', color: 'white' }}>
+                           {getBilingualName(s.instrument)}
+                         </div>
+                       ))}
+                     </div>
+
+                     {!isPast && userSlots.some(s => s.status !== 'confirmed') && (
+                        <button onClick={() => {
+                            updateRosterStatus(selectedEventDetails.id, currentUserId, 'confirmed');
+                            setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'confirmed'} : r)});
+                        }} style={{ width: '100%', padding: '1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
+                          <CheckCircle2 size={20} /> Confirmar Asistencia
+                        </button>
+                     )}
+                     {!isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
+                        <button onClick={() => {
+                            if(window.confirm('¿Seguro que no puedes asistir?')) {
+                              updateRosterStatus(selectedEventDetails.id, currentUserId, 'declined');
+                              setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'declined'} : r)});
+                            }
+                        }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                          <X size={16} /> Declinar
+                        </button>
+                     )}
+                  </div>
+                );
+             })()}
+
+             {/* Equipo */}
+             <div style={{ marginBottom: '2rem' }}>
+               <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 <Users size={20} color="var(--primary)" /> Equipo ({selectedEventDetails.event_roster?.length || 0})
+               </h3>
+               {(() => {
+                  const groups = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
+                  (selectedEventDetails.event_roster || []).forEach(s => {
+                    const g = getRoleGroup(s.instrument);
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(s);
+                  });
+                  return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
+                     const ordinalRank = (name = '') => {
+                       const n = name.toLowerCase();
+                       if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                       if (n.includes('segundo') || n.includes('second')) return 2;
+                       if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                       return 99;
+                     };
+                     const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
+                     
+                     return (
+                       <div key={groupName} style={{ marginBottom: '1.5rem' }}>
+                         <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{groupName}</div>
+                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
+                            {sorted.map((s, i) => {
+                               const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || 'Sin Asignar';
+                               const roleName = getBilingualName(s.instrument);
+                               const dot = s.status === 'confirmed' ? '#10b981' : (s.status === 'declined' || s.status === 'rejected') ? '#ef4444' : '#f59e0b';
+                               
+                               return (
+                                 <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ fontSize: '1.2rem', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      {getInstrumentIcon(s.instrument)}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontSize: '0.65rem', fontWeight: '800', color: getEventTheme(selectedEventDetails.name).main, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{roleName}</div>
+                                      <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{memberName}</div>
+                                    </div>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: dot }} />
+                                 </div>
+                               );
+                            })}
+                         </div>
+                       </div>
+                     );
+                  });
+               })()}
+             </div>
+
+             {/* Setlist */}
+             {selectedEventDetails.event_songs && selectedEventDetails.event_songs.length > 0 && (
+               <div>
+                 <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <Music size={20} color="var(--primary)" /> Setlist
+                 </h3>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[...selectedEventDetails.event_songs].sort((a,b) => a.order_index - b.order_index).map((es, i) => {
+                       const song = songs?.find(s => s.id === es.song_id);
+                       const leader = members?.find(m => m.id === es.lead_id);
+                       return (
+                         <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                           <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', width: '24px' }}>{i+1}</div>
+                           <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: '1rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Desconocida'}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
+                                Lider: {leader?.full_name?.split(' ')[0] || '--'} • Tono: <span style={{ color: 'white', fontWeight: '800' }}>{es.selected_key || '--'}</span>
+                              </div>
+                           </div>
+                           <div style={{ display: 'flex', gap: '6px' }}>
+                              {(song?.has_sequence || song?.sequences?.length > 0) && (
+                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alert('Requiere plan PRO'); }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <Headphones size={16} />
+                                </button>
+                              )}
+                              {song?.youtube_link && (
+                                <button onClick={() => setActiveYoutubeUrl(song.youtube_link)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <Play size={16} fill="#ef4444" />
+                                </button>
+                              )}
+                              <button onClick={() => setChartSong(song)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(59,130,246,0.15)', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <FileText size={16} />
+                              </button>
+                           </div>
+                         </div>
+                       );
+                    })}
+                 </div>
+               </div>
+             )}
           </div>
         </div>
-      )}
+      ), document.body)}
+    
 
-      {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {showModal && createPortal((
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="glass-panel" style={{ width: '95%', maxWidth: '850px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h3 style={{ marginBottom: '1.5rem' }}>{editingEventId ? 'Editar' : 'Nuevo'} Evento</h3>
             <div className="modal-tabs" style={{ marginBottom: '1.5rem' }}>
@@ -1255,7 +981,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-                    {roleBank.map(cat => (
+                    {ROLE_BANK.map(cat => (
                       <div key={cat.category}>
                         <h4 style={{ fontSize: '0.8rem', color: cat.color, marginBottom: '1rem', borderBottom: `1px solid ${cat.color}33`, paddingBottom: '0.5rem', letterSpacing: '1px' }}>
                           {cat.category}
@@ -1359,7 +1085,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                       value={r.instrument}
                                       onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
                                     />
-                                    <MemberSelector instrumentMatchMap={instrumentMatchMap} eventDate={eventDate} value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
+                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
                                   </div>
                                   <button 
                                     onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
@@ -1411,8 +1137,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           return (
                             <>
                               {song.key && <option value={song.key}>{song.key} (Orig)</option>}
-                              {song.key_male && <option value={song.key_male}>{song.key_male} (ÔÖé)</option>}
-                              {song.key_female && <option value={song.key_female}>{song.key_female} (ÔÖÇ)</option>}
+                              {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
+                              {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
                             </>
                           );
                         })()}
@@ -1420,7 +1146,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
 
                     <div style={{ flex: 1.5, minWidth: 0, overflow: 'hidden' }}>
-                      <MemberSelector instrumentMatchMap={instrumentMatchMap} eventDate={eventDate} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>
@@ -1434,13 +1160,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
       {showNotifyModal && notifyData && (
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
-             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>┬┐Notificar al equipo?</h3>
+             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>¿Notificar al equipo?</h3>
              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Los cambios se guardaron. Selecciona una opción de aviso.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button onClick={() => handleSendNotifications(notifyData.candidates, 'delta')} className="btn-primary" style={{ padding: '1.2rem' }}>
@@ -1477,7 +1203,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Zap size={30} color="var(--primary)" />
             </div>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>┬┐Cambiar a {pendingTemplate.label}?</h3>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>¿Cambiar a {pendingTemplate.label}?</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
               Se generará una nueva lista de roles. Las asignaciones actuales que no hayas guardado se perderán.
             </p>
