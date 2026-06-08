@@ -227,6 +227,96 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => 
   );
 };
 
+
+const CustomDatePicker = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState(() => value ? new Date(value + 'T12:00:00') : new Date());
+
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const prevMonth = (e) => { e.preventDefault(); setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)); };
+  const nextMonth = (e) => { e.preventDefault(); setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)); };
+
+  const handleSelect = (e, day) => {
+    e.preventDefault();
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    onChange(`${y}-${m}-${d}`);
+    setIsOpen(false);
+  };
+
+  const dayNames = ['DO', 'LU', 'MA', 'MI', 'JU', 'VI', 'SA'];
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="input-field" 
+        style={{ width: '100%', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      >
+        <span>{value ? value.split('-').reverse().join('/') : 'dd/mm/aaaa'}</span>
+        <CalendarIcon size={16} color="var(--text-muted)" />
+      </div>
+
+      {isOpen && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: '#1a2133', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', zIndex: 10000, boxShadow: '0 10px 40px rgba(0,0,0,0.8)', animation: 'modalFadeIn 0.2s ease-out' }}>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><ChevronDown size={18} style={{ transform: 'rotate(90deg)' }} /></button>
+            <div style={{ fontWeight: '800', fontSize: '0.9rem', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</div>
+            <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><ChevronDown size={18} style={{ transform: 'rotate(-90deg)' }} /></button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+            {dayNames.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800' }}>{d}</div>)}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+            {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const isSelected = value && parseInt(value.split('-')[2]) === day && parseInt(value.split('-')[1]) === currentDate.getMonth() + 1 && parseInt(value.split('-')[0]) === currentDate.getFullYear();
+              const isToday = day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+              
+              return (
+                <button 
+                  key={day}
+                  onClick={(e) => handleSelect(e, day)}
+                  style={{ 
+                    padding: '8px 0', 
+                    background: isSelected ? 'var(--primary)' : 'transparent', 
+                    border: isToday && !isSelected ? '1px solid rgba(255,255,255,0.2)' : 'none', 
+                    borderRadius: '8px', 
+                    color: isSelected ? 'white' : 'rgba(255,255,255,0.8)', 
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: isSelected || isToday ? '700' : '500',
+                    transition: 'all 0.1s'
+                  }}
+                  onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                  onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+            <button onClick={(e) => { e.preventDefault(); onChange(''); setIsOpen(false); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}>Borrar</button>
+            <button onClick={(e) => { e.preventDefault(); setCurrentDate(new Date()); }} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}>Hoy</button>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
@@ -336,18 +426,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleNewEvent = (selectedDate) => {
-    setEditingEventId(null);
-    setEventName('');
-    setEventDate(selectedDate || '');
-    setDescription('');
-    setFormat('full');
-    const template = generateTemplate('full');
-    setRoster(template);
-    setInitialRoster(JSON.parse(JSON.stringify(template)));
-    setDbHistory([]);
-    setSetlist([]);
-    setModalTab('info');
-    setShowModal(true);
+    setPendingEventDate(selectedDate || '');
+    setShowNewEventPicker(true);
   };
 
   const calculateRosterDiff = (initial, history, current, eventId) => {
@@ -894,20 +974,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                      return (
                        <div key={groupName} style={{ marginBottom: '1.5rem' }}>
                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{groupName}</div>
-                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {sorted.map((s, i) => {
                                const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || 'Sin Asignar';
                                const roleName = getBilingualName(s.instrument);
                                const dot = s.status === 'confirmed' ? '#10b981' : (s.status === 'declined' || s.status === 'rejected') ? '#ef4444' : '#f59e0b';
                                
                                return (
-                                 <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ fontSize: '1.2rem', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                      {getInstrumentIcon(s.instrument)}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div style={{ fontSize: '0.65rem', fontWeight: '800', color: getEventTheme(selectedEventDetails.name).main, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{roleName}</div>
-                                      <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{memberName}</div>
+                                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                       <div style={{ color: getEventTheme(selectedEventDetails.name).main, display: 'flex', alignItems: 'center' }}>
+                                         {getInstrumentIcon(s.instrument)}
+                                       </div>
+                                       <div>
+                                          <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'white' }}>{memberName}</div>
+                                          <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{roleName}</div>
+                                       </div>
                                     </div>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: dot }} />
                                  </div>
@@ -1094,7 +1176,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
                 <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
-                <input type="date" className="input-field" value={eventDate} onChange={e => setEventDate(e.target.value)} style={{ width: '100%' }} />
+                <CustomDatePicker value={eventDate} onChange={setEventDate} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
               </div>
             )}
