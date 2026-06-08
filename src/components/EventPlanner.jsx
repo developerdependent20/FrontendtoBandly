@@ -988,7 +988,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {userSlots.map((slot, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
                       <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument, instrumentDisplayMap, instrumentMatchMap)}</span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
                     </div>
                   ))}
@@ -1055,7 +1055,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           {sorted.map((s, i) => {
                             const dot = statusDot(s.status);
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
-                            const roleName = getBilingualName(s.instrument);
+                            const roleName = getBilingualName(s.instrument, instrumentDisplayMap, instrumentMatchMap);
                             return (
                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
