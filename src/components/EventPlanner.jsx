@@ -945,6 +945,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
           backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          transform: 'translateZ(0)',
+          WebkitMaskImage: '-webkit-radial-gradient(white, black)',
           transition: 'box-shadow 0.2s ease',
         }}>
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
