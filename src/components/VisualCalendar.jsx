@@ -72,8 +72,6 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
       borderRadius: '28px',
       padding: '0',
       border: '1px solid rgba(255,255,255,0.08)',
-      backdropFilter: 'blur(20px)',
-      overflow: 'hidden',
       boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
     }}>
 
