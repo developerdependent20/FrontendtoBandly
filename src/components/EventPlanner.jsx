@@ -632,6 +632,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [pendingTemplate, setPendingTemplate] = useState(null);
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
+  const [showNewEventPicker, setShowNewEventPicker] = useState(false);
+  const [pendingNewDate, setPendingNewDate] = useState('');
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -715,16 +717,36 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleNewEvent = (selectedDate) => {
+    setPendingNewDate(selectedDate || '');
+    setShowNewEventPicker(true);
+  };
+
+  const openNewEventWithTemplate = (type, duplicateFrom) => {
+    setShowNewEventPicker(false);
     setEditingEventId(null);
     setEventName('');
-    setEventDate(selectedDate || '');
+    setEventDate(pendingNewDate || '');
     setDescription('');
-    setFormat('full');
-    const template = generateTemplate('full');
-    setRoster(template);
-    setInitialRoster(JSON.parse(JSON.stringify(template)));
+    
+    if (type === 'blank') {
+      setFormat('full');
+      setRoster([]);
+      setSetlist([]);
+      setInitialRoster([]);
+    } else if (type === 'duplicate' && duplicateFrom) {
+      setFormat('full');
+      setEventName(duplicateFrom.name + ' (Copia)');
+      setRoster(duplicateFrom.event_roster.map(r => ({ ...r, id: `temp-${Date.now()}-${Math.random()}`, status: 'pending' })));
+      setSetlist(duplicateFrom.event_songs || []);
+      setInitialRoster([]);
+    } else {
+      setFormat(type);
+      const template = generateTemplate(type);
+      setRoster(template);
+      setSetlist([]);
+      setInitialRoster(JSON.parse(JSON.stringify(template)));
+    }
     setDbHistory([]);
-    setSetlist([]);
     setModalTab('info');
     setShowModal(true);
   };
@@ -910,6 +932,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
           backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          transform: 'translateZ(0)',
           transition: 'box-shadow 0.2s ease',
         }}>
           {/* Accent line left */}
@@ -917,7 +941,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
           <div style={{ padding: '1.25rem 1.25rem 1.25rem 1.6rem' }}>
 
-            {/* ÔöÇÔöÇ TOP ROW ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
+            {/* ── TOP ROW ────────────────────────────────────────────────── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -1163,6 +1187,48 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
            </div>
         </div>
       </section>
+
+      {showNewEventPicker && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '8vh' }}>
+          <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', padding: '2rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}>
+            <h3 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Crear Nuevo Evento</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <button onClick={() => openNewEventWithTemplate('blank')} className="btn-primary" style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}>
+                📄 Evento en Blanco
+              </button>
+              <button onClick={() => openNewEventWithTemplate('full')} className="btn-primary" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--primary)', border: '1px solid rgba(59,130,246,0.3)' }}>
+                🎸 Plantilla Base (Banda Completa)
+              </button>
+              <button onClick={() => openNewEventWithTemplate('acoustic')} className="btn-primary" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
+                🪕 Plantilla Acústica
+              </button>
+              {pastEvents.length > 0 && (
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Duplicar evento pasado:</p>
+                  <select 
+                    className="input-field" 
+                    onChange={(e) => {
+                      if(e.target.value) {
+                        const ev = pastEvents.find(p => p.id === e.target.value);
+                        if(ev) openNewEventWithTemplate('duplicate', ev);
+                      }
+                    }}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">Selecciona un evento...</option>
+                    {pastEvents.slice(0,5).map(p => (
+                      <option key={p.id} value={p.id}>{formatEventDate(p.date)} - {p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setShowNewEventPicker(false)} style={{ marginTop: '1.5rem', width: '100%', padding: '0.8rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
