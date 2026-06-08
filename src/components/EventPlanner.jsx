@@ -939,13 +939,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           position: 'relative',
           marginBottom: '1rem',
           borderRadius: '16px',
-          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.7)',
+          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.95)',
           border: `1px solid ${isPast ? 'rgba(255,255,255,0.06)' : theme.light}`,
           boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          transform: 'translateZ(0)',
           transition: 'box-shadow 0.2s ease',
         }}>
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
