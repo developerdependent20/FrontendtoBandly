@@ -939,7 +939,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           position: 'relative',
           marginBottom: '1rem',
           borderRadius: '16px',
-          overflow: 'hidden',
           background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.7)',
           border: `1px solid ${isPast ? 'rgba(255,255,255,0.06)' : theme.light}`,
           boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
@@ -947,7 +946,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           transform: 'translateZ(0)',
-          WebkitMaskImage: '-webkit-radial-gradient(white, white)',
           transition: 'box-shadow 0.2s ease',
         }}>
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
