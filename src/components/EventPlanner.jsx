@@ -204,7 +204,6 @@ const DatePickerField = ({ value, onChange, formatEventDate }) => {
               </div>
             ))}
           </div>
-
           {/* Footer */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
             <button onClick={() => { onChange({ target: { value: '' } }); setOpen(false); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}>Borrar</button>
@@ -223,7 +222,7 @@ const DatePickerField = ({ value, onChange, formatEventDate }) => {
 };
 
 // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
-const MemberSelector = ({ value, onChange, members, roleName, placeholder, eventDate }) => {
+const MemberSelector = ({ value, onChange, members, roleName, placeholder, eventDate, instrumentMatchMap }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -611,7 +610,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     ];
   }, [orgSettings]);
 
-
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -632,8 +630,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [initialRoster, setInitialRoster] = useState([]);
   const [dbHistory, setDbHistory] = useState([]);
   const [pendingTemplate, setPendingTemplate] = useState(null);
-  const [showNewEventPicker, setShowNewEventPicker] = useState(false);
-  const [pendingNewDate, setPendingNewDate] = useState('');
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
 
@@ -656,7 +652,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const i = (inst || '').toLowerCase();
     if (i.includes('drums') || i.includes('batería') || i.includes('perc')) return <Drum size={20} />;
     if (i.includes('bass') || i.includes('bajo')) return <Zap size={20} />;
-    if (i.includes('gtr') || i.includes('guitar') || i.includes('eléctrica') || i.includes('acústica')) return <Music size={20} />;
+    if (i.includes('gtr') || i.includes('guitar') || i.includes('el├®ctrica') || i.includes('acústica')) return <Music size={20} />;
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
@@ -667,10 +663,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const getRoleGroup = (inst) => {
-    const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('electric') || i.includes('acoustic') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
+    const i = (inst || '').toLowerCase();
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
     return 'OTROS';
   };
 
@@ -696,25 +692,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventDate(ev.date || '');
     setDescription(ev.description || '');
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
-    setFormat('full');
-    let merged;
-    if (activeRosterFromDb.length > 0) {
-      // Event already has saved roster: show ONLY those items, no empty template slots
-      merged = activeRosterFromDb.map(er => ({
-        id: Math.random().toString(),
-        event_roster_id: er.id,
-        instrument: er.instrument,
-        profile_id: er.profile_id,
-        category: er.category || 'custom',
-        status: er.status || 'pending'
-      }));
-    } else {
-      // No saved roster yet: load the default template so user has a starting point
-      const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
-      const detectedFormat = isFullBand ? 'full' : 'acoustic';
-      setFormat(detectedFormat);
-      merged = generateTemplate(detectedFormat);
-    }
+    const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
+    const detectedFormat = isFullBand ? 'full' : 'acoustic';
+    setFormat(detectedFormat);
+    let merged = generateTemplate(detectedFormat);
+    activeRosterFromDb.forEach(er => {
+       const slot = merged.find(m => m.instrument === er.instrument);
+       if (slot) {
+         slot.event_roster_id = er.id;
+         slot.profile_id = er.profile_id;
+         slot.status = er.status || 'pending';
+       } else {
+         merged.push({ id: Math.random().toString(), event_roster_id: er.id, instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: er.status || 'pending' });
+       }
+    });
     setRoster(merged);
     setInitialRoster(JSON.parse(JSON.stringify(merged)));
     setDbHistory(ev.event_roster || []);
@@ -724,49 +715,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleNewEvent = (selectedDate) => {
-    setPendingNewDate(selectedDate || '');
-    setShowNewEventPicker(true);
-  };
-
-  const openNewEventWithTemplate = (type, duplicateFrom) => {
-    setShowNewEventPicker(false);
     setEditingEventId(null);
     setEventName('');
-    setEventDate(pendingNewDate);
+    setEventDate(selectedDate || '');
     setDescription('');
+    setFormat('full');
+    const template = generateTemplate('full');
+    setRoster(template);
+    setInitialRoster(JSON.parse(JSON.stringify(template)));
     setDbHistory([]);
     setSetlist([]);
-
-    if (type === 'base') {
-      setFormat('full');
-      const t = generateTemplate('full');
-      setRoster(t);
-      setInitialRoster(JSON.parse(JSON.stringify(t)));
-    } else if (type === 'empty') {
-      setFormat('full');
-      setRoster([]);
-      setInitialRoster([]);
-    } else if (type === 'general') {
-      setFormat('general');
-      const r = (members || []).map(m => ({ id: Math.random().toString(), instrument: 'MIEMBRO', profile_id: m.id, category: 'general', status: 'pending' }));
-      setRoster(r);
-      setInitialRoster(JSON.parse(JSON.stringify(r)));
-    } else if (type === 'duplicate' && duplicateFrom) {
-      setFormat('full');
-      setEventName(duplicateFrom.name + ' (Copia)');
-      const activeRoster = (duplicateFrom.event_roster || []).filter(r => !r.is_removed).map(er => ({
-        id: Math.random().toString(),
-        instrument: er.instrument,
-        profile_id: er.profile_id,
-        category: er.category || 'custom',
-        status: 'pending'
-      }));
-      setRoster(activeRoster);
-      setInitialRoster(JSON.parse(JSON.stringify(activeRoster)));
-      const dupeSetlist = (duplicateFrom.event_songs || []).sort((a,b) => a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' }));
-      setSetlist(dupeSetlist);
-    }
-
     setModalTab('info');
     setShowModal(true);
   };
@@ -788,7 +746,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     });
     initial.forEach(active => {
       if (active.profile_id && !currentActive.some(curr => String(curr.profile_id) === String(active.profile_id) && curr.instrument === active.instrument)) {
-        if (active.event_roster_id) diff.softDeleted.push({ id: active.event_roster_id, event_id: active.event_id, profile_id: active.profile_id, instrument: active.instrument, category: active.category, status: active.status, is_removed: true, removed_at: new Date().toISOString() });
+        if (active.event_roster_id) diff.softDeleted.push({ id: active.event_roster_id, is_removed: true, removed_at: new Date().toISOString() });
       }
     });
     return diff;
@@ -836,7 +794,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         description: notifyData.description, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
-          profile_id: r.profile_id || r.id,
+          profile_id: r.profile_id || r.id, // Ensure profile_id is sent
           email: r.email, 
           name: r.name, 
           instrument: r.instrument 
@@ -868,7 +826,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleRemoveFromRoster = async (rosterId) => {
-    if (!confirm('¿Seguro que quieres eliminar a este usuario del evento?')) return;
+    if (!confirm('┬┐Seguro que quieres eliminar a este usuario del evento?')) return;
     try {
       await supabase.from('event_roster').delete().eq('id', rosterId);
       if (refreshData) refreshData();
@@ -883,36 +841,43 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const userRole = (profile?.role || '').toLowerCase();
   const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId)));
 
+  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el día completo del evento siempre se muestra en proximos)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
   const upcomingEvents = eventsToShow.filter(ev => {
-    if (!ev.date) return true;
-    const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
+    if (!ev.date) return true; // Sin fecha ├óÔÇáÔÇÖ siempre próximo
+    const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
     return evDate >= todayStart;
   });
 
   const pastEvents = eventsToShow.filter(ev => {
     if (!ev.date) return false;
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
-    return evDate < todayStart;
+    return evDate < todayStart; // Solo pasa a "pasados" cuando el día del evento ya terminó
   });
 
+  // [ESTABLE] Temas Joya Premium
   const cardThemes = [
-    { main: '#6366f1', glass: 'rgba(99, 102, 241, 0.1)', light: 'rgba(99, 102, 241, 0.3)' },
-    { main: '#10b981', glass: 'rgba(16, 185, 129, 0.1)', light: 'rgba(16, 185, 129, 0.3)' },
-    { main: '#f43f5e', glass: 'rgba(244, 63, 94, 0.1)', light: 'rgba(244, 63, 94, 0.3)' },
-    { main: '#f59e0b', glass: 'rgba(245, 158, 11, 0.1)', light: 'rgba(245, 158, 11, 0.3)' },
-    { main: '#2563eb', glass: 'rgba(37, 99, 235, 0.1)', light: 'rgba(37, 99, 235, 0.3)' },
-    { main: '#06b6d4', glass: 'rgba(6, 182, 212, 0.1)', light: 'rgba(6, 182, 212, 0.3)' },
+    { main: '#6366f1', glass: 'rgba(99, 102, 241, 0.1)', light: 'rgba(99, 102, 241, 0.3)' }, // Indigo
+    { main: '#10b981', glass: 'rgba(16, 185, 129, 0.1)', light: 'rgba(16, 185, 129, 0.3)' }, // Emerald
+    { main: '#f43f5e', glass: 'rgba(244, 63, 94, 0.1)', light: 'rgba(244, 63, 94, 0.3)' },    // Rose
+    { main: '#f59e0b', glass: 'rgba(245, 158, 11, 0.1)', light: 'rgba(245, 158, 11, 0.3)' },  // Amber
+    { main: '#8b5cf6', glass: 'rgba(139, 92, 246, 0.1)', light: 'rgba(139, 92, 246, 0.3)' },  // Violet
+    { main: '#06b6d4', glass: 'rgba(6, 182, 212, 0.1)', light: 'rgba(6, 182, 212, 0.3)' },   // Cyan
   ];
 
   const getEventTheme = (name) => {
     const n = (name || '').toLowerCase();
+    // Indigo para Servicios
     if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return cardThemes[0]; 
+    // Emerald para Oración
     if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return cardThemes[1];
+    // Violet para Reuniones
     if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[4];
+    // Orange/Amber para Especiales
     if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return cardThemes[3];
+    // Cyan por defecto
     return cardThemes[5];
   };
 
@@ -939,17 +904,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           position: 'relative',
           marginBottom: '1rem',
           borderRadius: '16px',
-          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.95)',
+          overflow: 'hidden',
+          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.7)',
           border: `1px solid ${isPast ? 'rgba(255,255,255,0.06)' : theme.light}`,
+          boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
+          backdropFilter: 'blur(12px)',
+          transition: 'box-shadow 0.2s ease',
         }}>
+          {/* Accent line left */}
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
 
           <div style={{ padding: '1.25rem 1.25rem 1.25rem 1.6rem' }}>
 
+            {/* ÔöÇÔöÇ TOP ROW ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
 
+                {/* Date chip + TODAY badge */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   {isToday && (
                     <span style={{ fontSize: '0.58rem', fontWeight: '900', color: '#fff', background: theme.main, padding: '2px 8px', borderRadius: '20px', letterSpacing: '1px', textTransform: 'uppercase' }}>
@@ -961,10 +933,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </span>
                 </div>
 
+                {/* Title */}
                 <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
                   {ev.name}
                 </h4>
 
+                {/* Description ÔÇö button + expandable panel */}
                 {ev.description && (
                   <div style={{ marginTop: '6px' }}>
                     <button
@@ -985,6 +959,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 )}
               </div>
 
+              {/* Admin buttons */}
               {!readOnly && (
                 <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                   <button onClick={() => handleEditEvent(ev)}
@@ -1005,18 +980,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               )}
             </div>
 
+            {/* ÔöÇÔöÇ ASSIGNMENT ROW ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
             {userSlots.length > 0 && (
               <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                {/* Slot pills */}
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: '1 1 auto' }}>
                   {userSlots.map((slot, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)`, maxWidth: '100%', boxSizing: 'border-box' }}>
-                      <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{getInstrumentIcon(slot.instrument)}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getBilingualName(slot.instrument, instrumentDisplayMap, instrumentMatchMap)}</span>
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
+                      <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
                     </div>
                   ))}
                 </div>
 
+                {/* Confirm/Decline */}
                 {!isPast && (
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     {userSlots.some(s => s.status !== 'confirmed') && (
@@ -1036,6 +1014,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
             )}
 
+            {/* ÔöÇÔöÇ EXPAND BUTTON ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
             <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))}
               style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid ${isExpanded ? theme.light : 'rgba(255,255,255,0.06)'}`, borderRadius: '10px', color: isExpanded ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.light; e.currentTarget.style.color = theme.main; }}
@@ -1044,34 +1023,31 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               {isExpanded ? 'Ocultar' : 'Ver equipo y canciones'}
             </button>
 
+            {/* ÔöÇÔöÇ EXPANDED SECTION ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */}
             {isExpanded && (
               <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid rgba(255,255,255,0.06)` }}>
+                {/* Team */}
                 {(() => {
-                  const groups = { 'MÚSICOS': [], 'PRODUCCIÓN / MEDIA': [], 'LOGÍSTICA / STAFF': [], 'OTROS': [] };
+                  const groups = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
                   (ev.event_roster || []).forEach(s => {
                     const g = getRoleGroup(s.instrument);
                     if (!groups[g]) groups[g] = [];
                     groups[g].push(s);
                   });
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
-                    const sorted = [...items].sort((a, b) => {
-                      const nameA = (a.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
-                      const nameB = (b.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
-                      if (nameA < nameB) return -1;
-                      if (nameA > nameB) return 1;
-                      const ordinalRank = (name = '') => {
-                        const n = name.toLowerCase();
-                        const match = n.match(/\d+/);
-                        if (match) return parseInt(match[0], 10);
-                        if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
-                        if (n.includes('segundo') || n.includes('second')) return 2;
-                        if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
-                        if (n.includes('cuarto') || n.includes('fourth')) return 4;
-                        if (n.includes('quinto') || n.includes('fifth')) return 5;
-                        return 99;
-                      };
-                      return ordinalRank(a.instrument) - ordinalRank(b.instrument);
-                    });
+                    // Sort by Spanish ordinal if instrument name contains one
+                    const ordinalRank = (name = '') => {
+                      const n = name.toLowerCase();
+                      if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                      if (n.includes('segundo') || n.includes('second')) return 2;
+                      if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                      if (n.includes('cuarto') || n.includes('fourth')) return 4;
+                      if (n.includes('quinto') || n.includes('fifth')) return 5;
+                      if (n.includes('sexto') || n.includes('sixth')) return 6;
+                      if (n.includes('septimo') || n.includes('seventh')) return 7;
+                      return 99;
+                    };
+                    const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
@@ -1079,19 +1055,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           {sorted.map((s, i) => {
                             const dot = statusDot(s.status);
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
-                            const roleName = getBilingualName(s.instrument, instrumentDisplayMap, instrumentMatchMap);
+                            const roleName = getBilingualName(s.instrument);
                             return (
-                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative', maxWidth: '100%', boxSizing: 'border-box', minWidth: 0 }}>
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
                                   <button onClick={() => handleRemoveFromRoster(s.id)}
                                     style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <X size={8} />
                                   </button>
                                 )}
-                                <span style={{ fontSize: '0.78rem', flexShrink: 0 }}>{getInstrumentIcon(s.instrument)}</span>
-                                <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0 }}>{roleName}</span>
+                                <span style={{ fontSize: '0.78rem' }}>{getInstrumentIcon(s.instrument)}</span>
+                                {/* Role label */}
+                                <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{roleName}</span>
+                                {/* Separator */}
                                 <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0 }}>{memberName}</span>
+                                {/* Member name */}
+                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
                                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
                               </div>
                             );
@@ -1100,8 +1079,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </div>
                     );
                   });
+
                 })()}
 
+                {/* Setlist */}
                 {ev.event_songs && ev.event_songs.length > 0 && (
                   <div style={{ marginTop: '0.5rem' }}>
                     <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>SETLIST</div>
@@ -1121,7 +1102,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
                                 <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alert('Requiere plan PRO'); }}
-                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(37, 99, 235,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
+                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
                                   <Headphones size={12} />
                                 </button>
                               )}
@@ -1193,21 +1174,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
-                  {/* Custom Date Picker Overlay */}
-                  <DatePickerField
-                    value={eventDate}
-                    onChange={e => setEventDate(e.target.value)}
-                    formatEventDate={formatEventDate}
-                  />
+                <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
+                <input type="date" className="input-field" value={eventDate} onChange={e => setEventDate(e.target.value)} style={{ width: '100%' }} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
               </div>
             )}
             {modalTab === 'equipo' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                
+                {/* 1. BANCO DE ROLES (Tienda) - AHORA ARRIBA */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Plus size={18} color="var(--primary)" /> Añadir al Equipo
                   </h3>
+                  
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
                     {roleBank.map(cat => (
                       <div key={cat.category}>
@@ -1256,6 +1236,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </div>
                     ))}
                   </div>
+                  
                   <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
                     <button 
                       onClick={() => setRoster([...roster, { id: Math.random().toString(), instrument: 'Nuevo Rol', profile_id: '', category: 'custom' }])}
@@ -1266,6 +1247,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </div>
                 </div>
 
+                {/* 2. EQUIPO SELECCIONADO (Roster Actual) - AHORA ABAJO */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
                     <h3 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1296,52 +1278,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
                     return (
                       <div>
-                        {Object.entries(groupedRoster).map(([groupName, items]) => {
-                          if (items.length === 0) return null;
-                          const sortedItems = [...items].sort((a, b) => {
-                            const nameA = (a.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
-                            const nameB = (b.instrument || '').replace(/ \d+.*$/, '').trim().toLowerCase();
-                            if (nameA < nameB) return -1;
-                            if (nameA > nameB) return 1;
-                            const ordinalRank = (name = '') => {
-                              const n = name.toLowerCase();
-                              const match = n.match(/\d+/);
-                              if (match) return parseInt(match[0], 10);
-                              if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
-                              if (n.includes('segundo') || n.includes('second')) return 2;
-                              if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
-                              if (n.includes('cuarto') || n.includes('fourth')) return 4;
-                              if (n.includes('quinto') || n.includes('fifth')) return 5;
-                              return 99;
-                            };
-                            return ordinalRank(a.instrument) - ordinalRank(b.instrument);
-                          });
-
-                          return (
+                        {Object.entries(groupedRoster).map(([groupName, items]) => items.length > 0 && (
                           <div key={groupName} style={{ marginBottom: '1.5rem' }}>
                             <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                              {sortedItems.map(r => (
+                              {items.map(r => (
                                 <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                                   <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
                                   <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
-                                    <RoleInput 
+                                    <input 
+                                      className="input-field"
+                                      placeholder="Nombre del rol..."
+                                      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
                                       value={r.instrument}
-                                      onChange={(newVal) => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: newVal } : x))}
+                                      onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
                                     />
-                                    <MemberSelector 
-                                      value={r.profile_id} 
-                                      members={members} 
-                                      roleName={r.instrument} 
-                                      eventDate={eventDate} 
-                                      onChange={(v, shiftKey) => {
-                                        if (shiftKey) {
-                                          setRoster([...roster, { id: Math.random().toString(), instrument: r.instrument, profile_id: v, category: r.category || 'MÚSICOS', status: 'pending' }]);
-                                        } else {
-                                          setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x));
-                                        }
-                                      }} 
-                                    />
+                                    <MemberSelector instrumentMatchMap={instrumentMatchMap} eventDate={eventDate} value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
                                   </div>
                                   <button 
                                     onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
@@ -1355,7 +1307,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               ))}
                             </div>
                           </div>
-                        );})}
+                        ))}
                       </div>
                     );
                   })()}
@@ -1363,159 +1315,53 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
               </div>
             )}
-            {modalTab === 'setlist' && (() => {
-              // Build a map: songId -> array of events where it was played (sorted newest first)
-              const songHistory = {};
-              (events || []).forEach(ev => {
-                if (!ev.date) return;
-                (ev.event_songs || []).forEach(es => {
-                  if (!songHistory[es.song_id]) songHistory[es.song_id] = [];
-                  songHistory[es.song_id].push({ date: ev.date, name: ev.name, eventId: ev.id });
-                });
-              });
-              // Sort each song's history newest first
-              Object.keys(songHistory).forEach(sid => {
-                songHistory[sid].sort((a, b) => new Date(b.date) - new Date(a.date));
-              });
+            {modalTab === 'setlist' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {setlist.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, overflow: 'hidden' }}>
+                    <select 
+                      className="input-field" 
+                      value={item.song_id} 
+                      onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
+                      style={{ flex: 2, background: 'none' }}
+                    >
+                      <option value="">Seleccionar Canción</option>
+                      {songs.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    </select>
 
-              const formatRelativeDate = (dateStr) => {
-                const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
-                const now = new Date();
-                now.setHours(0,0,0,0);
-                const diff = Math.round((now - d) / (1000*60*60*24));
-                if (diff === 0) return 'Hoy';
-                if (diff === 1) return 'Ayer';
-                if (diff < 7) return `Hace ${diff} días`;
-                if (diff < 30) return `Hace ${Math.round(diff/7)} sem.`;
-                if (diff < 365) return `Hace ${Math.round(diff/30)} mes${Math.round(diff/30)>1?'es':''}`;
-                return `Hace ${Math.round(diff/365)} año${Math.round(diff/365)>1?'s':''}`;
-              };
+                    {/* NUEVO: Selector de Tono (Tonality) */}
+                    <div style={{ flex: 1 }}>
+                      <select 
+                        className="input-field" 
+                        value={item.selected_key || ''} 
+                        onChange={e => { const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n); }}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.75rem' }}
+                        disabled={!item.song_id}
+                      >
+                        <option value="">Tono</option>
+                        {(() => {
+                          const song = songs.find(s => String(s.id) === String(item.song_id));
+                          if (!song) return null;
+                          return (
+                            <>
+                              {song.key && <option value={song.key}>{song.key} (Orig)</option>}
+                              {song.key_male && <option value={song.key_male}>{song.key_male} (ÔÖé)</option>}
+                              {song.key_female && <option value={song.key_female}>{song.key_female} (ÔÖÇ)</option>}
+                            </>
+                          );
+                        })()}
+                      </select>
+                    </div>
 
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {setlist.map((item, idx) => {
-                    const song = songs.find(s => String(s.id) === String(item.song_id));
-                    const history = item.song_id ? (songHistory[item.song_id] || []).filter(h => h.eventId !== editingEventId) : [];
-                    const lastPlayed = history[0];
-
-                    return (
-                      <div key={idx} style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        borderRadius: '16px',
-                        overflow: 'visible', // Changed from hidden to allow dropdown
-                        transition: 'border-color 0.2s',
-                      }}>
-                        {/* Row 1: number + song selector + delete */}
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.85rem 1rem' }}>
-                          <div style={{
-                            width: '28px', height: '28px', borderRadius: '50%',
-                            background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.72rem', fontWeight: '900', color: 'var(--primary)', flexShrink: 0
-                          }}>{idx + 1}</div>
-
-                          <SongPicker
-                            value={item.song_id}
-                            onChange={(newId) => { const n = [...setlist]; n[idx].song_id = newId; n[idx].selected_key = ''; setSetlist(n); }}
-                            songs={songs}
-                            events={events}
-                            editingEventId={editingEventId}
-                          />
-
-                          <button onClick={() => setSetlist(setlist.filter((_,i) => i !== idx))}
-                            style={{ background: 'none', border: 'none', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '4px', transition: 'color 0.2s' }}
-                            onMouseEnter={e => e.currentTarget.style.color='#ef4444'}
-                            onMouseLeave={e => e.currentTarget.style.color='rgba(239,68,68,0.5)'}
-                          ><Trash2 size={16}/></button>
-                        </div>
-
-                        {/* Row 2: song details + history (only when a song is selected) */}
-                        {song && (
-                          <div style={{ padding: '0 1rem 0.85rem 1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                            {/* Key picker */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '80px' }}>
-                              <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tono</span>
-                              <select
-                                className="input-field"
-                                value={item.selected_key || ''}
-                                onChange={e => { const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n); }}
-                                style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.8rem', padding: '6px 8px', borderRadius: '8px', border: '1px solid rgba(37,99,235,0.2)' }}
-                              >
-                                <option value="">–</option>
-                                {song.key && <option value={song.key}>{song.key} (Orig)</option>}
-                                {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
-                                {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
-                              </select>
-                            </div>
-
-                            {/* BPM */}
-                            {song.bpm && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>BPM</span>
-                                <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', fontWeight: '800', color: '#10b981' }}>{song.bpm}</div>
-                              </div>
-                            )}
-
-                            {/* Leader */}
-                            <div style={{ flex: 1, minWidth: '130px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Líder</span>
-                              <MemberSelector
-                                value={item.lead_id}
-                                members={members}
-                                roleName="Voz"
-                                placeholder="Asignar líder"
-                                onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }}
-                              />
-                            </div>
-
-                            {/* Last played history */}
-                            <div style={{ width: '100%', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                              <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                📅 Últimas veces que se tocó
-                              </span>
-                              {history.length === 0 ? (
-                                <div style={{ marginTop: '6px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>
-                                  Primera vez en el setlist 🎉
-                                </div>
-                              ) : (
-                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-                                  {history.slice(0, 5).map((h, hi) => (
-                                    <div key={hi} style={{
-                                      display: 'flex', alignItems: 'center', gap: '6px',
-                                      background: hi === 0 ? 'rgba(37,99,235,0.12)' : 'rgba(255,255,255,0.04)',
-                                      border: `1px solid ${hi === 0 ? 'rgba(37,99,235,0.25)' : 'rgba(255,255,255,0.06)'}`,
-                                      borderRadius: '20px', padding: '4px 10px',
-                                    }}>
-                                      <span style={{ fontSize: '0.68rem', fontWeight: '700', color: hi === 0 ? 'var(--primary)' : 'rgba(255,255,255,0.4)' }}>
-                                        {formatRelativeDate(h.date)}
-                                      </span>
-                                      <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' }} />
-                                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {h.name}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <button
-                    onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '1rem', background: 'transparent', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: '12px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', transition: 'all 0.2s' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor='var(--primary)'; e.currentTarget.style.color='var(--primary)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.color='var(--text-muted)'; }}
-                  >
-                    <Plus size={16}/> Añadir Canción
-                  </button>
-                </div>
-              );
-            })()}
-
+                    <div style={{ flex: 1.5, minWidth: 0, overflow: 'hidden' }}>
+                      <MemberSelector instrumentMatchMap={instrumentMatchMap} eventDate={eventDate} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                    </div>
+                    <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
+                  </div>
+                ))}
+                <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])} className="btn-secondary" style={{ padding: '1rem' }}>+ Añadir Canción</button>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
               <button onClick={closeModal} className="btn-secondary" style={{ flex: 1 }}>Cerrar</button>
               <button onClick={handleSave} className="btn-primary" style={{ flex: 2 }}>{saving ? 'Guardando...' : 'Guardar Cambios'}</button>
@@ -1528,14 +1374,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
-             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>¿Notificar al equipo?</h3>
+             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>┬┐Notificar al equipo?</h3>
              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Los cambios se guardaron. Selecciona una opción de aviso.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button onClick={() => handleSendNotifications(notifyData.candidates, 'delta')} className="btn-primary" style={{ padding: '1.2rem' }}>
                   Enviar solo a nuevos ({notifyData.candidates.length})
                 </button>
                 
-                <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(37, 99, 235, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
+                <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
                   Notificar a todo el equipo ({notifyData.allRoster.length})
                 </button>
 
@@ -1559,99 +1405,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           </div>
         </div>
       )}
-
-      {/* ── NEW EVENT TEMPLATE PICKER ── */}
-      {showNewEventPicker && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.88)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
-          <div style={{ width: '100%', maxWidth: '760px', background: 'linear-gradient(135deg,#0f172a,#1a2133)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '28px', overflow: 'hidden', animation: 'modalFadeIn 0.3s ease-out', boxShadow: '0 40px 80px rgba(0,0,0,0.7)', maxHeight: '92vh', overflowY: 'auto', margin: 'auto' }}>
-            {/* Header */}
-            <div style={{ padding: '1.75rem 2rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'linear-gradient(135deg,rgba(37,99,235,0.15),transparent)' }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px' }}>Nuevo Evento</div>
-              <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'white' }}>¿Cómo quieres empezar?</h3>
-              {pendingNewDate && <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>📅 {pendingNewDate}</p>}
-            </div>
-
-            {/* Options grid */}
-            <div style={{ padding: '1.5rem 2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              {[
-                { type: 'base', emoji: '🎸', label: 'Plantilla Base', desc: 'Banda completa con todos los roles estándar', color: '#2563eb', glow: 'rgba(37,99,235,0.25)' },
-                { type: 'empty', emoji: '✨', label: 'Vacío', desc: 'Empieza en blanco y añade lo que necesites', color: '#6366f1', glow: 'rgba(99,102,241,0.25)' },
-                { type: 'general', emoji: '👥', label: 'Reunión General', desc: 'Incluye automáticamente a todos los miembros', color: '#10b981', glow: 'rgba(16,185,129,0.25)' },
-              ].map(opt => (
-                <button
-                  key={opt.type}
-                  onClick={() => openNewEventWithTemplate(opt.type)}
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid rgba(255,255,255,0.08)`,
-                    borderRadius: '18px',
-                    padding: '1.2rem',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = opt.glow; e.currentTarget.style.borderColor = opt.color; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 30px ${opt.glow}`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  <div style={{ fontSize: '1.8rem' }}>{opt.emoji}</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'white' }}>{opt.label}</div>
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', lineHeight: '1.4' }}>{opt.desc}</div>
-                </button>
-              ))}
-
-              {/* Duplicate event - spans full width */}
-              <div style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '1.2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '1.5rem' }}>📋</span>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'white' }}>Duplicar Evento</div>
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>Copia el equipo y setlist de un evento anterior</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
-                  {[...(events || [])].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 8).map(ev => (
-                    <button
-                      key={ev.id}
-                      onClick={() => openNewEventWithTemplate('duplicate', ev)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}
-                      onMouseEnter={e => { e.currentTarget.style.background='rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor='rgba(37,99,235,0.3)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.06)'; }}
-                    >
-                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'white' }}>{ev.name}</span>
-                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', flexShrink: 0, marginLeft: '8px' }}>
-                        {ev.date ? new Date(ev.date.split('T')[0]+'T00:00:00').toLocaleDateString('es', {day:'numeric',month:'short',year:'numeric'}) : ''}
-                      </span>
-                    </button>
-                  ))}
-                  {(!events || events.length === 0) && (
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>Aún no hay eventos para duplicar</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Cancel */}
-            <div style={{ padding: '0 2rem 1.5rem', textAlign: 'center' }}>
-              <button onClick={() => setShowNewEventPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600', padding: '8px 20px', borderRadius: '20px', transition: 'color 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.color='rgba(255,255,255,0.7)'}
-                onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.3)'}
-              >Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {pendingTemplate && (
-
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--primary)', animation: 'modalFadeIn 0.3s ease-out' }}>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Zap size={30} color="var(--primary)" />
             </div>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>¿Cambiar a {pendingTemplate.label}?</h3>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>┬┐Cambiar a {pendingTemplate.label}?</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
               Se generará una nueva lista de roles. Las asignaciones actuales que no hayas guardado se perderán.
             </p>
