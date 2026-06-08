@@ -947,7 +947,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           transform: 'translateZ(0)',
-          WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+          WebkitMaskImage: '-webkit-radial-gradient(white, white)',
           transition: 'box-shadow 0.2s ease',
         }}>
           {!isPast && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: theme.main, borderRadius: '3px 0 0 3px' }} />}
