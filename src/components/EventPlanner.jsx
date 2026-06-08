@@ -1013,7 +1013,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                        const song = songs?.find(s => s.id === es.song_id);
                        const leader = members?.find(m => m.id === es.lead_id);
                        return (
-                         <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                         <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', width: '24px' }}>{i+1}</div>
                            <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '1rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Desconocida'}</div>
