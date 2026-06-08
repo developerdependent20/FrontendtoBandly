@@ -2024,15 +2024,3 @@ input[type="datetime-local"] {
 }
 
 @media (max-width: 480px) { .storage-meter { width: 100% !important; min-width: 100% !important; margin-right: 0 !important; margin-bottom: 0.5rem; } }
-
-/* NUCLEAR GPU RESET FOR MOBILE */
-@media (max-width: 1024px) {
-  * {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    filter: none !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    transform-style: flat !important;
-  }
-}
