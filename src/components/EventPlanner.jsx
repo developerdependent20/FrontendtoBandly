@@ -251,6 +251,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
+  const [showNewEventPicker, setShowNewEventPicker] = useState(false);
+  const [pendingEventDate, setPendingEventDate] = useState('');
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -634,12 +636,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             )}
 
             {/* ── EXPAND BUTTON ───────────────────────────── */}
-            <button onClick={() => setExpandedCardIds(prev => ({ ...prev, [ev.id]: !prev[ev.id] }))}
-              style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid ${isExpanded ? theme.light : 'rgba(255,255,255,0.06)'}`, borderRadius: '10px', color: isExpanded ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+            <button onClick={() => setSelectedEventDetails(ev)}
+              style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: '10px', color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.light; e.currentTarget.style.color = theme.main; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = isExpanded ? theme.light : 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = isExpanded ? theme.main : 'rgba(255,255,255,0.3)'; }}>
-              {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              {isExpanded ? 'Ocultar' : 'Ver equipo y canciones'}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>
+              <ChevronDown size={13} />
+              'Ver detalles y equipo'
             </button>
 
             {/* ── EXPANDED SECTION ────────────────────────── */}
@@ -955,6 +957,81 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         </div>
       ), document.body)}
     
+
+            {showNewEventPicker && createPortal((
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="glass-panel" style={{ padding: '2.5rem', width: '90%', maxWidth: '500px', textAlign: 'center', animation: 'modalFadeIn 0.3s ease-out' }}>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>Crear Nuevo Evento</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <button onClick={() => {
+                setShowNewEventPicker(false);
+                setEditingEventId(null);
+                setEventName('');
+                setEventDate(pendingEventDate);
+                setDescription('');
+                setFormat('blank');
+                setRoster([]);
+                setInitialRoster([]);
+                setDbHistory([]);
+                setSetlist([]);
+                setModalTab('info');
+                setShowModal(true);
+              }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)' }}>
+                <FileText size={20} /> Evento en Blanco
+              </button>
+
+              <button onClick={() => {
+                setShowNewEventPicker(false);
+                setEditingEventId(null);
+                setEventName('');
+                setEventDate(pendingEventDate);
+                setDescription('');
+                setFormat('general');
+                const template = generateTemplate('general');
+                setRoster(template);
+                setInitialRoster(JSON.parse(JSON.stringify(template)));
+                setDbHistory([]);
+                setSetlist([]);
+                setModalTab('info');
+                setShowModal(true);
+              }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+                <Users size={20} /> Plantilla: Reunión General
+              </button>
+              
+              <div style={{ margin: '1rem 0', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>O DUPLICAR PASADO</div>
+              
+              <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '0.5rem' }} className="custom-scrollbar">
+                {pastEvents.length === 0 ? <div style={{ padding: '1rem', color: 'var(--text-muted)' }}>No hay eventos pasados</div> : 
+                  pastEvents.map(ev => (
+                    <button key={ev.id} onClick={() => {
+                      setShowNewEventPicker(false);
+                      setEditingEventId(null);
+                      setEventName(ev.name + ' (Copia)');
+                      setEventDate(pendingEventDate);
+                      setDescription(ev.description || '');
+                      setFormat('copy');
+                      const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
+                      const merged = activeRosterFromDb.map(er => ({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: 'pending' }));
+                      setRoster(merged);
+                      setInitialRoster(JSON.parse(JSON.stringify(merged)));
+                      setDbHistory([]);
+                      setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
+                      setModalTab('info');
+                      setShowModal(true);
+                    }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600' }}>{ev.name}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{formatEventDate(ev.date)}</span>
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+            
+            <button onClick={() => setShowNewEventPicker(false)} className="btn-secondary" style={{ marginTop: '1.5rem', width: '100%' }}>Cancelar</button>
+          </div>
+        </div>
+      ), document.body)}
 
       {showModal && createPortal((
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
