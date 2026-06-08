@@ -814,10 +814,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                </div>
                <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: '0 0 1rem 0', color: 'white', lineHeight: 1.1 }}>{selectedEventDetails.name}</h2>
                {selectedEventDetails.description && (
-                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                   {selectedEventDetails.description}
-                 </p>
-               )}
+                  <details style={{ marginTop: '0.5rem', maxWidth: '600px', margin: '0 auto' }}>
+                    <summary style={{ fontSize: '0.75rem', color: getEventTheme(selectedEventDetails.name).main, cursor: 'pointer', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', userSelect: 'none', listStyle: 'none' }} className="custom-summary">
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                        Ver descripción completa
+                      </span>
+                    </summary>
+                    <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, whiteSpace: 'pre-wrap', textAlign: 'left' }} className="custom-scrollbar">
+                      {selectedEventDetails.description}
+                    </div>
+                  </details>
+                )}
              </div>
 
              {/* Mi Participación */}
@@ -938,11 +945,36 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   <Headphones size={16} />
                                 </button>
                               )}
-                              {song?.youtube_link && (
-                                <button onClick={() => setActiveYoutubeUrl(song.youtube_link)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <Play size={16} fill="#ef4444" />
-                                </button>
-                              )}
+                              {song?.youtube_link && (() => {
+                                 const yid = getYoutubeId(song.youtube_link);
+                                 return yid ? (
+                                   <div 
+                                     onClick={() => setActiveYoutubeUrl(song.youtube_link)}
+                                     style={{ 
+                                       width: '64px', 
+                                       height: '36px', 
+                                       borderRadius: '6px', 
+                                       position: 'relative', 
+                                       cursor: 'pointer',
+                                       border: '1px solid rgba(255,255,255,0.1)',
+                                       flexShrink: 0,
+                                       transform: 'translateZ(0)',
+                                       WebkitTransform: 'translateZ(0)'
+                                     }}
+                                   >
+                                     <img src={`https://img.youtube.com/vi/${yid}/hqdefault.jpg`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} alt="YouTube Thumbnail" />
+                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', borderRadius: '5px' }} 
+                                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'} 
+                                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
+                                       <Play size={16} fill="#ef4444" color="#ef4444" />
+                                     </div>
+                                   </div>
+                                 ) : (
+                                   <button onClick={() => setActiveYoutubeUrl(song.youtube_link)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                     <Play size={16} fill="#ef4444" />
+                                   </button>
+                                 );
+                               })()}
                               <button onClick={() => setChartSong(song)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(59,130,246,0.15)', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <FileText size={16} />
                               </button>
@@ -979,6 +1011,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 setShowModal(true);
               }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)' }}>
                 <FileText size={20} /> Evento en Blanco
+              </button>
+
+              <button onClick={() => {
+                setShowNewEventPicker(false);
+                setEditingEventId(null);
+                setEventName('');
+                setEventDate(pendingEventDate);
+                setDescription('');
+                setFormat('full');
+                const template = generateTemplate('full');
+                setRoster(template);
+                setInitialRoster(JSON.parse(JSON.stringify(template)));
+                setDbHistory([]);
+                setSetlist([]);
+                setModalTab('info');
+                setShowModal(true);
+              }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+                <Music size={20} /> Plantilla: Banda Base
               </button>
 
               <button onClick={() => {
