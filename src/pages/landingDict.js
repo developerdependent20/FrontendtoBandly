@@ -1,4 +1,4 @@
-﻿export const landingDict = {
+export const landingDict = {
   es: {
     navFeatures: "Funciones",
     navPricing: "Planes",
@@ -97,6 +97,7 @@
     f_allStarter: "Todo lo de Starter",
     f_preview: "Sala de previsualización",
     f_seqPlayer: "Player de secuencias",
+    f_presenter: "Bandly Presenter (App de Proyección)",
     elitePlan: "Elite",
     eliteSubMo: "Facturado mensualmente",
     eliteSubYr: "Equivale a $27.4 / mes",
@@ -219,6 +220,7 @@
     f_allStarter: "Everything in Starter",
     f_preview: "Preview room",
     f_seqPlayer: "Sequence player",
+    f_presenter: "Bandly Presenter (Desktop App)",
     elitePlan: "Elite",
     eliteSubMo: "Billed monthly",
     eliteSubYr: "Equals $27.4 / month",

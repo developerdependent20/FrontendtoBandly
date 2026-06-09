@@ -423,7 +423,7 @@ const MemoizedTransportUI = React.memo(({
   );
 });
 
-export default function ProMixer({ session, events }) {
+export default function ProMixer({ session, events, profile }) {
   // isConfigured arranca en false — la auto-reconexión lo pone en true si el motor responde OK
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -949,6 +949,41 @@ export default function ProMixer({ session, events }) {
       setIsLoadingStems(false);
     }
   }, []);
+
+  const lastBroadcastRef = useRef(null);
+
+  useEffect(() => {
+    if (!isPlaying || markers.length === 0) return;
+    
+    let currentMarker = null;
+    for (const m of markers) {
+      if (playbackSample >= m.sample) {
+        currentMarker = m;
+      } else {
+        break;
+      }
+    }
+
+    if (currentMarker && lastBroadcastRef.current !== currentMarker.id) {
+      lastBroadcastRef.current = currentMarker.id;
+      
+      const userPlan = profile?.organizations?.plan || 'free';
+      if (userPlan === 'pro' || userPlan === 'elite') {
+        // Broadcast silencioso al Presenter
+        supabase.from('presenter_state')
+          .update({ active_marker: currentMarker.label })
+          .eq('id', 1)
+          .then(() => console.log('[Presenter Sync] Sent Marker:', currentMarker.label))
+          .catch(() => {});
+      } else {
+        console.log('[Presenter Sync] Omitido: Requiere plan Pro o Elite');
+      }
+    }
+  }, [playbackSample, markers, isPlaying]);
+
+  useEffect(() => {
+    if (playbackSample === 0) lastBroadcastRef.current = null;
+  }, [playbackSample]);
 
   const onAddMarker = useCallback(async (bar, label, sample) => {
     if (!activeSequenceId) return;

@@ -457,6 +457,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               <li><Crown size={16} color="var(--accent)" /> {t.f_allStarter}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_preview}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_seqPlayer}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_presenter}</li>
             </ul>
             <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.choosePro}</button>
           </div>
