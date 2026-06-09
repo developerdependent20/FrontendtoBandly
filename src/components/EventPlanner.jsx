@@ -97,7 +97,7 @@ const ROLE_BANK = [
 ];
 
 // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
-const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => {
+const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const selectedMember = members?.find(m => m.id === value);
@@ -160,7 +160,7 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder }) => 
           <div style={{ 
             position: 'absolute', 
             top: '115%', 
-            left: 0, 
+            ...(alignRight ? { right: 0 } : { left: 0 }),
             minWidth: '220px', 
             background: '#1a2133', 
             border: '1px solid rgba(255,255,255,0.1)', 
@@ -258,7 +258,7 @@ const CustomDatePicker = ({ value, onChange }) => {
         className="input-field" 
         style={{ width: '100%', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
       >
-        <span>{value ? value.split('-').reverse().join('/') : 'dd/mm/aaaa'}</span>
+        <span>{value ? value.split('T')[0].split('-').reverse().join('/') : 'dd/mm/aaaa'}</span>
         <CalendarIcon size={16} color="var(--text-muted)" />
       </div>
 
@@ -425,6 +425,42 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setShowModal(true);
   };
 
+
+  const getLastPlayed = (songId) => {
+    if (!events || events.length === 0) return null;
+    let lastDate = null;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    events.forEach(ev => {
+      if (!ev.date) return;
+      const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
+      // Skip future events
+      if (evDate > today) return;
+      
+      const hasSong = ev.event_songs?.some(es => String(es.song_id) === String(songId));
+      if (hasSong) {
+        if (!lastDate || evDate > lastDate) {
+          lastDate = evDate;
+        }
+      }
+    });
+
+    if (!lastDate) return null;
+    
+    const diffTime = Math.abs(today - lastDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'hoy';
+    if (diffDays === 1) return 'ayer';
+    if (diffDays < 30) return `hace ${diffDays} días`;
+    if (diffDays < 60) return `hace 1 mes`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return `hace ${diffMonths} meses`;
+    const diffYears = Math.floor(diffMonths / 12);
+    return diffYears === 1 ? 'hace 1 año' : `hace ${diffYears} años`;
+  };
+
   const handleNewEvent = (selectedDate) => {
     setPendingEventDate(selectedDate || '');
     setShowNewEventPicker(true);
@@ -560,25 +596,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   // [ESTABLE] Temas Joya Premium
   const cardThemes = [
-    { main: '#6366f1', glass: 'rgba(99, 102, 241, 0.1)', light: 'rgba(99, 102, 241, 0.3)' }, // Indigo
-    { main: '#10b981', glass: 'rgba(16, 185, 129, 0.1)', light: 'rgba(16, 185, 129, 0.3)' }, // Emerald
-    { main: '#f43f5e', glass: 'rgba(244, 63, 94, 0.1)', light: 'rgba(244, 63, 94, 0.3)' },    // Rose
-    { main: '#f59e0b', glass: 'rgba(245, 158, 11, 0.1)', light: 'rgba(245, 158, 11, 0.3)' },  // Amber
-    { main: '#8b5cf6', glass: 'rgba(139, 92, 246, 0.1)', light: 'rgba(139, 92, 246, 0.3)' },  // Violet
-    { main: '#06b6d4', glass: 'rgba(6, 182, 212, 0.1)', light: 'rgba(6, 182, 212, 0.3)' },   // Cyan
+    { main: '#3b82f6', glass: 'rgba(59, 130, 246, 0.1)', light: 'rgba(59, 130, 246, 0.3)' }, // 0: Royal Blue
+    { main: '#8b5cf6', glass: 'rgba(139, 92, 246, 0.1)', light: 'rgba(139, 92, 246, 0.3)' }, // 1: Neon Purple
+    { main: '#ec4899', glass: 'rgba(236, 72, 153, 0.1)', light: 'rgba(236, 72, 153, 0.3)' }, // 2: Pink
+    { main: '#f97316', glass: 'rgba(249, 115, 22, 0.1)', light: 'rgba(249, 115, 22, 0.3)' }, // 3: Sunset
+    { main: '#be123c', glass: 'rgba(190, 18, 60, 0.1)', light: 'rgba(190, 18, 60, 0.3)' }, // 4: Rose
+    { main: '#94a3b8', glass: 'rgba(148, 163, 184, 0.1)', light: 'rgba(148, 163, 184, 0.3)' }, // 5: Silver Default
   ];
 
   const getEventTheme = (name) => {
     const n = (name || '').toLowerCase();
-    // Indigo para Servicios
-    if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return cardThemes[0]; 
-    // Emerald para Oración
-    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return cardThemes[1];
-    // Violet para Reuniones
-    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[4];
-    // Orange/Amber para Especiales
+    if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return cardThemes[0];
+    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return cardThemes[4];
+    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[1];
     if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return cardThemes[3];
-    // Cyan por defecto
     return cardThemes[5];
   };
 
@@ -900,7 +931,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         Ver descripción completa
                       </span>
                     </summary>
-                    <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, whiteSpace: 'pre-wrap', textAlign: 'left' }} className="custom-scrollbar">
+                    <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordWrap: 'break-word', wordBreak: 'break-word', textAlign: 'left' }} className="custom-scrollbar">
                       {selectedEventDetails.description}
                     </div>
                   </details>
@@ -1319,7 +1350,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'setlist' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {setlist.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, overflow: 'hidden' }}>
+                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0 }}>
                     <select 
                       className="input-field" 
                       value={item.song_id} 
@@ -1327,7 +1358,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       style={{ flex: 2, background: 'none' }}
                     >
                       <option value="">Seleccionar Canción</option>
-                      {songs.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                      {songs.map(s => {
+                        const lp = getLastPlayed(s.id);
+                        const label = lp ? `${s.title} (${lp})` : s.title;
+                        return <option key={s.id} value={s.id}>{label}</option>;
+                      })}
                     </select>
 
                     {/* NUEVO: Selector de Tono (Tonality) */}
@@ -1354,8 +1389,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </select>
                     </div>
 
-                    <div style={{ flex: 1.5, minWidth: 0, overflow: 'hidden' }}>
-                      <MemberSelector value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                    <div style={{ flex: 1.5, minWidth: 0 }}>
+                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>

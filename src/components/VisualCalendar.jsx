@@ -26,22 +26,22 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const getEventColor = (name) => {
     const n = (name || '').toLowerCase();
     if (n.includes('servicio') || n.includes('dominical') || n.includes('culto'))
-      return { bg: 'linear-gradient(135deg,#6366f1,#4f46e5)', glow: '#6366f1' };
+      return { bg: 'linear-gradient(135deg,#2563eb,#1d4ed8)', glow: '#3b82f6' };
     if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda'))
-      return { bg: 'linear-gradient(135deg,#10b981,#059669)', glow: '#10b981' };
+      return { bg: 'linear-gradient(135deg,#9f1239,#881337)', glow: '#be123c' }; // Rose
     if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo'))
-      return { bg: 'linear-gradient(135deg,#2563eb,#1d4ed8)', glow: '#2563eb' };
+      return { bg: 'linear-gradient(135deg,#7c3aed,#6d28d9)', glow: '#8b5cf6' };
     if (n.includes('especial') || n.includes('altar') || n.includes('conferencia'))
-      return { bg: 'linear-gradient(135deg,#f97316,#ea580c)', glow: '#f97316' };
-    return { bg: 'linear-gradient(135deg,#06b6d4,#0891b2)', glow: '#06b6d4' };
+      return { bg: 'linear-gradient(135deg,#ea580c,#c2410c)', glow: '#f97316' };
+    return { bg: 'linear-gradient(135deg,#475569,#334155)', glow: '#94a3b8' };
   };
 
   const categories = [
-    { name: 'Servicios', color: '#6366f1' },
-    { name: 'Oración', color: '#10b981' },
-    { name: 'Reuniones/Ensayos', color: '#2563eb' },
+    { name: 'Servicios', color: '#3b82f6' },
+    { name: 'Oración', color: '#be123c' },
+    { name: 'Reuniones', color: '#8b5cf6' },
     { name: 'Especiales', color: '#f97316' },
-    { name: 'Otros', color: '#06b6d4' },
+    { name: 'Otros', color: '#94a3b8' },
   ];
 
   const exportToICS = () => {
@@ -68,12 +68,15 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%)',
+      background: 'linear-gradient(135deg, #09090b 0%, #18181b 100%)',
       borderRadius: '28px',
       padding: '0',
       border: '1px solid rgba(255,255,255,0.08)',
       boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
-    }}>
+      width: '100%',
+      overflowX: 'auto'
+    }} className="custom-scrollbar">
+      <div style={{ minWidth: '700px' }}>
 
       {/* ── HEADER ── */}
       <div style={{
@@ -248,6 +251,7 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
         >
           <Download size={13}/> Exportar .ics
         </button>
+      </div>
       </div>
     </div>
   );
