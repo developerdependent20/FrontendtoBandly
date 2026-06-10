@@ -8,6 +8,7 @@ import { Settings } from 'lucide-react';
 export default function TeamList({ members, isDirector, refreshData, orgSettings, orgId }) {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [filterBlocked, setFilterBlocked] = useState(false);
   
   React.useEffect(() => {
     if (localStorage.getItem('open_org_settings') === 'true') {
@@ -133,10 +134,15 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
   // 2. Agrupación Jerárquica Exclusiva
   const groupedMembers = useMemo(() => {
-    if (!members) return { global: [], leadership: [], production: [], logistics: [], music: [], unassigned: [] };
+    let activeMembers = members || [];
+    if (filterBlocked) {
+      activeMembers = activeMembers.filter(m => m.blocked_dates && m.blocked_dates.length > 0);
+    }
     
-    const global = members.filter(m => m.role === 'director');
-    const remainingAfterGlobal = members.filter(m => m.role !== 'director');
+    if (!activeMembers || activeMembers.length === 0) return { global: [], leadership: [], production: [], logistics: [], music: [], unassigned: [] };
+    
+    const global = activeMembers.filter(m => m.role === 'director');
+    const remainingAfterGlobal = activeMembers.filter(m => m.role !== 'director');
 
     // Nivel 2: Líderes de área (Prioridad alta)
     const leadership = remainingAfterGlobal.filter(m => (m.functions || []).some(f => leadershipIds.has(f)));
@@ -153,7 +159,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     const unassigned = remainingAfterLogistics.filter(m => !(m.functions || []).some(f => instrumentIds.has(f)));
 
     return { global, leadership, production, logistics, music, unassigned };
-  }, [members, leadershipIds, productionIds, logisticsIds, instrumentIds]);
+  }, [members, filterBlocked, leadershipIds, productionIds, logisticsIds, instrumentIds]);
 
   const renderMemberCard = (m, level, categoryName) => {
     const mFunctions = m.functions || [];
@@ -337,13 +343,22 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           <p>Organiza a tu equipo asignando múltiples funciones. Los miembros aparecerán agrupados automáticamente bajo el departamento correspondiente a su rol más alto.</p>
         </div>
         {isDirector && (
-          <button 
-            onClick={() => setShowSettingsModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-            className="hover-scale"
-          >
-            <Settings size={18} /> Configurar Departamentos
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => setFilterBlocked(!filterBlocked)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: filterBlocked ? '#ef4444' : 'rgba(239, 68, 68, 0.1)', color: filterBlocked ? 'white' : '#ef4444', borderRadius: '12px', border: filterBlocked ? 'none' : '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', fontWeight: 'bold' }}
+              className="hover-scale"
+            >
+              🚫 {filterBlocked ? 'Mostrando bloqueados' : 'Filtrar bloqueados'}
+            </button>
+            <button 
+              onClick={() => setShowSettingsModal(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+              className="hover-scale"
+            >
+              <Settings size={18} /> Configurar Departamentos
+            </button>
+          </div>
         )}
       </div>
 
@@ -364,8 +379,10 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
         />
 
         <div className="member-list-container">
-          {members?.length === 0 ? (
+          {(!members || members.length === 0) ? (
             <p className="empty-msg">Manda el código de acceso a tu organización para empezar a sumar talentos.</p>
+          ) : filterBlocked && Object.values(groupedMembers).every(g => g.length === 0) ? (
+            <p className="empty-msg" style={{ opacity: 0.7 }}>Ningún miembro tiene fechas bloqueadas actualmente.</p>
           ) : (
             <>
               {groupedMembers.global.length > 0 && (

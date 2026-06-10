@@ -1116,8 +1116,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', width: '24px' }}>{i+1}</div>
                            <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '1rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Desconocida'}</div>
-                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-                                Lider: {leader?.full_name?.split(' ')[0] || '--'} â€¢ Tono: <span style={{ color: 'white', fontWeight: '800' }}>{es.selected_key || '--'}</span>
+                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                <span>Líder: {leader?.full_name?.split(' ')[0] || '--'}</span>
+                                <span style={{ opacity: 0.5 }}>|</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                  {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '800' }}>{es.selected_key || '--'}</strong>
+                                </span>
                               </div>
                            </div>
                            <div style={{ display: 'flex', gap: '6px' }}>
