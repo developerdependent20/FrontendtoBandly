@@ -273,7 +273,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                   )}
                 </div>
                 
-                <div className="song-metadata">
+                <div className="song-metadata" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
                    <div className="meta-tag">Orig: <span>{s.key || '-'}</span></div>
                    <div className="meta-tag male">♂: <span>{s.key_male || '-'}</span></div>
                    <div className="meta-tag female">♀: <span>{s.key_female || '-'}</span></div>
@@ -284,31 +284,33 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 </div>
               </div>
 
-              <div className="song-visuals">
-                {s.youtube_link && (() => {
+              <div className="song-visuals" style={{ width: '120px', height: '68px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {s.youtube_link ? (() => {
                    const match = s.youtube_link.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
                    const yId = match ? match[1] : null;
                    return yId ? (
-                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" className="yt-thumb-wrapper">
-                       <img src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} alt="YouTube" />
-                       <div className="yt-play-overlay">▶</div>
+                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" className="yt-thumb-wrapper" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
+                       <img src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} alt="YouTube" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                       <div className="yt-play-overlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.2rem' }}>▶</div>
                      </a>
                    ) : (
-                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" className="yt-link-simple">📺 Video</a>
+                     <a href={s.youtube_link} target="_blank" rel="noopener noreferrer" className="yt-link-simple" style={{ color: 'var(--primary)', fontSize: '0.8rem', textDecoration: 'none' }}>📺 Video</a>
                    );
-                })()}
+                })() : (
+                   <Music size={24} color="rgba(255,255,255,0.1)" />
+                )}
               </div>
 
-              <div className="song-actions-grid">
-                <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn">
+              <div className="song-actions-grid" style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '240px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn" style={{ flex: 1, whiteSpace: 'nowrap', padding: '10px' }}>
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
-                <div style={{ display: 'flex', gap: '4px', width: '100%' }}>
+                <div style={{ display: 'flex', gap: '4px', flex: 1.2 }}>
                   <button 
                     onClick={() => openMixer(s)} 
                     disabled={loadingSeq === s.id} 
                     className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, padding: '10px', whiteSpace: 'nowrap' }}
                   >
                     {loadingSeq === s.id ? (
                       <Loader2 size={14} className="spin-slow" />
@@ -317,14 +319,14 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                     ) : (
                       <Headphones size={14} />
                     )}
-                    {loadingSeq === s.id ? ' Abriendo...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reproducir' : ' Secuencia'}
+                    {loadingSeq === s.id ? ' ...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reprod.' : ' Secuen.'}
                   </button>
                   
                   {(s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) && canEditSongs && !readOnly && (
                     <button 
                       onClick={() => handleDeleteSequence(s.id)} 
                       className="song-action-btn sequence-btn hover-scale"
-                      style={{ flex: '0 0 auto', padding: '0 10px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                      style={{ flex: '0 0 36px', padding: '0', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       title="Eliminar secuencia para subir una nueva"
                     >
                       <Trash2 size={14} />
