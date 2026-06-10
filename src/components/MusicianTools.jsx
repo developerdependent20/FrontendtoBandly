@@ -6,22 +6,31 @@ import PercussionPad from './PercussionPad';
 export default function MusicianTools() {
   return (
     <div style={{ maxWidth: '100%', width: '100%', margin: '0 auto', paddingBottom: '3rem' }}>
-      <div style={{ 
-        background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 100%)', 
-        padding: '1.5rem 2rem', 
-        borderRadius: '16px', 
-        color: 'white',
-        marginBottom: '2rem',
-        border: '1px solid rgba(255,255,255,0.05)',
-        display: 'flex', alignItems: 'center', gap: '20px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-      }}>
-        <div style={{ background: 'var(--primary)', padding: '1rem', borderRadius: '50%', boxShadow: '0 0 20px var(--primary)' }}>
-          <Headphones size={28} color="#fff" />
-        </div>
-        <div>
-          <h4 style={{ margin: '0 0 5px', fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-0.5px' }}>STUDIO LIVE TOOLS</h4>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>Acompaña la música desde tu dispositivo. Los sonidos del Drum Machine se pueden personalizar.</p>
+      <div className="library-intro" style={{ marginBottom: '3rem', marginTop: '1rem' }}>
+        <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem' }}>
+          Tus Herramientas. <span className="serif-accent">En Vivo.</span>
+        </h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <Headphones size={28} color="var(--primary)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Studio Live Tools</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Acompaña la música desde tu dispositivo utilizando los <span style={{ color: 'white' }}>Ambient Pads</span> profesionales.
+            </p>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <Disc3 size={28} color="var(--accent)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Drum Machine</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Los sonidos de percusión se pueden <span style={{ color: 'white' }}>personalizar</span> para tu interpretación en directo.
+            </p>
+          </div>
         </div>
       </div>
 

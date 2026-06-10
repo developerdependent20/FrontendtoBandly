@@ -65,30 +65,32 @@ export default function WebUploadStudio({ songs = [], orgId, session, profile, r
     }}>
 
       {/* Header Hero */}
-      <div style={{
-        padding: '2.5rem 0 2rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        marginBottom: '2rem',
-      }}>
-        <div style={{
-          width: '52px', height: '52px', borderRadius: '16px',
-          background: 'linear-gradient(135deg, #2563eb, #6366f1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 24px rgba(37, 99, 235,0.4)',
-          flexShrink: 0,
-        }}>
-          <CloudUpload size={26} color="white" />
-        </div>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', letterSpacing: '-0.5px' }}>
-            Subir Secuencia
-          </h1>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Selecciona una canción y sube su multitrack ZIP a la nube.
-          </p>
+      {/* Header Hero */}
+      <div className="library-intro" style={{ marginBottom: '3rem', marginTop: '1rem' }}>
+        <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem' }}>
+          Tus Secuencias. <span className="serif-accent">A la nube.</span>
+        </h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <CloudUpload size={28} color="var(--primary)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Subir Secuencias</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Selecciona una canción del repertorio y sube su <span style={{ color: 'white' }}>multitrack ZIP</span> a la nube para usarlo en vivo.
+            </p>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <ShieldCheck size={28} color="var(--accent)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Almacenamiento</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Todas las secuencias se almacenan de manera segura y estarán disponibles en el <span style={{ color: 'white' }}>ProMixer DAW</span> para tus ensayos.
+            </p>
+          </div>
         </div>
       </div>
 
