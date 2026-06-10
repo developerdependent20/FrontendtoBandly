@@ -254,13 +254,13 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
 };
 
 export function DirectorView({ profile, session, activeTab, setActiveTab, orgData }) {
-  const { members, events, songs, fetchData } = orgData;
+  const { members, events, songs, orgSettings, fetchData } = orgData;
   return (
     <div className="dashboard-grid" style={{ display: 'block' }}>
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <UnifiedDashboardHeader profile={profile} orgData={orgData} setActiveTab={setActiveTab} />
-          <EventPlanner readOnly={false} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} orgSettings={profile?.organizations?.settings || {}} />
+          <EventPlanner readOnly={false} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} orgSettings={orgSettings || profile?.organizations?.settings || {}} />
         </div>
       )}
       {activeTab === 'library' && (
@@ -270,7 +270,7 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
       )}
       {activeTab === 'team' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={profile?.organizations?.settings || {}} />
+          <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} />
         </div>
       )}
       {activeTab === 'play' && (
@@ -291,7 +291,7 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
 }
 
 export function MemberView({ profile, session, activeTab, setActiveTab, orgData }) {
-  const { members, events, songs, fetchData } = orgData;
+  const { members, events, songs, orgSettings, fetchData } = orgData;
   const userFunctions = profile.functions || [];
   const canAccessLibrary = userFunctions.some(f => ['musico', 'audio', 'media'].includes(f));
 
@@ -300,7 +300,7 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <UnifiedDashboardHeader profile={profile} orgData={orgData} setActiveTab={setActiveTab} />
-          <EventPlanner readOnly={true} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} orgSettings={profile?.organizations?.settings || {}} />
+          <EventPlanner readOnly={true} events={events} members={members} orgId={profile.org_id} refreshData={fetchData} songs={songs} profile={profile} session={session} orgSettings={orgSettings || profile?.organizations?.settings || {}} />
         </div>
       )}
       {activeTab === 'library' && canAccessLibrary && (
@@ -310,7 +310,7 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       )}
       {activeTab === 'team' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={profile?.organizations?.settings || {}} />
+          <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} />
         </div>
       )}
       {activeTab === 'play' && (

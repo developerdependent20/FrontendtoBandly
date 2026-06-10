@@ -5,6 +5,7 @@ export function useOrgData(orgId) {
   const [members, setMembers] = useState([]);
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
+  const [orgSettings, setOrgSettings] = useState(null);
 
   useEffect(() => {
     if (orgId) fetchData();
@@ -19,6 +20,7 @@ export function useOrgData(orgId) {
         if (members.length === 0) setMembers(parsed.members || []);
         if (events.length === 0) setEvents(parsed.events || []);
         if (songs.length === 0) setSongs(parsed.songs || []);
+        if (!orgSettings) setOrgSettings(parsed.orgSettings || null);
       }
 
       // Si no hay internet, nos quedamos solo con la caché
@@ -30,18 +32,21 @@ export function useOrgData(orgId) {
       const resMem = await supabase.from('profiles').select('*').eq('org_id', orgId);
       const resSongs = await supabase.from('songs').select('*, sequences(id)').eq('org_id', orgId).order('title', { ascending: true });
       const resEv = await supabase.from('events').select('*, event_roster(*), event_songs(*, songs(*, sequences(id)))').eq('org_id', orgId).order('date', { ascending: true });
+      const resOrg = await supabase.from('organizations').select('settings').eq('id', orgId).single();
 
       if (resMem.error || resSongs.error || resEv.error) throw new Error("Supabase fetch failed");
 
       setMembers(resMem.data);
       setSongs(resSongs.data);
       setEvents(resEv.data);
+      if (resOrg.data) setOrgSettings(resOrg.data.settings);
 
       // 2. Guardar en Caché Local para la próxima vez (o para cuando se vaya el internet)
       localStorage.setItem(`bandly_offline_org_${orgId}`, JSON.stringify({
         members: resMem.data,
         songs: resSongs.data,
         events: resEv.data,
+        orgSettings: resOrg.data?.settings || null,
         lastSync: new Date().toISOString()
       }));
 
@@ -54,9 +59,10 @@ export function useOrgData(orgId) {
         setMembers(parsed.members || []);
         setEvents(parsed.events || []);
         setSongs(parsed.songs || []);
+        setOrgSettings(parsed.orgSettings || null);
       }
     }
   };
 
-  return { members, events, songs, fetchData };
+  return { members, events, songs, orgSettings, fetchData };
 }

@@ -37,8 +37,8 @@ export default function App() {
 
   // Org Data Hook
   const effectiveOrgId = inspectedOrg?.id || profile?.org_id;
-  const { members, events, songs, fetchData } = useOrgData(effectiveOrgId);
-  const orgData = React.useMemo(() => ({ members, events, songs, fetchData }), [members, events, songs, fetchData]);
+  const { members, events, songs, orgSettings, fetchData } = useOrgData(effectiveOrgId);
+  const orgData = React.useMemo(() => ({ members, events, songs, orgSettings, fetchData }), [members, events, songs, orgSettings, fetchData]);
 
   useEffect(() => {
     // Initialize OneSignal Push Notifications via window object (v16 uses OneSignalDeferred)
