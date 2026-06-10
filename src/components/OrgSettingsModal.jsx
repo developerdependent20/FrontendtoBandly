@@ -169,10 +169,14 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
     setSaving(true);
     try {
       // Guardamos la nueva estructura de departamentos
-      const { error } = await supabase.from('organizations')
+      const { data, error } = await supabase.from('organizations')
         .update({ settings: { leadership, production, logistics, instruments } })
-        .eq('id', orgId);
+        .eq('id', orgId)
+        .select();
+        
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo actualizar la base de datos. Verifica tus permisos.");
+      
       if (refreshData) refreshData();
       onClose();
     } catch (e) {

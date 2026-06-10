@@ -5,7 +5,7 @@ import { AvatarPicker } from './layout/AvatarPicker';
 import OrgSettingsModal from './OrgSettingsModal';
 import { Settings } from 'lucide-react';
 
-export default function TeamList({ members, isDirector, refreshData, orgSettings }) {
+export default function TeamList({ members, isDirector, refreshData, orgSettings, orgId }) {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   
@@ -336,7 +336,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
         <OrgSettingsModal 
           isOpen={showSettingsModal} 
           onClose={() => setShowSettingsModal(false)} 
-          orgId={members?.[0]?.org_id} 
+          orgId={orgId || members?.[0]?.org_id} 
           orgSettings={orgSettings} 
           refreshData={refreshData} 
         />
