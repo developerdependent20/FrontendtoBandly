@@ -408,7 +408,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setFormat(detectedFormat);
     let merged = generateTemplate(detectedFormat);
     activeRosterFromDb.forEach(er => {
-       const slot = merged.find(m => m.instrument === er.instrument);
+       const slot = merged.find(m => m.instrument === er.instrument && !m.profile_id);
        if (slot) {
          slot.event_roster_id = er.id;
          slot.profile_id = er.profile_id;
@@ -472,7 +472,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     currentActive.forEach(item => {
       const historyMatch = history.find(h => String(h.profile_id) === String(item.profile_id) && h.instrument === item.instrument);
       if (historyMatch) {
-        if (historyMatch.is_removed) {
           diff.reactivated.push({ id: historyMatch.id, event_id: eventId, profile_id: item.profile_id, instrument: item.instrument, is_removed: false, status: 'pending' });
           diff.toNotify.push({ ...item, email: members.find(m => m.id === item.profile_id)?.email, name: members.find(m => m.id === item.profile_id)?.full_name });
         }
@@ -482,13 +481,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
     });
     initial.forEach(active => {
-      if (active.profile_id && !currentActive.some(curr => String(curr.profile_id) === String(active.profile_id) && curr.instrument === active.instrument)) {
-        if (active.event_roster_id) diff.softDeleted.push({ id: active.event_roster_id, is_removed: true, removed_at: new Date().toISOString() });
+      if (active.profile_id) {
+        let stillExists = false;
+        if (active.event_roster_id) {
+          stillExists = currentActive.some(curr => curr.event_roster_id === active.event_roster_id);
+        } else {
+          stillExists = currentActive.some(curr => String(curr.profile_id) === String(active.profile_id) && curr.instrument === active.instrument);
+        }
+        
+        if (!stillExists && active.event_roster_id) {
+          diff.softDeleted.push({ id: active.event_roster_id, is_removed: true, removed_at: new Date().toISOString() });
+        }
       }
     });
     return diff;
   };
-
   const handleSave = async () => {
     if (!eventName || !eventDate || saving) return;
     setSaving(true);
