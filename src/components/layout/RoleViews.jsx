@@ -6,6 +6,7 @@ import SongLibrary from '../SongLibrary';
 import TeamList from '../TeamList';
 import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
+import MusicianTools from '../MusicianTools';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
@@ -272,6 +273,11 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
           <TeamList members={members} isDirector={true} refreshData={fetchData} />
         </div>
       )}
+      {activeTab === 'play' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <MusicianTools />
+        </div>
+      )}
       {activeTab === 'daw' && (
         isTauri()
           // En la app de escritorio: DAW completo con ProMixer
@@ -305,6 +311,11 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       {activeTab === 'team' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <TeamList members={members} isDirector={false} refreshData={fetchData} />
+        </div>
+      )}
+      {activeTab === 'play' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <MusicianTools />
         </div>
       )}
       {activeTab === 'daw' && canAccessLibrary && (
