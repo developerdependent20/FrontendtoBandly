@@ -489,7 +489,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         }
         
         if (!stillExists && active.event_roster_id) {
-          diff.softDeleted.push({ id: active.event_roster_id, is_removed: true, removed_at: new Date().toISOString() });
+          diff.softDeleted.push({ id: active.event_roster_id, event_id: eventId, profile_id: active.profile_id, instrument: active.instrument, is_removed: true, removed_at: new Date().toISOString() });
         }
       }
     });
