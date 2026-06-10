@@ -272,6 +272,15 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
               {badge}
             </div>
             <div className="member-email">{m.email}</div>
+            {isDirector && m.blocked_dates && m.blocked_dates.length > 0 && (
+              <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ opacity: 0.8 }}>🚫 Bloqueos:</span> 
+                <span style={{ fontWeight: '600' }}>{m.blocked_dates.map(d => {
+                  const parts = d.split('-');
+                  return parts.length === 3 ? `${parts[2]}/${parts[1]}` : d;
+                }).join(', ')}</span>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
