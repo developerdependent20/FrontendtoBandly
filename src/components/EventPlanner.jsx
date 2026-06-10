@@ -515,9 +515,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         const { error } = await supabase.from('event_roster').insert(diff.newRecords);
         if (error) throw error;
       }
-      const toUpsert = [...diff.reactivated, ...diff.softDeleted];
-      if (toUpsert.length > 0) {
-        const { error } = await supabase.from('event_roster').upsert(toUpsert, { onConflict: 'id' });
+      if (diff.reactivated.length > 0) {
+        const ids = diff.reactivated.map(r => r.id);
+        const { error } = await supabase.from('event_roster').update({ is_removed: false, status: 'pending' }).in('id', ids);
+        if (error) throw error;
+      }
+      if (diff.softDeleted.length > 0) {
+        const ids = diff.softDeleted.map(r => r.id);
+        const { error } = await supabase.from('event_roster').update({ is_removed: true, removed_at: new Date().toISOString() }).in('id', ids);
         if (error) throw error;
       }
       const { error: songDelErr } = await supabase.from('event_songs').delete().eq('event_id', evtId);
@@ -599,7 +604,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const currentUserId = session?.user?.id || profile?.id;
   const userRole = (profile?.role || '').toLowerCase();
-  const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId)));
+  const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId) && !r.is_removed));
 
   // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el dÃ­a completo del evento siempre se muestra en proximos)
   const todayStart = new Date();
@@ -963,7 +968,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
              {/* Mi ParticipaciÃ³n */}
              {(() => {
-                const userSlots = selectedEventDetails.event_roster?.filter(r => String(r.profile_id) === String(currentUserId)) || [];
+                const userSlots = selectedEventDetails.event_roster?.filter(r => String(r.profile_id) === String(currentUserId) && !r.is_removed) || [];
                 if(userSlots.length === 0) return null;
                 const isPast = selectedEventDetails.date && new Date(selectedEventDetails.date.split('T')[0] + 'T00:00:00') < new Date().setHours(0,0,0,0);
                 
@@ -1006,11 +1011,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
              {/* Equipo */}
              <div style={{ marginBottom: '2rem' }}>
                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                 <Users size={20} color="var(--primary)" /> Equipo ({selectedEventDetails.event_roster?.length || 0})
+                 <Users size={20} color="var(--primary)" /> Equipo ({(selectedEventDetails.event_roster?.filter(r => !r.is_removed).length || 0)})
                </h3>
                {(() => {
                   const groups = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
-                  (selectedEventDetails.event_roster || []).forEach(s => {
+                  (selectedEventDetails.event_roster || []).filter(r => !r.is_removed).forEach(s => {
                     const g = getRoleGroup(s.instrument);
                     if (!groups[g]) groups[g] = [];
                     groups[g].push(s);
