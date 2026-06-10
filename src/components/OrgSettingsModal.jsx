@@ -211,7 +211,7 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
         </p>
 
         <SectionBuilder 
-          title="👑 Roles de Liderazgo (Prioridad #2)" 
+          title="👑 Roles de Liderazgo" 
           defaultList={DEFAULT_LEADERSHIP_ROLES} 
           currentList={leadership} 
           setList={setLeadership} 

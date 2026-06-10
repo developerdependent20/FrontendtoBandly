@@ -5,7 +5,7 @@ import PercussionPad from './PercussionPad';
 
 export default function MusicianTools() {
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '3rem' }}>
+    <div style={{ maxWidth: '100%', width: '100%', margin: '0 auto', paddingBottom: '3rem' }}>
       <div style={{ 
         background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 100%)', 
         padding: '1.5rem 2rem', 

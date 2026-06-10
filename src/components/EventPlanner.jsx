@@ -319,22 +319,35 @@ const CustomDatePicker = ({ value, onChange }) => {
 
 export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session, orgSettings }) {
   const ROLE_BANK = React.useMemo(() => {
-    const defaultMusicos = ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión'];
-    const defaultProduccion = ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical'];
-    const defaultStaff = ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración'];
+    const defaultMusicos = ['Batería', 'Bajo', 'Guitarra', 'Teclado', 'Voz/Cantante', 'Percusión'];
+    const defaultLiderazgo = ['Director Musical', 'Dir. Eventos', 'Líder Producción', 'Líder Logística'];
+    const defaultProduccion = ['Media/Visuales', 'Audio/Sonido', 'Transmisión', 'Iluminación'];
+    const defaultLogistica = ['Staff/Logística', 'Decoración', 'Bienvenida', 'Finanzas'];
 
     return [
       {
-        category: 'MÚSICOS',
+        category: '👑 LIDERAZGO',
+        color: '#fcd34d',
+        bg: 'rgba(252,211,77,0.1)',
+        roles: orgSettings?.leadership?.length > 0 ? orgSettings.leadership.map(r => r.label) : defaultLiderazgo
+      },
+      {
+        category: '📽️ PRODUCCIÓN Y MEDIA',
+        color: '#c084fc',
+        bg: 'rgba(192,132,252,0.1)',
+        roles: orgSettings?.production?.length > 0 ? orgSettings.production.map(r => r.label) : defaultProduccion
+      },
+      {
+        category: '📋 LOGÍSTICA Y STAFF',
+        color: '#f97316',
+        bg: 'rgba(249,115,22,0.1)',
+        roles: orgSettings?.logistics?.length > 0 ? orgSettings.logistics.map(r => r.label) : defaultLogistica
+      },
+      {
+        category: '🎵 MÚSICOS E INSTRUMENTOS',
         color: 'var(--primary)',
         bg: 'rgba(59,130,246,0.1)',
         roles: orgSettings?.instruments?.length > 0 ? orgSettings.instruments.map(i => i.label) : defaultMusicos
-      },
-      {
-        category: 'PRODUCCIÓN / LOGÍSTICA / STAFF',
-        color: 'var(--accent)',
-        bg: 'rgba(139,92,246,0.1)',
-        roles: orgSettings?.roles?.length > 0 ? orgSettings.roles.map(r => r.label) : [...defaultProduccion, ...defaultStaff]
       }
     ];
   }, [orgSettings]);
@@ -591,7 +604,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
       const payload = { 
         eventName: notifyData.eventName, 
-        eventDate: notifyData.eventDate, 
+        eventDate: formatEventDate(notifyData.eventDate), 
         description: notifyData.description, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
@@ -1488,7 +1501,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       ), document.body)}
 
       {showNotifyModal && notifyData && createPortal((
-         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
              <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>¿Notificar al equipo?</h3>
@@ -1513,7 +1526,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       {chartSong && <ChartStudio song={chartSong} onClose={() => setChartSong(null)} readOnly={true} />}
       
       {activeYoutubeUrl && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.9)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.9)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: '100%', maxWidth: '800px', position: 'relative' }}>
             <button onClick={() => setActiveYoutubeUrl(null)} style={{ position: 'absolute', top: '-35px', right: 0, color: 'white', background: 'none', border: 'none' }}><X size={32} /></button>
             <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px' }}>
@@ -1523,7 +1536,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         </div>
       )}
       {pendingTemplate && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--primary)', animation: 'modalFadeIn 0.3s ease-out' }}>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Zap size={30} color="var(--primary)" />

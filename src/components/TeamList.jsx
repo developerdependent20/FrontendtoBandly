@@ -9,6 +9,13 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
   const [selectedMember, setSelectedMember] = useState(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   
+  React.useEffect(() => {
+    if (localStorage.getItem('open_org_settings') === 'true') {
+      setShowSettingsModal(true);
+      localStorage.removeItem('open_org_settings');
+    }
+  }, []);
+  
   const handleAvatarUpdate = async (url) => {
     if (!selectedMember) return;
     try {

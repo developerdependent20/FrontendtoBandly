@@ -463,7 +463,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
   // ── Render ────────────────────────────────────────────────
   return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 500000,
+      position: 'fixed', inset: 0, zIndex: 10000000,
       background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '16px',

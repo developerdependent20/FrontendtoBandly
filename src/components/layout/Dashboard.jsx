@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
+import WelcomeModal from './WelcomeModal';
 import '../DAW/DAW.css';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
@@ -9,6 +10,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
   const [showTeamAction, setShowTeamAction] = React.useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const [showWelcome, setShowWelcome] = React.useState(
+    profile?.role === 'director' && !localStorage.getItem(`bandly_welcome_${profile?.id}`)
+  );
+  
   const isSuperAdmin = profile?.email === 'dependent.mix@gmail.com';
   const userFunctions = profile?.functions || [];
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
@@ -384,6 +389,17 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
 
         {showSubscription && (
           <SubscriptionModal profile={profile} onClose={() => setShowSubscription(false)} />
+        )}
+
+        {showWelcome && (
+          <WelcomeModal 
+            profile={profile} 
+            onClose={() => setShowWelcome(false)} 
+            onOpenSettings={() => {
+              setShowWelcome(false);
+              setActiveTab('team');
+            }} 
+          />
         )}
 
         {children}
