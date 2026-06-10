@@ -11,6 +11,7 @@ import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
 import { AVATARS, AvatarPicker } from './AvatarPicker';
+import ProfileSettings from '../ProfileSettings';
 
 const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -285,6 +286,11 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
+      {activeTab === 'profile' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
+        </div>
+      )}
 
     </div>
   );
@@ -324,6 +330,11 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
           ? <ProMixer songs={songs} session={session} profile={profile} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+      )}
+      {activeTab === 'profile' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
+        </div>
       )}
 
     </div>

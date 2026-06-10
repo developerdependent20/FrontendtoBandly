@@ -75,8 +75,29 @@ const getSuggestedMembers = (roleName, members) => {
   return { suggested, others };
 };
 
+const ROLE_BANK = [
+  {
+    category: 'MÚSICOS',
+    color: 'var(--primary)',
+    bg: 'rgba(59,130,246,0.1)',
+    roles: ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión']
+  },
+  {
+    category: 'PRODUCCIÓN / MEDIA',
+    color: 'var(--accent)',
+    bg: 'rgba(139,92,246,0.1)',
+    roles: ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical']
+  },
+  {
+    category: 'LOGÍSTICA / STAFF',
+    color: '#fbbf24',
+    bg: 'rgba(251,191,36,0.1)',
+    roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración']
+  }
+];
+
 // [ESTABLE] COMPONENTE EXTRAÃ DO (Con arreglos de truncado y visibilidad)
-const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight }) => {
+const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight, eventDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,32 +188,36 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
             </div>
             
             <div style={{ overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
-              {filteredList.map(m => (
-                <div 
-                  key={m.id} 
-                  onClick={() => handleSelect(m.id)} 
-                  style={{ 
-                    padding: '10px 14px', 
-                    borderRadius: '12px', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '12px', 
-                    background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
-                    marginBottom: '4px',
-                    transition: 'all 0.2s ease'
-                  }} 
-                  className="dropdown-item-custom"
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-                    {m.full_name?.[0]}
+              {filteredList.map(m => {
+                const isBlocked = eventDate && m.blocked_dates?.includes(eventDate);
+                return (
+                  <div 
+                    key={m.id} 
+                    onClick={() => { if (!isBlocked) handleSelect(m.id); }} 
+                    style={{ 
+                      padding: '10px 14px', 
+                      borderRadius: '12px', 
+                      cursor: isBlocked ? 'not-allowed' : 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px', 
+                      background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
+                      marginBottom: '4px',
+                      transition: 'all 0.2s ease',
+                      opacity: isBlocked ? 0.5 : 1
+                    }} 
+                    className={isBlocked ? '' : "dropdown-item-custom"}
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isBlocked ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', color: isBlocked ? '#ef4444' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: isBlocked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                      {m.full_name?.[0]}
+                    </div>
+                    <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: isBlocked ? '#ef4444' : (value === m.id ? 'var(--primary)' : 'white'), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {m.full_name} {isBlocked && <span style={{fontSize: '0.75rem', fontWeight: 'normal', opacity: 0.8}}>(Ocupado)</span>}
+                    </div>
+                    {suggested.find(s => s.id === m.id) && !isBlocked && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }} title="Sugerido para este rol">✨</span>}
                   </div>
-                  <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {m.full_name}
-                  </div>
-                  {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }} title="Sugerido para este rol">✨</span>}
-                </div>
-              ))}
+                );
+              })}
               
               {filteredList.length === 0 && (
                 <div style={{ padding: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>No se encontraron miembros</div>
@@ -317,41 +342,7 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session, orgSettings }) {
-  const ROLE_BANK = React.useMemo(() => {
-    const defaultMusicos = ['Batería', 'Bajo', 'Guitarra', 'Teclado', 'Voz/Cantante', 'Percusión'];
-    const defaultLiderazgo = ['Director Musical', 'Dir. Eventos', 'Líder Producción', 'Líder Logística'];
-    const defaultProduccion = ['Media/Visuales', 'Audio/Sonido', 'Transmisión', 'Iluminación'];
-    const defaultLogistica = ['Staff/Logística', 'Decoración', 'Bienvenida', 'Finanzas'];
-
-    return [
-      {
-        category: '👑 LIDERAZGO',
-        color: '#fcd34d',
-        bg: 'rgba(252,211,77,0.1)',
-        roles: orgSettings?.leadership?.length > 0 ? orgSettings.leadership.map(r => r.label) : defaultLiderazgo
-      },
-      {
-        category: '📽️ PRODUCCIÓN Y MEDIA',
-        color: '#c084fc',
-        bg: 'rgba(192,132,252,0.1)',
-        roles: orgSettings?.production?.length > 0 ? orgSettings.production.map(r => r.label) : defaultProduccion
-      },
-      {
-        category: '📋 LOGÍSTICA Y STAFF',
-        color: '#f97316',
-        bg: 'rgba(249,115,22,0.1)',
-        roles: orgSettings?.logistics?.length > 0 ? orgSettings.logistics.map(r => r.label) : defaultLogistica
-      },
-      {
-        category: '🎵 MÚSICOS E INSTRUMENTOS',
-        color: 'var(--primary)',
-        bg: 'rgba(59,130,246,0.1)',
-        roles: orgSettings?.instruments?.length > 0 ? orgSettings.instruments.map(i => i.label) : defaultMusicos
-      }
-    ];
-  }, [orgSettings]);
-
+export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -604,7 +595,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
       const payload = { 
         eventName: notifyData.eventName, 
-        eventDate: formatEventDate(notifyData.eventDate), 
+        eventDate: notifyData.eventDate, 
         description: notifyData.description, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
@@ -844,25 +835,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     groups[g].push(s);
                   });
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
+                    // Sort by Spanish ordinal if instrument name contains one
                     const ordinalRank = (name = '') => {
                       const n = name.toLowerCase();
-                      if (n.includes('primer') || n.includes('first') || n.includes('lead') || n.includes('principal')) return 1;
-                      if (n.includes('segund') || n.includes('second')) return 2;
-                      if (n.includes('tercer') || n.includes('third')) return 3;
-                      if (n.includes('cuart') || n.includes('fourth')) return 4;
-                      if (n.includes('quint') || n.includes('fifth')) return 5;
-                      const match = n.match(/\d+/);
-                      if (match) return parseInt(match[0]) + 10;
+                      if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                      if (n.includes('segundo') || n.includes('second')) return 2;
+                      if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                      if (n.includes('cuarto') || n.includes('fourth')) return 4;
+                      if (n.includes('quinto') || n.includes('fifth')) return 5;
+                      if (n.includes('sexto') || n.includes('sixth')) return 6;
+                      if (n.includes('septimo') || n.includes('seventh')) return 7;
                       return 99;
                     };
-                    const sorted = [...items].sort((a, b) => {
-                      const clean = s => s.toLowerCase().replace(/[0-9]/g, '').replace(/(primer|segund|tercer|cuart|quint)[oa]s?|first|second|third|fourth|fifth|lead|principal/g, '').trim();
-                      const baseA = clean(a.instrument);
-                      const baseB = clean(b.instrument);
-                      if (baseA < baseB) return -1;
-                      if (baseA > baseB) return 1;
-                      return ordinalRank(a.instrument) - ordinalRank(b.instrument);
-                    });
+                    const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
@@ -1077,24 +1062,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   });
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
                      const ordinalRank = (name = '') => {
-                      const n = name.toLowerCase();
-                      if (n.includes('primer') || n.includes('first') || n.includes('lead') || n.includes('principal')) return 1;
-                      if (n.includes('segund') || n.includes('second')) return 2;
-                      if (n.includes('tercer') || n.includes('third')) return 3;
-                      if (n.includes('cuart') || n.includes('fourth')) return 4;
-                      if (n.includes('quint') || n.includes('fifth')) return 5;
-                      const match = n.match(/\d+/);
-                      if (match) return parseInt(match[0]) + 10;
-                      return 99;
-                    };
-                    const sorted = [...items].sort((a, b) => {
-                      const clean = s => s.toLowerCase().replace(/[0-9]/g, '').replace(/(primer|segund|tercer|cuart|quint)[oa]s?|first|second|third|fourth|fifth|lead|principal/g, '').trim();
-                      const baseA = clean(a.instrument);
-                      const baseB = clean(b.instrument);
-                      if (baseA < baseB) return -1;
-                      if (baseA > baseB) return 1;
-                      return ordinalRank(a.instrument) - ordinalRank(b.instrument);
-                    });
+                       const n = name.toLowerCase();
+                       if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
+                       if (n.includes('segundo') || n.includes('second')) return 2;
+                       if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                       return 99;
+                     };
+                     const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
                      
                      return (
                        <div key={groupName} style={{ marginBottom: '1.5rem' }}>
@@ -1419,7 +1393,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                       value={r.instrument}
                                       onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
                                     />
-                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
+                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} eventDate={eventDate} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
                                   </div>
                                   <button 
                                     onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
@@ -1484,7 +1458,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
 
                     <div style={{ flex: 1.5, minWidth: 0 }}>
-                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" eventDate={eventDate} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>

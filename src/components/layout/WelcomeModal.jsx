@@ -23,8 +23,8 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings }) {
       icon: <Crown size={48} color="#eab308" />
     },
     {
-      title: "Todo tu ministerio en un solo lugar",
-      desc: "Crea eventos, sube secuencias multipista, comparte charts con los músicos y mantén a todo tu equipo sincronizado en tiempo real.",
+      title: "Todo tu equipo en un solo lugar",
+      desc: "Crea eventos, sube secuencias multipista, comparte charts con los músicos y mantén a toda tu organización sincronizada en tiempo real.",
       icon: <Sparkles size={48} color="#3b82f6" />
     },
     {
