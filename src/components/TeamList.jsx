@@ -89,28 +89,28 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
   };
 
   // 1. Cargamos las categorías desde la DB (o usamos los defaults si no hay nada guardado aún)
-  const leadershipRoles = orgSettings?.leadership || [
+  const leadershipRoles = orgSettings?.leadership ?? [
     { id: 'director_musical', label: 'Director Musical', icon: '🎼' },
     { id: 'eventos', label: 'Dir. Eventos', icon: '📅' },
     { id: 'lider_produccion', label: 'Líder Producción', icon: '🎬' },
     { id: 'lider_logistica', label: 'Líder Logística', icon: '📋' }
   ];
 
-  const productionRoles = orgSettings?.production || [
+  const productionRoles = orgSettings?.production ?? [
     { id: 'media', label: 'Media/Visuales', icon: '📽️' },
     { id: 'sonido', label: 'Audio/Sonido', icon: '🎛️' },
     { id: 'transmision', label: 'Transmisión', icon: '📡' },
     { id: 'iluminacion', label: 'Iluminación', icon: '💡' }
   ];
 
-  const logisticsRoles = orgSettings?.logistics || [
+  const logisticsRoles = orgSettings?.logistics ?? [
     { id: 'logistica', label: 'Staff/Logística', icon: '🛠️' },
     { id: 'decoracion', label: 'Decoración', icon: '🎨' },
     { id: 'bienvenida', label: 'Bienvenida', icon: '👋' },
     { id: 'finanzas', label: 'Finanzas', icon: '💰' }
   ];
 
-  const instrumentsCatalog = orgSettings?.instruments || [
+  const instrumentsCatalog = orgSettings?.instruments ?? [
     { id: 'bateria', label: 'Batería', icon: '🥁' },
     { id: 'bajo', label: 'Bajo', icon: '🎸' },
     { id: 'guitarra', label: 'Guitarra', icon: '🎸' },

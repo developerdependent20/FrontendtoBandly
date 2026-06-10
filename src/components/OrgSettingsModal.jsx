@@ -154,6 +154,15 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
   const [instruments, setInstruments] = useState(orgSettings?.instruments || []);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setLeadership(orgSettings?.leadership || [...oldLeadership, ...leftovers]);
+      setProduction(orgSettings?.production || getOld(DEFAULT_PRODUCTION_ROLES));
+      setLogistics(orgSettings?.logistics || getOld(DEFAULT_LOGISTICS_ROLES));
+      setInstruments(orgSettings?.instruments || []);
+    }
+  }, [isOpen, orgSettings]);
+
   if (!isOpen) return null;
 
   const handleSave = async () => {
