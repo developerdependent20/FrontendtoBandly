@@ -301,38 +301,40 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 )}
               </div>
 
-              <div className="song-actions-grid" style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '240px', justifyContent: 'flex-end' }}>
-                <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn" style={{ flex: 1, whiteSpace: 'nowrap', padding: '10px' }}>
+              <div className="song-actions-grid" style={{ display: 'grid', gridTemplateColumns: (canEditSongs && !readOnly) ? '1fr 1.1fr 36px' : '1fr 1.1fr', gap: '8px', alignItems: 'center', minWidth: (canEditSongs && !readOnly) ? '280px' : '236px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn" style={{ width: '100%', whiteSpace: 'nowrap', padding: '10px', height: '38px' }}>
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
-                <div style={{ display: 'flex', gap: '4px', flex: 1.2 }}>
-                  <button 
-                    onClick={() => openMixer(s)} 
-                    disabled={loadingSeq === s.id} 
-                    className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
-                    style={{ flex: 1, padding: '10px', whiteSpace: 'nowrap' }}
-                  >
-                    {loadingSeq === s.id ? (
-                      <Loader2 size={14} className="spin-slow" />
-                    ) : s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? (
-                      <ShieldCheck size={14} />
-                    ) : (
-                      <Headphones size={14} />
-                    )}
-                    {loadingSeq === s.id ? ' ...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reprod.' : ' Secuen.'}
-                  </button>
-                  
-                  {(s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) && canEditSongs && !readOnly && (
+                <button 
+                  onClick={() => openMixer(s)} 
+                  disabled={loadingSeq === s.id} 
+                  className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
+                  style={{ width: '100%', padding: '10px', whiteSpace: 'nowrap', height: '38px' }}
+                >
+                  {loadingSeq === s.id ? (
+                    <Loader2 size={14} className="spin-slow" />
+                  ) : s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? (
+                    <ShieldCheck size={14} />
+                  ) : (
+                    <Headphones size={14} />
+                  )}
+                  {loadingSeq === s.id ? ' ...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reprod.' : ' Secuen.'}
+                </button>
+                
+                {canEditSongs && !readOnly && (
+                  (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? (
                     <button 
                       onClick={() => handleDeleteSequence(s.id)} 
                       className="song-action-btn sequence-btn hover-scale"
-                      style={{ flex: '0 0 36px', padding: '0', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ width: '36px', height: '38px', padding: '0', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       title="Eliminar secuencia para subir una nueva"
                     >
                       <Trash2 size={14} />
                     </button>
-                  )}
-                </div>
+                  ) : (
+                    <div style={{ width: '36px' }} />
+                  )
+                )}
               </div>
             </div>
           ))
