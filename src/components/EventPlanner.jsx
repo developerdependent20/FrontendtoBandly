@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 // [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
-// [ESTABLE] MAPA DE LÃ“GICA: Para sugerencias internas
+// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
 const INSTRUMENT_MATCH_MAP = {
   'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
@@ -30,7 +30,7 @@ const INSTRUMENT_MATCH_MAP = {
   'roadie': 'instr:roadie', 'logistica': 'instr:roadie', 'staff': 'instr:roadie'
 };
 
-// [ESTABLE] MAPA DE VISUALIZACIÃ“N: Para etiquetas de interfaz
+// [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
 const INSTRUMENT_DISPLAY_MAP = {
   'instr:bateria': 'DRUMS / BATERÃA',
   'instr:bajo': 'BASS / BAJO',
@@ -45,13 +45,13 @@ const cleanEncoding = (str) => {
   if (!str) return str;
   return str
     .replace(/BATERÃA/g, 'BATERÃA')
-    .replace(/PERCUSIÃ“N/g, 'PERCUSIÃ“N')
-    .replace(/ELÃ‰CTRICA/g, 'ELÃ‰CTRICA')
-    .replace(/ACÃšSTICA/g, 'ACÃšSTICA')
-    .replace(/LOGÃSTICA/g, 'LOGÃSTICA')
-    .replace(/DIRECCIÃ“N/g, 'DIRECCIÃ“N')
-    .replace(/baterÃ­a/g, 'baterÃ­a')
-    .replace(/VacÃ­os/g, 'VacÃ­os');
+    .replace(/PERCUSIÓN/g, 'PERCUSIÓN')
+    .replace(/ELÉCTRICA/g, 'ELÉCTRICA')
+    .replace(/ACÚSTICA/g, 'ACÚSTICA')
+    .replace(/LOGÍSTICA/g, 'LOGÍSTICA')
+    .replace(/DIRECCIÓN/g, 'DIRECCIÓN')
+    .replace(/batería/g, 'batería')
+    .replace(/Vacíos/g, 'Vacíos');
 };
 
 const getBilingualName = (inst) => {
@@ -77,22 +77,22 @@ const getSuggestedMembers = (roleName, members) => {
 
 const ROLE_BANK = [
   {
-    category: 'MÃšSICOS',
+    category: 'MÚSICOS',
     color: 'var(--primary)',
     bg: 'rgba(59,130,246,0.1)',
-    roles: ['Voz', 'Coros', 'BaterÃ­a', 'Bajo', 'Teclados', 'Guitarra ElÃ©ctrica', 'Guitarra AcÃºstica', 'PercusiÃ³n']
+    roles: ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión']
   },
   {
-    category: 'PRODUCCIÃ“N / MEDIA',
+    category: 'PRODUCCIÓN / MEDIA',
     color: 'var(--accent)',
     bg: 'rgba(139,92,246,0.1)',
-    roles: ['Sonido', 'Pantallas', 'CÃ¡maras', 'TransmisiÃ³n', 'Luces', 'Roadie', 'Director Musical']
+    roles: ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical']
   },
   {
-    category: 'LOGÃSTICA / STAFF',
+    category: 'LOGÍSTICA / STAFF',
     color: '#fbbf24',
     bg: 'rgba(251,191,36,0.1)',
-    roles: ['Coordinador', 'Bienvenida', 'Maestro de NiÃ±os', 'OraciÃ³n']
+    roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración']
   }
 ];
 
@@ -361,9 +361,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const getInstrumentIcon = (inst) => {
     const i = (inst || '').toLowerCase();
-    if (i.includes('drums') || i.includes('baterÃ­a') || i.includes('perc')) return <Drum size={20} />;
+    if (i.includes('drums') || i.includes('batería') || i.includes('perc')) return <Drum size={20} />;
     if (i.includes('bass') || i.includes('bajo')) return <Zap size={20} />;
-    if (i.includes('gtr') || i.includes('guitar') || i.includes('elÃ©ctrica') || i.includes('acÃºstica')) return <Music size={20} />;
+    if (i.includes('gtr') || i.includes('guitar') || i.includes('eléctrica') || i.includes('acústica')) return <Music size={20} />;
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
@@ -375,23 +375,23 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase();
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niÃ±o') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÃSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cÃ¡mara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÃ“N / MEDIA';
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÃšSICOS';
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
     return 'OTROS';
   };
 
   const generateTemplate = (fmt) => {
     let musicLabels = [];
     if (fmt === 'full') {
-      musicLabels = ['DRUMS / BATERÃA', 'PERC / PERCUSIÃ“N', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÃ‰CTRICA', 'A. GTR / GT. ACÃšSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS'];
+      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS'];
     } else if (fmt === 'acoustic') {
-      musicLabels = ['PERC / PERCUSIÃ“N', 'BASS / BAJO', 'PIANO / KEYS', 'A. GTR / GT. ACÃšSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3'];
+      musicLabels = ['PERC / PERCUSIÓN', 'BASS / BAJO', 'PIANO / KEYS', 'A. GTR / GT. ACÚSTICA', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3'];
     } else { // general
-      musicLabels = ['DRUMS / BATERÃA', 'PERC / PERCUSIÃ“N', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÃ‰CTRICA', 'A. GTR / GT. ACÃšSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
+      musicLabels = ['DRUMS / BATERÍA', 'PERC / PERCUSIÓN', 'BASS / BAJO', 'KEYS / TECLADOS', 'E. GTR / GT. ELÉCTRICA', 'A. GTR / GT. ACÚSTICA', 'BRASS / METALES', 'VOICE 1 / VOZ 1', 'VOICE 2 / VOZ 2', 'VOICE 3 / VOZ 3', 'VOICE 4 / COROS', 'BACKINGS / COROS EXTRA'];
     }
     
-    const service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÃSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÃ“N MUSICAL'];
+    const service = ['AUDIO / SONIDO (FOH)', 'VISUALS / PANTALLAS', 'STAFF / LOGÍSTICA', 'PREACHER / PREDICADOR', 'MD / DIRECCIÓN MUSICAL'];
     const base = musicLabels.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'music', status: 'pending' }));
     const srv = service.map(l => ({ id: Math.random().toString(), instrument: l, profile_id: '', category: 'service', status: 'pending' }));
     return [...base, ...srv];
@@ -403,20 +403,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventDate(ev.date || '');
     setDescription(ev.description || '');
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
-    const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'BaterÃ­a', 'Bajo'].includes(r.instrument));
+    const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
     setFormat(detectedFormat);
-    let merged = generateTemplate(detectedFormat);
-    activeRosterFromDb.forEach(er => {
-       const slot = merged.find(m => m.instrument === er.instrument && !m.profile_id);
-       if (slot) {
-         slot.event_roster_id = er.id;
-         slot.profile_id = er.profile_id;
-         slot.status = er.status || 'pending';
-       } else {
-         merged.push({ id: Math.random().toString(), event_roster_id: er.id, instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: er.status || 'pending' });
-       }
-    });
+    
+    // Solo cargamos lo que ya estaba guardado en la base de datos
+    const merged = activeRosterFromDb.map(er => ({
+      id: Math.random().toString(),
+      event_roster_id: er.id,
+      instrument: er.instrument,
+      profile_id: er.profile_id,
+      category: 'extra',
+      status: er.status || 'pending'
+    }));
+    
     setRoster(merged);
     setInitialRoster(JSON.parse(JSON.stringify(merged)));
     setDbHistory(ev.event_roster || []);
@@ -453,12 +453,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     
     if (diffDays === 0) return 'hoy';
     if (diffDays === 1) return 'ayer';
-    if (diffDays < 30) return `hace ${diffDays} dÃ­as`;
+    if (diffDays < 30) return `hace ${diffDays} días`;
     if (diffDays < 60) return `hace 1 mes`;
     const diffMonths = Math.floor(diffDays / 30);
     if (diffMonths < 12) return `hace ${diffMonths} meses`;
     const diffYears = Math.floor(diffMonths / 12);
-    return diffYears === 1 ? 'hace 1 aÃ±o' : `hace ${diffYears} aÃ±os`;
+    return diffYears === 1 ? 'hace 1 año' : `hace ${diffYears} años`;
   };
 
   const handleNewEvent = (selectedDate) => {
@@ -537,6 +537,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       const { data: freshRoster, error: freshErr } = await supabase.from('event_roster').select('*').eq('event_id', evtId).eq('is_removed', false);
       if (freshErr) throw freshErr;
       setNotifyData({ eventId: evtId, eventName, eventDate, description, candidates: diff.toNotify, allRoster: (freshRoster || []).map(r => ({ ...r, email: members.find(m => m.id === r.profile_id)?.email, name: members.find(m => m.id === r.profile_id)?.full_name })) });
+      setShowModal(false);
       setShowNotifyModal(true);
       if (refreshData) refreshData();
     } catch (e) { 
@@ -593,7 +594,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleRemoveFromRoster = async (rosterId) => {
-    if (!confirm('Â¿Seguro que quieres eliminar a este usuario del evento?')) return;
+    if (!confirm('¿Seguro que quieres eliminar a este usuario del evento?')) return;
     try {
       await supabase.from('event_roster').delete().eq('id', rosterId);
       if (refreshData) refreshData();
@@ -608,12 +609,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const userRole = (profile?.role || '').toLowerCase();
   const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId) && !r.is_removed));
 
-  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el dÃ­a completo del evento siempre se muestra en proximos)
+  // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el día completo del evento siempre se muestra en proximos)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
   const upcomingEvents = eventsToShow.filter(ev => {
-    if (!ev.date) return true; // Sin fecha Ã¢â€ â€™ siempre prÃ³ximo
+    if (!ev.date) return true; // Sin fecha Ã¢â€ â€™ siempre próximo
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
     return evDate >= todayStart;
   });
@@ -621,7 +622,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const pastEvents = eventsToShow.filter(ev => {
     if (!ev.date) return false;
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
-    return evDate < todayStart; // Solo pasa a "pasados" cuando el dÃ­a del evento ya terminÃ³
+    return evDate < todayStart; // Solo pasa a "pasados" cuando el día del evento ya terminó
   });
 
   // [ESTABLE] Temas Joya Premium
@@ -637,8 +638,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const getEventTheme = (name) => {
     const n = (name || '').toLowerCase();
     if (n.includes('servicio') || n.includes('dominical') || n.includes('culto')) return cardThemes[0];
-    if (n.includes('oraciÃ³n') || n.includes('ayuno') || n.includes('bÃºsqueda')) return cardThemes[4];
-    if (n.includes('reuniÃ³n') || n.includes('jÃ³venes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[1];
+    if (n.includes('oración') || n.includes('ayuno') || n.includes('búsqueda')) return cardThemes[4];
+    if (n.includes('reunión') || n.includes('jóvenes') || n.includes('servidores') || n.includes('ensayo')) return cardThemes[1];
     if (n.includes('especial') || n.includes('altar') || n.includes('conferencia')) return cardThemes[3];
     return cardThemes[5];
   };
@@ -897,12 +898,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     <section id="planner-top">
       <div className="tutorial-banner">
         <div style={{ background: 'var(--accent)', padding: '1rem', borderRadius: '15px' }}><CalendarIcon size={24} color="#0f172a" /></div>
-        <div style={{ marginLeft: '1rem' }}><h4>Calendario & PlaneaciÃ³n</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
+        <div style={{ marginLeft: '1rem' }}><h4>Calendario & Planeación</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
       </div>
 
       <section id="upcoming-events" className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> PrÃ³xima Agenda</h3>
+          <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
           {!readOnly && (
             <button onClick={() => handleNewEvent('')} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
               <Plus size={16} /> Nuevo Evento
@@ -939,7 +940,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                  <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                    <Edit2 size={14} /> Editar
                  </button>
-                 <button onClick={() => { if(window.confirm('Â¿Borrar?')) { supabase.from('events').delete().eq('id', selectedEventDetails.id).then(()=>refreshData()); setSelectedEventDetails(null); } }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                 <button onClick={() => { if(window.confirm('¿Borrar?')) { supabase.from('events').delete().eq('id', selectedEventDetails.id).then(()=>refreshData()); setSelectedEventDetails(null); } }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                    <Trash2 size={14} />
                  </button>
                </div>
@@ -958,7 +959,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   <details style={{ marginTop: '0.5rem', maxWidth: '600px', margin: '0 auto' }}>
                     <summary style={{ fontSize: '0.75rem', color: getEventTheme(selectedEventDetails.name).main, cursor: 'pointer', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', userSelect: 'none', listStyle: 'none' }} className="custom-summary">
                       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                        Ver descripciÃ³n completa
+                        Ver descripción completa
                       </span>
                     </summary>
                     <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordWrap: 'break-word', wordBreak: 'break-word', textAlign: 'left' }} className="custom-scrollbar">
@@ -968,7 +969,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 )}
              </div>
 
-             {/* Mi ParticipaciÃ³n */}
+             {/* Mi Participación */}
              {(() => {
                 const userSlots = selectedEventDetails.event_roster?.filter(r => String(r.profile_id) === String(currentUserId) && !r.is_removed) || [];
                 if(userSlots.length === 0) return null;
@@ -977,7 +978,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 return (
                   <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
                      <h3 style={{ fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <User size={16} color="var(--primary)" /> Mi ParticipaciÃ³n
+                       <User size={16} color="var(--primary)" /> Mi Participación
                      </h3>
                      
                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -998,7 +999,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                      )}
                      {!isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
                         <button onClick={() => {
-                            if(window.confirm('Â¿Seguro que no puedes asistir?')) {
+                            if(window.confirm('¿Seguro que no puedes asistir?')) {
                               updateRosterStatus(selectedEventDetails.id, currentUserId, 'declined');
                               setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'declined'} : r)});
                             }
@@ -1189,7 +1190,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 setModalTab('info');
                 setShowModal(true);
               }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
-                <Users size={20} /> Plantilla: ReuniÃ³n General
+                <Users size={20} /> Plantilla: Reunión General
               </button>
               
               <div style={{ margin: '1rem 0', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>O DUPLICAR PASADO</div>
@@ -1238,7 +1239,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
                 <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
                 <CustomDatePicker value={eventDate} onChange={setEventDate} />
-                <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="DescripciÃ³n o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
+                <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
               </div>
             )}
             {modalTab === 'equipo' && (
@@ -1247,7 +1248,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 {/* 1. BANCO DE ROLES (Tienda) - AHORA ARRIBA */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Plus size={18} color="var(--primary)" /> AÃ±adir al Equipo
+                    <Plus size={18} color="var(--primary)" /> Añadir al Equipo
                   </h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
@@ -1304,7 +1305,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       onClick={() => setRoster([...roster, { id: Math.random().toString(), instrument: 'Nuevo Rol', profile_id: '', category: 'custom' }])}
                       style={{ background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '20px', padding: '8px 20px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
-                      <Plus size={14} /> AÃ±adir Rol Personalizado
+                      <Plus size={14} /> Añadir Rol Personalizado
                     </button>
                   </div>
                 </div>
@@ -1320,18 +1321,18 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       className="btn-secondary" 
                       style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
-                      <X size={14} /> Limpiar VacÃ­os
+                      <X size={14} /> Limpiar Vacíos
                     </button>
                   </div>
                   
                   {roster.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                      AÃºn no has aÃ±adido roles. AÃ±Ã¡delos desde el menÃº de arriba.
+                      Aún no has añadido roles. Añádelos desde el menú de arriba.
                     </div>
                   )}
 
                   {(() => {
-                    const groupedRoster = { 'MÃšSICOS': [], 'PRODUCCIÃ“N / MEDIA': [], 'LOGÃSTICA / STAFF': [], 'OTROS': [] };
+                    const groupedRoster = { 'MÚSICOS': [], 'PRODUCCIÓN / MEDIA': [], 'LOGÍSTICA / STAFF': [], 'OTROS': [] };
                     roster.forEach(r => {
                       const g = getRoleGroup(r.instrument);
                       if (!groupedRoster[g]) groupedRoster[g] = [];
@@ -1387,7 +1388,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
                       style={{ flex: 2, background: 'none' }}
                     >
-                      <option value="">Seleccionar CanciÃ³n</option>
+                      <option value="">Seleccionar Canción</option>
                       {songs.map(s => {
                         const lp = getLastPlayed(s.id);
                         const label = lp ? `${s.title} (${lp})` : s.title;
@@ -1420,12 +1421,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
 
                     <div style={{ flex: 1.5, minWidth: 0 }}>
-                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="LÃ­der" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>
                 ))}
-                <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])} className="btn-secondary" style={{ padding: '1rem' }}>+ AÃ±adir CanciÃ³n</button>
+                <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])} className="btn-secondary" style={{ padding: '1rem' }}>+ Añadir Canción</button>
               </div>
             )}
             <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
@@ -1440,8 +1441,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
-             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Â¿Notificar al equipo?</h3>
-             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Los cambios se guardaron. Selecciona una opciÃ³n de aviso.</p>
+             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>¿Notificar al equipo?</h3>
+             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Los cambios se guardaron. Selecciona una opción de aviso.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button onClick={() => handleSendNotifications(notifyData.candidates, 'delta')} className="btn-primary" style={{ padding: '1.2rem' }}>
                   Enviar solo a nuevos ({notifyData.candidates.length})
@@ -1477,9 +1478,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Zap size={30} color="var(--primary)" />
             </div>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>Â¿Cambiar a {pendingTemplate.label}?</h3>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>¿Cambiar a {pendingTemplate.label}?</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
-              Se generarÃ¡ una nueva lista de roles. Las asignaciones actuales que no hayas guardado se perderÃ¡n.
+              Se generará una nueva lista de roles. Las asignaciones actuales que no hayas guardado se perderán.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button 
@@ -1509,7 +1510,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 className="btn-primary" 
                 style={{ flex: 1.5, padding: '1rem' }}
               >
-                SÃ­, cambiar
+                Sí, cambiar
               </button>
             </div>
           </div>
