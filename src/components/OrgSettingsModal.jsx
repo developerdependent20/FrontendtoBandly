@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, X, Loader2, Save } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
@@ -127,7 +128,7 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
     </div>
   );
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -164,6 +165,7 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
