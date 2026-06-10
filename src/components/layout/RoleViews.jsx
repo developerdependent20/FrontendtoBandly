@@ -7,11 +7,10 @@ import TeamList from '../TeamList';
 import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
 import MusicianTools from '../MusicianTools';
-import { isTauri } from '../../utils/tauri';
+import ProfileSettings from '../ProfileSettings';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
 import { AVATARS, AvatarPicker } from './AvatarPicker';
-import ProfileSettings from '../ProfileSettings';
 
 const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -270,7 +269,7 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
         </div>
       )}
       {activeTab === 'team' && (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
         </div>
       )}
@@ -315,7 +314,7 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
         </div>
       )}
       {activeTab === 'team' && (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
         </div>
       )}
