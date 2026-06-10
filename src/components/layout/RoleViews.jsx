@@ -8,6 +8,7 @@ import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
 import MusicianTools from '../MusicianTools';
 import ProfileSettings from '../ProfileSettings';
+import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
 import { AVATARS, AvatarPicker } from './AvatarPicker';
