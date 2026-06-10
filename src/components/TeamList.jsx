@@ -334,32 +334,50 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
   return (
     <section>
-      <div className="tutorial-banner">
-        <div style={{ background: 'var(--primary)', padding: '1rem', borderRadius: '15px', color: 'white' }}>
-          <Users size={24} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <h4>Jerarquía de Departamentos</h4>
-          <p>Organiza a tu equipo asignando múltiples funciones. Los miembros aparecerán agrupados automáticamente bajo el departamento correspondiente a su rol más alto.</p>
-        </div>
-        {isDirector && (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              onClick={() => setFilterBlocked(!filterBlocked)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: filterBlocked ? '#ef4444' : 'rgba(239, 68, 68, 0.1)', color: filterBlocked ? 'white' : '#ef4444', borderRadius: '12px', border: filterBlocked ? 'none' : '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', fontWeight: 'bold' }}
-              className="hover-scale"
-            >
-              🚫 {filterBlocked ? 'Mostrando bloqueados' : 'Filtrar bloqueados'}
-            </button>
-            <button 
-              onClick={() => setShowSettingsModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-              className="hover-scale"
-            >
-              <Settings size={18} /> Configurar Departamentos
-            </button>
+      <div className="library-intro" style={{ marginBottom: '3rem', marginTop: '1rem' }}>
+        <h2 className="hero-main-title-large" style={{ fontSize: '3rem', textAlign: 'left', marginBottom: '1.5rem' }}>
+          Tu Equipo. <span className="serif-accent">Sincronizado.</span>
+        </h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <Users size={28} color="var(--primary)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Roles y Departamentos</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Organiza a tu equipo asignando múltiples funciones. Los miembros aparecerán agrupados automáticamente bajo el <span style={{ color: 'white' }}>departamento</span> correspondiente a su rol más alto.
+            </p>
           </div>
-        )}
+
+          <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <Settings size={28} color="var(--accent)" />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Administración Global</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Solo los <span style={{ color: 'white' }}>directores</span> pueden reconfigurar departamentos, ajustar permisos o filtrar por disponibilidad de fechas de los músicos.
+            </p>
+            {isDirector && (
+              <div style={{ marginTop: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                <button 
+                  onClick={() => setShowSettingsModal(true)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1, padding: '10px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                  className="hover-scale"
+                >
+                  <Settings size={16} /> Configurar Departamentos
+                </button>
+                <button 
+                  onClick={() => setFilterBlocked(!filterBlocked)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1, padding: '10px', background: filterBlocked ? '#ef4444' : 'rgba(239, 68, 68, 0.1)', color: filterBlocked ? 'white' : '#ef4444', borderRadius: '12px', border: filterBlocked ? 'none' : '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                  className="hover-scale"
+                >
+                  🚫 {filterBlocked ? 'Mostrando bloqueados' : 'Filtrar bloqueados'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <section className="glass-panel" style={{ padding: '2rem', background: 'transparent', border: 'none', boxShadow: 'none' }}>
