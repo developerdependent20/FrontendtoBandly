@@ -1,67 +1,9 @@
 /* =========================================================================
    VARIABLES & DESIGN TOKENS
    ========================================================================= */
-:root {
-  /* Dynamic Mappings from globals.css */
-  --bg-dark: var(--bg-card);
-  --bg-darker: var(--bg-main);
-  --bg-card-legacy: var(--bg-card);
-  
-  /* Brand System - Sychronized with globals.css */
-  --brand-primary: var(--brand-primary); 
-  --brand-hover: var(--brand-primary-hover);
-  --brand-glow: var(--hero-glow-1);
-  
-  --brand-secondary: var(--brand-secondary); 
-  --brand-accent: #FEA680;    /* PEACH */
-
-  /* Compatibility Aliases - ALL RE-MAPPED TO BLUE TO KILL YELLOW */
-  --yellow-primary: var(--brand-primary);
-  --yellow-hover: var(--brand-hover);
-  --yellow-glow: var(--brand-glow);
-  
-  --text-primary: var(--text-main);
-  --text-secondary: var(--text-muted);
-  --text-dark: #000000;
-
-  /* Refined Accents */
-  --accent-sport: var(--brand-primary); 
-  --accent-art: var(--brand-secondary); 
-  --accent-blue: var(--brand-primary);
-  
-  /* Typography */
-  --font-main: 'Inter', sans-serif;
-  --font-heading: 'Inter', sans-serif;
-  
-  /* Transitions */
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-
-  /* Glass Effects */
-  --glass-bg: var(--glass-bg);
-  --glass-border: var(--glass-border);
-  --bg-ambient-glow: rgba(0, 82, 255, 0.08);
-}
-
-[data-theme='dark'] {
-  --text-primary: #ffffff;
-  --bg-dark: #020617;
-  --bg-darker: #000208;
-  
-  /* Strictly Blue/Azure Branding */
-  --brand-primary: var(--brand-primary); 
-  --brand-hover: var(--brand-primary-hover);
-  --brand-glow: var(--hero-glow-1);
-  --bg-ambient-glow: rgba(59, 130, 246, 0.15);
-  
-  --yellow-primary: var(--brand-primary);
-  --yellow-hover: var(--brand-hover);
-  --yellow-glow: var(--brand-glow);
-  
-  --accent-sport: var(--brand-primary);
-  --accent-art: var(--brand-secondary);
-}
+/* =========================================================================
+   VARIABLES & DESIGN TOKENS (Moved to globals.css)
+   ========================================================================= */
 
 /* =========================================================================
    RESET & BASE STYLES
@@ -78,11 +20,8 @@ html {
 
 body {
   font-family: var(--font-main);
-  background-color: var(--bg-darker); /* Blacker background */
-  color: var(--text-primary);
-  line-height: 1.6;
-  overflow-x: hidden;
-  letter-spacing: -0.012em;
+  background-color: var(--bg-page);
+  color: var(--text-main);
 }
 
 a {
@@ -109,7 +48,7 @@ ul {
   top: 0; left: 0; width: 100vw; height: 100vh;
   z-index: -10;
   pointer-events: none;
-  background-color: var(--bg-main);
+  background-color: var(--bg-page);
   background-image: 
     radial-gradient(circle at 50% -10%, rgba(0, 82, 255, 0.08) 0%, transparent 70%),
     radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
@@ -611,7 +550,7 @@ p {
 
 .sidebar {
   width: 280px;
-  background: linear-gradient(to bottom, var(--bg-card), var(--bg-main));
+  background: linear-gradient(to bottom, var(--bg-card), var(--bg-page));
   border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
@@ -810,7 +749,7 @@ td { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.03); font-size
 }
 
 .course-stat-card {
-  background: linear-gradient(135deg, var(--bg-card), var(--bg-main)) !important;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-page)) !important;
   padding: 35px;
   border-radius: 24px;
   border: 1px solid var(--glass-border) !important;
@@ -1326,10 +1265,153 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
     box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
     border: 1px solid rgba(254, 220, 61, 0.2) !important;
   }
+
+  /* --- Course Player Mobile Layout Fixes --- */
+  .player-sidebar {
+    position: fixed !important;
+    left: -350px;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    width: 85% !important;
+    max-width: 320px !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background: var(--bg-card) !important;
+  }
+
+  .player-sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  .content-viewer {
+    padding: 80px 20px 40px !important;
+    width: 100% !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 990;
+    background: var(--brand-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+
+  .mobile-overlay {
+    display: block !important;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 995;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .mobile-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* --- Dashboard Mobile Layout Fixes --- */
+  .main-content {
+    padding: 20px !important;
+    overflow-x: hidden;
+  }
+
+  .dashboard-header-premium {
+    padding: 20px 0 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    margin-bottom: 20px;
+  }
+
+  .welcome-title {
+    font-size: 1.8rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.9rem !important;
+  }
+
+  .stat-card-featured {
+    padding: 25px !important;
+    border-radius: 20px !important;
+  }
+
+  .featured-title {
+    font-size: 1.8rem !important;
+  }
+
+  .featured-desc {
+    font-size: 0.9rem !important;
+    margin-bottom: 20px !important;
+  }
+
+  .art-text {
+    font-size: 1.8rem !important;
+    margin-bottom: 25px !important;
+  }
+
+  .stat-card {
+    padding: 25px !important;
+  }
+
+  .radar-mini-container {
+    transform: scale(0.85);
+    margin: -30px 0;
+  }
+
+  /* User dropdown position on mobile */
+  .header-text-group + div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* --- Dashboard Sidebar Mobile Logic --- */
+  .sidebar-wrapper {
+    position: fixed !important;
+    left: -350px !important;
+    top: 0;
+    bottom: 0;
+    z-index: 2000;
+    width: 320px !important;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .sidebar-wrapper.mobile-open {
+    left: 0 !important;
+  }
+
+  /* Prevent horizontal overflow from hardcoded grids */
+  .dashboard-view div[style*="grid"],
+  .admin-view div[style*="grid"],
+  .main-content div[style*="grid"] {
+    grid-template-columns: 1fr !important;
+  }
 }
 
+/* Specific button scaling for very small screens */
 @media (max-width: 480px) {
   .dashboard-header h1 { font-size: 1.5rem !important; }
   .btn-primary, .btn-secondary { font-size: 0.8rem !important; padding: 12px 20px; width: 100%; text-align: center; justify-content: center; }
   .hero { padding-top: 130px !important; }
+  
+  .stat-card-featured .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
 }

@@ -1,53 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  /* Modern Clean - Light Mode (Default) */
-  --brand-primary: #0052FF;
-  --brand-primary-hover: #0041CC;
-  --brand-secondary: #0EA5E9;
+  /* --- MASTER PREMIUM SLATE DESIGN SYSTEM (LIGHT) --- */
+  --brand-primary: #292e3f;
+  --brand-primary-hover: #1e222e;
+  --brand-secondary: #C5A059; /* Elegant Gold */
+  --brand-accent: #A0AEC0;    /* Elegant Silver */
+  --brand-glow: rgba(41, 46, 63, 0.12);
   
-  --bg-main: #EEF2FF; /* Soft Icy Blue */
+  --bg-page: #EEF2FF;      /* Soft Icy Blue */
   --bg-card: #FFFFFF;
-  --bg-nav: rgba(238, 242, 255, 0.8);
+  --bg-sidebar: #FFFFFF;
   
-  --text-main: #0F172A;
-  --text-muted: #475569; /* Darker for better contrast */
+  --text-main: #0F172A;    /* Deep Slate */
+  --text-muted: #64748B;   /* Slate Muted */
   --text-on-brand: #FFFFFF;
   
+  --bg-secondary-btn: rgba(0, 0, 0, 0.03); /* Visible subtle contrast on light card */
+  --bg-secondary-hover: rgba(0, 0, 0, 0.06);
+  
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(41, 46, 63, 0.15);
+  
+  --radius-pill: 100px;
   --radius-xl: 32px;
   --radius-lg: 24px;
   --radius-md: 12px;
   
-  --shadow-soft: 0 10px 40px rgba(0, 82, 255, 0.1);
-  --shadow-md: 0 20px 50px rgba(15, 23, 42, 0.12);
-  --shadow-royal: 0 12px 30px rgba(0, 82, 255, 0.25);
+  --shadow-premium: 0 10px 40px rgba(41, 46, 63, 0.08);
+  --shadow-hover: 0 20px 50px rgba(41, 46, 63, 0.15);
   
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(0, 82, 255, 0.15);
-
-  --hero-glow-1: rgba(0, 82, 255, 0.12);
-  --hero-glow-2: rgba(14, 165, 233, 0.12);
+  /* --- LEGACY ALIASES (Prevents breaking old components) --- */
+  --yellow-primary: var(--brand-primary);
+  --yellow-hover: var(--brand-primary-hover);
+  --yellow-glow: var(--brand-glow);
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-muted);
+  --bg-dark: var(--bg-card);
+  --bg-darker: var(--bg-page);
 }
 
 [data-theme='dark'] {
-  /* High-End Dark Mode */
-  --bg-main: #020617; /* Very Deep Navy */
-  --bg-card: #0F172A; /* Slate Navy */
-  --bg-nav: rgba(2, 6, 23, 0.9);
+  /* --- MASTER PREMIUM SLATE DESIGN SYSTEM (DARK) --- */
+  --bg-page: #020617;      /* Deepest Navy */
+  --bg-card: #0F172A;      /* Slate Navy */
+  --bg-sidebar: #0F172A;
   
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
+  --text-main: #F8FAFC;    /* Sky White */
+  --text-muted: #94A3B8;   /* Slate 400 */
   
-  --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 20px 50px rgba(0, 0, 0, 0.6);
+  /* Lighter primary color for Dark Mode so it stands out against Navy Background */
+  --brand-primary: #334155; 
+  --brand-primary-hover: #475569;
+  
+  --brand-secondary: #D4AF37; /* Brighter Gold for Dark Mode */
+  --brand-accent: #A0AEC0;    /* Muted Silver */
+  
+  --bg-secondary-btn: rgba(255, 255, 255, 0.05); /* Visible contrast on dark card */
+  --bg-secondary-hover: rgba(255, 255, 255, 0.1);
   
   --glass-bg: rgba(15, 23, 42, 0.8);
   --glass-border: rgba(255, 255, 255, 0.1);
-  
-  --brand-primary: #3B82F6;
-  --hero-glow-1: rgba(0, 82, 255, 0.15);
-  --hero-glow-2: rgba(14, 165, 233, 0.1);
+  --brand-glow: rgba(226, 232, 240, 0.15); /* Silver glow */
 }
 
 * {
@@ -57,7 +71,7 @@
 }
 
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-page);
   color: var(--text-main);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
@@ -92,14 +106,14 @@ body {
 .btn-primary:hover {
   background-color: var(--brand-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(0, 82, 255, 0.3); /* Blue shadow */
+  box-shadow: 0 15px 35px rgba(41, 46, 63, 0.3); /* Blue shadow */
 }
 
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background-color: var(--bg-card);
+  background-color: var(--bg-secondary-btn);
   color: var(--text-main) !important;
   padding: 1.1rem 3rem;
   border-radius: 100px;
@@ -113,9 +127,10 @@ body {
 }
 
 .btn-secondary:hover {
+  background-color: var(--bg-secondary-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: rgba(0,0,0,0.1);
+  border-color: var(--text-muted);
 }
 
 .modern-card {
@@ -172,8 +187,8 @@ body {
 
 .hero-tag {
   display: inline-block;
-  background: rgba(0, 82, 255, 0.08); /* Ocean Blue tint */
-  color: var(--brand-primary);
+  background: rgba(41, 46, 63, 0.08); /* Ocean Blue tint */
+  color: var(--brand-secondary);
   padding: 6px 18px;
   border-radius: 100px;
   font-weight: 800;
@@ -201,10 +216,11 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  background: linear-gradient(135deg, var(--brand-secondary), var(--brand-accent));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2); /* Slight golden aura */
 }
 
 /* === PILLARS GRID === */
@@ -230,8 +246,8 @@ body {
 .pillar-icon {
   width: 54px;
   height: 54px;
-  background: rgba(0, 82, 255, 0.08); /* Indigo-Blue hint */
-  color: var(--brand-primary);
+  background: rgba(41, 46, 63, 0.08); /* Indigo-Blue hint */
+  color: var(--brand-secondary);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -249,7 +265,7 @@ body {
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  background-color: var(--bg-main);
+  background-color: var(--bg-page);
   transition: var(--transition);
 }
 
@@ -301,7 +317,7 @@ body {
 
 .input-focus-ring:focus {
   border-color: var(--brand-primary) !important;
-  box-shadow: 0 0 0 4px rgba(0, 82, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(41, 46, 63, 0.1);
   transform: translateY(-1px);
 }
 
@@ -317,7 +333,7 @@ body {
   display: flex;
   height: 100vh;
   width: 100%;
-  background: var(--bg-main);
+  background: var(--bg-page);
   position: relative;
   overflow: hidden;
 }
@@ -363,12 +379,12 @@ body {
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(0, 82, 255, 0.1);
+  background: rgba(41, 46, 63, 0.1);
   border-radius: 10px;
 }
 
 .sidebar:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 82, 255, 0.2);
+  background: rgba(41, 46, 63, 0.2);
 }
 
 .sidebar-logo {
@@ -438,8 +454,8 @@ body {
 
 .stat-card:hover {
   transform: translateY(-10px) scale(1.01);
-  border-color: rgba(0, 82, 255, 0.4);
-  box-shadow: 0 40px 100px rgba(0, 82, 255, 0.12);
+  border-color: rgba(41, 46, 63, 0.4);
+  box-shadow: 0 40px 100px rgba(41, 46, 63, 0.12);
 }
 
 .continue-grid {
@@ -461,7 +477,7 @@ body {
   height: 100%;
   background: var(--brand-primary);
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0, 82, 255, 0.3);
+  box-shadow: 0 0 15px rgba(41, 46, 63, 0.3);
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -471,16 +487,28 @@ body {
     flex-direction: column;
   }
   
-  .sidebar {
-    position: fixed;
-    left: -280px;
+  .sidebar-wrapper {
+    position: fixed !important;
+    left: -320px !important;
     top: 0;
-    width: 280px;
-    height: 100vh;
+    width: 320px !important;
+    height: 100vh !important;
+    z-index: 2000 !important;
+    transition: left 0.3s ease !important;
   }
   
-  .sidebar.mobile-open {
-    left: 0;
+  .sidebar-wrapper.mobile-open {
+    left: 0 !important;
+  }
+
+  .sidebar-wrapper .sidebar {
+    width: 100% !important;
+    padding: 30px 20px !important;
+  }
+
+  /* Hide the desktop collapse toggle button on mobile */
+  .sidebar-wrapper button[style*="absolute"] {
+    display: none !important;
   }
   
   .continue-grid {
@@ -509,13 +537,13 @@ body {
     border-radius: 12px;
     padding: 10px;
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0, 82, 255, 0.3);
+    box-shadow: 0 10px 20px rgba(41, 46, 63, 0.3);
   }
 }
 
 .hover-glow:hover {
   border-color: var(--brand-primary);
-  box-shadow: 0 20px 40px rgba(0, 82, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(41, 46, 63, 0.1);
   transform: translateY(-5px);
 }
 
@@ -525,83 +553,294 @@ body {
   color: #fff;
   padding: 100px 0 40px 0;
 }
-/* === CONSOLIDATED VIBRANT AZURE THEME === */
-/* These rules ensure 100% consistency across all pages and navigation states */
+/* === MASTER CONSOLIDATED THEME (VIBRANT AZURE) === */
 
-/* 1. Navigation & Sidebar Active States */
-.nav-item.active, 
-.syllabus-item.active { 
-  background: #0052FF !important; 
-  color: #FFFFFF !important; 
-  font-weight: 800 !important;
-  box-shadow: 0 8px 20px rgba(0, 82, 255, 0.15) !important;
-  border: none !important;
+body {
+  background-color: var(--bg-page) !important;
+  color: var(--text-main) !important;
 }
 
-.nav-item.active span, 
-.nav-item.active svg,
-.syllabus-item.active span,
-.syllabus-item.active svg { 
-  color: #FFFFFF !important; 
-  opacity: 1 !important;
+/* 1. Global Navigation & Sidebar Items */
+.nav-item, .syllabus-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
 }
 
-/* 2. Premium Stat Cards (Used in Admin & Course) */
-.course-stat-card, .stat-card-vibrant {
-  background: linear-gradient(135deg, #FFFFFF, #EEF2FF) !important;
-  border: 1px solid rgba(0, 82, 255, 0.15) !important;
-  box-shadow: 0 10px 40px rgba(0, 82, 255, 0.1) !important;
+.sidebar.collapsed .nav-item, .sidebar.collapsed .syllabus-item {
+  justify-content: center;
+  padding: 14px 0;
+  gap: 0;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  text-align: center;
+  padding: 0;
+}
+
+.nav-item svg, .syllabus-item svg {
+  color: currentColor;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.nav-item:hover, .syllabus-item:hover {
+  background: var(--brand-glow);
+  color: var(--text-main);
+}
+
+.nav-item.active, .syllabus-item.active { 
+  background: var(--brand-primary);
+  color: var(--brand-secondary);
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(41, 46, 63, 0.2);
+  border-left: 4px solid var(--brand-secondary);
+}
+
+.sidebar.collapsed .nav-item.active {
+  border-left: none;
+  border-bottom: 4px solid var(--brand-secondary);
+}
+
+.nav-item.active span, .nav-item.active svg,
+.syllabus-item.active span, .syllabus-item.active svg { 
+  color: var(--brand-secondary);
+  opacity: 1;
+}
+
+/* 2. Premium Stat Cards */
+.stat-card, .course-stat-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 24px !important;
+  padding: 30px !important;
+  box-shadow: var(--shadow-premium) !important;
+  transition: all 0.4s ease !important;
 }
 
-.course-accent-card, .stat-card-primary {
-  background: #0052FF !important;
-  box-shadow: 0 12px 30px rgba(0, 82, 255, 0.25) !important;
+.stat-card:hover, .course-stat-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: var(--shadow-hover) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+.stat-card-primary, .course-accent-card {
+  background: var(--brand-primary) !important;
   color: #FFFFFF !important;
   border-radius: 24px !important;
+  padding: 30px !important;
+  box-shadow: 0 12px 30px rgba(41, 46, 63, 0.3) !important;
 }
 
-.course-accent-card *, .stat-card-primary * {
+.stat-card-primary *, .course-accent-card * {
   color: #FFFFFF !important;
 }
 
 /* 3. Global Action Buttons */
-.btn-primary-vibrant {
-  background: #0052FF !important;
+.btn-primary {
+  background: var(--brand-primary) !important;
   color: #FFFFFF !important;
-  box-shadow: 0 4px 15px rgba(0, 82, 255, 0.3) !important;
-  font-weight: 800 !important;
+  padding: 12px 24px !important;
   border-radius: 12px !important;
-  display: flex !important;
+  font-weight: 800 !important;
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 10px !important;
+  border: none !important;
+  cursor: pointer !important;
   transition: all 0.3s ease !important;
 }
 
-.btn-primary-vibrant:hover {
+.btn-primary:hover {
+  background: var(--brand-primary-hover) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(0, 82, 255, 0.4) !important;
+  box-shadow: 0 8px 25px rgba(41, 46, 63, 0.4) !important;
 }
 
-/* 4. Sidebar Controls */
-.sidebar-wrapper > button, 
-.sidebar-toggle-vibrant {
-  background: #0052FF !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 4px 15px rgba(0, 82, 255, 0.4) !important;
-  z-index: 500 !important;
+/* 4. Layout Fixes */
+.main-content {
+  background-color: var(--bg-page) !important;
+  padding: 40px !important;
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
 }
 
-/* 5. Fix for spacing consistency across pages */
-.admin-view, .course-view {
-  width: 100%;
+.sidebar {
+  background: var(--bg-sidebar) !important;
+  border-right: 1px solid var(--glass-border) !important;
 }
 
-/* 6. Table Buttons */
-.admin-view table .btn-primary {
-  background: #0052FF !important;
-  color: #FFFFFF !important;
-  padding: 8px 16px !important;
-  border-radius: 10px !important;
-  font-weight: 700 !important;
+/* 6. Dashboard Specialized Components */
+.dashboard-header-premium {
+  padding: 40px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 25px !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.welcome-title {
+  font-size: 2.4rem !important;
+  font-weight: 800 !important;
+  color: var(--text-main) !important;
+  margin-bottom: 5px !important;
+}
+
+.brand-accent-text {
+  color: var(--brand-secondary) !important; /* Elegant gold for contrast */
+}
+
+.welcome-subtitle {
+  font-size: 1rem !important;
+  opacity: 0.85 !important; /* Increased for better readability */
+  font-weight: 500 !important;
+}
+
+.stat-card-featured {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 24px !important;
+  padding: 40px !important;
+  box-shadow: var(--shadow-premium) !important;
+}
+
+.card-decoration-blob {
+  position: absolute !important;
+  top: -50px !important;
+  right: -50px !important;
+  width: 250px !important;
+  height: 250px !important;
+  background: var(--brand-primary) !important;
+  opacity: 0.05 !important;
+  filter: blur(50px) !important;
+  border-radius: 50% !important;
+}
+
+.pill-badge {
+  display: inline-block !important;
+  padding: 6px 16px !important;
+  border-radius: 20px !important;
+  background: rgba(212, 175, 55, 0.1) !important; /* Subtle gold background */
+  color: var(--brand-secondary) !important; /* Gold text */
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  margin-bottom: 20px !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+.featured-title {
+  font-size: 2.4rem !important;
+  margin-bottom: 12px !important;
+  color: var(--text-main) !important;
+  font-weight: 800 !important;
+}
+
+.featured-desc {
+  max-width: 420px !important;
+  margin-bottom: 30px !important;
+  color: var(--text-muted) !important;
+  font-size: 1.05rem !important;
+  line-height: 1.6 !important;
+}
+
+.sidebar-footer {
+  margin-top: auto !important;
+  border-top: 1px solid var(--glass-border) !important;
+  padding-top: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.logout-btn {
+  color: #ef4444 !important;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+}
+
+/* 7. Mobile Responsive Overrides for Admin Dashboard */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0 16px !important;
+  }
+  
+  .dashboard-header-premium {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 25px 20px !important;
+    gap: 15px !important;
+    margin-bottom: 25px !important;
+  }
+
+  .welcome-title {
+    font-size: 1.6rem !important;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.85rem !important;
+  }
+
+  .header-actions-group {
+    width: 100% !important;
+    justify-content: space-between !important;
+    margin-top: 10px !important;
+  }
+
+  .header-btn {
+    padding: 10px 16px !important;
+    flex-grow: 1 !important;
+    justify-content: center !important;
+  }
+
+  .header-divider {
+    display: none !important;
+  }
+
+  .admin-badge-text {
+    display: none !important; /* Hide admin badge text to save space on mobile */
+  }
+
+  .admin-avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .admin-view {
+    padding: 0 0 30px 0 !important;
+  }
+
+  .grid-admin {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+
+  .stat-card {
+    padding: 25px 20px !important;
+  }
+
+  h2 {
+    font-size: 1.6rem !important;
+  }
 }

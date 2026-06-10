@@ -7,7 +7,7 @@ export const CourseCatalog = ({ courses, loading }: { courses: any[], loading: b
   return (
     <div className="dashboard-view active">
       <h2 className="art-text" style={{ fontSize: "2.8rem", margin: "0 0 40px 0", color: "var(--text-main)" }}>
-        Catálogo de <span style={{ color: "var(--brand-primary)" }}>Rutas.</span>
+        Catálogo de <span style={{ color: "var(--brand-secondary)" }}>Cursos.</span>
       </h2>
       {loading ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "25px" }}>
@@ -18,10 +18,10 @@ export const CourseCatalog = ({ courses, loading }: { courses: any[], loading: b
       ) : courses.length === 0 ? (
           <div style={{ background: "var(--bg-card)", padding: "60px 40px", borderRadius: "24px", border: "1px dashed var(--glass-border)", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
             <div style={{ width: "80px", height: "80px", background: "rgba(0, 82, 255, 0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-                <i data-lucide="lock" aria-hidden="true" style={{ width: "35px", height: "35px", color: "var(--brand-primary)" }}></i>
+                <i data-lucide="lock" aria-hidden="true" style={{ width: "35px", height: "35px", color: "var(--brand-secondary)" }}></i>
             </div>
-            <h3 className="art-text" style={{ fontSize: "1.8rem", marginBottom: "12px", color: "var(--text-main)" }}>Aún no tienes rutas activas</h3>
-            <p style={{ opacity: 0.7, fontSize: "1rem", color: "var(--text-muted)", lineHeight: 1.6 }}>Las rutas se habilitan desde la administración del ecosistema. Pronto tendrás acceso a tu camino de desarrollo integral.</p>
+            <h3 className="art-text" style={{ fontSize: "1.8rem", marginBottom: "12px", color: "var(--text-main)" }}>Aún no tienes cursos activos</h3>
+            <p style={{ opacity: 0.7, fontSize: "1rem", color: "var(--text-muted)", lineHeight: 1.6 }}>Los cursos se habilitan desde la administración del ecosistema. Pronto tendrás acceso a tu camino de desarrollo integral.</p>
           </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px" }}>
@@ -44,7 +44,7 @@ export const CourseCatalog = ({ courses, loading }: { courses: any[], loading: b
                       <>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
                            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>{completed} / {total} Hitos</span>
-                           <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--brand-primary)" }}>{percent}%</span>
+                           <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--brand-secondary)" }}>{percent}%</span>
                         </div>
                         <div className="progress-bar-bg" style={{ height: "8px" }}>
                           <div className="progress-bar-fill" style={{ width: `${percent}%`, background: "var(--brand-primary)" }}></div>
@@ -53,7 +53,7 @@ export const CourseCatalog = ({ courses, loading }: { courses: any[], loading: b
                     );
                   })()}
                   <div className="btn-primary" style={{ marginTop: "25px", width: "100%", justifyContent: "center", padding: "14px" }}>
-                    Entrar a la Ruta
+                    Entrar al Curso
                   </div>
                 </div>
               </div>

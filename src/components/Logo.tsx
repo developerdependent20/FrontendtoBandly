@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  const logoUrl = "https://krmopdpfgrlcoldfsefq.supabase.co/storage/v1/object/public/Images/3.png";
+  const logoUrl = "https://krmopdpfgrlcoldfsefq.supabase.co/storage/v1/object/public/Images/Logo%20CLAN%20Virtual.png";
   const logoFilter = theme === "dark" ? "brightness(0) invert(1)" : "none";
 
   // Sizes for high visibility

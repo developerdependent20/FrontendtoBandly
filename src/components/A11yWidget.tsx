@@ -17,7 +17,7 @@ export default function A11yWidget() {
   };
 
   return (
-    <div style={{ position: "fixed", bottom: "30px", right: "30px", zIndex: 9999 }}>
+    <div style={{ position: "fixed", bottom: "110px", right: "30px", zIndex: 9999 }}>
       {open && (
         <div style={{ 
           position: "absolute", bottom: "60px", right: "0", 

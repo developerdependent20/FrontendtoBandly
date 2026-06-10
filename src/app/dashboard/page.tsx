@@ -7,13 +7,19 @@ import { createClient } from "@/utils/supabase/client";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { CourseCatalog } from "@/components/dashboard/CourseCatalog";
 import { CLANStoriesFeed } from "@/components/dashboard/CLANStoriesFeed";
+import { NovedadesView } from "@/components/dashboard/NovedadesView";
+import { AcademicProfileView } from "@/components/dashboard/AcademicProfileView";
 import { trackDailyActivity } from "@/utils/supabase/streakManager";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import TermsAcceptanceModal from "@/components/dashboard/TermsAcceptanceModal";
+import { FloatingAI } from "@/components/dashboard/FloatingAI";
 
 export default function StudentDashboard() {
   const [activeView, setActiveView] = useState("dashboard");
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   
   const [profile, setProfile] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
@@ -36,6 +42,36 @@ export default function StudentDashboard() {
   const [expandedPosts, setExpandedPosts] = useState<string[]>([]);
   const [commentsMap, setCommentsMap] = useState<{[key: string]: any[]}>({});
   const [newCommentText, setNewCommentText] = useState<{[key: string]: string}>({});
+
+  const handleAvatarUpload = async (file: File) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !file) return;
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: upError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true });
+      if (upError) { alert('Error subiendo imagen: ' + upError.message); return; }
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+      const avatarUrl = publicUrl + '?t=' + Date.now();
+      await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', user.id);
+      setProfile((prev: any) => ({ ...prev, avatar_url: avatarUrl }));
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const view = urlParams.get('view');
+      if (view) {
+        setActiveView(view);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -102,23 +138,43 @@ export default function StudentDashboard() {
   }, []);
   
   const fetchCommunityPosts = async () => {
-    const { data, error } = await supabase
+    // Intentar con avatar_url primero, si falla (columna no existe) intentar sin ella
+    let data: any[] | null = null;
+    let error: any = null;
+
+    const result = await supabase
       .from("community_posts")
-      .select("*, profiles(full_name)")
+      .select("*, profiles(full_name, avatar_url)")
       .order("created_at", { ascending: false });
-    
-    if (!error && data) {
-      // Filtrar posts normales (que no son stories o stories que no expiran aquí, aunque deberíamos separar)
-      const feedItems = data.filter(d => d.is_story !== true);
+
+    if (result.error) {
+      // Puede fallar si avatar_url no existe en profiles aún — intentamos sin ella
+      const fallback = await supabase
+        .from("community_posts")
+        .select("*, profiles(full_name)")
+        .order("created_at", { ascending: false });
+      data = fallback.data;
+      error = fallback.error;
+    } else {
+      data = result.data;
+      error = result.error;
+    }
+
+    if (error) {
+      console.error("Error cargando posts:", error.message);
+      return;
+    }
+
+    if (data) {
+      const feedItems = data.filter((d: any) => d.is_story !== true);
       setCommunityPosts(feedItems);
 
-      // Extraemos autores reales únicos que tengan historias activas
       const now = new Date().toISOString();
-      const activeStories = data.filter(d => d.is_story === true && d.expires_at && d.expires_at > now);
-      
+      const activeStories = data.filter((d: any) => d.is_story === true && d.expires_at && d.expires_at > now);
+
       const authors = activeStories.reduce((acc: any[], current: any) => {
-        if (current.profiles && !acc.some(a => a.id === current.author_id)) {
-          acc.push({ id: current.author_id, full_name: current.profiles.full_name });
+        if (current.profiles && !acc.some((a: any) => a.id === current.author_id)) {
+          acc.push({ id: current.author_id, full_name: current.profiles.full_name, avatar_url: current.profiles.avatar_url || null });
         }
         return acc;
       }, []);
@@ -396,7 +452,7 @@ export default function StudentDashboard() {
               return `${center.x + radius * val * Math.cos(angle)},${center.y + radius * val * Math.sin(angle)}`;
             }).join(" ")} 
             fill="rgba(0, 82, 255, 0.2)" 
-            stroke="var(--brand-primary)" 
+            stroke="var(--brand-secondary)" 
             strokeWidth="3"
             style={{ transition: "all 1s cubic-bezier(0.4, 0, 0.2, 1)" }}
           />
@@ -439,164 +495,25 @@ export default function StudentDashboard() {
         <div className="blob blob-3"></div>
       </div>
 
-      {/* Mobile Top-Level Controls */}
-      <button className="mobile-menu-btn" aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={isMobileMenuOpen} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-        <i data-lucide={isMobileMenuOpen ? "x" : "menu"} aria-hidden="true" style={{ width: 24, height: 24 }}></i>
-      </button>
-      <div className={`mobile-overlay ${isMobileMenuOpen ? "active" : ""}`} onClick={() => setIsMobileMenuOpen(false)}></div>
-
-      <DashboardSidebar 
-        isMobileMenuOpen={isMobileMenuOpen} 
-        setIsMobileMenuOpen={setIsMobileMenuOpen} 
-        activeView={activeView} 
-        setActiveView={setActiveView} 
-        streakData={streakData}
-      />
-
-      {/* Main Content */}
-      <main className="main-content">
-        <header className="dashboard-header" style={{ padding: "40px", background: "transparent", borderBottom: "1px solid var(--glass-border)", backdropFilter: "blur(10px)" }}>
-          <div>
-            <h1 style={{ fontSize: "2.4rem", marginBottom: "5px", color: "var(--text-main)", fontWeight: 800 }}>
-              Bienvenid@, <span className="art-text" style={{ color: "var(--brand-primary)" }}>{firstName}.</span>
-            </h1>
-            <p style={{ fontSize: "1rem", opacity: 0.6, color: "var(--text-muted)", fontWeight: 500 }}>Tu ruta de desarrollo integral está activa.</p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            {profile?.role === "admin" && (
-                <button 
-                  onClick={() => window.location.href = "/admin"} 
-                  style={{ padding: "10px 20px", background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "20px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", transition: "0.2s" }}
-                >
-                  <i data-lucide="settings" aria-hidden="true" style={{width: "16px"}}></i> <span style={{fontSize: "0.85rem", fontWeight: "bold"}}>Panel de Control</span>
-                </button>
-            )}
-            <button aria-label="Ver notificaciones" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "50%", width: "45px", height: "45px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-primary)" }}>
-              <i data-lucide="bell" aria-hidden="true" style={{ width: "20px" }}></i>
-            </button>
-            <div style={{ position: "relative" }}>
-              <button 
-                onClick={() => setDropdownOpen(prev => !prev)}
-                title="Mi Cuenta"
-                aria-label="Abrir menú de cuenta"
-                aria-expanded={dropdownOpen}
-                aria-haspopup="menu"
-                style={{ width: "48px", height: "48px", background: "var(--brand-primary)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#fff", textTransform: "uppercase", border: "none", cursor: "pointer", transition: "transform 0.2s", fontSize: "0.95rem", boxShadow: "0 10px 20px rgba(0, 82, 255, 0.3)" }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-              >
-                {firstName.substring(0, 2)}
-              </button>
-
-              {dropdownOpen && (
-                <div style={{ position: "fixed", top: "70px", right: "30px", background: "var(--bg-dark)", border: "1px solid var(--glass-border)", borderRadius: "14px", padding: "8px", minWidth: "180px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)", zIndex: 9999 }}>
-                  <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--glass-border)", marginBottom: "6px" }}>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{profile?.full_name || firstName}</p>
-                    <p style={{ fontSize: "0.72rem", opacity: 0.5, color: "var(--text-secondary)", margin: 0, textTransform: "capitalize" }}>{profile?.role || "Estudiante"}</p>
-                  </div>
-                  <button 
-                    onClick={async () => { 
-                      setDropdownOpen(false);
-                      await supabase.auth.signOut(); 
-                      window.location.href = "/login"; 
-                    }} 
-                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "10px 14px", borderRadius: "8px", fontSize: "0.9rem", textAlign: "left", fontWeight: 600 }} 
-                    onMouseEnter={e => e.currentTarget.style.background="rgba(239,68,68,0.1)"} 
-                    onMouseLeave={e => e.currentTarget.style.background="none"}
-                  >
-                    <i data-lucide="log-out" aria-hidden="true" style={{ width: "16px" }}></i> Cerrar Sesión
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {activeView === "dashboard" && (
-          <div className="dashboard-view active">
-            <div className="continue-grid">
-              <div className="stat-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", overflow: "hidden", background: "var(--bg-card)", border: "1px solid var(--glass-border)", borderRadius: "24px", padding: "40px" }}>
-                <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "250px", height: "250px", background: "var(--brand-primary)", opacity: 0.05, filter: "blur(50px)", borderRadius: "50%" }}></div>
-                <div>
-                  <span style={{ display: "inline-block", padding: "6px 16px", borderRadius: "20px", background: "rgba(0, 82, 255, 0.1)", color: "var(--brand-primary)", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "20px" }}>Continuar donde lo dejaste</span>
-                  <h2 className="art-text" style={{ fontSize: "2.4rem", marginBottom: "12px", color: "var(--text-main)" }}>
-                    {courses.length > 0 ? courses[0].title : "Inicia tu primer programa"}
-                  </h2>
-                  <p style={{ maxWidth: "420px", marginBottom: "30px", color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.6 }}>Enfócate en tu crecimiento diario y alcanza nuevos niveles de maestría.</p>
-                </div>
-                {courses.length > 0 ? (
-                  <Link href={`/course?id=${courses[0].id}`} className="btn-primary" style={{ width: "fit-content", padding: "14px 30px" }}>Seguir Rutas <i data-lucide="zap" aria-hidden="true" className="icon" style={{ width: "18px", marginLeft: "10px" }}></i></Link>
-                ) : (
-                   <button className="btn-primary" onClick={() => setActiveView("courses")} style={{ width: "fit-content", padding: "14px 30px" }}>Ver Catálogo <i data-lucide="zap" aria-hidden="true" className="icon" style={{ width: "18px", marginLeft: "10px" }}></i></button>
-                )}
-              </div>
-
-              <div className="stat-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "25px" }}>
-                  <div>
-                    <p style={{ textTransform: "uppercase", letterSpacing: "1px", fontSize: "0.75rem", fontWeight: 800, color: "var(--brand-primary)", marginBottom: "5px" }}>Racha Activa</p>
-                    {streakData && (
-                      <div className="group relative flex items-center gap-1 bg-white/5 px-3 py-1.5 rounded-full cursor-default border border-white/5 transition-all hover:bg-white/10 hover:scale-105">
-                        <span style={{ fontSize: "1.1rem" }}>⚡</span>
-                        <span className="font-outfit font-bold text-sm tracking-wide" style={{ color: streakData.currentStreak > 0 ? "var(--brand-primary)" : "var(--text-muted)" }}>
-                          {streakData.currentStreak}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p style={{ textTransform: "uppercase", letterSpacing: "1px", fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", marginBottom: "5px" }}>Maestría CLAN</p>
-                    <h4 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)" }}>Nivel {Math.floor((profile?.ev_points || 0) / 100) + 1}</h4>
-                  </div>
-                </div>
-                <p style={{ fontSize: "0.8rem", opacity: 0.5, marginBottom: "10px" }}>Nivel Actual: <strong>Desarrollador Base</strong></p>
-                <div className="progress-bar-bg">
-                  <div className="progress-bar-fill" style={{ width: "15%" }}></div>
-                </div>
-                <p style={{ fontSize: "0.75rem", marginTop: "15px", opacity: 0.4 }}>Próximo Rango: <strong>Estratega Bronce</strong> <span>(+2,550 EV)</span></p>
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px", marginTop: "30px" }}>
-              {/* Radar Mini Widget */}
-              <div className="stat-card" style={{ padding: "40px", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <h3 className="art-text" style={{ fontSize: "1.8rem", color: "var(--brand-primary)", marginBottom: "20px", textAlign: "center" }}>Tu Radar Base</h3>
-                  <div className="radar-mini-container" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                    <SkillRadar data={masteryData} size={320} />
-                  </div>
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", opacity: 0.7, marginTop: "20px", textAlign: "center", maxWidth: "250px", lineHeight: 1.5 }}>
-                    Tu perfil se actualiza dinámicamente con cada hito completado.
-                  </p>
-              </div>
-
-              {/* Feed Preview Card */}
-              <div className="stat-card" style={{ padding: "40px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "30px" }}>
-                  <h3 className="art-text" style={{ fontSize: "1.8rem", color: "var(--text-main)" }}>Inspiración <span style={{ color: "var(--brand-primary)" }}>Global.</span></h3>
-                  <button onClick={() => setActiveView("community")} style={{ background: "none", border: "none", color: "var(--brand-primary)", fontSize: "0.85rem", fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}>Ver todo →</button>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-                  {communityPosts.slice(0, 3).map(post => (
-                    <div key={post.id} style={{ display: "flex", gap: "12px", padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid var(--glass-border)" }}>
-                      <div className="avatar-ring" style={{ width: "32px", height: "32px", padding: "1.5px", flexShrink: 0 }}>
-                        <div className="avatar-inner" style={{ fontSize: "0.6rem" }}>
-                          {post.profiles?.full_name?.substring(0, 2).toUpperCase() || "??"}
-                        </div>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: "0.85rem", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>{post.profiles?.full_name}</p>
-                        <p style={{ fontSize: "0.8rem", opacity: 0.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.content_text}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {communityPosts.filter(p => !p.is_story).length === 0 && <p style={{ opacity: 0.3, fontSize: "0.8rem", textAlign: "center", padding: "20px" }}>No hay actividad reciente.</p>}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeView === "community" && (
+      {/* ─── COMMUNITY MODE: Full-screen overlay, no sidebar ─── */}
+      {activeView === "community" && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "#000" }}>
+          {/* Back button */}
+          <button
+            onClick={() => setActiveView("dashboard")}
+            style={{
+              position: "absolute", top: "20px", left: "20px", zIndex: 9100,
+              background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255,255,255,0.25)", color: "white",
+              borderRadius: "50%", width: "42px", height: "42px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", fontSize: "1.2rem", fontWeight: 900,
+              transition: "0.2s"
+            }}
+            title="Volver al Dashboard"
+          >
+            ←
+          </button>
           <CLANStoriesFeed 
             firstName={firstName}
             profile={profile}
@@ -632,6 +549,224 @@ export default function StudentDashboard() {
             handleDeleteComment={handleDeleteComment}
             addEmoji={addEmoji}
           />
+        </div>
+      )}
+
+      {/* Mobile Top-Level Controls */}
+      <button className="mobile-menu-btn" aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={isMobileMenuOpen} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        <i data-lucide={isMobileMenuOpen ? "x" : "menu"} aria-hidden="true" style={{ width: 24, height: 24 }}></i>
+      </button>
+      <div className={`mobile-overlay ${isMobileMenuOpen ? "active" : ""}`} onClick={() => setIsMobileMenuOpen(false)}></div>
+
+      <DashboardSidebar 
+        isMobileMenuOpen={isMobileMenuOpen} 
+        setIsMobileMenuOpen={setIsMobileMenuOpen} 
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+        streakData={streakData}
+      />
+
+      {/* Main Content */}
+      <main className="main-content">
+        <header className="dashboard-header-premium" style={{ display: "flex", flexWrap: "wrap", gap: "25px", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="header-text-group" style={{ flex: "1 1 min-content", minWidth: "300px" }}>
+            <h1 className="welcome-title">
+              Bienvenid@, <span className="brand-accent-text">{firstName}.</span>
+            </h1>
+            <p className="welcome-subtitle">Tu ruta de desarrollo integral está activa.</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            {profile?.role === "admin" && (
+                <button 
+                  onClick={() => window.location.href = "/admin"} 
+                  style={{ padding: "10px 20px", background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "20px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", transition: "0.2s" }}
+                >
+                  <i data-lucide="settings" aria-hidden="true" style={{width: "16px"}}></i> <span style={{fontSize: "0.85rem", fontWeight: "bold"}}>Panel de Control</span>
+                </button>
+            )}
+            <button aria-label="Ver notificaciones" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "50%", width: "45px", height: "45px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-primary)" }}>
+              <i data-lucide="bell" aria-hidden="true" style={{ width: "20px" }}></i>
+            </button>
+            <div style={{ position: "relative" }}>
+              {/* Hidden avatar file input */}
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleAvatarUpload(file);
+                }}
+              />
+
+              <button 
+                onClick={() => setDropdownOpen(prev => !prev)}
+                title="Mi Cuenta"
+                aria-label="Abrir menú de cuenta"
+                aria-expanded={dropdownOpen}
+                aria-haspopup="menu"
+                style={{ 
+                  width: "48px", height: "48px", 
+                  background: profile?.avatar_url ? "transparent" : "var(--brand-primary)", 
+                  borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", 
+                  fontWeight: 800, color: "#fff", textTransform: "uppercase", 
+                  border: profile?.avatar_url ? "2px solid var(--brand-primary)" : "none",
+                  cursor: "pointer", transition: "transform 0.2s", fontSize: "0.95rem", 
+                  boxShadow: "0 10px 20px rgba(0, 82, 255, 0.3)",
+                  overflow: "hidden", padding: 0
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              >
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Mi foto" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+                ) : (
+                  avatarUploading ? "⏳" : firstName.substring(0, 2)
+                )}
+              </button>
+
+              {dropdownOpen && (
+                <div style={{ position: "fixed", top: "70px", right: "30px", background: "var(--bg-dark)", border: "1px solid var(--glass-border)", borderRadius: "14px", padding: "8px", minWidth: "200px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)", zIndex: 9999 }}>
+                  {/* Avatar section */}
+                  <div style={{ padding: "14px", borderBottom: "1px solid var(--glass-border)", marginBottom: "6px", display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <div style={{ width: "46px", height: "46px", borderRadius: "50%", overflow: "hidden", background: "var(--brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--brand-secondary)" }}>
+                        {profile?.avatar_url ? (
+                          <img src={profile.avatar_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <span style={{ color: "white", fontWeight: 800, fontSize: "1rem" }}>{firstName.substring(0, 2)}</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => { avatarInputRef.current?.click(); setDropdownOpen(false); }}
+                        style={{
+                          position: "absolute", bottom: -2, right: -2,
+                          background: "var(--brand-primary)", border: "2px solid var(--bg-dark)",
+                          borderRadius: "50%", width: "20px", height: "20px",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", fontSize: "0.6rem", color: "white"
+                        }}
+                        title="Cambiar foto"
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.full_name || firstName}</p>
+                      <p style={{ fontSize: "0.72rem", opacity: 0.5, color: "var(--text-secondary)", margin: "2px 0 0", textTransform: "capitalize" }}>{profile?.role || "Estudiante"}</p>
+                      <button
+                        onClick={() => { avatarInputRef.current?.click(); setDropdownOpen(false); }}
+                        style={{ fontSize: "0.7rem", color: "var(--brand-secondary)", background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 700, marginTop: "4px" }}
+                      >
+                        {avatarUploading ? "Subiendo..." : (profile?.avatar_url ? "Cambiar foto" : "+ Agregar foto")}
+                      </button>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async () => { 
+                      setDropdownOpen(false);
+                      await supabase.auth.signOut(); 
+                      window.location.href = "/login"; 
+                    }} 
+                    style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "10px 14px", borderRadius: "8px", fontSize: "0.9rem", textAlign: "left", fontWeight: 600 }} 
+                    onMouseEnter={e => e.currentTarget.style.background="rgba(239,68,68,0.1)"} 
+                    onMouseLeave={e => e.currentTarget.style.background="none"}
+                  >
+                    <i data-lucide="log-out" aria-hidden="true" style={{ width: "16px" }}></i> Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {activeView === "dashboard" && (
+          <div className="dashboard-view active">
+            <div className="continue-grid">
+              <div className="stat-card-featured">
+                <div className="card-decoration-blob"></div>
+                <div className="featured-content">
+                  <span className="pill-badge">Continuar donde lo dejaste</span>
+                  <h2 className="featured-title">
+                    {courses.length > 0 ? courses[0].title : "Inicia tu primer programa"}
+                  </h2>
+                  <p className="featured-desc">Enfócate en tu crecimiento diario y alcanza nuevos niveles de maestría.</p>
+                </div>
+                {courses.length > 0 ? (
+                  <Link href={`/course?id=${courses[0].id}`} className="btn-primary">
+                    Seguir Rutas <i data-lucide="zap" aria-hidden="true" className="icon"></i>
+                  </Link>
+                ) : (
+                   <button className="btn-primary" onClick={() => setActiveView("courses")}>
+                     Ver Catálogo <i data-lucide="zap" aria-hidden="true" className="icon"></i>
+                   </button>
+                )}
+              </div>
+
+              <div className="stat-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "25px" }}>
+                  <div>
+                    <p style={{ textTransform: "uppercase", letterSpacing: "1px", fontSize: "0.75rem", fontWeight: 800, color: "var(--brand-secondary)", marginBottom: "5px" }}>Racha Activa</p>
+                    {streakData && (
+                      <div className="group relative flex items-center gap-1 bg-white/5 px-3 py-1.5 rounded-full cursor-default border border-white/5 transition-all hover:bg-white/10 hover:scale-105">
+                        <span style={{ fontSize: "1.1rem" }}>⚡</span>
+                        <span className="font-outfit font-bold text-sm tracking-wide" style={{ color: streakData.currentStreak > 0 ? "var(--brand-primary)" : "var(--text-muted)" }}>
+                          {streakData.currentStreak}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ textTransform: "uppercase", letterSpacing: "1px", fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", marginBottom: "5px" }}>Maestría CLAN</p>
+                    <h4 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)" }}>Nivel {Math.floor((profile?.ev_points || 0) / 100) + 1}</h4>
+                  </div>
+                </div>
+                <p style={{ fontSize: "0.8rem", opacity: 0.5, marginBottom: "10px" }}>Nivel Actual: <strong>Desarrollador Base</strong></p>
+                <div className="progress-bar-bg">
+                  <div className="progress-bar-fill" style={{ width: "15%" }}></div>
+                </div>
+                <p style={{ fontSize: "0.75rem", marginTop: "15px", opacity: 0.4 }}>Próximo Rango: <strong>Estratega Bronce</strong> <span>(+2,550 ClanCoins)</span></p>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px", marginTop: "30px" }}>
+              {/* Radar Mini Widget */}
+              <div className="stat-card" style={{ padding: "40px", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <h3 className="art-text" style={{ fontSize: "1.8rem", color: "var(--brand-secondary)", marginBottom: "20px", textAlign: "center" }}>Tu Radar Base</h3>
+                  <div className="radar-mini-container" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                    <SkillRadar data={masteryData} size={320} />
+                  </div>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", opacity: 0.7, marginTop: "20px", textAlign: "center", maxWidth: "250px", lineHeight: 1.5 }}>
+                    Tu perfil se actualiza dinámicamente con cada hito completado.
+                  </p>
+              </div>
+
+              {/* Feed Preview Card */}
+              <div className="stat-card" style={{ padding: "40px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "30px" }}>
+                  <h3 className="art-text" style={{ fontSize: "1.8rem", color: "var(--text-main)" }}>Inspiración <span style={{ color: "var(--brand-secondary)" }}>Global.</span></h3>
+                  <button onClick={() => setActiveView("community")} style={{ background: "none", border: "none", color: "var(--brand-secondary)", fontSize: "0.85rem", fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}>Ver todo →</button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                  {communityPosts.slice(0, 3).map(post => (
+                    <div key={post.id} style={{ display: "flex", gap: "12px", padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid var(--glass-border)" }}>
+                      <div className="avatar-ring" style={{ width: "32px", height: "32px", padding: "1.5px", flexShrink: 0 }}>
+                        <div className="avatar-inner" style={{ fontSize: "0.6rem" }}>
+                          {post.profiles?.full_name?.substring(0, 2).toUpperCase() || "??"}
+                        </div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: "0.85rem", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>{post.profiles?.full_name}</p>
+                        <p style={{ fontSize: "0.8rem", opacity: 0.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.content_text}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {communityPosts.filter(p => !p.is_story).length === 0 && <p style={{ opacity: 0.3, fontSize: "0.8rem", textAlign: "center", padding: "20px" }}>No hay actividad reciente.</p>}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {activeView === "courses" && (
@@ -641,11 +776,11 @@ export default function StudentDashboard() {
         {activeView === "certs" && (
           <div className="dashboard-view active">
             <h2 className="art-text" style={{ fontSize: "2.8rem", marginBottom: "40px", color: "var(--text-main)" }}>
-              Hitos de <span style={{ color: "var(--brand-primary)" }}>Talento.</span>
+              Hitos de <span style={{ color: "var(--brand-secondary)" }}>Talento.</span>
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "30px" }}>
               <div className="stat-card" style={{ border: "1px dashed var(--glass-border)", position: "relative", overflow: "hidden", opacity: 0.6, textAlign: "center", padding: "60px 40px", borderRadius: "24px" }}>
-                <i data-lucide="lock" aria-hidden="true" style={{ width: "48px", height: "48px", marginBottom: "20px", color: "var(--brand-primary)", margin: "0 auto 20px auto" }}></i>
+                <i data-lucide="lock" aria-hidden="true" style={{ width: "48px", height: "48px", marginBottom: "20px", color: "var(--brand-secondary)", margin: "0 auto 20px auto" }}></i>
                 <h4 style={{ margin: 0, fontSize: "1.4rem", marginBottom: "10px", color: "var(--text-main)", fontWeight: 800 }}>Aún no hay hitos registrados</h4>
                 <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.6 }}>Continúa tu desarrollo integral para desbloquear hitos de alto rendimiento y potenciar tu perfil profesional.</p>
               </div>
@@ -653,12 +788,22 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {activeView !== "dashboard" && activeView !== "community" && activeView !== "courses" && activeView !== "certs" && (
+        {activeView === "novedades" && profile && (
+          <NovedadesView userId={profile.id} />
+        )}
+
+        {activeView === "profile" && profile && (
+          <AcademicProfileView profile={profile} />
+        )}
+
+        {activeView !== "dashboard" && activeView !== "community" && activeView !== "courses" && activeView !== "certs" && activeView !== "novedades" && activeView !== "profile" && (
            <div style={{ padding: "40px", opacity: 0.5, textAlign: "center" }}>
               <h2 style={{ fontFamily: "'Playfair Display', serif" }}>Sección en desarrollo pedagógico...</h2>
            </div>
         )}
       </main>
+      {profile && <FloatingAI profile={profile} />}
+      {profile?.id && !profile.accepted_terms && <TermsAcceptanceModal userId={profile.id} onAccept={() => setProfile({...profile, accepted_terms: true})} />}
     </div>
   );
 }

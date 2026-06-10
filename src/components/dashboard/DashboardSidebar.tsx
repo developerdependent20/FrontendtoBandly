@@ -4,20 +4,22 @@ import React from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import { Logo } from "@/components/Logo";
-import { LayoutDashboard, Compass, Zap, Users, LogOut, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Compass, Zap, Users, LogOut, ChevronLeft, ChevronRight, Sun, Moon, AlertTriangle, FileText, Calendar } from "lucide-react";
 
 export const DashboardSidebar = ({ 
   isMobileMenuOpen, 
   setIsMobileMenuOpen, 
   activeView, 
   setActiveView,
-  streakData
+  streakData,
+  role
 }: { 
   isMobileMenuOpen: boolean, 
   setIsMobileMenuOpen: (val: boolean) => void, 
   activeView: string, 
   setActiveView: (view: string) => void,
-  streakData?: { currentStreak: number, history: string[] } | null
+  streakData?: { currentStreak: number, history: string[] } | null,
+  role?: string
 }) => {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const supabase = createClient();
@@ -40,7 +42,7 @@ export const DashboardSidebar = ({
           top: "105px",
           width: "28px",
           height: "28px",
-          background: "var(--brand-primary)",
+          background: "var(--brand-secondary)",
           borderRadius: "50%",
           border: "none",
           color: "white",
@@ -73,66 +75,43 @@ export const DashboardSidebar = ({
         </div>
         
         <nav className="sidebar-nav">
-          <a href="#" className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} onClick={(e) => { e.preventDefault(); setActiveView("dashboard"); setIsMobileMenuOpen(false); }} 
-             style={{ 
-               color: activeView === "dashboard" ? "#fff" : "var(--text-main)", 
-               background: activeView === "dashboard" ? "var(--brand-primary)" : "transparent",
-               borderRadius: "14px",
-               fontWeight: 700, 
-               marginBottom: "12px",
-               padding: "14px 20px",
-               display: "flex",
-               alignItems: "center",
-               justifyContent: isCollapsed ? "center" : "flex-start",
-               gap: isCollapsed ? "0" : "12px"
-             }}>
+          <a href="#" className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} 
+             
+             onClick={(e) => { e.preventDefault(); setActiveView("dashboard"); setIsMobileMenuOpen(false); }}>
             <LayoutDashboard size={20} /> {!isCollapsed && <span>Dashboard</span>}
           </a>
-          <a href="#" className={`nav-item ${activeView === "courses" ? "active" : ""}`} onClick={(e) => { e.preventDefault(); setActiveView("courses"); setIsMobileMenuOpen(false); }} 
-             style={{ 
-               color: activeView === "courses" ? "#fff" : "var(--text-main)", 
-               background: activeView === "courses" ? "var(--brand-primary)" : "transparent",
-               borderRadius: "14px",
-               fontWeight: 700, 
-               marginBottom: "12px",
-               padding: "14px 20px",
-               display: "flex",
-               alignItems: "center",
-               justifyContent: isCollapsed ? "center" : "flex-start",
-               gap: isCollapsed ? "0" : "12px"
-             }}>
-            <Compass size={20} /> {!isCollapsed && <span>Mis Rutas</span>}
+          <a href="#" className={`nav-item ${activeView === "courses" ? "active" : ""}`} 
+             
+             onClick={(e) => { e.preventDefault(); setActiveView("courses"); setIsMobileMenuOpen(false); }}>
+            <Compass size={20} /> {!isCollapsed && <span>Mis Cursos</span>}
           </a>
-          <a href="#" className={`nav-item ${activeView === "certs" ? "active" : ""}`} onClick={(e) => { e.preventDefault(); setActiveView("certs"); setIsMobileMenuOpen(false); }} 
-             style={{ 
-               color: activeView === "certs" ? "#fff" : "var(--text-main)", 
-               background: activeView === "certs" ? "var(--brand-primary)" : "transparent",
-               borderRadius: "14px",
-               fontWeight: 700, 
-               marginBottom: "12px",
-               padding: "14px 20px",
-               display: "flex",
-               alignItems: "center",
-               justifyContent: isCollapsed ? "center" : "flex-start",
-               gap: isCollapsed ? "0" : "12px"
-             }}>
+          <a href="#" className={`nav-item ${activeView === "certs" ? "active" : ""}`} 
+             
+             onClick={(e) => { e.preventDefault(); setActiveView("certs"); setIsMobileMenuOpen(false); }}>
             <Zap size={20} /> {!isCollapsed && <span>Evolución</span>}
           </a>
-          <a href="#" className={`nav-item ${activeView === "community" ? "active" : ""}`} onClick={(e) => { e.preventDefault(); setActiveView("community"); setIsMobileMenuOpen(false); }} 
-             style={{ 
-               color: activeView === "community" ? "#fff" : "var(--text-main)", 
-               background: activeView === "community" ? "var(--brand-primary)" : "transparent",
-               borderRadius: "14px",
-               fontWeight: 700, 
-               marginBottom: "12px",
-               padding: "14px 20px",
-               display: "flex",
-               alignItems: "center",
-               justifyContent: isCollapsed ? "center" : "flex-start",
-               gap: isCollapsed ? "0" : "12px"
-             }}>
+          <a href="#" className={`nav-item ${activeView === "community" ? "active" : ""}`} 
+             
+             onClick={(e) => { e.preventDefault(); setActiveView("community"); setIsMobileMenuOpen(false); }}>
             <Users size={20} /> {!isCollapsed && <span>Comunidad</span>}
           </a>
+          <a href="#" className={`nav-item ${activeView === "novedades" ? "active" : ""}`} 
+             
+             onClick={(e) => { e.preventDefault(); setActiveView("novedades"); setIsMobileMenuOpen(false); }}>
+            <AlertTriangle size={20} /> {!isCollapsed && <span>Novedades</span>}
+          </a>
+          <a href="#" className={`nav-item ${activeView === "profile" ? "active" : ""}`} 
+             
+             onClick={(e) => { e.preventDefault(); setActiveView("profile"); setIsMobileMenuOpen(false); }}>
+            <FileText size={20} /> {!isCollapsed && <span>Perfil Académico</span>}
+          </a>
+          
+          {(role === "admin" || role === "mentor") && (
+            <a href="#" className={`nav-item ${activeView === "agenda" ? "active" : ""}`} 
+               onClick={(e) => { e.preventDefault(); setActiveView("agenda"); setIsMobileMenuOpen(false); }}>
+              <Calendar size={20} /> {!isCollapsed && <span>Mi Agenda</span>}
+            </a>
+          )}
         </nav>
 
         {streakData && (
@@ -146,9 +125,9 @@ export const DashboardSidebar = ({
                         <div style={{ 
                           width: "12px", 
                           height: "12px", 
-                          background: isActive ? "var(--brand-primary)" : "var(--glass-border)", 
+                          background: isActive ? "var(--brand-secondary)" : "var(--glass-border)", 
                           borderRadius: "3px", 
-                          boxShadow: isActive ? "0 0 10px rgba(0, 82, 255, 0.4)" : "none",
+                          boxShadow: isActive ? "0 0 10px rgba(255, 184, 0, 0.4)" : "none",
                           transition: "0.5s cubic-bezier(0.4, 0, 0.2, 1)",
                           transform: isActive ? "scale(1.15)" : "scale(1)"
                         }}></div>
@@ -160,20 +139,20 @@ export const DashboardSidebar = ({
           </div>
         )}
 
-        <div style={{ marginTop: "auto", borderTop: "1px solid var(--glass-border)", paddingTop: "20px" }}>
+        <div className="sidebar-footer">
           <button 
-            className="nav-item" 
+            className="nav-item theme-toggle-btn" 
             aria-label="Cambiar tema"
-            style={{ width: "100%", background: "none", border: "none", color: "var(--text-main)", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: isCollapsed ? "center" : "flex-start", gap: isCollapsed ? "0" : "12px", padding: "14px 20px", fontWeight: 700, marginBottom: "8px" }}
+            
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           >
             {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />} {!isCollapsed && <span>{theme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>}
           </button>
 
           <button 
-            className="nav-item" 
+            className="nav-item logout-btn" 
             aria-label="Cerrar sesión"
-            style={{ width: "100%", background: "none", border: "none", color: "var(--text-main)", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: isCollapsed ? "center" : "flex-start", gap: isCollapsed ? "0" : "12px", padding: "14px 20px", fontWeight: 700 }}
+            
             onClick={async () => {
               await supabase.auth.signOut();
               window.location.href = "/login";

@@ -101,27 +101,16 @@ export const CLANEditor = ({
     const text = e.clipboardData.getData("text/plain");
     if (!text) return;
 
-    const selection = window.getSelection();
-    if (!selection?.rangeCount) return;
-    selection.deleteFromDocument();
-
-    const range = selection.getRangeAt(0);
-    const span = document.createElement("span");
-    span.style.backgroundColor = "rgba(255, 255, 0, 0.35)";
-    span.textContent = text;
-
-    range.insertNode(span);
+    // Escapamos HTML para evitar inyecciones y cambiamos saltos de línea por <br>
+    const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>");
     
-    // Insert a non-breaking space after to "break" the styling
-    const spacer = document.createTextNode("\u00A0");
-    range.setStartAfter(span);
-    range.insertNode(spacer);
+    // Inyectamos el texto pegado en amarillo y FORZAMOS un espacio limpio transparente después
+    const htmlToInsert = `<span style="background-color: rgba(255, 255, 0, 0.35);" data-pasted="true">${safeText}</span><span style="background-color: transparent;">&nbsp;</span>`;
     
-    // Move cursor after the spacer
-    range.setStartAfter(spacer);
-    range.setEndAfter(spacer);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+    document.execCommand("insertHTML", false, htmlToInsert);
   };
 
   const saveContent = async () => {
@@ -199,6 +188,33 @@ export const CLANEditor = ({
             onMouseDown={(e) => e.stopPropagation()}
             style={{ width: 20, height: 20, border: "none", background: "transparent", cursor: "pointer" }}
           />
+          <div style={{ width: 1, height: 18, background: "#e2e8f0", alignSelf: "center" }} />
+          <select 
+            title="Emojis"
+            onChange={(e) => { 
+              if(e.target.value && editorRef.current) { 
+                editorRef.current.focus();
+                document.execCommand('insertHTML', false, e.target.value); 
+                e.target.value = ""; 
+              }
+            }} 
+            onMouseDown={(e) => e.stopPropagation()} 
+            style={{ background: "transparent", border: "none", fontSize: "1.1rem", outline: "none", cursor: "pointer", padding: "0 4px" }}
+          >
+            <option value="">😀</option>
+            <option value="😀">😀</option>
+            <option value="😂">😂</option>
+            <option value="🥰">🥰</option>
+            <option value="😎">😎</option>
+            <option value="🤔">🤔</option>
+            <option value="🙌">🙌</option>
+            <option value="💡">💡</option>
+            <option value="🔥">🔥</option>
+            <option value="🚀">🚀</option>
+            <option value="👀">👀</option>
+            <option value="✅">✅</option>
+            <option value="⚠️">⚠️</option>
+          </select>
         </div>
 
         {/* GRUPO REVISIÓN (SÓLO MENTOR EN MODO CALIFICACIÓN) */}

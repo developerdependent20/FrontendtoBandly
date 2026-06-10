@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-main)", padding: "20px" }}>
+      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-page)", padding: "20px" }}>
         <div className="modern-card" style={{ width: "100%", maxWidth: "480px", padding: "50px", textAlign: "center" }}>
           <div style={{ background: "rgba(16, 185, 129, 0.1)", width: "80px", height: "80px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 30px" }}>
             <CheckCircle2 size={40} color="#10B981" />
@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-main)", padding: "20px", position: "relative", overflow: "hidden" }}>
+    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-page)", padding: "20px", position: "relative", overflow: "hidden" }}>
       {/* Background Ornaments */}
       <div className="bg-ornaments">
         <div className="blob blob-1"></div>

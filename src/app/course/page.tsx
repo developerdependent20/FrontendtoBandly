@@ -9,19 +9,18 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, 
   Link as LinkIcon, Image as ImageIcon, Minus, Code, Edit3,
   Mic, Square, Play, Pause, Volume2, Headphones, Palette, Type, Save,
-  Users, UserPlus, UserMinus, Search, ShieldAlert, Inbox,
-  Trophy, Gamepad2, Layers, Menu, CheckCircle2, Circle,
-  Maximize2, Minimize2, Send, Upload, User, Video, X, Sparkles, Bot, MessageSquare, FileText, Loader2, CheckSquare
+  ShieldAlert, Trophy, Gamepad2, Layers, Menu, CheckCircle2, Circle,
+  Maximize2, Minimize2, Send, Upload, User, Video, X, Sparkles, Bot, MessageSquare, FileText, Loader2, CheckSquare,
+  ChevronLeft, ChevronRight, Sun, Moon
 } from "lucide-react";
 import MuxPlayer from "@mux/mux-player-react";
 import { createClient } from "@/utils/supabase/client";
 import { playUISound } from "@/utils/audio";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useTheme } from "@/components/ThemeProvider";
-import { Sun, Moon } from "lucide-react";
 import "../legacy-styles.css";
 
-type BlockType = "video" | "audio" | "upload" | "delivery" | "label" | "quiz" | "flashcards" | "dragdrop" | "checklist";
+type BlockType = "video" | "audio" | "upload" | "delivery" | "label" | "quiz" | "flashcards" | "dragdrop" | "checklist" | "file_delivery";
 
 import { AudioBlockPlayer } from "@/components/course/AudioBlockPlayer";
 import { CLANEditor } from "@/components/course/CLANEditor";
@@ -29,6 +28,12 @@ import { QuizBlockEditor } from "@/components/course/QuizBlockEditor";
 import { FlashCardPlayer } from "@/components/course/FlashCardPlayer";
 import { DragDropEditor } from "@/components/course/DragDropEditor";
 import { ChecklistBlockEditor } from "@/components/course/ChecklistBlockEditor";
+import { CourseMembersView } from "@/components/course/CourseMembersView";
+import { CourseGradesView } from "@/components/course/CourseGradesView";
+import { CourseOverviewView } from "@/components/course/CourseOverviewView";
+import { CourseSidebar } from "@/components/course/CourseSidebar";
+import { FileDeliveryBlock } from "@/components/course/FileDeliveryBlock";
+import ClanTemplateForm from "@/components/dashboard/ClanTemplateForm";
 
 function CoursePlayerContent() {
   const searchParams = useSearchParams();
@@ -53,13 +58,14 @@ function CoursePlayerContent() {
   // Members Management State
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [courseEnrollments, setCourseEnrollments] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   
   const [insertModal, setInsertModal] = useState<{ type: BlockType, message: string } | null>(null);
   const [modalInput, setModalInput] = useState("");
   const [modalFile, setModalFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [applyLegacyCss, setApplyLegacyCss] = useState(false);
   const [showInteractive, setShowInteractive] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
 
   // Submissions & Grading State
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -69,6 +75,7 @@ function CoursePlayerContent() {
   const [isZenMode, setIsZenMode] = useState(false);
   const [isEditingWelcome, setIsEditingWelcome] = useState(false);
   const [tempWelcomeMessage, setTempWelcomeMessage] = useState("");
+  const [editingBlock, setEditingBlock] = useState<any>(null);
 
   // Audio Recording State
   const [isRecording, setIsRecording] = useState(false);
@@ -87,6 +94,12 @@ function CoursePlayerContent() {
 
   const [isAddingModule, setIsAddingModule] = useState(false);
   const [newModuleTitle, setNewModuleTitle] = useState("");
+  const [blockToDelete, setBlockToDelete] = useState<string | null>(null);
+  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+  const [editingModuleTitle, setEditingModuleTitle] = useState("");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showModuleCreationModal, setShowModuleCreationModal] = useState(false);
+  const [bulkCreateLoading, setBulkCreateLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,7 +139,7 @@ function CoursePlayerContent() {
       if (course) {
         setCourseTitle(course.title);
         setCourseCover(course.cover_url || null);
-        setCourseDescription(course.description || "Bienvenido a tu programa de transformación. Tu ruta hacia la maestría comienza aquí.");
+        setCourseDescription(course.description || "Bienvenido a tu programa de transformación. Tu aprendizaje comienza aquí.");
       }
 
       const { data: mods } = await supabase.from("modules").select("*").eq("course_id", courseId).order("order_index", { ascending: true });
@@ -172,6 +185,41 @@ function CoursePlayerContent() {
     } catch (err: any) {
       console.error("Error fatal en handleAddModule:", err);
       alert("Error fatal: " + err.message);
+    }
+  };
+
+  const handleCreateModules = async (mode: 'both' | 'corte1' | 'corte2') => {
+    setBulkCreateLoading(true);
+    try {
+      const baseIndex = modules.length;
+      const modulesToInsert = [];
+      
+      if (mode === 'both' || mode === 'corte1') {
+        for (let i = 1; i <= 8; i++) {
+          modulesToInsert.push({ title: `Semana ${i} Corte 1`, course_id: courseId, order_index: baseIndex + modulesToInsert.length });
+        }
+      }
+      if (mode === 'both' || mode === 'corte2') {
+        for (let i = 1; i <= 8; i++) {
+          modulesToInsert.push({ title: `Semana ${i} Corte 2`, course_id: courseId, order_index: baseIndex + modulesToInsert.length });
+        }
+      }
+
+      const { data: newMods, error } = await supabase.from("modules").insert(modulesToInsert).select();
+      
+      if (!error && newMods) {
+        setModules(prev => [...prev, ...newMods]);
+        setShowModuleCreationModal(false);
+        playUISound("success");
+      } else {
+        const errMsg = error?.message || "Sin respuesta del servidor.";
+        alert("Error al crear la estructura: " + errMsg);
+      }
+    } catch (err: any) {
+      console.error("Error fatal en handleCreateModules:", err);
+      alert("Error fatal: " + err.message);
+    } finally {
+      setBulkCreateLoading(false);
     }
   };
 
@@ -229,7 +277,7 @@ function CoursePlayerContent() {
 
   // Ayudante: Obtener bloques obligatorios del módulo actual
   const getRequiredBlocksForModule = (modId: string) => {
-    return blocks.filter(b => b.screen === modId && ["quiz", "delivery", "dragdrop", "checklist"].includes(b.type));
+    return blocks.filter(b => b.screen === modId && ["quiz", "delivery", "file_delivery", "dragdrop", "checklist"].includes(b.type));
   };
 
   // Lógica de Autocompletado Inteligente
@@ -261,15 +309,18 @@ function CoursePlayerContent() {
   }, [activeScreen, enrollment, isAdmin, isEditMode, blocks, submissions, currentUser]);
 
   const handleInsertClick = (type: BlockType) => {
+    setEditingBlock(null);
+    setModalInput("");
     if (type === "video") setInsertModal({ type, message: "Inserta un Video (Sube MP4 o pega YouTube)" });
     else if (type === "audio") setInsertModal({ type, message: "Añade un Audio (Sube o graba)" });
     else if (type === "upload") setInsertModal({ type, message: "Añade un Recurso (Sube archivo)" });
+    else if (type === "label") setInsertModal({ type, message: "Añade Contenido HTML" });
     else if (type === "delivery") executeInsert("delivery", { html: "" });
-    else if (type === "label") executeInsert("label", { html: "<p>Escribe aquí tu contenido...</p>" });
     else if (type === "quiz") { executeInsert("quiz", { questions: [] }); setShowInteractive(false); }
     else if (type === "flashcards") { executeInsert("flashcards", { cards: [] }); setShowInteractive(false); }
     else if (type === "dragdrop") { executeInsert("dragdrop", { pairs: [] }); setShowInteractive(false); }
     else if (type === "checklist") { executeInsert("checklist", { items: [] }); setShowInteractive(false); }
+    else if (type === "file_delivery") executeInsert("file_delivery", { instructions: "" });
   };
 
   const startRecording = async () => {
@@ -301,6 +352,16 @@ function CoursePlayerContent() {
   };
 
   const executeInsert = async (type: BlockType, content: any) => {
+    if (editingBlock) {
+      const { data, error } = await supabase.from("blocks").update({
+        content: content
+      }).eq("id", editingBlock.id).select().single();
+
+      if (error) alert("Error actualizando bloque (" + type + ")");
+      else if (data) setBlocks(prev => prev.map(b => b.id === data.id ? data : b));
+      return;
+    }
+
     const { data, error } = await supabase.from("blocks").insert({
       course_id: courseId,
       screen: activeScreen,
@@ -333,7 +394,7 @@ function CoursePlayerContent() {
           const upRes = await fetch("/api/video/upload", { method: "POST" });
           const { url, id } = await upRes.json();
           
-          setUploadStatus("Subiendo video maestro a la nube...");
+          setUploadStatus("Subiendo video a la nube...");
           await fetch(url, { method: "PUT", body: modalFile });
           
           let playbackId = "";
@@ -359,7 +420,11 @@ function CoursePlayerContent() {
           }
         }
       } else if (modalInput) {
-        await executeInsert(insertModal.type, { url: modalInput, title: modalInput });
+        if (insertModal.type === "label") {
+          await executeInsert("label", { html: modalInput, use_legacy_css: applyLegacyCss });
+        } else {
+          await executeInsert(insertModal.type, { url: modalInput, title: modalInput });
+        }
       }
     } catch (err) {
       alert("Error en la subida: " + err);
@@ -371,6 +436,8 @@ function CoursePlayerContent() {
     setModalInput("");
     setModalFile(null);
     setRecordedBlob(null);
+    setEditingBlock(null);
+    setApplyLegacyCss(false);
   };
 
   const handleCoverUpload = async (file: File) => {
@@ -458,7 +525,7 @@ function CoursePlayerContent() {
     setIsTutorThinking(true);
 
     try {
-      const res = await fetch("/api/ai/tutor", {
+            const res = await fetch("/api/ai/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -467,10 +534,33 @@ function CoursePlayerContent() {
         }),
       });
 
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (!res.ok) {
+         const errorText = await res.text();
+         throw new Error(errorText || "Error de conexión con la IA");
+      }
+      if (!res.body) throw new Error("No stream body");
 
-      setTutorMessages(prev => [...prev, data]);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      
+      setTutorMessages(prev => [...prev, { role: "assistant", content: "" }]);
+
+      let done = false;
+      let streamedText = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          streamedText += decoder.decode(value, { stream: true });
+          setTutorMessages(prev => {
+            const newMsgs = [...prev];
+            newMsgs[newMsgs.length - 1].content = streamedText;
+            return newMsgs;
+          });
+        }
+      }
+      
       playUISound("click");
     } catch (err: any) {
       setTutorMessages(prev => [...prev, { role: "assistant", content: "Lo siento, tuve un problema de conexión con Gemini. ¿Podemos intentarlo de nuevo? Error: " + err.message }]);
@@ -495,11 +585,34 @@ function CoursePlayerContent() {
     }
   };
 
-  const removeBlock = async (id: string) => {
-    if (confirm("¿Borrar permanentemente?")) {
-      const { error } = await supabase.from("blocks").delete().eq("id", id);
-      if (!error) setBlocks(prev => prev.filter(b => b.id !== id));
+  const requestBlockDelete = (id: string) => {
+    setBlockToDelete(id);
+  };
+
+  const executeDeleteBlock = async () => {
+    if (!blockToDelete) return;
+    const id = blockToDelete;
+    console.log("Attempting to delete block:", id);
+    
+    // Manual cascade: Delete all student submissions associated with this interactive block first.
+    const { error: subErr } = await supabase.from("submissions").delete().eq("block_id", id);
+    console.log("Submissions cascade result:", subErr);
+    
+    const { data, error } = await supabase.from("blocks").delete().eq("id", id).select();
+    console.log("Blocks deletion result:", { data, error });
+    
+    if (!error) {
+      if (data && data.length === 0) {
+         alert("Alerta: El bloque no se pudo borrar de la base de datos (Posible bloqueo por permisos RLS).");
+      } else {
+         setBlocks(prev => prev.filter(b => b.id !== id));
+      }
+    } else {
+      alert("Error al borrar el bloque: " + error.message);
+      console.error("Delete Block Error:", error);
     }
+    
+    setBlockToDelete(null);
   };
 
   const updateAudioTitle = async (id: string, newTitle: string) => {
@@ -513,12 +626,12 @@ function CoursePlayerContent() {
   if (loading) return <LoadingScreen />;
   if (!isEnrolled && !isAdmin) {
     return (
-      <div className="denied-screen" style={{ height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--bg-darker)", color: "white", textAlign: "center", padding: 40 }}>
+      <div className="denied-screen" style={{ height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--bg-page)", color: "var(--text-main)", textAlign: "center", padding: 40 }}>
         <div style={{ width: 100, height: 100, background: "rgba(239, 68, 68, 0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 30 }}>
           <ShieldAlert size={50} color="#ef4444" />
         </div>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2.5rem", marginBottom: 15 }}>Acceso No Autorizado</h1>
-        <p style={{ opacity: 0.6, maxWidth: 500, lineHeight: "1.6" }}>Esta sección de la plataforma está reservada para alumnos matriculados. Contacta con tu tutor para habilitar esta competencia en tu ruta.</p>
+        <p style={{ opacity: 0.6, maxWidth: 500, lineHeight: "1.6" }}>Esta sección de la plataforma está reservada para alumnos matriculados. Contacta con tu tutor para habilitar este curso.</p>
         <Link href="/dashboard" className="btn-primary" style={{ marginTop: 30 }}>Volver al Panel</Link>
       </div>
     );
@@ -526,15 +639,31 @@ function CoursePlayerContent() {
 
   return (
     <>
+      {blockToDelete && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(10px)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.3s ease" }}>
+          <div style={{ background: "var(--bg-card)", padding: 40, borderRadius: 24, border: "1px solid rgba(255,255,255,0.1)", maxWidth: 400, textAlign: "center", boxShadow: "0 20px 40px rgba(0,0,0,0.5)", animation: "slideUp 0.3s ease" }}>
+            <div style={{ background: "rgba(239, 68, 68, 0.1)", width: 80, height: 80, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+               <Trash2 size={40} color="#ef4444" />
+            </div>
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.8rem", marginBottom: 15, color: "var(--text-main)" }}>¿Borrar este contenido?</h3>
+            <p style={{ opacity: 0.6, marginBottom: 30, color: "var(--text-main)", lineHeight: 1.6 }}>Esta acción es permanente. Todo el contenido y las respuestas asociadas de los alumnos se perderán para siempre.</p>
+            <div style={{ display: "flex", gap: 15, justifyContent: "center" }}>
+               <button onClick={() => setBlockToDelete(null)} style={{ background: "transparent", color: "var(--text-main)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 12, padding: "12px 24px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseOut={(e) => e.currentTarget.style.background = "transparent"}>Cancelar</button>
+               <button onClick={executeDeleteBlock} style={{ background: "#ef4444", color: "white", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 15px rgba(239, 68, 68, 0.4)", transition: "all 0.2s" }} onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"} onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}>Sí, eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="edit-toggle-wrapper" style={{ display: isAdmin ? "flex" : "none" }}>
-        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: isEditMode ? "var(--brand-primary)" : "white" }}>{isEditMode ? "EDITOR ACTIVO" : "VISTA PÚBLICA"}</span>
+        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: isEditMode ? "var(--brand-primary)" : "var(--text-main)" }}>{isEditMode ? "EDITOR ACTIVO" : "VISTA PÚBLICA"}</span>
         <label className="switch">
           <input type="checkbox" checked={isEditMode} onChange={(e) => setIsEditMode(e.target.checked)} />
           <span className="slider"></span>
         </label>
       </div>
 
-      <div className={`player-container ${isZenMode ? "zen-active" : ""}`}>
+      <div className={`player-container ${isZenMode ? "zen-active" : ""} ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         {/* Mobile Action Controls */}
         {!isZenMode && (
           <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -543,120 +672,36 @@ function CoursePlayerContent() {
         )}
         <div className={`mobile-overlay ${isMobileMenuOpen ? "active" : ""}`} onClick={() => setIsMobileMenuOpen(false)}></div>
 
-        <aside className={`player-sidebar ${isMobileMenuOpen ? "mobile-open" : ""} ${isZenMode ? "zen-hidden" : ""}`}>
-          <div style={{ marginBottom:30, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Link href={isAdmin ? "/admin" : "/dashboard"} className="back-btn"><ArrowLeft size={20} color="var(--text-main)" /></Link>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", margin: 0, fontSize: "1.2rem", color: "var(--text-main)" }}>Aula CLAN</h3>
-            </div>
-            <button 
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "10px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-main)", cursor: "pointer" }}
-            >
-              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          </div>
-
-          {!isAdmin && modules.length > 0 && (
-            <div style={{ marginBottom: 30, padding: "0 10px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--brand-primary)", fontWeight: 700, marginBottom: 8, letterSpacing: 1 }}>
-                <span>PROGRESO DEL CURSO</span>
-                <span>{(() => {
-                  const completedCount = (enrollment?.completed_modules || []).length;
-                  const total = modules.length;
-                  return Math.round((completedCount / total) * 100);
-                })()}%</span>
-              </div>
-              <div style={{ height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 10, overflow: "hidden" }}>
-                <div style={{ 
-                  height: "100%", 
-                  background: "var(--brand-primary)", 
-                  width: `${Math.round(((enrollment?.completed_modules || []).length / modules.length) * 100)}%`,
-                  transition: "width 0.5s ease"
-                }}></div>
-              </div>
-            </div>
-          )}
-          
-          <nav className="syllabus-nav">
-            <div className={`syllabus-item ${activeScreen === "overview" ? "active" : ""}`} onClick={() => { setActiveScreen("overview"); setIsMobileMenuOpen(false); }}><LayoutDashboard size={18} /> <span>Mapa del Curso</span></div>
-            {modules.map(mod => {
-              const isCompleted = enrollment?.completed_modules?.includes(mod.id);
-              const isLocked = isModuleLocked(mod.id);
-              return (
-                <div key={mod.id} className={`syllabus-item ${activeScreen === mod.id ? "active" : ""} ${isLocked ? "is-locked" : ""}`} onClick={() => {
-                    setActiveScreen(mod.id);
-                    setIsMobileMenuOpen(false);
-                    if (isLocked) playUISound("click");
-                  }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }}>
-                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {isCompleted ? (
-                        <CheckCircle2 size={18} color="var(--brand-primary)" />
-                      ) : isLocked ? (
-                        <ShieldAlert size={18} style={{ opacity: 0.5 }} />
-                      ) : (
-                        <Folder size={18} />
-                      )}
-                      <span style={{ opacity: isCompleted ? 0.6 : isLocked ? 0.4 : 1 }}>
-                        {mod.title}
-                        {isLocked && <span style={{ fontSize: "0.6rem", display: "block", color: "var(--brand-primary)", opacity: 0.8, fontWeight: 700 }}>VISTA PREVIA</span>}
-                      </span>
-                   </div>
-                   {isEditMode && (
-                      <button 
-                         onClick={async (e) => { e.stopPropagation(); if(confirm('¿Seguro de borrar este módulo y todo su contenido?')) { await supabase.from('modules').delete().eq('id', mod.id); window.location.reload(); } }}
-                         style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", opacity: 0.6, padding: 0, display: "flex", alignItems: "center" }}
-                         title="Borrar Módulo"
-                      >
-                         <Trash2 size={16} />
-                      </button>
-                   )}
-                </div>
-              );
-            })}
-            <div className={`syllabus-item ${activeScreen === "grades" ? "active" : ""}`} onClick={() => { setActiveScreen("grades"); setIsMobileMenuOpen(false); }}>
-              <Trophy size={18} /> <span>Calificaciones {isAdmin && submissions.filter(s => s.status === 'pending').length > 0 && `(${submissions.filter(s => s.status === 'pending').length})`}</span>
-            </div>
-            {isAdmin && (
-              <>
-                <div className={`syllabus-item ${activeScreen === "members" ? "active" : ""}`} onClick={() => { setActiveScreen("members"); setIsMobileMenuOpen(false); }} style={{ borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 10, paddingTop: 15 }}>
-                  <Users size={18} /> <span>Miembros del Curso</span>
-                </div>
-              </>
-            )}
-            {isEditMode && (
-              <div style={{ marginTop: 10 }}>
-                {isAddingModule ? (
-                  <div style={{ padding: "10px", background: "var(--glass-bg)", borderRadius: "12px", border: "1px solid var(--brand-primary)" }}>
-                    <input 
-                      autoFocus
-                      value={newModuleTitle}
-                      onChange={(e) => setNewModuleTitle(e.target.value)}
-                      placeholder="Título del módulo..."
-                      style={{ width: "100%", background: "transparent", border: "none", color: "var(--text-main)", outline: "none", fontSize: "0.85rem", marginBottom: 8 }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddModule();
-                        if (e.key === 'Escape') setIsAddingModule(false);
-                      }}
-                    />
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={handleAddModule} style={{ background: "var(--brand-primary)", color: "black", border: "none", borderRadius: "6px", padding: "4px 10px", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer" }}>AÑADIR</button>
-                      <button onClick={() => setIsAddingModule(false)} style={{ background: "transparent", color: "var(--text-muted)", border: "none", borderRadius: "6px", padding: "4px 10px", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer" }}>CANCELAR</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button className="syllabus-item add-mod" onClick={() => setIsAddingModule(true)}>+ Nuevo Módulo</button>
-                )}
-              </div>
-            )}
-          </nav>
-
-          <footer style={{ marginTop: "auto", padding: "20px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-             <Link href={isAdmin ? "/admin" : "/dashboard"} style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-main)", opacity: 0.5, textDecoration: "none", fontSize: "0.9rem" }}>
-                <LayoutDashboard size={18} /> <span>Salir del curso</span>
-             </Link>
-          </footer>
-        </aside>
+        <CourseSidebar 
+          isSidebarCollapsed={isSidebarCollapsed}
+          setIsSidebarCollapsed={setIsSidebarCollapsed}
+          theme={theme}
+          setTheme={setTheme}
+          isAdmin={isAdmin}
+          modules={modules}
+          enrollment={enrollment}
+          activeScreen={activeScreen}
+          setActiveScreen={setActiveScreen}
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+          isModuleLocked={isModuleLocked}
+          editingModuleId={editingModuleId}
+          setEditingModuleId={setEditingModuleId}
+          editingModuleTitle={editingModuleTitle}
+          setEditingModuleTitle={setEditingModuleTitle}
+          supabase={supabase}
+          setModules={setModules}
+          isEditMode={isEditMode}
+          blocks={blocks}
+          submissions={submissions}
+          isAddingModule={isAddingModule}
+          setIsAddingModule={setIsAddingModule}
+          newModuleTitle={newModuleTitle}
+          setNewModuleTitle={setNewModuleTitle}
+          handleAddModule={handleAddModule}
+          playUISound={playUISound}
+          setShowModuleCreationModal={setShowModuleCreationModal}
+        />
 
         <main className={`content-viewer player-main ${isZenMode ? "zen-full" : ""}`}>
           <div className="player-content-wrapper" style={{ minHeight: "100%", display: "flex", flexDirection: "column", justifyContent: activeScreen === "overview" ? "center" : "flex-start" }}>
@@ -678,7 +723,7 @@ function CoursePlayerContent() {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "var(--brand-primary)",
+                color: "var(--brand-secondary)",
                 backdropFilter: "blur(10px)",
                 transition: "0.2s"
               }}
@@ -688,373 +733,41 @@ function CoursePlayerContent() {
             </button>
 
             {activeScreen === "overview" ? (
-              <div style={{ position: "relative", marginBottom: "40px" }}>
-                {/* Portada Estilo Red Social */}
-                <div style={{ 
-                  width: "100%", 
-                  height: "350px", 
-                  borderRadius: "32px", 
-                  background: courseCover ? `url(${courseCover}) center/cover no-repeat` : "linear-gradient(to right, #1e1e2e, #2d2d44)",
-                  border: "1px solid var(--glass-border)",
-                  position: "relative",
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
-                }}>
-                  {/* Overlay Gradiente para legibilidad */}
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)", zIndex: 1 }}></div>
-                  
-                  {/* Controles de Mentor (Esquina Superior Derecha) */}
-                  {isEditMode && (
-                    <div style={{ position: "absolute", top: "25px", right: "25px", zIndex: 20, display: "flex", gap: "10px" }}>
-                       {courseCover && (
-                          <button 
-                            onClick={handleRemoveCover}
-                            style={{ background: "rgba(239, 68, 68, 0.2)", backdropFilter: "blur(10px)", border: "1px solid rgba(239, 68, 68, 4)", borderRadius: "12px", width: "40px", height: "40px", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                            title="Eliminar Portada"
-                          >
-                             <Trash2 size={18} />
-                          </button>
-                       )}
-                    </div>
-                  )}
-
-                  {/* Cajita de Subida para Mentores */}
-                  {isEditMode && (
-                    <div style={{ position: "relative", zIndex: 10 }}>
-                      <label style={{ 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        alignItems: "center", 
-                        gap: "10px", 
-                        cursor: "pointer", 
-                        padding: "20px 30px", 
-                        background: "rgba(0,0,0,0.4)", 
-                        backdropFilter: "blur(10px)",
-                        border: "2px dashed rgba(255,255,255,0.3)",
-                        borderRadius: "20px",
-                        color: "white",
-                        transition: "0.2s"
-                      }} className="hover-scale">
-                        {isUploading ? (
-                          <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>PROCESANDO...</span>
-                        ) : (
-                          <>
-                            <Upload size={24} color="var(--brand-primary)" />
-                            <span style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "1px" }}>{courseCover ? "CAMBIAR PORTADA" : "AÑADIR PORTADA"}</span>
-                          </>
-                        )}
-                        <input type="file" accept="image/*" hidden onChange={(e) => {
-                          if (e.target.files?.[0]) handleCoverUpload(e.target.files[0]);
-                        }} />
-                      </label>
-                    </div>
-                  )}
-
-                  {/* Contenido de Bienvenida */}
-                  <div style={{ position: "absolute", bottom: "40px", left: "60px", right: "60px", zIndex: 5, textAlign: "left" }}>
-                     <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "3.5rem", color: "white", margin: 0, textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>{courseTitle}</h1>
-                     
-                     {isEditingDescription ? (
-                        <div style={{ marginTop: "15px", display: "flex", gap: "10px", alignItems: "flex-end" }}>
-                           <textarea 
-                             value={tempDescription}
-                             onChange={(e) => setTempDescription(e.target.value)}
-                             autoFocus
-                             placeholder="Escribe el mensaje de bienvenida del programa..."
-                             style={{ width: "100%", maxWidth: "600px", padding: "15px", borderRadius: "12px", background: "rgba(0,0,0,0.6)", border: "1px solid var(--brand-primary)", color: "white", fontSize: "1rem", outline: "none", resize: "none" }}
-                             rows={3}
-                           />
-                           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                              <button onClick={handleUpdateDescription} style={{ background: "var(--brand-primary)", border: "none", borderRadius: "8px", padding: "8px 15px", fontWeight: 700, color: "black", cursor: "pointer" }}><Save size={16} /></button>
-                              <button onClick={() => setIsEditingDescription(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "8px", padding: "8px 15px", fontWeight: 700, color: "white", cursor: "pointer" }}><X size={16} /></button>
-                           </div>
-                        </div>
-                     ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: "15px", marginTop: "10px" }}>
-                           <p style={{ opacity: 0.8, fontSize: "1.1rem", maxWidth: 650, margin: 0, color: "white" }}>{courseDescription}</p>
-                           {isEditMode && <button onClick={() => { setTempDescription(courseDescription); setIsEditingDescription(true); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%", width: "32px", height: "32px", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.5 }}><Edit3 size={14} /></button>}
-                        </div>
-                     )}
-                  </div>
-                </div>
-
-                {/* Medidor de Progreso Flotante / Minimalista */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "25px", marginTop: "30px" }}>
-                    <div className="course-stat-card">
-                      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                         <div className="vibrant-icon-bg" style={{ width: "64px", height: "64px", borderRadius: "18px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
-                            <Trophy size={32} />
-                         </div>
-                         <div>
-                            <span style={{ display: "block", fontSize: "0.85rem", color: "var(--text-muted)", letterSpacing: "1.5px", fontWeight: 900 }}>PROGRESO ACTUAL</span>
-                            <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-main)" }}>{Math.round(((enrollment?.completed_modules || []).length / (modules.length || 1)) * 100)}%</span>
-                         </div>
-                      </div>
-                      <div style={{ width: "250px" }}>
-                        <div style={{ height: "12px", background: "var(--glass-border)", borderRadius: "20px", overflow: "hidden", position: "relative" }}>
-                          <div style={{ 
-                             height: "100%", 
-                             width: `${Math.round(((enrollment?.completed_modules || []).length / (modules.length || 1)) * 100)}%`,
-                             background: "linear-gradient(90deg, var(--brand-primary), var(--brand-secondary))",
-                             boxShadow: "0 0 20px rgba(0, 82, 255, 0.3)",
-                             borderRadius: "20px",
-                             transition: "width 1s ease"
-                          }}></div>
-                        </div>
-                        <p style={{ textAlign: "right", fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "12px", fontWeight: 600 }}>
-                          <strong style={{ color: "var(--brand-primary)" }}>{(enrollment?.completed_modules || []).length}</strong> de {modules.length} Módulos
-                        </p>
-                      </div>
-                   </div>
-                   <div className="course-accent-card">
-                      <span style={{ fontSize: "0.85rem", fontWeight: 900, color: "rgba(255,255,255,0.8)", letterSpacing: "1.5px" }}>SIGUIENTE PASO</span>
-                      <p style={{ margin: "10px 0 0 0", fontSize: "1.1rem", fontWeight: 800, color: "white" }}>Continúa tu ruta</p>
-                   </div>
-                </div>
-              </div>
+              <CourseOverviewView 
+                courseTitle={courseTitle}
+                courseCover={courseCover}
+                courseDescription={courseDescription}
+                isEditMode={isEditMode}
+                isEditingDescription={isEditingDescription}
+                tempDescription={tempDescription}
+                setTempDescription={setTempDescription}
+                handleUpdateDescription={handleUpdateDescription}
+                setIsEditingDescription={setIsEditingDescription}
+                handleRemoveCover={handleRemoveCover}
+                isUploading={isUploading}
+                handleCoverUpload={handleCoverUpload}
+                enrollment={enrollment}
+                modules={modules}
+              />
             ) : activeScreen === "members" ? (
-              <div className="members-view">
-                <header style={{ marginBottom: 40, borderBottom: "1px solid var(--glass-border)", paddingBottom: 20 }}>
-                  <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2rem", color: "var(--brand-primary)", margin: 0 }}>Gestión de Miembros</h2>
-                  <p style={{ opacity: 0.5, marginTop: 5 }}>Controla quién tiene acceso a este programa de estudio.</p>
-                </header>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 40 }}>
-                  {/* Lista Actual */}
-                  <div style={{ background: "rgba(255,255,255,0.02)", padding: 30, borderRadius: 24, border: "1px solid var(--glass-border)" }}>
-                    <h3 style={{ fontSize: "1.2rem", marginBottom: 20 }}>Alumnos Matriculados ({courseEnrollments.length})</h3>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      {courseEnrollments.length === 0 ? (
-                        <p style={{ opacity: 0.3, textAlign: "center", padding: 40 }}>No hay alumnos asignados aún.</p>
-                      ) : courseEnrollments.map(e => (
-                        <div key={e.user_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 15, background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)" }}>
-                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--brand-primary)", color: "black", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 800 }}>{e.profiles?.full_name?.substring(0,2).toUpperCase()}</div>
-                              <div>
-                                <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>{e.profiles?.full_name}</p>
-                                <p style={{ margin: 0, fontSize: "0.7rem", opacity: 0.4 }}>ID: {e.user_id.split("-")[0]}</p>
-                              </div>
-                           </div>
-                           <button onClick={() => toggleEnrollment(e.user_id, true)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", opacity: 0.6 }} title="Quitar acceso"><UserMinus size={18} /></button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Buscador para añadir */}
-                  <div style={{ background: "rgba(255,255,255,0.02)", padding: 30, borderRadius: 24, border: "1px solid var(--glass-border)" }}>
-                    <h3 style={{ fontSize: "1.2rem", marginBottom: 20 }}>Matricular Alumnos</h3>
-                    <div style={{ position: "relative", marginBottom: 20 }}>
-                      <Search size={18} style={{ position: "absolute", left: 15, top: "50%", transform: "translateY(-50%)", opacity: 0.4 }} />
-                      <input 
-                        type="text" 
-                        placeholder="Buscar por nombre..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ width: "100%", padding: "12px 15px 12px 45px", borderRadius: 12, border: "1px solid var(--glass-border)", background: "rgba(0,0,0,0.2)", color: "white", outline: "none", boxSizing: "border-box" }}
-                      />
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 400, overflowY: "auto", paddingRight: 5 }}>
-                      {allProfiles.filter(p => !courseEnrollments.find(e => e.user_id === p.id) && p.full_name?.toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
-                        <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 15px", background: "rgba(255,255,255,0.02)", borderRadius: 10 }}>
-                          <span style={{ fontSize: "0.9rem", opacity: 0.8 }}>{p.full_name}</span>
-                          <button onClick={() => toggleEnrollment(p.id, false)} className="btn-secondary" style={{ padding: "5px 12px", fontSize: "0.75rem", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 6 }}>
-                            <UserPlus size={14} /> Matricular
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <CourseMembersView 
+                courseEnrollments={courseEnrollments}
+                allProfiles={allProfiles}
+                toggleEnrollment={toggleEnrollment}
+              />
             ) : activeScreen === "grades" ? (
-              <div className="grades-summary-view" style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px" }}>
-                 {isAdmin ? (
-                   <>
-                    {/* PANEL MENTOR: DASHBOARD DE MÉTRICAS */}
-                    <header style={{ marginBottom: 40, borderBottom: "1px solid var(--glass-border)", paddingBottom: 25 }}>
-                       <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2.5rem", color: "var(--brand-primary)", margin: 0 }}>Gestión Académica</h2>
-                       <p style={{ opacity: 0.5, marginTop: 5 }}>Visión global del rendimiento y retroalimentación de este programa.</p>
-                       
-                       <div style={{ display: "flex", gap: 20, marginTop: 25 }}>
-                          <div style={{ background: "rgba(255,255,255,0.02)", padding: "20px 25px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.05)", flex: 1, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}>
-                             <label style={{ fontSize: "0.65rem", fontWeight: 900, opacity: 0.4, letterSpacing: 1.5, display: "block", marginBottom: 5 }}>TOTAL ENTREGAS</label>
-                             <span style={{ fontSize: "2rem", fontWeight: 800 }}>{submissions.length}</span>
-                          </div>
-                          <div style={{ background: "var(--brand-glow)", padding: "20px 25px", borderRadius: 24, border: "1px solid var(--brand-glow)", flex: 1, boxShadow: "0 10px 30px var(--brand-glow)" }}>
-                             <label style={{ fontSize: "0.65rem", fontWeight: 900, color: "var(--brand-primary)", letterSpacing: 1.5, display: "block", marginBottom: 5 }}>POR REVISAR</label>
-                             <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--brand-primary)" }}>{submissions.filter(s => s.status === 'pending').length}</span>
-                          </div>
-                          <div style={{ background: "rgba(16, 185, 129, 0.05)", padding: "20px 25px", borderRadius: 24, border: "1px solid rgba(16, 185, 129, 0.1)", flex: 1, boxShadow: "0 10px 30px rgba(16, 185, 129, 0.05)" }}>
-                             <label style={{ fontSize: "0.65rem", fontWeight: 900, color: "#10b981", letterSpacing: 1.5, display: "block", marginBottom: 5 }}>PROMEDIO CURSO</label>
-                             <span style={{ fontSize: "2rem", fontWeight: 800, color: "#10b981" }}>
-                                {submissions.filter(s => s.status === 'graded').length > 0 
-                                   ? (submissions.reduce((acc, s) => acc + (s.score || 0), 0) / submissions.filter(s => s.status === 'graded').length).toFixed(1)
-                                   : "—"}
-                             </span>
-                          </div>
-                       </div>
-                    </header>
-
-                    {/* LISTA DE ENTREGAS (BUZÓN) */}
-                    {submissions.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "100px 40px", background: "rgba(255,255,255,0.02)", borderRadius: 40, border: "1px dashed rgba(255,255,255,0.1)" }}>
-                           <Inbox size={48} style={{ opacity: 0.2, marginBottom: 20 }} />
-                           <p style={{ opacity: 0.5, fontSize: "1.1rem" }}>Aún no hay trabajos para calificar en este programa.</p>
-                        </div>
-                    ) : (
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(480px, 1fr))", gap: 30 }}>
-                           {submissions.sort((a,b) => a.status === 'pending' ? -1 : 1).map(sub => {
-                              const block = blocks.find(b => b.id === sub.block_id);
-                              const module = modules.find(m => m.id === block?.screen);
-                              return (
-                                 <div key={sub.id} style={{ display: "flex", flexDirection: "column", background: "var(--bg-dark)", border: "1px solid var(--glass-border)", borderRadius: 32, overflow: "hidden", transition: "0.3s", boxShadow: sub.status === 'pending' ? "0 15px 50px rgba(254, 220, 61, 0.08)" : "0 10px 30px rgba(0,0,0,0.1)" }}>
-                                    {/* Encabezado Entrega */}
-                                    <div style={{ padding: 30, borderBottom: "1px solid rgba(255,255,255,0.05)", background: sub.status === 'pending' ? "rgba(254, 220, 61, 0.02)" : "transparent" }}>
-                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                                          <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-                                             <div style={{ width: 50, height: 50, borderRadius: "50%", background: "var(--brand-primary)", color: "black", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "1.1rem" }}>{sub.profiles?.full_name?.substring(0,2).toUpperCase() || "?"}</div>
-                                             <div>
-                                                <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700 }}>{sub.profiles?.full_name || "Estudiante"}</h4>
-                                                <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.5, fontWeight: 600 }}>{module?.title || "Módulo General"} » {block?.type === 'delivery' ? "Proyecto Final" : "Actividad"}</p>
-                                             </div>
-                                          </div>
-                                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                             <span style={{ padding: "6px 12px", border: "1px solid", borderColor: sub.status === 'graded' ? "#10b981" : "var(--brand-primary)", borderRadius: 20, color: sub.status === 'graded' ? "#10b981" : "var(--brand-primary)", fontSize: "0.65rem", fontWeight: 900, letterSpacing: 1 }}>{sub.status.toUpperCase()}</span>
-                                             <button 
-                                                onClick={async () => {
-                                                   if (confirm("¿Estás seguro de eliminar permanentemente esta entrega?")) {
-                                                      const { error } = await supabase.from("submissions").delete().eq("id", sub.id);
-                                                      if (!error) setSubmissions(prev => prev.filter(s => s.id !== sub.id));
-                                                   }
-                                                }}
-                                                style={{ background: "rgba(239, 68, 68, 0.1)", border: "none", borderRadius: 12, width: 40, height: 40, color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                                title="Eliminar Entrega"
-                                             >
-                                                <Trash2 size={18} />
-                                             </button>
-                                          </div>
-                                       </div>
-                                    </div>
-                                    {/* Contenido con Bisturí */}
-                                    <div style={{ padding: 30, flexGrow: 1, background: "rgba(255,255,255,0.01)" }}>
-                                       <p style={{ fontSize: "0.7rem", opacity: 0.4, marginBottom: 15, fontWeight: 900, letterSpacing: 1 }}>TRABAJO ENTREGADO (USA EL BISTURÍ PARA RESALTAR):</p>
-                                       <div className="mentor-editor-box" style={{ borderRadius: 24, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
-                                          <CLANEditor 
-                                                blockId={block?.id || ""} 
-                                                initialHtml={sub.content} 
-                                                isAdmin={true} 
-                                                mode="grading"
-                                                onGrade={(updatedContent: string) => { (sub as any).pending_content = updatedContent; }}
-                                             />
-                                       </div>
-                                    </div>
-                                    {/* Footer Evaluación */}
-                                    <div style={{ padding: 30, background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                                       <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-                                          <div style={{ display: "flex", gap: 20 }}>
-                                             <div style={{ width: 120 }}>
-                                                <label style={{ fontSize: "0.65rem", opacity: 0.5, display: "block", marginBottom: 5 }}>NOTA /100</label>
-                                                <input id={`score-${sub.id}`} type="number" defaultValue={sub.score || ""} style={{ width: "100%", padding: "15px", borderRadius: 16, background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none", fontWeight: 800, textAlign: "center", fontSize: "1.2rem" }} />
-                                             </div>
-                                             <div style={{ flex: 1 }}>
-                                                <label style={{ fontSize: "0.65rem", opacity: 0.5, display: "block", marginBottom: 5 }}>RETROALIMENTACIÓN</label>
-                                                <input id={`fdbk-${sub.id}`} type="text" defaultValue={sub.feedback || ""} placeholder="Excelente trabajo, pero considera..." style={{ width: "100%", padding: "15px 20px", borderRadius: 16, background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }} />
-                                             </div>
-                                          </div>
-                                          <button onClick={async () => {
-                                             const score = (document.getElementById(`score-${sub.id}`) as HTMLInputElement).value;
-                                             const feedback = (document.getElementById(`fdbk-${sub.id}`) as HTMLInputElement).value;
-                                             const finalContent = (sub as any).pending_content || sub.content;
-                                             if (!score) return alert("Por favor asigna una nota.");
-                                             const { error } = await supabase.from("submissions").update({ score: parseFloat(score), feedback, content: finalContent, status: 'graded' }).eq("id", sub.id);
-                                             if (!error) {
-                                                playUISound("success");
-                                                setSubmissions(prev => prev.map(s => s.id === sub.id ? { ...s, score: parseFloat(score), feedback, content: finalContent, status: 'graded' } : s));
-                                                alert("¡Evaluación enviada con éxito!");
-                                             } else alert(error.message);
-                                          }} className="btn-primary" style={{ height: 50, borderRadius: 16, fontWeight: 800, fontSize: "1rem" }}>{sub.status === 'graded' ? "ACTUALIZAR NOTA" : "ENVIAR EVALUACIÓN"}</button>
-                                       </div>
-                                    </div>
-                                 </div>
-                              );
-                           })}
-                        </div>
-                    )}
-                   </>
-                 ) : (
-                   <>
-                    {/* PANEL ALUMNO: RESUMEN DE PROGRESO */}
-                    <header style={{ marginBottom: 40, borderBottom: "1px solid var(--glass-border)", paddingBottom: 25 }}>
-                       <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2.5rem", color: "var(--brand-primary)", margin: 0 }}>Mis Calificaciones</h2>
-                       <p style={{ opacity: 0.5, marginTop: 5 }}>Resumen detallado de tus entregas y retroalimentación de mentores.</p>
-                       
-                       <div style={{ display: "flex", gap: 20, marginTop: 25 }}>
-                          <div style={{ background: "rgba(255,255,255,0.02)", padding: "20px 25px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.05)", flex: 1 }}>
-                             <label style={{ fontSize: "0.65rem", fontWeight: 900, opacity: 0.4, letterSpacing: 1.5, display: "block", marginBottom: 5 }}>PROYECTOS ENVIADOS</label>
-                             <span style={{ fontSize: "2rem", fontWeight: 800 }}>{submissions.length}</span>
-                          </div>
-                          <div style={{ background: "rgba(16, 185, 129, 0.05)", padding: "20px 25px", borderRadius: 24, border: "1px solid rgba(16, 185, 129, 0.1)", flex: 1 }}>
-                             <label style={{ fontSize: "0.65rem", fontWeight: 900, color: "#10b981", letterSpacing: 1.5, display: "block", marginBottom: 5 }}>TU PROMEDIO</label>
-                             <span style={{ fontSize: "2rem", fontWeight: 800, color: "#10b981" }}>
-                                {submissions.filter(s => s.status === 'graded').length > 0 
-                                   ? (submissions.reduce((acc, s) => acc + (s.score || 0), 0) / submissions.filter(s => s.status === 'graded').length).toFixed(1)
-                                   : "—"}
-                             </span>
-                          </div>
-                       </div>
-                    </header>
-
-                    <div style={{ background: "var(--bg-dark)", border: "1px solid var(--glass-border)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-                       <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                          <thead>
-                             <tr style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                                <th style={{ padding: "25px 30px", fontSize: "0.7rem", fontWeight: 900, opacity: 0.4, letterSpacing: 1.5, textTransform: "uppercase" }}>Módulo & Actividad</th>
-                                <th style={{ padding: "25px 30px", fontSize: "0.7rem", fontWeight: 900, opacity: 0.4, letterSpacing: 1.5, textTransform: "uppercase" }}>Estado</th>
-                                <th style={{ padding: "25px 30px", fontSize: "0.7rem", fontWeight: 900, opacity: 0.4, letterSpacing: 1.5, textTransform: "uppercase" }}>Puntaje</th>
-                                <th style={{ padding: "25px 30px", fontSize: "0.7rem", fontWeight: 900, opacity: 0.4, letterSpacing: 1.5, textTransform: "uppercase" }}>Comentario del Mentor</th>
-                             </tr>
-                          </thead>
-                          <tbody>
-                             {submissions.length === 0 ? (
-                                <tr>
-                                   <td colSpan={4} style={{ padding: 80, textAlign: "center", opacity: 0.3, fontSize: "1.1rem" }}>Aún no has realizado ninguna entrega por calificar.</td>
-                                </tr>
-                             ) : submissions.map(sub => {
-                                const block = blocks.find(b => b.id === sub.block_id);
-                                const module = modules.find(m => m.id === block?.screen);
-                                return (
-                                   <tr key={sub.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer", transition: "0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.01)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"} onClick={() => { if(module) { setActiveScreen(module.id); playUISound("click"); } }}>
-                                      <td style={{ padding: "30px" }}>
-                                         <p style={{ margin: 0, fontWeight: 800, fontSize: "1.1rem", color: "white" }}>{block?.type === 'delivery' ? "Proyecto Final" : "Actividad Interactiva"}</p>
-                                         <p style={{ margin: "5px 0 0", fontSize: "0.8rem", opacity: 0.4 }}>{module?.title}</p>
-                                      </td>
-                                      <td style={{ padding: "30px" }}>
-                                         <span style={{ padding: "6px 14px", borderRadius: 20, border: "1px solid", borderColor: sub.status === 'graded' ? "#10b981" : "var(--brand-primary)", color: sub.status === 'graded' ? "#10b981" : "var(--brand-primary)", fontSize: "0.6rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>{sub.status === 'graded' ? "REVISADO" : "PENDIENTE"}</span>
-                                      </td>
-                                      <td style={{ padding: "30px" }}>
-                                         <span style={{ fontSize: "1.8rem", fontWeight: 900, color: sub.status === 'graded' ? "white" : "rgba(255,255,255,0.1)" }}>{sub.score || "—"}</span>
-                                         <span style={{ opacity: 0.3, fontSize: "0.85rem", marginLeft: 6 }}>/100</span>
-                                      </td>
-                                      <td style={{ padding: "30px" }}>
-                                         <p style={{ margin: 0, fontSize: "0.95rem", opacity: 0.7, maxWidth: 350, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontStyle: sub.feedback ? "italic" : "normal" }}>{sub.feedback || "Sin comentarios adicionales."}</p>
-                                      </td>
-                                   </tr>
-                                );
-                             })}
-                          </tbody>
-                       </table>
-                    </div>
-                   </>
-                 )}
-              </div>
+              <CourseGradesView 
+                isAdmin={isAdmin}
+                submissions={submissions}
+                setSubmissions={setSubmissions}
+                blocks={blocks}
+                modules={modules}
+                setActiveScreen={setActiveScreen}
+              />
             ) : (
               <div>
                 <header style={{ marginBottom: 40, borderBottom: "1px solid var(--glass-border)", paddingBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2rem", color: "var(--brand-primary)", margin: 0 }}>{modules.find(m => m.id === activeScreen)?.title}</h2>
+                  <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2rem", color: "var(--brand-secondary)", margin: 0 }}>{modules.find(m => m.id === activeScreen)?.title}</h2>
                   {isEditMode && (
                     <button 
                       onClick={() => {
@@ -1073,11 +786,11 @@ function CoursePlayerContent() {
 
                 {/* Mentor Welcome Message Section */}
                 {isEditingWelcome ? (
-                    <div style={{ marginBottom: 40, background: "var(--glass-bg)", padding: 30, borderRadius: 24, border: "1px solid var(--brand-primary)", animation: "fadeIn 0.3s ease" }}>
+                    <div style={{ marginBottom: 40, background: "var(--glass-bg)", padding: 30, borderRadius: 24, border: "1px solid var(--brand-secondary)", animation: "fadeIn 0.3s ease" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
-                      <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--brand-primary)", letterSpacing: 1 }}>MENSAJE DE BIENVENIDA DEL MENTOR</label>
+                      <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--brand-secondary)", letterSpacing: 1 }}>MENSAJE DE BIENVENIDA DEL MENTOR</label>
                       <div style={{ fontSize: "0.65rem", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(239, 68, 68, 0.2)", fontWeight: 700 }}>
-                        ⚠️ ¡NO BORRES EL TAG {{nombre}}!
+                        ⚠️ ¡NO BORRES EL TAG {"{{nombre}}"}!
                       </div>
                     </div>
                     
@@ -1085,12 +798,12 @@ function CoursePlayerContent() {
                       value={tempWelcomeMessage}
                       onChange={(e) => setTempWelcomeMessage(e.target.value)}
                       placeholder="Ej: Hola {{nombre}}, hoy es un nuevo desafío..."
-                      style={{ width: "100%", background: "var(--bg-main)", border: "1px solid var(--glass-border)", borderRadius: 16, padding: 20, color: "var(--text-main)", fontSize: "1rem", outline: "none", resize: "none", fontFamily: "inherit" }}
+                      style={{ width: "100%", background: "var(--bg-card)", border: "1px solid var(--glass-border)", borderRadius: 16, padding: 20, color: "var(--text-main)", fontSize: "1rem", outline: "none", resize: "none", fontFamily: "inherit" }}
                       rows={3}
                     />
                     
                     <p style={{ marginTop: 10, fontSize: "0.7rem", opacity: 0.5, fontStyle: "italic", color: "var(--text-muted)" }}>
-                      * El sistema reemplaza automáticamente <b>{{nombre}}</b> por el nombre real del estudiante.
+                      * El sistema reemplaza automáticamente <b>{"{{nombre}}"}</b> por el nombre real del estudiante.
                     </p>
 
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 15 }}>
@@ -1112,7 +825,7 @@ function CoursePlayerContent() {
                           <User size={24} color="black" />
                         </div>
                         <div style={{ background: "var(--glass-bg)", padding: "20px 25px", borderRadius: "0 24px 24px 24px", border: "1px solid var(--glass-border)", position: "relative", flex: 1 }}>
-                          <div style={{ position: "absolute", top: 10, right: 15, fontSize: "0.6rem", fontWeight: 900, color: "var(--brand-primary)", opacity: 0.5, letterSpacing: 1 }}>MENSAJE DEL MENTOR</div>
+                          <div style={{ position: "absolute", top: 10, right: 15, fontSize: "0.6rem", fontWeight: 900, color: "var(--brand-secondary)", opacity: 0.5, letterSpacing: 1 }}>MENSAJE DEL MENTOR</div>
                           <p style={{ margin: "0 0 15px 0", fontSize: "1.05rem", lineHeight: "1.6", color: "var(--text-main)", fontStyle: "italic" }}>"{formattedMsg}"</p>
                           
                           {/* Student Action Button */}
@@ -1150,7 +863,7 @@ function CoursePlayerContent() {
                   {isModuleLocked(activeScreen) && (
                     <div style={{ 
                       background: "var(--brand-glow)", 
-                      border: "1px solid var(--brand-primary)", 
+                      border: "1px solid var(--brand-secondary)", 
                       padding: "15px 25px", 
                       borderRadius: "16px", 
                       marginBottom: "30px", 
@@ -1159,7 +872,7 @@ function CoursePlayerContent() {
                       gap: "15px",
                       animation: "fadeIn 0.5s ease"
                     }}>
-                      <ShieldAlert size={24} color="var(--brand-primary)" />
+                      <ShieldAlert size={24} color="var(--brand-secondary)" />
                       <div>
                         <p style={{ margin: 0, fontWeight: 800, fontSize: "0.9rem", color: "white" }}>MODO VISTA PREVIA ACTIVO</p>
                         <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.7 }}>Debes completar el módulo anterior para habilitar las entregas y actividades de esta sección.</p>
@@ -1168,17 +881,17 @@ function CoursePlayerContent() {
                   )}
 
                   {blocks.filter(b => b.screen === activeScreen).map(block => {
-                    const isLocked = isModuleLocked(activeScreen) && ["quiz", "flashcards", "dragdrop", "delivery", "checklist"].includes(block.type);
+                    const isLocked = isModuleLocked(activeScreen) && ["quiz", "flashcards", "dragdrop", "delivery", "file_delivery", "checklist"].includes(block.type);
                     return (
                     <div key={block.id} style={{ position: "relative", marginBottom: 40, opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? "none" : "auto" }}>
                       {isEditMode && (
-                        <button className="del-btn" onClick={() => removeBlock(block.id)} style={{ position: "absolute", top: -10, right: -10, zIndex: 10 }}><Trash2 size={16} /></button>
+                        <button className="del-btn" onClick={() => requestBlockDelete(block.id)} style={{ position: "absolute", top: -10, right: -10, zIndex: 10, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", backdropFilter: "blur(10px)", color: "#ef4444", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.1)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"} title="Eliminar bloque"><Trash2 size={16} /></button>
                       )}
                       
                       {isLocked && (
                         <div style={{ position: "absolute", inset: 0, zIndex: 5, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(2px)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed rgba(255,255,255,0.1)" }}>
                            <div style={{ textAlign: "center", padding: 20 }}>
-                              <ShieldAlert size={32} color="var(--brand-primary)" style={{ marginBottom: 10, margin: "0 auto" }} />
+                              <ShieldAlert size={32} color="var(--brand-secondary)" style={{ marginBottom: 10, margin: "0 auto" }} />
                               <p style={{ fontSize: "0.8rem", fontWeight: 800, color: "white", margin: 0 }}>ACTIVIDAD BLOQUEADA</p>
                            </div>
                         </div>
@@ -1191,7 +904,7 @@ function CoursePlayerContent() {
                               playbackId={block.content.mux_playback_id}
                               metadataVideoTitle={block.content.title || "Video de CLAN"}
                               style={{ height: '100%', width: '100%' }}
-                              accentColor="var(--brand-primary)"
+                              accentColor="var(--brand-secondary)"
                             />
                           ) : block.content?.url?.includes("youtube.com") || block.content?.url?.includes("youtu.be") ? (
                             <iframe 
@@ -1235,32 +948,67 @@ function CoursePlayerContent() {
                         </div>
                       )}
 
+                      {block.type === "file_delivery" && (
+                        <FileDeliveryBlock
+                          key={block.id}
+                          blockId={block.id}
+                          isEditMode={isEditMode}
+                          isAdmin={isAdmin}
+                          isLocked={isModuleLocked(activeScreen)}
+                          instructions={block.content?.instructions}
+                          userSubmission={submissions.find(s => s.block_id === block.id && s.student_id === currentUser?.id)}
+                          currentUserId={currentUser?.id}
+                          onInstructionsSave={async (text) => {
+                            const { error } = await supabase.from("blocks").update({ content: { instructions: text } }).eq("id", block.id);
+                            if (!error) setBlocks(prev => prev.map(b => b.id === block.id ? { ...b, content: { instructions: text } } : b));
+                          }}
+                        />
+                      )}
+
                       {block.type === "upload" && (
                         <div className="upload-block" onClick={() => window.open(block.content?.url)} style={{ background: "var(--glass-bg)", padding: 30, borderRadius: 24, border: "1px solid var(--glass-border)", textAlign: "center", cursor: "pointer" }}>
-                          <Paperclip size={32} style={{ color: "var(--brand-primary)", marginBottom: 15 }} />
+                          <Paperclip size={32} style={{ color: "var(--brand-secondary)", marginBottom: 15 }} />
                           <h4 style={{ margin: 0 }}>{block.content?.filename || "Recurso de Estudio"}</h4>
                         </div>
                       )}
 
                       {block.type === "label" && (
-                        <div className="label-block" style={{ color: "white" }}>
-                          {isEditMode ? (
-                            <CLANEditor 
-                              blockId={block.id} 
-                              initialHtml={block.content?.html} 
-                              isEditMode={isEditMode} 
-                              isAdmin={isAdmin} 
-                              courseId={courseId} 
-                              mode="content" 
-                              onSave={(newHtml) => setBlocks(prev => prev.map(b => b.id === block.id ? { ...b, content: { html: newHtml } } : b))}
-                            />
-                          ) : (
-                            <div 
-                              className="content-render" 
-                              dangerouslySetInnerHTML={{ __html: block.content?.html }} 
-                              style={{ padding: "0 20px", fontSize: "1.1rem", lineHeight: "1.8", color: "white" }} 
-                            />
+                        <div className="label-block" style={{ color: "white", position: "relative" }}>
+                          {isEditMode && (
+                             <button 
+                               onClick={() => {
+                                 setEditingBlock(block);
+                                 setModalInput(block.content?.html || "");
+                                 setApplyLegacyCss(block.content?.use_legacy_css || false);
+                                 setInsertModal({ type: "label", message: "Editar Contenido HTML" });
+                               }} 
+                               style={{ 
+                                 position: "absolute", 
+                                 top: -10, 
+                                 right: 30, 
+                                 background: "var(--brand-primary)", 
+                                 color: "black", 
+                                 border: "none", 
+                                 borderRadius: "50%", 
+                                 width: "32px", 
+                                 height: "32px", 
+                                 display: "flex", 
+                                 alignItems: "center", 
+                                 justifyContent: "center", 
+                                 zIndex: 10,
+                                 cursor: "pointer",
+                                 boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
+                               }}
+                               title="Editar HTML"
+                             >
+                               <Code size={16} />
+                             </button>
                           )}
+                          <div 
+                            className={`content-render ${block.content?.use_legacy_css ? "clan-week" : ""}`} 
+                            dangerouslySetInnerHTML={{ __html: block.content?.html }} 
+                            style={block.content?.use_legacy_css ? {} : { padding: "0 20px", fontSize: "1.1rem", lineHeight: "1.8", color: "white" }} 
+                          />
                         </div>
                       )}
 
@@ -1334,7 +1082,7 @@ function CoursePlayerContent() {
                             </div>
                             <div>
                               <h3 style={{ fontSize: "1.4rem", fontFamily: "'Playfair Display', serif", marginBottom: 5 }}>Módulo Finalizado</h3>
-                              <p style={{ opacity: 0.5, fontSize: "0.9rem" }}>¡Buen trabajo! Has desbloqueado el siguiente paso en tu ruta.</p>
+                              <p style={{ opacity: 0.5, fontSize: "0.9rem" }}>¡Buen trabajo! Has desbloqueado el siguiente paso.</p>
                             </div>
                           </>
                         );
@@ -1344,7 +1092,7 @@ function CoursePlayerContent() {
                         return (
                           <>
                             <div style={{ width: 60, height: 60, background: "var(--brand-glow)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                               <ClipboardList size={30} color="var(--brand-primary)" />
+                               <ClipboardList size={30} color="var(--brand-secondary)" />
                             </div>
                             <div>
                               <h3 style={{ fontSize: "1.4rem", fontFamily: "'Playfair Display', serif", marginBottom: 5 }}>Actividades Pendientes</h3>
@@ -1354,7 +1102,7 @@ function CoursePlayerContent() {
                                   const isDone = studentSubmissions.some(s => s.block_id === rb.id);
                                   return (
                                     <div key={rb.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: isDone ? 0.4 : 1 }}>
-                                      {isDone ? <CheckCircle2 size={16} color="var(--brand-primary)" /> : <Circle size={16} />}
+                                      {isDone ? <CheckCircle2 size={16} color="var(--brand-secondary)" /> : <Circle size={16} />}
                                       <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{rb.type === 'quiz' ? 'Completar el Quiz' : rb.type === 'delivery' ? 'Enviar tu Entrega' : rb.type === 'checklist' ? 'Lista de Verificación' : 'Completar el Desafío'}</span>
                                     </div>
                                   );
@@ -1368,7 +1116,7 @@ function CoursePlayerContent() {
                       return (
                         <>
                           <div style={{ width: 60, height: 60, background: "rgba(255,255,255,0.05)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                             <Loader2 className="animate-spin" size={30} color="var(--brand-primary)" />
+                             <Loader2 className="animate-spin" size={30} color="var(--brand-secondary)" />
                           </div>
                           <div>
                             <h3 style={{ fontSize: "1.4rem", fontFamily: "'Playfair Display', serif", marginBottom: 5 }}>Analizando Progreso</h3>
@@ -1384,8 +1132,8 @@ function CoursePlayerContent() {
                         className="btn-primary"
                         style={{ 
                           background: "transparent",
-                          color: "var(--brand-primary)",
-                          border: "1px solid var(--brand-primary)",
+                          color: "var(--brand-secondary)",
+                          border: "1px solid var(--brand-secondary)",
                           padding: "12px 30px",
                           fontSize: "0.9rem",
                           fontWeight: 700
@@ -1404,9 +1152,10 @@ function CoursePlayerContent() {
                       <button className="btn-secondary" onClick={() => handleInsertClick("video")}>+ Video</button>
                       <button className="btn-secondary" onClick={() => handleInsertClick("audio")}>+ Audio</button>
                       <button className="btn-secondary" onClick={() => handleInsertClick("upload")}>+ Archivo</button>
-                      <button className="btn-secondary" onClick={() => handleInsertClick("delivery")}>+ Caja Entrega</button>
+                      <button className="btn-secondary" onClick={() => handleInsertClick("delivery")}>+ Caja Texto</button>
+                      <button className="btn-secondary" style={{ borderColor: "var(--brand-secondary)", color: "var(--brand-secondary)" }} onClick={() => handleInsertClick("file_delivery")}>+ Caja Archivo</button>
                       <button className="btn-secondary" onClick={() => handleInsertClick("label")}>+ Texto/HTML</button>
-                      <button className="btn-secondary" style={{ background: "var(--brand-glow)", borderColor: "var(--brand-primary)" }} onClick={() => setShowInteractive(!showInteractive)}>+ Actividad Interactiva</button>
+                      <button className="btn-secondary" style={{ background: "var(--brand-glow)", borderColor: "var(--brand-secondary)" }} onClick={() => setShowInteractive(!showInteractive)}>+ Actividad Interactiva</button>
                     </div>
 
                     {showInteractive && (
@@ -1449,7 +1198,7 @@ function CoursePlayerContent() {
           }}>
              <header style={{ padding: "30px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                   <div style={{ width: "45px", height: "45px", borderRadius: "14px", background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
+                   <div style={{ width: "45px", height: "45px", borderRadius: "14px", background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-secondary)" }}>
                       <Bot size={24} />
                    </div>
                    <div>
@@ -1518,15 +1267,15 @@ function CoursePlayerContent() {
 
       {insertModal && (
         <div className="modal-overlay forced-center">
-          <div className="modal-content" style={{ background: "var(--bg-dark)", border: "1px solid var(--glass-border)", padding: 40, borderRadius: 32, maxWidth: "500px", width: "90%", boxShadow: "0 25px 50px rgba(0,0,0,0.8)" }}>
-            <h3 style={{ color: "var(--brand-primary)", marginBottom: 25, fontFamily: "'Playfair Display', serif", fontSize: "1.8rem" }}>{insertModal.message}</h3>
+          <div className="modal-content" style={{ background: "var(--bg-dark)", border: "1px solid var(--glass-border)", padding: 40, borderRadius: 32, maxWidth: insertModal.type === "label" ? "1000px" : "500px", width: "95%", boxShadow: "0 25px 50px rgba(0,0,0,0.8)" }}>
+            <h3 style={{ color: "var(--brand-secondary)", marginBottom: 25, fontFamily: "'Playfair Display', serif", fontSize: "1.8rem" }}>{insertModal.message}</h3>
             
             <div style={{ marginBottom: 30 }}>
               {insertModal.type === "video" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
                    <div style={{ background: "var(--brand-glow)", padding: 25, borderRadius: 20, border: "1px solid var(--brand-glow)", textAlign: "center" }}>
                       <div style={{ width: 60, height: 60, background: "var(--brand-glow)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 15px" }}>
-                        <Plus size={30} style={{ color: "var(--brand-primary)" }} />
+                        <Plus size={30} style={{ color: "var(--brand-secondary)" }} />
                       </div>
                       <h4 style={{ margin: "0 0 5px 0", fontSize: "1.1rem" }}>Subir Video de Alta Fidelidad</h4>
                       <p style={{ fontSize: "0.8rem", opacity: 0.6, marginBottom: 20 }}>Optimizado automáticamente por Mux para streaming profesional.</p>
@@ -1562,13 +1311,63 @@ function CoursePlayerContent() {
                     </button>
                   ) : (
                     <div style={{ background: "rgba(255,255,255,0.05)", padding: 15, borderRadius: 15 }}>
-                      <p style={{ fontSize: "0.8rem", color: "var(--brand-primary)" }}>✓ Grabación lista</p>
+                      <p style={{ fontSize: "0.8rem", color: "var(--brand-secondary)" }}>✓ Grabación lista</p>
                       <button onClick={() => setRecordedBlob(null)} style={{ background: "none", color: "white", border: "1px solid rgba(255,255,255,0.2)", padding: "5px 15px", borderRadius: 8, fontSize: "0.7rem", marginTop: 10 }}>Descartar y repetir</button>
                     </div>
                   )}
                   <p style={{ margin: "20px 0", opacity: 0.3 }}>O OTRA OPCIÓN:</p>
                   <input type="file" accept="audio/*" onChange={(e) => e.target.files?.[0] && setModalFile(e.target.files[0])} style={{ color: "white" }} />
                 </div>
+              ) : insertModal.type === "label" ? (
+                showTemplateForm ? (
+                  <ClanTemplateForm 
+                    moduleTitle={modules.find(m => m.id === activeScreen)?.title || ""}
+                    onGenerate={(html) => {
+                      setShowTemplateForm(false);
+                      executeInsert("label", { html, use_legacy_css: true });
+                    }}
+                    onCancel={() => setShowTemplateForm(false)}
+                  />
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <p style={{ fontSize: "0.8rem", opacity: 0.6, margin: 0 }}>Pega aquí tu código HTML personalizado.</p>
+                      <button 
+                        onClick={() => setShowTemplateForm(true)}
+                        style={{ background: "var(--brand-glow)", border: "1px solid var(--brand-secondary)", color: "var(--brand-secondary)", padding: "5px 10px", borderRadius: 8, fontSize: "0.75rem", cursor: "pointer" }}
+                      >
+                        ⚡ Usar Plantilla CLAN Week
+                      </button>
+                    </div>
+                    <textarea 
+                      placeholder="<div class='mi-clase'>Hola Mundo</div>..." 
+                      value={modalInput} 
+                      onChange={(e) => setModalInput(e.target.value)} 
+                      style={{ 
+                        width: "100%", 
+                        height: "300px", 
+                        padding: 20, 
+                        borderRadius: 20, 
+                        background: "rgba(0,0,0,0.3)", 
+                        border: "1px solid var(--glass-border)", 
+                        color: "#10b981", 
+                        fontFamily: "monospace", 
+                        fontSize: "0.9rem",
+                        outline: "none",
+                        resize: "none"
+                      }} 
+                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, alignSelf: "flex-start", marginTop: 10 }}>
+                      <label className="switch" style={{ margin: 0 }}>
+                        <input type="checkbox" checked={applyLegacyCss} onChange={(e) => setApplyLegacyCss(e.target.checked)} />
+                        <span className="slider"></span>
+                      </label>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--brand-secondary)" }}>
+                        Aplicar estilos de la plataforma anterior (Semana CLAN)
+                      </span>
+                    </div>
+                  </div>
+                )
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
                   <input type="text" placeholder="Título del contenido..." value={modalInput} onChange={(e) => setModalInput(e.target.value)} style={{ width: "100%", padding: 15, borderRadius: 15, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }} />
@@ -1582,21 +1381,101 @@ function CoursePlayerContent() {
 
             {isUploading && (
                <div style={{ width: "100%", textAlign: "center", marginBottom: 25, animation: "fadeIn 0.3s ease" }}>
-                  <div className="loading-spinner" style={{ margin: "0 auto 15px", borderColor: "var(--brand-primary)" }}></div>
-                  <p style={{ color: "var(--brand-primary)", fontSize: "0.9rem", fontWeight: 600 }}>{uploadStatus}</p>
+                  <div className="loading-spinner" style={{ margin: "0 auto 15px", borderColor: "var(--brand-secondary)" }}></div>
+                  <p style={{ color: "var(--brand-secondary)", fontSize: "0.9rem", fontWeight: 600 }}>{uploadStatus}</p>
                </div>
             )}
 
-            <div style={{ display: "flex", gap: 15, justifyContent: "center" }}>
-              <button className="btn-secondary" onClick={() => { setInsertModal(null); setUploadStatus(""); }} disabled={isUploading}>Cancelar</button>
-              <button className="btn-primary" onClick={confirmModal} disabled={isUploading || isRecording || (!modalFile && !modalInput && !recordedBlob)}>
-                {isUploading ? "Procesando..." : "Sincronizar"}
+            {!showTemplateForm && (
+              <div style={{ display: "flex", gap: 15, justifyContent: "center" }}>
+                <button className="btn-secondary" onClick={() => { setInsertModal(null); setUploadStatus(""); setShowTemplateForm(false); }} disabled={isUploading}>Cancelar</button>
+                <button className="btn-primary" onClick={confirmModal} disabled={isUploading || isRecording || (!modalFile && !modalInput && !recordedBlob)}>
+                  {isUploading ? "Procesando..." : "Sincronizar"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showModuleCreationModal && (
+        <div className="modal-overlay forced-center">
+          <div className="modal-content" style={{ background: "var(--bg-dark)", border: "1px solid var(--brand-secondary)", padding: 40, borderRadius: 32, maxWidth: "600px", width: "90%", boxShadow: "0 25px 50px rgba(0,0,0,0.8)" }}>
+            <h3 style={{ color: "var(--brand-secondary)", marginBottom: 15, fontFamily: "'Playfair Display', serif", fontSize: "1.8rem", textAlign: "center" }}>Crear Nuevo Módulo</h3>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: 30, textAlign: "center" }}>
+              ¿Qué tipo de estructura deseas crear?
+            </p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginBottom: 30 }}>
+              <button 
+                onClick={() => { setShowModuleCreationModal(false); setIsAddingModule(true); }}
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--glass-border)", padding: "20px", borderRadius: "16px", color: "var(--text-main)", fontWeight: 700, fontSize: "1.1rem", cursor: "pointer", transition: "0.2s", display: "flex", alignItems: "center", gap: 15 }}
+                className="hover-glow"
+              >
+                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}><Folder size={20} /></div>
+                <div style={{ textAlign: "left" }}>
+                  <div>1 Módulo (Manual)</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 400 }}>Escribe el nombre de un módulo personalizado.</div>
+                </div>
               </button>
+
+              <button 
+                onClick={() => handleCreateModules('both')}
+                disabled={bulkCreateLoading}
+                style={{ background: "rgba(14, 165, 233, 0.1)", border: "1px solid var(--brand-secondary)", padding: "20px", borderRadius: "16px", color: "var(--text-main)", fontWeight: 700, fontSize: "1.1rem", cursor: "pointer", transition: "0.2s", display: "flex", alignItems: "center", gap: 15 }}
+                className="hover-glow"
+              >
+                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-secondary)" }}><Layers size={20} /></div>
+                <div style={{ textAlign: "left" }}>
+                  <div>2 Cortes (16 Semanas)</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 400 }}>Estructura completa: Semana 1-8 (Corte 1) y Semana 1-8 (Corte 2).</div>
+                </div>
+              </button>
+
+              <div style={{ display: "flex", gap: "15px" }}>
+                <button 
+                  onClick={() => handleCreateModules('corte1')}
+                  disabled={bulkCreateLoading}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid var(--glass-border)", padding: "15px", borderRadius: "16px", color: "var(--text-main)", fontWeight: 700, fontSize: "1rem", cursor: "pointer", transition: "0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
+                  className="hover-glow"
+                >
+                  <Folder size={18} /> Solo Corte 1
+                </button>
+                <button 
+                  onClick={() => handleCreateModules('corte2')}
+                  disabled={bulkCreateLoading}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid var(--glass-border)", padding: "15px", borderRadius: "16px", color: "var(--text-main)", fontWeight: 700, fontSize: "1rem", cursor: "pointer", transition: "0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
+                  className="hover-glow"
+                >
+                  <Folder size={18} /> Solo Corte 2
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button className="btn-secondary" onClick={() => setShowModuleCreationModal(false)} disabled={bulkCreateLoading} style={{ width: "100%" }}>Cancelar</button>
             </div>
           </div>
         </div>
       )}
+
       <style dangerouslySetInnerHTML={{__html: `
+        .player-container { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; width: 100%; }
+        .player-sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease; min-width: 0; flex-shrink: 0; }
+        
+        @media (min-width: 769px) {
+          .player-sidebar.collapsed { width: 80px !important; padding: 30px 10px !important; }
+          .player-sidebar.collapsed .syllabus-item { justify-content: center; padding: 15px 0; }
+          .player-sidebar.collapsed .syllabus-item span { display: none; }
+        }
+        
+        .player-main { flex: 1; min-width: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
+
+        .syllabus-nav::-webkit-scrollbar { width: 4px; }
+        .syllabus-nav::-webkit-scrollbar-track { background: transparent; }
+        .syllabus-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .syllabus-nav::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+
         .player-container.zen-active { grid-template-columns: 1fr; }
         .player-sidebar.zen-hidden { display: none; }
         .player-main.zen-full { padding-left: 0; padding-right: 0; max-width: 1000px; margin: 0 auto; }

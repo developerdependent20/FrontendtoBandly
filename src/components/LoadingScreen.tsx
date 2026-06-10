@@ -5,7 +5,7 @@ import { Logo } from "./Logo";
 
 export const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black" style={{ background: "var(--bg-main)" }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black" style={{ background: "var(--bg-page)" }}>
       <style jsx>{`
         .loading-pulse {
           animation: logo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -34,7 +34,7 @@ export const LoadingScreen = () => {
         <div className="w-2 h-2 rounded-full bg-brand-primary animate-bounce" style={{ background: "var(--brand-primary)" }}></div>
       </div>
       
-      <p className="mt-6 font-outfit text-[0.65rem] uppercase tracking-[6px] opacity-40 text-brand-primary" style={{ color: "var(--brand-primary)", fontWeight: 900 }}>
+      <p className="mt-6 font-outfit text-[0.65rem] uppercase tracking-[6px] opacity-40 text-brand-primary" style={{ color: "var(--brand-secondary)", fontWeight: 900 }}>
         Acceso Seguro en Proceso
       </p>
     </div>

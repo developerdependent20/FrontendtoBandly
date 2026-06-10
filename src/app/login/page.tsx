@@ -24,8 +24,23 @@ export default function LoginPage() {
 
     try {
       let email = username.trim();
+      
+      // Si el usuario no ingresó un email (no hay arroba), intentamos buscar su email por el username en profiles
       if (!email.includes("@")) {
-        email = `${email}@clanestudiovivo.com`;
+        console.log('Buscando email para el username:', email);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("username", email)
+          .single();
+          
+        if (profile?.email) {
+          email = profile.email;
+          console.log('Email encontrado:', email);
+        } else {
+          // Fallback legacy por si acaso
+          email = `${email}@clanestudiovivo.com`;
+        }
       }
 
       console.log('Iniciando autenticación para:', email);
@@ -73,7 +88,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-main)", padding: "20px", position: "relative", overflow: "hidden" }}>
+    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-page)", padding: "20px", position: "relative", overflow: "hidden" }}>
       {/* Background Ornaments */}
       <div className="bg-ornaments">
         <div className="blob blob-1"></div>
@@ -114,7 +129,7 @@ export default function LoginPage() {
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <label style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)" }}>Contraseña</label>
-              <a href="#" style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--brand-primary)", textDecoration: "none" }}>¿Olvidaste tu clave?</a>
+              <a href="#" style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--brand-secondary)", textDecoration: "none" }}>¿Olvidaste tu clave?</a>
             </div>
             <div style={{ position: "relative" }}>
               <Lock size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
@@ -138,7 +153,7 @@ export default function LoginPage() {
           </div>
 
           {errorMsg && (
-            <div style={{ padding: "12px", background: "#FEF2F2", borderRadius: "12px", color: "#B91C1C", fontSize: "0.9rem", fontWeight: 600, marginBottom: "24px", textAlign: "center", border: "1px solid #FEE2E2" }}>
+            <div style={{ padding: "12px", background: "rgba(239, 68, 68, 0.1)", borderRadius: "12px", color: "#ef4444", fontSize: "0.9rem", fontWeight: 600, marginBottom: "24px", textAlign: "center", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
               {errorMsg}
             </div>
           )}
@@ -148,6 +163,17 @@ export default function LoginPage() {
             <LogIn size={20} style={{ marginLeft: "10px" }} />
           </button>
         </form>
+
+        <div style={{ marginTop: "24px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>
+          Al ingresar, aceptas nuestros{" "}
+          <Link href="/terminos" style={{ color: "var(--brand-secondary)", fontWeight: 600, textDecoration: "none" }} className="hover:underline">
+            Términos y Condiciones
+          </Link>{" "}
+          y nuestra{" "}
+          <Link href="/politica-privacidad" style={{ color: "var(--brand-secondary)", fontWeight: 600, textDecoration: "none" }} className="hover:underline">
+            Política de Privacidad
+          </Link>.
+        </div>
       </div>
     </main>
   );

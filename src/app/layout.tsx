@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import SessionManager from "@/components/SessionManager";
 import A11yWidget from "@/components/A11yWidget";
 import "./globals.css";
+import "./legacy-platform.css";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,6 +40,9 @@ const bodoni = Bodoni_Moda({
 export const metadata: Metadata = {
   title: "CLAN | Talento CLAN",
   description: "Ecosistema para el desarrollo integral de jóvenes talentos en el deporte y las artes. Acompañamos a atletas y artistas en la construcción de su futuro.",
+  icons: {
+    icon: "https://krmopdpfgrlcoldfsefq.supabase.co/storage/v1/object/public/Images/Logo%20CLAN%20Virtual.png"
+  }
 };
 
 export default function RootLayout({
