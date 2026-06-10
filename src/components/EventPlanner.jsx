@@ -96,10 +96,11 @@ const ROLE_BANK = [
   }
 ];
 
-// [ESTABLE] COMPONENTE EXTRAÃDO (Con arreglos de truncado y visibilidad)
+// [ESTABLE] COMPONENTE EXTRAÃ DO (Con arreglos de truncado y visibilidad)
 const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const selectedMember = members?.find(m => m.id === value);
   const { suggested, others } = getSuggestedMembers(roleName, members);
 
@@ -107,9 +108,11 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
     onChange(id);
     setIsOpen(false);
     setShowAll(false);
+    setSearchTerm('');
   };
 
-  const listToRender = (suggested.length > 0 && !showAll) ? suggested : (showAll ? [...suggested, ...others] : others);
+  const listToRender = (suggested.length > 0 && !showAll && !searchTerm) ? suggested : [...suggested, ...others];
+  const filteredList = listToRender.filter(m => m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
@@ -161,72 +164,90 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
             position: 'absolute', 
             top: '115%', 
             ...(alignRight ? { right: 0 } : { left: 0 }),
-            minWidth: '220px', 
+            minWidth: '240px', 
             background: '#1a2133', 
             border: '1px solid rgba(255,255,255,0.1)', 
             borderRadius: '16px', 
             zIndex: 101, 
-            maxHeight: '260px', 
-            overflowY: 'auto', 
+            maxHeight: '320px', 
+            display: 'flex',
+            flexDirection: 'column',
             boxShadow: '0 20px 60px rgba(0,0,0,0.8)', 
             padding: '8px', 
             animation: 'dropdownFadeIn 0.2s ease-out' 
           }}>
-            {listToRender.map(m => (
-              <div 
-                key={m.id} 
-                onClick={() => handleSelect(m.id)} 
-                style={{ 
-                  padding: '10px 14px', 
-                  borderRadius: '12px', 
-                  cursor: 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
-                  background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
-                  marginBottom: '4px',
-                  transition: 'all 0.2s ease'
-                }} 
-                className="dropdown-item-custom"
-              >
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-                  {m.full_name?.[0]}
+            <div style={{ paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px' }}>
+              <input 
+                autoFocus
+                placeholder="Buscar miembro..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem', outline: 'none' }}
+                onClick={e => e.stopPropagation()}
+              />
+            </div>
+            
+            <div style={{ overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
+              {filteredList.map(m => (
+                <div 
+                  key={m.id} 
+                  onClick={() => handleSelect(m.id)} 
+                  style={{ 
+                    padding: '10px 14px', 
+                    borderRadius: '12px', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px', 
+                    background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
+                    marginBottom: '4px',
+                    transition: 'all 0.2s ease'
+                  }} 
+                  className="dropdown-item-custom"
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                    {m.full_name?.[0]}
+                  </div>
+                  <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {m.full_name}
+                  </div>
+                  {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }} title="Sugerido para este rol">✨</span>}
                 </div>
-                <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: value === m.id ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {m.full_name}
-                </div>
-                {suggested.find(s => s.id === m.id) && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }}>âœ¨</span>}
-              </div>
-            ))}
-            {suggested.length > 0 && !showAll && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
-                style={{ 
-                  width: '100%', 
-                  padding: '12px', 
-                  background: 'rgba(255,255,255,0.03)', 
-                  border: 'none', 
-                  color: 'var(--primary)', 
-                  fontSize: '0.7rem', 
-                  fontWeight: '900', 
-                  cursor: 'pointer', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1.5px', 
-                  borderRadius: '12px', 
-                  marginTop: '6px',
-                  border: '1px dashed rgba(59,130,246,0.3)'
-                }}
-              >
-                + Mostrar resto del equipo
-              </button>
-            )}
+              ))}
+              
+              {filteredList.length === 0 && (
+                <div style={{ padding: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>No se encontraron miembros</div>
+              )}
+              
+              {suggested.length > 0 && !showAll && !searchTerm && others.length > 0 && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px', 
+                    background: 'rgba(255,255,255,0.03)', 
+                    border: 'none', 
+                    color: 'var(--primary)', 
+                    fontSize: '0.7rem', 
+                    fontWeight: '900', 
+                    cursor: 'pointer', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1.5px', 
+                    borderRadius: '12px', 
+                    marginTop: '6px',
+                    border: '1px dashed rgba(59,130,246,0.3)'
+                  }}
+                >
+                  + Mostrar resto del equipo
+                </button>
+              )}
+            </div>
           </div>
         </>
       )}
     </div>
   );
 };
-
 
 const CustomDatePicker = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -360,10 +381,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const getInstrumentIcon = (inst) => {
-    const i = (inst || '').toLowerCase();
-    if (i.includes('drums') || i.includes('batería') || i.includes('perc')) return <Drum size={20} />;
+    const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (i.includes('drums') || i.includes('bateria') || i.includes('perc')) return <Drum size={20} />;
     if (i.includes('bass') || i.includes('bajo')) return <Zap size={20} />;
-    if (i.includes('gtr') || i.includes('guitar') || i.includes('eléctrica') || i.includes('acústica')) return <Music size={20} />;
+    if (i.includes('gtr') || i.includes('guitar') || i.includes('electrica') || i.includes('acustica')) return <Music size={20} />;
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
@@ -374,9 +395,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const getRoleGroup = (inst) => {
-    const i = (inst || '').toLowerCase();
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('niño') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('cámara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
+    const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
     if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
     return 'OTROS';
   };
@@ -501,6 +522,18 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     if (!eventName) { alert('Falta el nombre del evento'); return; }
     if (!eventDate) { alert('Falta la fecha del evento'); return; }
     if (saving) return;
+
+    const baseDate = eventDate.split('T')[0];
+    const blockedNames = roster.filter(r => r.profile_id).map(r => {
+      const m = members?.find(mem => mem.id === r.profile_id);
+      return (m && m.blocked_dates && m.blocked_dates.includes(baseDate)) ? m.full_name : null;
+    }).filter(Boolean);
+    const uniqueBlocked = [...new Set(blockedNames)];
+    if (uniqueBlocked.length > 0) {
+      const msg = `⚠️ ATENCIÓN ⚠️\n\nLas siguientes personas han marcado el ${baseDate} como NO DISPONIBLE en sus perfiles:\n\n${uniqueBlocked.map(n => `- ${n}`).join('\n')}\n\n¿Estás seguro de que deseas asignarlos de todos modos?`;
+      if (!window.confirm(msg)) return;
+    }
+
     setSaving(true);
     try {
       let evtId = editingEventId;
@@ -1229,7 +1262,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
       {showModal && createPortal((
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="glass-panel" style={{ width: '95%', maxWidth: '850px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="glass-panel" style={{ width: '95%', maxWidth: '1050px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h3 style={{ marginBottom: '1.5rem' }}>{editingEventId ? 'Editar' : 'Nuevo'} Evento</h3>
             <div className="modal-tabs" style={{ marginBottom: '1.5rem' }}>
                 {['info', 'equipo', 'setlist'].map(t => <button key={t} className={`modal-tab-btn ${modalTab === t ? 'active' : ''}`} onClick={() => setModalTab(t)}>{t.toUpperCase()}</button>)}
@@ -1392,7 +1425,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       {songs.map(s => {
                         const lp = getLastPlayed(s.id);
                         const label = lp ? `${s.title} (${lp})` : s.title;
-                        return <option key={s.id} value={s.id}>{label}</option>;
+                                                return <option key={s.id} value={s.id}>{label}</option>;
                       })}
                     </select>
 
@@ -1412,8 +1445,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           return (
                             <>
                               {song.key && <option value={song.key}>{song.key} (Orig)</option>}
-                              {song.key_male && <option value={song.key_male}>{song.key_male} (â™‚)</option>}
-                              {song.key_female && <option value={song.key_female}>{song.key_female} (â™€)</option>}
+                              {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
+                              {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
                             </>
                           );
                         })()}
