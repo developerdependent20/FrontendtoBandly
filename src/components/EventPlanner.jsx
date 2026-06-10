@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
@@ -469,9 +469,18 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const calculateRosterDiff = (initial, history, current, eventId) => {
     const diff = { newRecords: [], reactivated: [], updated: [], softDeleted: [], toNotify: [] };
     const currentActive = current.filter(m => m.profile_id);
+    const claimedHistoryIds = new Set();
+    
     currentActive.forEach(item => {
-      const historyMatch = history.find(h => String(h.profile_id) === String(item.profile_id) && h.instrument === item.instrument);
-      if (historyMatch) { if (historyMatch.is_removed) { diff.reactivated.push({ id: historyMatch.id, event_id: eventId, profile_id: item.profile_id, instrument: item.instrument, is_removed: false, status: 'pending' });
+      let match = history.find(h => String(h.profile_id) === String(item.profile_id) && h.instrument === item.instrument && h.id === item.event_roster_id && !claimedHistoryIds.has(h.id));
+      if (!match) {
+        match = history.find(h => String(h.profile_id) === String(item.profile_id) && h.instrument === item.instrument && !claimedHistoryIds.has(h.id));
+      }
+      
+      if (match) {
+        claimedHistoryIds.add(match.id);
+        if (match.is_removed) {
+          diff.reactivated.push({ id: match.id, event_id: eventId, profile_id: item.profile_id, instrument: item.instrument, is_removed: false, status: 'pending' });
           diff.toNotify.push({ ...item, email: members.find(m => m.id === item.profile_id)?.email, name: members.find(m => m.id === item.profile_id)?.full_name });
         }
       } else {
@@ -479,22 +488,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         diff.toNotify.push({ ...item, email: members.find(m => m.id === item.profile_id)?.email, name: members.find(m => m.id === item.profile_id)?.full_name });
       }
     });
+    
     initial.forEach(active => {
-      if (active.profile_id) {
-        let stillExists = false;
-        if (active.event_roster_id) {
-          stillExists = currentActive.some(curr => curr.event_roster_id === active.event_roster_id);
-        } else {
-          stillExists = currentActive.some(curr => String(curr.profile_id) === String(active.profile_id) && curr.instrument === active.instrument);
-        }
-        
-        if (!stillExists && active.event_roster_id) {
-          diff.softDeleted.push({ id: active.event_roster_id, event_id: eventId, profile_id: active.profile_id, instrument: active.instrument, is_removed: true, removed_at: new Date().toISOString() });
-        }
+      if (active.profile_id && active.event_roster_id && !claimedHistoryIds.has(active.event_roster_id)) {
+        diff.softDeleted.push({ id: active.event_roster_id, event_id: eventId, profile_id: active.profile_id, instrument: active.instrument, is_removed: true, removed_at: new Date().toISOString() });
       }
     });
     return diff;
   };
+
   const handleSave = async () => {
     if (!eventName) { alert('Falta el nombre del evento'); return; }
     if (!eventDate) { alert('Falta la fecha del evento'); return; }
@@ -1434,7 +1436,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         </div>
       ), document.body)}
 
-      {showNotifyModal && notifyData && (
+      {showNotifyModal && notifyData && createPortal((
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
@@ -1455,7 +1457,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
            </div>
          </div>
-      )}
+      ), document.body)}
 
       {chartSong && <ChartStudio song={chartSong} onClose={() => setChartSong(null)} readOnly={true} />}
       
