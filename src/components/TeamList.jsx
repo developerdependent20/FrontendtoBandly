@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Shield, CheckCircle2, Trash2, Crown, Star } from 'lucide-react';
+import { Users, Shield, CheckCircle2, Trash2, Crown, Star, MonitorPlay, ClipboardCheck, Music, Headphones } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { AvatarPicker } from './layout/AvatarPicker';
 import OrgSettingsModal from './OrgSettingsModal';
@@ -88,40 +88,71 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     }
   };
 
-  const functionsList = orgSettings?.roles?.length ? orgSettings.roles : [
-    { id: 'admin_eventos', label: 'Admin Eventos', icon: '📅' },
-    { id: 'admin_musica', label: 'Admin Música', icon: '🎸' },
-    { id: 'admin_logistica', label: 'Admin Logística', icon: '📋' },
-    { id: 'admin_produccion', label: 'Admin Producción', icon: '💻' }
+  // 1. Cargamos las categorías desde la DB (o usamos los defaults si no hay nada guardado aún)
+  const leadershipRoles = orgSettings?.leadership || [
+    { id: 'director_musical', label: 'Director Musical', icon: '🎼' },
+    { id: 'eventos', label: 'Dir. Eventos', icon: '📅' },
+    { id: 'lider_produccion', label: 'Líder Producción', icon: '🎬' },
+    { id: 'lider_logistica', label: 'Líder Logística', icon: '📋' }
   ];
 
-  const INSTRUMENTS_CATALOG = orgSettings?.instruments?.length ? orgSettings.instruments : [
-    { id: 'instr:bateria', label: 'Batería', icon: '🥁' },
-    { id: 'instr:bajo', label: 'Bajo', icon: '🎸' },
-    { id: 'instr:piano', label: 'Piano/Keys', icon: '🎹' },
-    { id: 'instr:guitarra', label: 'Guitarra', icon: '🎸' },
-    { id: 'instr:voz', label: 'Voz', icon: '🎤' },
-    { id: 'instr:sonido', label: 'Sonido/Media', icon: '🎚️' }
+  const productionRoles = orgSettings?.production || [
+    { id: 'media', label: 'Media/Visuales', icon: '📽️' },
+    { id: 'sonido', label: 'Audio/Sonido', icon: '🎛️' },
+    { id: 'transmision', label: 'Transmisión', icon: '📡' },
+    { id: 'iluminacion', label: 'Iluminación', icon: '💡' }
   ];
 
-  const partialAdminIds = new Set(functionsList.map(r => r.id));
+  const logisticsRoles = orgSettings?.logistics || [
+    { id: 'logistica', label: 'Staff/Logística', icon: '🛠️' },
+    { id: 'decoracion', label: 'Decoración', icon: '🎨' },
+    { id: 'bienvenida', label: 'Bienvenida', icon: '👋' },
+    { id: 'finanzas', label: 'Finanzas', icon: '💰' }
+  ];
 
-  // Hierarchical Grouping
+  const instrumentsCatalog = orgSettings?.instruments || [
+    { id: 'bateria', label: 'Batería', icon: '🥁' },
+    { id: 'bajo', label: 'Bajo', icon: '🎸' },
+    { id: 'guitarra', label: 'Guitarra', icon: '🎸' },
+    { id: 'piano', label: 'Teclado', icon: '🎹' },
+    { id: 'voz', label: 'Voz/Cantante', icon: '🎤' },
+    { id: 'percusion', label: 'Percusión', icon: '🪘' }
+  ];
+
+  const leadershipIds = new Set(leadershipRoles.map(r => r.id));
+  const productionIds = new Set(productionRoles.map(r => r.id));
+  const logisticsIds = new Set(logisticsRoles.map(r => r.id));
+  const instrumentIds = new Set(instrumentsCatalog.map(r => r.id));
+
+  // 2. Agrupación Jerárquica Exclusiva
   const groupedMembers = useMemo(() => {
-    if (!members) return { directors: [], admins: [], regulars: [] };
+    if (!members) return { global: [], leadership: [], production: [], logistics: [], music: [], unassigned: [] };
     
-    const directors = members.filter(m => m.role === 'director');
-    const admins = members.filter(m => m.role !== 'director' && (m.functions || []).some(f => partialAdminIds.has(f)));
-    const regulars = members.filter(m => m.role !== 'director' && !(m.functions || []).some(f => partialAdminIds.has(f)));
+    const global = members.filter(m => m.role === 'director');
+    const remainingAfterGlobal = members.filter(m => m.role !== 'director');
 
-    return { directors, admins, regulars };
-  }, [members, partialAdminIds]);
+    // Nivel 2: Líderes de área (Prioridad alta)
+    const leadership = remainingAfterGlobal.filter(m => (m.functions || []).some(f => leadershipIds.has(f)));
+    const remainingAfterLeadership = remainingAfterGlobal.filter(m => !(m.functions || []).some(f => leadershipIds.has(f)));
 
-  const renderMemberCard = (m, level) => {
+    // Nivel 3: Equipos operativos (Música, Producción, Logística)
+    const production = remainingAfterLeadership.filter(m => (m.functions || []).some(f => productionIds.has(f)));
+    const remainingAfterProd = remainingAfterLeadership.filter(m => !(m.functions || []).some(f => productionIds.has(f)));
+
+    const logistics = remainingAfterProd.filter(m => (m.functions || []).some(f => logisticsIds.has(f)));
+    const remainingAfterLogistics = remainingAfterProd.filter(m => !(m.functions || []).some(f => logisticsIds.has(f)));
+
+    const music = remainingAfterLogistics.filter(m => (m.functions || []).some(f => instrumentIds.has(f)));
+    const unassigned = remainingAfterLogistics.filter(m => !(m.functions || []).some(f => instrumentIds.has(f)));
+
+    return { global, leadership, production, logistics, music, unassigned };
+  }, [members, leadershipIds, productionIds, logisticsIds, instrumentIds]);
+
+  const renderMemberCard = (m, level, categoryName) => {
     const mFunctions = m.functions || [];
     const isUserDirector = m.role === 'director';
     
-    // level: 1 = Director, 2 = Admin, 3 = Regular
+    // level: 1 = Global, 2 = Leadership, 3 = Staff (Music, Prod, Logistics)
     let cardStyle = {};
     let avatarStyle = { border: '1px solid rgba(255,255,255,0.1)' };
     let badge = null;
@@ -134,7 +165,68 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       cardStyle = { border: '1px solid rgba(168, 85, 247, 0.4)', background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.05) 0%, rgba(0,0,0,0.4) 100%)' };
       avatarStyle = { border: '2px solid rgba(168, 85, 247, 0.6)', boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)' };
       badge = <span className="director-badge" style={{ fontSize: '0.6rem', background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc' }}>LÍDER DE ÁREA</span>;
+    } else {
+      // Level 3 badges
+      let bColor = 'rgba(59, 130, 246, 0.2)';
+      let tColor = '#3b82f6';
+      if (categoryName === 'production') {
+        bColor = 'rgba(168, 85, 247, 0.1)';
+        tColor = '#c084fc';
+      } else if (categoryName === 'logistics') {
+        bColor = 'rgba(249, 115, 22, 0.1)';
+        tColor = '#fb923c';
+      }
+      badge = <span className="director-badge" style={{ fontSize: '0.6rem', background: bColor, color: tColor }}>EQUIPO OPERATIVO</span>;
     }
+
+    const renderRoleSection = (title, list, colorClass) => {
+      // Si no es director y no tiene roles de esta sección, la ocultamos para limpiar la UI
+      const hasAnyRole = list.some(r => mFunctions.includes(r.id));
+      if (!isDirector && !hasAnyRole) return null;
+
+      let accentColor = '#3b82f6';
+      let bgActive = 'rgba(59, 130, 246, 0.15)';
+      if (colorClass === 'yellow') { accentColor = '#eab308'; bgActive = 'rgba(234, 179, 8, 0.15)'; }
+      else if (colorClass === 'purple') { accentColor = '#a855f7'; bgActive = 'rgba(168, 85, 247, 0.15)'; }
+      else if (colorClass === 'orange') { accentColor = '#f97316'; bgActive = 'rgba(249, 115, 22, 0.15)'; }
+
+      return (
+        <div className="role-selector-section" style={{ marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <span className="section-mini-label" style={{ color: accentColor }}>{title}</span>
+          <div className="role-selector-grid">
+            {isDirector ? (
+              list.map(func => {
+                const isActive = mFunctions.includes(func.id);
+                return (
+                  <button
+                    key={func.id}
+                    onClick={() => handleToggleFunction(m.id, m.functions, func.id)}
+                    className={`role-chip ${isActive ? 'active' : ''}`}
+                    style={{ 
+                      background: isActive ? bgActive : 'rgba(255,255,255,0.02)',
+                      border: isActive ? `1px solid ${accentColor}80` : '1px solid rgba(255,255,255,0.05)',
+                      opacity: isActive ? 1 : 0.6
+                    }}
+                  >
+                    <span className="chip-icon">{func.icon}</span>
+                    {func.label}
+                    {isActive && <CheckCircle2 size={12} className="check-icon" style={{ color: accentColor }} />}
+                  </button>
+                )
+              })
+            ) : (
+              <div className="role-display-row">
+                {list.filter(f => mFunctions.includes(f.id)).map(f => (
+                  <span key={f.id} className="static-role-chip" style={{ border: `1px solid ${accentColor}40`, color: '#fff' }}>
+                    {f.icon} {f.label}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
 
     return (
       <div key={m.id} className={`member-card`} style={cardStyle}>
@@ -207,59 +299,12 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           </div>
         </div>
 
-        <div className="role-selector-section">
-          <span className="section-mini-label">Áreas de Liderazgo / Administración</span>
-          <div className="role-selector-grid">
-            {isDirector ? (
-              functionsList.map(func => (
-                <button
-                  key={func.id}
-                  onClick={() => handleToggleFunction(m.id, m.functions, func.id)}
-                  className={`role-chip ${mFunctions.includes(func.id) ? 'active' : ''}`}
-                >
-                  <span className="chip-icon">{func.icon}</span>
-                  {func.label}
-                  {mFunctions.includes(func.id) && <CheckCircle2 size={12} className="check-icon" />}
-                </button>
-              ))
-            ) : (
-              <div className="role-display-row">
-                {mFunctions.filter(f => partialAdminIds.has(f)).map(f => (
-                  <span key={f} className="static-role-chip">
-                    {functionsList.find(fl => fl.id === f)?.icon} {functionsList.find(fl => fl.id === f)?.label || f.toUpperCase()}
-                  </span>
-                ))}
-                {mFunctions.filter(f => partialAdminIds.has(f)).length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sin liderazgo asignado</span>}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="role-selector-section" style={{ marginTop: '1.2rem', paddingTop: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <span className="section-mini-label" style={{ color: 'var(--primary)' }}>🎸 Instrumentos / Habilidades Operativas</span>
-          <div className="role-selector-grid">
-            {INSTRUMENTS_CATALOG.map(inst => {
-              const isActive = mFunctions.includes(inst.id);
-              if (!isDirector && !isActive) return null; // hide unassigned from non-directors to save space
-              return (
-                <button
-                  key={inst.id}
-                  onClick={() => isDirector && handleToggleFunction(m.id, m.functions, inst.id)}
-                  className={`role-chip ${isActive ? 'active' : ''}`}
-                  style={{ 
-                    opacity: isDirector ? 1 : (isActive ? 1 : 0.3), 
-                    cursor: isDirector ? 'pointer' : 'default',
-                    background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.02)',
-                    border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)'
-                  }}
-                >
-                  <span className="chip-icon">{inst.icon}</span>
-                  {inst.label}
-                  {isActive && <CheckCircle2 size={12} className="check-icon" />}
-                </button>
-              );
-            })}
-          </div>
+        {/* Sections for Roles */}
+        <div style={{ padding: '0 10px 10px 10px' }}>
+          {renderRoleSection("👑 Roles de Liderazgo", leadershipRoles, 'yellow')}
+          {renderRoleSection("📽️ Equipo de Producción", productionRoles, 'purple')}
+          {renderRoleSection("📋 Equipo de Logística", logisticsRoles, 'orange')}
+          {renderRoleSection("🎵 Instrumentos", instrumentsCatalog, 'blue')}
         </div>
       </div>
     );
@@ -272,8 +317,8 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           <Users size={24} />
         </div>
         <div style={{ flex: 1 }}>
-          <h4>Gestión de Equipo Multi-Rol</h4>
-          <p>Organiza a tu equipo asignando múltiples funciones según tu propia estructura. Los miembros aparecerán agrupados por jerarquía.</p>
+          <h4>Jerarquía de Departamentos</h4>
+          <p>Organiza a tu equipo asignando múltiples funciones. Los miembros aparecerán agrupados automáticamente bajo el departamento correspondiente a su rol más alto.</p>
         </div>
         {isDirector && (
           <button 
@@ -281,7 +326,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
             className="hover-scale"
           >
-            <Settings size={18} /> Configurar Organización
+            <Settings size={18} /> Configurar Departamentos
           </button>
         )}
       </div>
@@ -289,13 +334,13 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       <section className="glass-panel" style={{ padding: '2rem', background: 'transparent', border: 'none', boxShadow: 'none' }}>
         
         <OrgSettingsModal 
-    isOpen={showSettingsModal} 
-    onClose={() => setShowSettingsModal(false)} 
-    orgId={members?.[0]?.org_id} 
-    orgSettings={orgSettings} 
-    refreshData={refreshData} 
-  />
-  <AvatarPicker 
+          isOpen={showSettingsModal} 
+          onClose={() => setShowSettingsModal(false)} 
+          orgId={members?.[0]?.org_id} 
+          orgSettings={orgSettings} 
+          refreshData={refreshData} 
+        />
+        <AvatarPicker 
           isOpen={!!selectedMember} 
           onClose={() => setSelectedMember(null)} 
           onSelect={handleAvatarUpdate}
@@ -307,35 +352,68 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
             <p className="empty-msg">Manda el código de acceso a tu organización para empezar a sumar talentos.</p>
           ) : (
             <>
-              {groupedMembers.directors.length > 0 && (
+              {groupedMembers.global.length > 0 && (
                 <div style={{ marginBottom: '3rem' }}>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#eab308', marginBottom: '1.5rem', borderBottom: '1px solid rgba(234, 179, 8, 0.2)', paddingBottom: '0.5rem' }}>
-                    <Crown size={22} /> Nivel 1: Dirección Global
+                    <Crown size={22} /> Dirección Global
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.directors.map(m => renderMemberCard(m, 1))}
+                    {groupedMembers.global.map(m => renderMemberCard(m, 1, 'global'))}
                   </div>
                 </div>
               )}
 
-              {groupedMembers.admins.length > 0 && (
+              {groupedMembers.leadership.length > 0 && (
+                <div style={{ marginBottom: '3rem' }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fcd34d', marginBottom: '1.5rem', borderBottom: '1px solid rgba(252, 211, 77, 0.2)', paddingBottom: '0.5rem' }}>
+                    <Star size={22} /> Roles de Liderazgo (Directores de Área)
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {groupedMembers.leadership.map(m => renderMemberCard(m, 2, 'leadership'))}
+                  </div>
+                </div>
+              )}
+
+              {groupedMembers.production.length > 0 && (
                 <div style={{ marginBottom: '3rem' }}>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#c084fc', marginBottom: '1.5rem', borderBottom: '1px solid rgba(168, 85, 247, 0.2)', paddingBottom: '0.5rem' }}>
-                    <Star size={22} /> Nivel 2: Líderes de Área / Administradores
+                    <MonitorPlay size={22} /> Equipo de Producción y Media
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.admins.map(m => renderMemberCard(m, 2))}
+                    {groupedMembers.production.map(m => renderMemberCard(m, 3, 'production'))}
                   </div>
                 </div>
               )}
 
-              {groupedMembers.regulars.length > 0 && (
-                <div>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--primary)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '0.5rem' }}>
-                    <Users size={22} /> Nivel 3: Equipo / Músicos
+              {groupedMembers.logistics.length > 0 && (
+                <div style={{ marginBottom: '3rem' }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fb923c', marginBottom: '1.5rem', borderBottom: '1px solid rgba(251, 146, 60, 0.2)', paddingBottom: '0.5rem' }}>
+                    <ClipboardCheck size={22} /> Equipo de Logística y Staff
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.regulars.map(m => renderMemberCard(m, 3))}
+                    {groupedMembers.logistics.map(m => renderMemberCard(m, 3, 'logistics'))}
+                  </div>
+                </div>
+              )}
+
+              {groupedMembers.music.length > 0 && (
+                <div style={{ marginBottom: '3rem' }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#60a5fa', marginBottom: '1.5rem', borderBottom: '1px solid rgba(96, 165, 250, 0.2)', paddingBottom: '0.5rem' }}>
+                    <Music size={22} /> Instrumentos y Operación (Músicos)
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {groupedMembers.music.map(m => renderMemberCard(m, 3, 'music'))}
+                  </div>
+                </div>
+              )}
+              
+              {groupedMembers.unassigned.length > 0 && (
+                <div style={{ marginBottom: '3rem', opacity: 0.7 }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                    <Users size={22} /> Sin Asignación Específica
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {groupedMembers.unassigned.map(m => renderMemberCard(m, 3, 'unassigned'))}
                   </div>
                 </div>
               )}

@@ -270,7 +270,7 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
       )}
       {activeTab === 'team' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <TeamList members={members} isDirector={true} refreshData={fetchData} />
+          <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={profile?.organizations?.settings || {}} />
         </div>
       )}
       {activeTab === 'play' && (
@@ -310,7 +310,7 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       )}
       {activeTab === 'team' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <TeamList members={members} isDirector={false} refreshData={fetchData} />
+          <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={profile?.organizations?.settings || {}} />
         </div>
       )}
       {activeTab === 'play' && (
