@@ -496,41 +496,58 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     return diff;
   };
   const handleSave = async () => {
-    if (!eventName || !eventDate || saving) return;
+    if (!eventName) { alert('Falta el nombre del evento'); return; }
+    if (!eventDate) { alert('Falta la fecha del evento'); return; }
+    if (saving) return;
     setSaving(true);
     try {
       let evtId = editingEventId;
-      if (editingEventId) await supabase.from('events').update({ name: eventName, date: eventDate, description }).eq('id', editingEventId);
-      else {
-        const { data: evt } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description }]).select().single();
+      if (editingEventId) {
+        const { error } = await supabase.from('events').update({ name: eventName, date: eventDate, description }).eq('id', editingEventId);
+        if (error) throw error;
+      } else {
+        const { data: evt, error } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description }]).select().single();
+        if (error) throw error;
         evtId = evt.id;
       }
       const diff = calculateRosterDiff(initialRoster, dbHistory, roster, evtId);
-      if (diff.newRecords.length > 0) await supabase.from('event_roster').insert(diff.newRecords);
+      if (diff.newRecords.length > 0) {
+        const { error } = await supabase.from('event_roster').insert(diff.newRecords);
+        if (error) throw error;
+      }
       const toUpsert = [...diff.reactivated, ...diff.softDeleted];
-      if (toUpsert.length > 0) await supabase.from('event_roster').upsert(toUpsert, { onConflict: 'id' });
-      await supabase.from('event_songs').delete().eq('event_id', evtId);
+      if (toUpsert.length > 0) {
+        const { error } = await supabase.from('event_roster').upsert(toUpsert, { onConflict: 'id' });
+        if (error) throw error;
+      }
+      const { error: songDelErr } = await supabase.from('event_songs').delete().eq('event_id', evtId);
+      if (songDelErr) throw songDelErr;
       const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx }));
-      if (validS.length > 0) await supabase.from('event_songs').insert(validS);
-      const { data: freshRoster } = await supabase.from('event_roster').select('*').eq('event_id', evtId).eq('is_removed', false);
+      if (validS.length > 0) {
+        const { error } = await supabase.from('event_songs').insert(validS);
+        if (error) throw error;
+      }
+      const { data: freshRoster, error: freshErr } = await supabase.from('event_roster').select('*').eq('event_id', evtId).eq('is_removed', false);
+      if (freshErr) throw freshErr;
       setNotifyData({ eventId: evtId, eventName, eventDate, description, candidates: diff.toNotify, allRoster: (freshRoster || []).map(r => ({ ...r, email: members.find(m => m.id === r.profile_id)?.email, name: members.find(m => m.id === r.profile_id)?.full_name })) });
       setShowNotifyModal(true);
       if (refreshData) refreshData();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { 
+      console.error('Save Error:', e); 
+      alert('Error critico al guardar: ' + e.message + '\n\nRevisa la consola para más detalles.'); 
+    }
     finally { setSaving(false); }
   };
 
   const handleSendNotifications = async (recipients, mode) => {
     if (dispatching) return;
-
     setDispatching(true);
     try {
       const validRecipients = recipients.filter(r => r.email);
 
       if (validRecipients.length === 0) {
-        return alert('Sin correos vÃ¡lidos.');
+        return alert('Sin correos válidos.');
       }
-
       const payload = { 
         eventName: notifyData.eventName, 
         eventDate: notifyData.eventDate, 
