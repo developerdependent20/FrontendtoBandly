@@ -275,8 +275,8 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 
                 <div className="song-metadata" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
                    <div className="meta-tag">Orig: <span>{s.key || '-'}</span></div>
-                   <div className="meta-tag male">♂: <span>{s.key_male || '-'}</span></div>
-                   <div className="meta-tag female">♀: <span>{s.key_female || '-'}</span></div>
+                   <div className="meta-tag male">👨 Voz: <span>{s.key_male || '-'}</span></div>
+                   <div className="meta-tag female">👩 Voz: <span>{s.key_female || '-'}</span></div>
                    <div className="meta-tag bpm">BPM: <span>{s.bpm || '-'}</span></div>
                    <div className="meta-tag" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                      Tocado: <span style={{ fontWeight: '800' }}>{getLastPlayedText(s.id)}</span>

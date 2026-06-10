@@ -1449,8 +1449,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           return (
                             <>
                               {song.key && <option value={song.key}>{song.key} (Orig)</option>}
-                              {song.key_male && <option value={song.key_male}>{song.key_male} (♂)</option>}
-                              {song.key_female && <option value={song.key_female}>{song.key_female} (♀)</option>}
+                              {song.key_male && <option value={song.key_male}>{song.key_male} (👨)</option>}
+                              {song.key_female && <option value={song.key_female}>{song.key_female} (👩)</option>}
                             </>
                           );
                         })()}
