@@ -271,10 +271,19 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
         <div style={{ background: 'var(--primary)', padding: '1rem', borderRadius: '15px', color: 'white' }}>
           <Users size={24} />
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <h4>Gestión de Equipo Multi-Rol</h4>
           <p>Organiza a tu equipo asignando múltiples funciones según tu propia estructura. Los miembros aparecerán agrupados por jerarquía.</p>
         </div>
+        {isDirector && (
+          <button 
+            onClick={() => setShowSettingsModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+            className="hover-scale"
+          >
+            <Settings size={18} /> Configurar Organización
+          </button>
+        )}
       </div>
 
       <section className="glass-panel" style={{ padding: '2rem', background: 'transparent', border: 'none', boxShadow: 'none' }}>

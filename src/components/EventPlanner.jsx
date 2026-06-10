@@ -75,27 +75,6 @@ const getSuggestedMembers = (roleName, members) => {
   return { suggested, others };
 };
 
-const ROLE_BANK = [
-  {
-    category: 'MÚSICOS',
-    color: 'var(--primary)',
-    bg: 'rgba(59,130,246,0.1)',
-    roles: ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión']
-  },
-  {
-    category: 'PRODUCCIÓN / MEDIA',
-    color: 'var(--accent)',
-    bg: 'rgba(139,92,246,0.1)',
-    roles: ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical']
-  },
-  {
-    category: 'LOGÍSTICA / STAFF',
-    color: '#fbbf24',
-    bg: 'rgba(251,191,36,0.1)',
-    roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración']
-  }
-];
-
 // [ESTABLE] COMPONENTE EXTRAÃ DO (Con arreglos de truncado y visibilidad)
 const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -338,7 +317,28 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
+export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session, orgSettings }) {
+  const ROLE_BANK = React.useMemo(() => {
+    const defaultMusicos = ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión'];
+    const defaultProduccion = ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical'];
+    const defaultStaff = ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración'];
+
+    return [
+      {
+        category: 'MÚSICOS',
+        color: 'var(--primary)',
+        bg: 'rgba(59,130,246,0.1)',
+        roles: orgSettings?.instruments?.length > 0 ? orgSettings.instruments.map(i => i.label) : defaultMusicos
+      },
+      {
+        category: 'PRODUCCIÓN / LOGÍSTICA / STAFF',
+        color: 'var(--accent)',
+        bg: 'rgba(139,92,246,0.1)',
+        roles: orgSettings?.roles?.length > 0 ? orgSettings.roles.map(r => r.label) : [...defaultProduccion, ...defaultStaff]
+      }
+    ];
+  }, [orgSettings]);
+
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -831,19 +831,25 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     groups[g].push(s);
                   });
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
-                    // Sort by Spanish ordinal if instrument name contains one
                     const ordinalRank = (name = '') => {
                       const n = name.toLowerCase();
-                      if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
-                      if (n.includes('segundo') || n.includes('second')) return 2;
-                      if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
-                      if (n.includes('cuarto') || n.includes('fourth')) return 4;
-                      if (n.includes('quinto') || n.includes('fifth')) return 5;
-                      if (n.includes('sexto') || n.includes('sixth')) return 6;
-                      if (n.includes('septimo') || n.includes('seventh')) return 7;
+                      if (n.includes('primer') || n.includes('first') || n.includes('lead') || n.includes('principal')) return 1;
+                      if (n.includes('segund') || n.includes('second')) return 2;
+                      if (n.includes('tercer') || n.includes('third')) return 3;
+                      if (n.includes('cuart') || n.includes('fourth')) return 4;
+                      if (n.includes('quint') || n.includes('fifth')) return 5;
+                      const match = n.match(/\d+/);
+                      if (match) return parseInt(match[0]) + 10;
                       return 99;
                     };
-                    const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
+                    const sorted = [...items].sort((a, b) => {
+                      const clean = s => s.toLowerCase().replace(/[0-9]/g, '').replace(/(primer|segund|tercer|cuart|quint)[oa]s?|first|second|third|fourth|fifth|lead|principal/g, '').trim();
+                      const baseA = clean(a.instrument);
+                      const baseB = clean(b.instrument);
+                      if (baseA < baseB) return -1;
+                      if (baseA > baseB) return 1;
+                      return ordinalRank(a.instrument) - ordinalRank(b.instrument);
+                    });
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
@@ -1058,13 +1064,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   });
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
                      const ordinalRank = (name = '') => {
-                       const n = name.toLowerCase();
-                       if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
-                       if (n.includes('segundo') || n.includes('second')) return 2;
-                       if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
-                       return 99;
-                     };
-                     const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
+                      const n = name.toLowerCase();
+                      if (n.includes('primer') || n.includes('first') || n.includes('lead') || n.includes('principal')) return 1;
+                      if (n.includes('segund') || n.includes('second')) return 2;
+                      if (n.includes('tercer') || n.includes('third')) return 3;
+                      if (n.includes('cuart') || n.includes('fourth')) return 4;
+                      if (n.includes('quint') || n.includes('fifth')) return 5;
+                      const match = n.match(/\d+/);
+                      if (match) return parseInt(match[0]) + 10;
+                      return 99;
+                    };
+                    const sorted = [...items].sort((a, b) => {
+                      const clean = s => s.toLowerCase().replace(/[0-9]/g, '').replace(/(primer|segund|tercer|cuart|quint)[oa]s?|first|second|third|fourth|fifth|lead|principal/g, '').trim();
+                      const baseA = clean(a.instrument);
+                      const baseB = clean(b.instrument);
+                      if (baseA < baseB) return -1;
+                      if (baseA > baseB) return 1;
+                      return ordinalRank(a.instrument) - ordinalRank(b.instrument);
+                    });
                      
                      return (
                        <div key={groupName} style={{ marginBottom: '1.5rem' }}>
