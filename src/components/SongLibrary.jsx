@@ -163,6 +163,29 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
     }
   };
   
+
+  const handleDeleteSequence = async (songId) => {
+    if(!confirm("¿Estás seguro de eliminar la secuencia/multitrack de esta canción? Esto borrará los archivos en la nube y te permitirá subir uno nuevo.")) return;
+    try {
+      const { data: sequences } = await supabase.from('sequences').select('id').eq('song_id', songId);
+      if (sequences && sequences.length > 0) {
+        const { data: { session } } = await supabase.auth.getSession();
+        for (const seq of sequences) {
+          try {
+            await fetch(`${API_URL}/api/sequences/${seq.id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${session?.access_token}` }
+            });
+          } catch(e) { console.error('Error borrando secuencia de R2', e); }
+        }
+      }
+      if (refreshData) refreshData();
+      alert("Secuencia eliminada correctamente. Ahora puedes subir una nueva.");
+    } catch (e) {
+      alert("Error al eliminar la secuencia.");
+    }
+  };
+
   const handleDelete = async (id) => {
     if(!confirm("¿Estás seguro de eliminar esta canción del repertorio? Se borrarán también los multitracks asociados para ahorrar espacio en la nube.")) return;
     try {
@@ -280,20 +303,34 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn">
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
-                <button 
-                  onClick={() => openMixer(s)} 
-                  disabled={loadingSeq === s.id} 
-                  className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
-                >
-                  {loadingSeq === s.id ? (
-                    <Loader2 size={14} className="spin-slow" />
-                  ) : s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? (
-                    <ShieldCheck size={14} />
-                  ) : (
-                    <Headphones size={14} />
+                <div style={{ display: 'flex', gap: '4px', width: '100%' }}>
+                  <button 
+                    onClick={() => openMixer(s)} 
+                    disabled={loadingSeq === s.id} 
+                    className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
+                    style={{ flex: 1 }}
+                  >
+                    {loadingSeq === s.id ? (
+                      <Loader2 size={14} className="spin-slow" />
+                    ) : s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? (
+                      <ShieldCheck size={14} />
+                    ) : (
+                      <Headphones size={14} />
+                    )}
+                    {loadingSeq === s.id ? ' Abriendo...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reproducir' : ' Secuencia'}
+                  </button>
+                  
+                  {(s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) && canEditSongs && !readOnly && (
+                    <button 
+                      onClick={() => handleDeleteSequence(s.id)} 
+                      className="song-action-btn sequence-btn hover-scale"
+                      style={{ flex: '0 0 auto', padding: '0 10px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                      title="Eliminar secuencia para subir una nueva"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   )}
-                  {loadingSeq === s.id ? ' Abriendo...' : (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? ' Reproducir' : ' Secuencia'}
-                </button>
+                </div>
               </div>
             </div>
           ))
