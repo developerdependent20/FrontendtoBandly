@@ -692,7 +692,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     return list.map(ev => {
       const isExpanded = !!expandedCardIds[ev.id];
       const theme = getEventTheme(ev.name);
-      const userSlots = ev.event_roster?.filter(r => String(r.profile_id) === String(currentUserId)) || [];
+      const userSlots = ev.event_roster?.filter(r => String(r.profile_id) === String(currentUserId) && !r.is_removed) || [];
       const evDate = ev.date ? new Date(ev.date.split('T')[0] + 'T00:00:00') : null;
       const isToday = evDate && evDate.toDateString() === new Date().toDateString();
 
@@ -829,7 +829,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 {/* Team */}
                 {(() => {
                   const groups = { 'BANDA': [], 'VOCES': [], 'PRODUCCION / STAFF': [] };
-                  (ev.event_roster || []).forEach(s => {
+                  (ev.event_roster || []).filter(s => !s.is_removed).forEach(s => {
                     const g = getRoleGroup(s.instrument);
                     if (!groups[g]) groups[g] = [];
                     groups[g].push(s);
