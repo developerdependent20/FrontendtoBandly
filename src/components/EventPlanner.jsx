@@ -617,8 +617,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
       if (!evtDateRaw) throw new Error("Falta la fecha del evento para notificar.");
 
+      // SOLUCIÓN ESTRUCTURAL A "Invalid Date":
+      // Limpiar la fecha descartando cualquier sufijo de hora que venga de la DB (ej: T19:00:00Z)
+      const cleanDate = evtDateRaw.split('T')[0];
+      
       // Formatear la fecha a humano para evitar "Invalid Date"
-      const dateObj = new Date(evtDateRaw + 'T12:00:00');
+      const dateObj = new Date(cleanDate + 'T12:00:00');
       const formattedDate = dateObj.toLocaleDateString('es-ES', { 
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
       });
@@ -1558,8 +1562,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 </div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
-                  Re-Notificar a TODO el equipo ({notifyData.allRoster.length})
+                <button 
+                  onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} 
+                  className="btn-primary" 
+                  disabled={dispatching}
+                  style={{ 
+                    padding: '1.2rem', 
+                    background: dispatching ? 'rgba(139, 92, 246, 0.05)' : 'rgba(139, 92, 246, 0.1)', 
+                    border: '1px solid var(--primary)', 
+                    color: dispatching ? 'rgba(255,255,255,0.5)' : 'white',
+                    cursor: dispatching ? 'wait' : 'pointer'
+                  }}
+                >
+                  {dispatching ? 'Enviando Notificaciones...' : `Re-Notificar a TODO el equipo (${notifyData.allRoster.length})`}
                 </button>
 
                 <button onClick={() => { setShowNotifyModal(false); closeModal(); }} className="btn-secondary" style={{ padding: '1.2rem' }}>

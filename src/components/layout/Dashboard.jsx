@@ -101,7 +101,13 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           className="nav-item"
           onClick={() => {
             if (window.OneSignal && window.OneSignal.Notifications) {
-               window.OneSignal.Notifications.requestPermission().then(() => alert("Permisos solicitados. Revisa el borde de tu navegador."));
+               if (window.Notification && Notification.permission === 'denied') {
+                 alert("🔒 Tu navegador bloqueó permanentemente las notificaciones.\n\nPARA ARREGLARLO:\n1. Haz clic en el ícono de Opciones (o un candadito 🔒) en la barra de direcciones superior de tu navegador.\n2. Busca 'Notificaciones' y cambia a 'Permitir'.\n3. Recarga la página.");
+               } else if (window.Notification && Notification.permission === 'granted') {
+                 alert("✅ ¡Las notificaciones Push ya están activadas en este dispositivo!");
+               } else {
+                 window.OneSignal.Notifications.requestPermission().then(() => alert("Permisos solicitados. Revisa el borde de tu navegador."));
+               }
             } else {
                alert("OneSignal no está cargado aún. Intenta en unos segundos.");
             }
