@@ -599,18 +599,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const handleSendNotifications = async (recipients, mode, overrideData = null) => {
     if (dispatching) return;
     setDispatching(true);
+    const isAuto = mode === 'delta' && overrideData !== null;
     try {
       const validRecipients = recipients.filter(r => r.email);
 
       if (validRecipients.length === 0) {
-        return; // Silencioso si no hay a quien notificar
+        if (!isAuto) alert('⚠️ No se puede enviar: Ninguno de los integrantes seleccionados tiene un correo registrado en su perfil.');
+        return; 
       }
       
-      const evtName = overrideData ? overrideData.eventName : notifyData.eventName;
-      const evtDateRaw = overrideData ? overrideData.eventDate : notifyData.eventDate;
-      const evtDesc = overrideData ? overrideData.description : notifyData.description;
+      const evtName = overrideData ? overrideData.eventName : notifyData?.eventName;
+      const evtDateRaw = overrideData ? overrideData.eventDate : notifyData?.eventDate;
+      const evtDesc = overrideData ? overrideData.description : notifyData?.description;
 
-      // Formatear la fecha a humano para evitar "Invalid Date" en los correos y notificaciones push
+      if (!evtDateRaw) throw new Error("Falta la fecha del evento para notificar.");
+
+      // Formatear la fecha a humano para evitar "Invalid Date"
       const dateObj = new Date(evtDateRaw + 'T12:00:00');
       const formattedDate = dateObj.toLocaleDateString('es-ES', { 
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
@@ -622,7 +626,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         description: evtDesc, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
-          profile_id: r.profile_id || r.id, // Ensure profile_id is sent
+          profile_id: r.profile_id || r.id,
           email: r.email, 
           name: r.name, 
           instrument: r.instrument 
@@ -639,13 +643,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
       if (response.ok) {
         await supabase.from('event_roster').upsert(validRecipients.map(r => ({ id: r.id, last_invite_sent_at: new Date().toISOString(), invite_status: 'sent' })));
-        alert('Enviado correctamente.');
-        closeModal(); setShowNotifyModal(false);
+        
+        if (!isAuto) {
+          alert('✅ Notificaciones enviadas correctamente a ' + validRecipients.length + ' integrantes.');
+          closeModal(); setShowNotifyModal(false);
+        } else {
+          // Si es automático, solo mostramos una notificación pequeña tipo toast o nada, 
+          // pero NO cerramos el modal porque el usuario lo está viendo.
+          console.log("Auto-notificación enviada a nuevos.");
+        }
       } else {
-        alert(`Error del Servidor: ${result.error || result.details || 'No se pudo enviar la notificación.'}`);
+        alert(`❌ Error del Servidor: ${result.error || result.details || 'No se pudo enviar la notificación.'}`);
         console.error("Notify API Error:", result);
       }
-    } catch (e) { alert(`Error de red: ${e.message}`); }
+    } catch (e) { alert(`❌ Error de red: ${e.message}`); }
     finally { setDispatching(false); }
   };
 
