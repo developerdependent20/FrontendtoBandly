@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
@@ -98,10 +98,25 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         )}
 
         <div 
+          className="nav-item"
+          onClick={() => {
+            if (window.OneSignal && window.OneSignal.Notifications) {
+               window.OneSignal.Notifications.requestPermission().then(() => alert("Permisos solicitados. Revisa el borde de tu navegador."));
+            } else {
+               alert("OneSignal no está cargado aún. Intenta en unos segundos.");
+            }
+          }}
+          title="Activar Notificaciones Push"
+          style={{ marginTop: 'auto', marginBottom: '10px', color: '#10b981' }}
+        >
+          <Bell size={22} />
+        </div>
+
+        <div 
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} 
           onClick={() => setActiveTab('profile')}
           title="Mi Perfil / Disponibilidad"
-          style={{ marginTop: 'auto', marginBottom: '10px' }}
+          style={{ marginBottom: '10px' }}
         >
           <UserCircle size={22} />
         </div>

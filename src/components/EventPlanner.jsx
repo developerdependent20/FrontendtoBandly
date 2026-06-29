@@ -356,6 +356,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [notifyData, setNotifyData] = useState(null);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [dispatching, setDispatching] = useState(false);
+  const [notifyMessage, setNotifyMessage] = useState(null);
+  const [eventToDelete, setEventToDelete] = useState(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [expandedCardIds, setExpandedCardIds] = useState({});
   const [activeYoutubeUrl, setActiveYoutubeUrl] = useState(null);
@@ -523,8 +525,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleSave = async () => {
-    if (!eventName) { alert('Falta el nombre del evento'); return; }
-    if (!eventDate) { alert('Falta la fecha del evento'); return; }
+    if (!eventName) { setNotifyMessage({ type: 'error', text: 'Falta el nombre del evento' }); return; }
+    if (!eventDate) { setNotifyMessage({ type: 'error', text: 'Falta la fecha del evento' }); return; }
     if (saving) return;
 
     const baseDate = eventDate.split('T')[0];
@@ -591,7 +593,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       if (refreshData) refreshData();
     } catch (e) { 
       console.error('Save Error:', e); 
-      alert('Error critico al guardar: ' + e.message + '\n\nRevisa la consola para más detalles.'); 
+      setNotifyMessage({ type: 'error', text: 'Error crítico al guardar: ' + e.message }); 
     }
     finally { setSaving(false); }
   };
@@ -599,12 +601,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const handleSendNotifications = async (recipients, mode, overrideData = null) => {
     if (dispatching) return;
     setDispatching(true);
+    setNotifyMessage(null);
     const isAuto = mode === 'delta' && overrideData !== null;
     try {
       const validRecipients = recipients.filter(r => r.email);
 
       if (validRecipients.length === 0) {
-        if (!isAuto) alert('⚠️ No se puede enviar: Ninguno de los integrantes seleccionados tiene un correo registrado en su perfil.');
+        if (!isAuto) setNotifyMessage({ type: 'error', text: 'No se puede enviar: Ninguno de los integrantes seleccionados tiene un correo registrado en su perfil.' });
         return; 
       }
       
@@ -645,7 +648,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         await supabase.from('event_roster').upsert(validRecipients.map(r => ({ id: r.id, last_invite_sent_at: new Date().toISOString(), invite_status: 'sent' })));
         
         if (!isAuto) {
-          alert('✅ Notificaciones enviadas correctamente a ' + validRecipients.length + ' integrantes.');
+          setNotifyMessage({ type: 'success', text: '✅ Notificaciones enviadas correctamente a ' + validRecipients.length + ' integrantes.' });
           closeModal(); setShowNotifyModal(false);
         } else {
           // Si es automático, solo mostramos una notificación pequeña tipo toast o nada, 
@@ -653,11 +656,26 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           console.log("Auto-notificación enviada a nuevos.");
         }
       } else {
-        alert(`❌ Error del Servidor: ${result.error || result.details || 'No se pudo enviar la notificación.'}`);
+        setNotifyMessage({ type: 'error', text: `❌ Error del Servidor: ${result.error || result.details || 'No se pudo enviar la notificación.'}` });
         console.error("Notify API Error:", result);
       }
-    } catch (e) { alert(`❌ Error de red: ${e.message}`); }
+    } catch (e) { setNotifyMessage({ type: 'error', text: `❌ Error de red: ${e.message}` }); }
     finally { setDispatching(false); }
+  };
+
+  const handleDeleteEventConfirm = async () => {
+    if (!eventToDelete) return;
+    try {
+      await supabase.from('events').delete().eq('id', eventToDelete.id);
+      if (typeof selectedEventDetails !== 'undefined' && selectedEventDetails?.id === eventToDelete.id) {
+        setSelectedEventDetails(null);
+      }
+      refreshData();
+    } catch (e) {
+      console.error('Delete Event Error:', e);
+    } finally {
+      setEventToDelete(null);
+    }
   };
 
   const updateRosterStatus = async (eventId, roleId, status) => {
@@ -806,7 +824,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.4)'; e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}>
                     <Edit2 size={13} />
                   </button>
-                  <button onClick={() => { if(window.confirm('Borrar este evento?')) supabase.from('events').delete().eq('id', ev.id).then(()=>refreshData()); }}
+                  <button onClick={() => setEventToDelete(ev)}
                     title="Eliminar"
                     style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.color='#ef4444'; e.currentTarget.style.background='rgba(239,68,68,0.15)'; }}
@@ -1014,7 +1032,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                  <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                    <Edit2 size={14} /> Editar
                  </button>
-                 <button onClick={() => { if(window.confirm('¿Borrar?')) { supabase.from('events').delete().eq('id', selectedEventDetails.id).then(()=>refreshData()); setSelectedEventDetails(null); } }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                 <button onClick={() => setEventToDelete(selectedEventDetails)} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                    <Trash2 size={14} />
                  </button>
                </div>
@@ -1523,6 +1541,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
                 Los cambios se guardaron y se notificó automáticamente a los {notifyData.candidates?.length || 0} integrantes nuevos.
               </p>
+              
+              {notifyMessage && (
+                <div style={{
+                  padding: '1rem',
+                  marginBottom: '1.5rem',
+                  borderRadius: '10px',
+                  background: notifyMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${notifyMessage.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  color: notifyMessage.type === 'success' ? '#4ade80' : '#f87171',
+                  fontSize: '0.95rem',
+                  fontWeight: '500',
+                  animation: 'fadeIn 0.3s ease'
+                }}>
+                  {notifyMessage.text}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
                   Re-Notificar a TODO el equipo ({notifyData.allRoster.length})
@@ -1534,6 +1568,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               </div>
            </div>
          </div>
+      ), document.body)}
+
+      {eventToDelete && createPortal((
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(10px)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', width: '90%', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+            <div style={{ width: '60px', height: '60px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Trash2 size={32} color="#ef4444" />
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#fff' }}>¿Borrar Evento?</h3>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
+              Estás a punto de eliminar permanentemente el evento <strong>{eventToDelete.name}</strong>. Esta acción no se puede deshacer.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setEventToDelete(null)} className="btn-secondary" style={{ flex: 1, padding: '1rem' }}>Cancelar</button>
+              <button onClick={handleDeleteEventConfirm} className="btn-primary" style={{ flex: 1, padding: '1rem', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#ef4444' }}>Sí, Eliminar</button>
+            </div>
+          </div>
+        </div>
       ), document.body)}
 
       {chartSong && <ChartStudio song={chartSong} onClose={() => setChartSong(null)} readOnly={true} />}
