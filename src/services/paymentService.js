@@ -23,8 +23,6 @@ export const paymentService = {
       });
 
       const data = await response.json();
-      
-      const data = await response.json();
       if (!response.ok) throw new Error(data.details || data.error || 'Fallo en el pago');
 
       return data.checkoutUrl;
