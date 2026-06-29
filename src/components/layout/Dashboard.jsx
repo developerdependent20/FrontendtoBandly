@@ -98,37 +98,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         )}
 
         <div 
-          className="nav-item"
-          onClick={() => {
-            const checkPermissions = () => {
-               if (window.Notification && Notification.permission === 'denied') {
-                 alert("🔒 Tu navegador bloqueó permanentemente las notificaciones.\n\nPARA ARREGLARLO:\n1. Haz clic en el ícono de Opciones (o un candadito 🔒) en la barra de direcciones superior de tu navegador.\n2. Busca 'Notificaciones' y cambia a 'Permitir'.\n3. Recarga la página.");
-               } else if (window.Notification && Notification.permission === 'granted') {
-                 alert("✅ ¡Las notificaciones Push ya están activadas en este dispositivo!");
-               } else if (window.OneSignal && window.OneSignal.Notifications) {
-                 window.OneSignal.Notifications.requestPermission().then(() => alert("Permisos solicitados. Revisa el borde de tu navegador."));
-               }
-            };
-
-            if (window.OneSignal && window.OneSignal.Notifications) {
-               checkPermissions();
-            } else if (window.OneSignalDeferred) {
-               alert("⏳ Cargando sistema de notificaciones... espera un par de segundos y vuelve a intentar.");
-            } else {
-               alert("El servicio de notificaciones no está disponible.");
-            }
-          }}
-          title="Activar Notificaciones Push"
-          style={{ marginTop: 'auto', marginBottom: '10px', color: '#10b981' }}
-        >
-          <Bell size={22} />
-        </div>
-
-        <div 
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} 
           onClick={() => setActiveTab('profile')}
           title="Mi Perfil / Disponibilidad"
-          style={{ marginBottom: '10px' }}
+          style={{ marginTop: 'auto', marginBottom: '10px' }}
         >
           <UserCircle size={22} />
         </div>
@@ -307,10 +280,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
 
       <main className="main-content">
         <header style={{ 
-          height: '60px', background: 'rgba(15, 23, 42, 0.2)', 
+          minHeight: '60px', background: 'rgba(15, 23, 42, 0.2)', 
           borderBottom: '1px solid rgba(255,255,255,0.05)',
-          display: 'flex', justifyContent: 'flex-end', alignItems: 'center', 
-          padding: '0 2rem', gap: '12px'
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', 
+          padding: '8px 1rem', gap: '8px'
         }}>
 
           {profile?.role === 'director' && profile?.organizations?.invite_code && (
@@ -319,14 +292,14 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               style={{ 
                 display: 'flex', alignItems: 'center', gap: '6px', 
                 background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
-                padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+                padding: '6px 10px', borderRadius: '20px', cursor: 'pointer',
                 transition: 'all 0.2s'
               }}
-              className="hover-scale"
+              className="hover-scale hide-on-tiny"
               title="Copiar link mágico para invitar"
             >
               <Users size={14} color="#3b82f6" />
-              <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#3b82f6', letterSpacing: '1px' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#3b82f6', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
                 CÓDIGO: {profile.organizations.invite_code}
               </span>
             </div>
@@ -334,18 +307,18 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
 
           {profile?.role === 'director' && profile?.organizations && (
             <div className="storage-meter" style={{
-              display: 'flex', flexDirection: 'column', gap: '6px',
-              padding: '8px 14px', borderRadius: '14px',
+              display: 'flex', flexDirection: 'column', gap: '4px',
+              padding: '6px 10px', borderRadius: '12px',
               background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6))', 
               border: '1px solid rgba(255,255,255,0.05)',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-              minWidth: '160px', marginRight: '8px'
+              minWidth: '120px', maxWidth: '180px', flex: '0 1 auto'
             }} title="Almacenamiento Usado">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6rem', color: 'rgba(255,255,255,0.7)', fontWeight: '800', letterSpacing: '0.5px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Cloud size={10} color="var(--primary)" /> ALMACENAMIENTO
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', fontWeight: '800', letterSpacing: '0.5px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <Cloud size={9} color="var(--primary)" /> STORAGE
                 </span>
-                <span style={{ color: 'white', fontFamily: 'var(--font-mono)' }}>
+                <span style={{ color: 'white', fontFamily: 'var(--font-mono)', fontSize: '0.55rem' }}>
                   {(() => {
                     const used = profile.organizations.storage_used_mb || 0;
                     const limit = profile.organizations.storage_limit_mb || 300;
@@ -354,7 +327,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                   })()}
                 </span>
               </div>
-              <div style={{ width: '100%', height: '5px', background: 'rgba(0,0,0,0.5)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{ 
                   height: '100%', 
                   width: `${Math.min(100, ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) * 100)}%`, 
@@ -377,38 +350,38 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               }
             }}
             style={{ 
-              display: 'flex', alignItems: 'center', gap: '6px', 
+              display: 'flex', alignItems: 'center', gap: '5px', 
               background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+              padding: '6px 10px', borderRadius: '20px', cursor: 'pointer',
               transition: 'all 0.2s'
             }}
             className="hover-scale"
             title={profile?.role === 'director' ? "Opciones de Equipo" : "Unirse a un equipo"}
           >
             <Plus size={14} color="#fff" />
-            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#fff', letterSpacing: '1px' }}>
-              {profile?.role === 'director' ? 'ORGANIZACIÓN' : 'UNIRSE'}
+            <span className="hide-on-tiny" style={{ fontSize: '0.65rem', fontWeight: '900', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+              {profile?.role === 'director' ? 'ORG' : 'UNIRSE'}
             </span>
           </div>
 
           <div 
             onClick={() => setShowSubscription(true)}
             style={{ 
-              display: 'flex', alignItems: 'center', gap: '8px', 
+              display: 'flex', alignItems: 'center', gap: '5px', 
               background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)',
-              padding: '6px 16px', borderRadius: '20px', cursor: 'pointer',
+              padding: '6px 10px', borderRadius: '20px', cursor: 'pointer',
               transition: 'all 0.2s'
             }}
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)'}
           >
             <Crown size={14} color="#a855f7" />
-            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>
+            <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#a855f7', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
               {(profile?.organizations?.plan || profile?.plan_id || 'STARTER').toUpperCase()}
             </span>
             {(!profile?.organizations?.plan || profile.organizations.plan === 'free' || profile.organizations.plan === 'starter') && (
-              <span style={{ fontSize: '0.6rem', background: '#a855f7', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontWeight: '900', marginLeft: '6px' }}>
-                UPGRADE
+              <span className="hide-on-tiny" style={{ fontSize: '0.55rem', background: '#a855f7', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' }}>
+                UP
               </span>
             )}
           </div>

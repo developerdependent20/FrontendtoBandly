@@ -2021,4 +2021,28 @@ input[type="datetime-local"] {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-@media (max-width: 480px) { .storage-meter { width: 100% !important; min-width: 100% !important; margin-right: 0 !important; margin-bottom: 0.5rem; } }
+@media (max-width: 480px) { 
+  .storage-meter { 
+    min-width: unset !important; 
+    max-width: unset !important;
+    width: auto !important;
+    flex: 1 1 100% !important; 
+    order: 10;
+  }
+  .hide-on-tiny { display: none !important; }
+  .main-content header { 
+    justify-content: center !important; 
+    padding: 6px 8px !important;
+    gap: 6px !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .storage-meter {
+    min-width: 110px !important;
+    max-width: 150px !important;
+  }
+  .main-content header {
+    padding: 8px 12px !important;
+  }
+}

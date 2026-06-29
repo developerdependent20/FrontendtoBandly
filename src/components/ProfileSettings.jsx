@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { User, Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut } from 'lucide-react';
+import { User, Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut, Bell } from 'lucide-react';
 import { isTauri } from '../utils/tauri';
 
 export default function ProfileSettings({ profile, session, onLogout }) {
@@ -104,6 +104,41 @@ export default function ProfileSettings({ profile, session, onLogout }) {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
+        <h3 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981' }}>
+          <Bell size={20} color="#10b981" /> Notificaciones Push
+        </h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+          Activa las notificaciones en este dispositivo para recibir alertas instantáneas cuando el director te asigne a un evento nuevo o envíe el Call-Sheet.
+        </p>
+        
+        <button 
+          className="btn-primary"
+          style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.8rem 1.5rem', width: 'auto' }}
+          onClick={() => {
+            const checkPermissions = () => {
+               if (window.Notification && Notification.permission === 'denied') {
+                 alert("🔒 Tu navegador bloqueó permanentemente las notificaciones.\n\nPARA ARREGLARLO:\n1. Haz clic en el ícono de Opciones (o un candadito 🔒) en la barra de direcciones superior de tu navegador.\n2. Busca 'Notificaciones' y cambia a 'Permitir'.\n3. Recarga la página.");
+               } else if (window.Notification && Notification.permission === 'granted') {
+                 alert("✅ ¡Las notificaciones Push ya están activadas en este dispositivo!");
+               } else if (window.OneSignal && window.OneSignal.Notifications) {
+                 window.OneSignal.Notifications.requestPermission().then(() => alert("Permisos solicitados. Revisa el borde de tu navegador."));
+               }
+            };
+
+            if (window.OneSignal && window.OneSignal.Notifications) {
+               checkPermissions();
+            } else if (window.OneSignalDeferred) {
+               alert("⏳ Cargando sistema de notificaciones... espera un par de segundos y vuelve a intentar.");
+            } else {
+               alert("El servicio de notificaciones no está disponible.");
+            }
+          }}
+        >
+          <Bell size={18} /> Activar Notificaciones en este Dispositivo
+        </button>
       </div>
 
       <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
