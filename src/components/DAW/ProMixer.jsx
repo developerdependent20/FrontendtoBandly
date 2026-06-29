@@ -46,12 +46,15 @@ const getTrackCategory = (rawName) => {
   const n = normalizeTrackName(rawName);
   if (n.includes('CLICK') || n.includes('METRO')) return 'CATEGORY_CLICK';
   if (n.includes('CUE') || n.includes('GUIA') || n.includes('GUIDE')) return 'CATEGORY_CUE';
-  if (n.includes('DRUM') || n.includes('PERC') || n.includes('BATERIA')) return 'CATEGORY_DRUMS';
+  if (n.includes('DRUM') || n.includes('PERC') || n.includes('BATERIA') || n.includes('LOOP') || n.includes('SEQ') || n.includes('TRACK')) return 'CATEGORY_DRUMS';
   if (n.includes('BASS') || n.includes('BAJO')) return 'CATEGORY_BASS';
-  if (n.includes('GTR') || n.includes('GUITAR') || n.includes('ELEC')) return 'CATEGORY_GTR';
-  if (n.includes('PIANO') || n.includes('KEY') || n.includes('TECLA') || n.includes('SYNTH')) return 'CATEGORY_KEYS';
-  if (n.includes('VOCAL') || n.includes('VOX') || n.includes('VOZ') || n.includes('CHOIR')) return 'CATEGORY_VOCAL';
-  return n; // Fallback al nombre normalizado si no hay categoría
+  if (n.includes('GTR') || n.includes('GUITAR') || n.includes('ELEC') || n.includes('ACU') || n.includes('ACOUSTIC')) return 'CATEGORY_GTR';
+  if (n.includes('PIANO') || n.includes('KEY') || n.includes('TECLA') || n.includes('SYNTH') || n.includes('PAD') || n.includes('STRING') || n.includes('ORCH') || n.includes('HORN') || n.includes('BRASS') || n.includes('FX')) return 'CATEGORY_KEYS';
+  if (n.includes('VOCAL') || n.includes('VOX') || n.includes('VOZ') || n.includes('CHOIR') || n.includes('CORO')) return 'CATEGORY_VOCAL';
+  
+  // Si no coincide con los clásicos, extraemos la primera palabra relevante para agrupar canciones distintas
+  const firstWordMatch = rawName.toUpperCase().match(/[A-Z]+/);
+  return firstWordMatch ? `CATEGORY_CUSTOM_${firstWordMatch[0]}` : n;
 };
 
 // Función para mostrar nombres limpios y profesionales en la consola
@@ -69,7 +72,10 @@ const getStandardName = (rawName) => {
   return rawName.replace(/^[0-9_.-]+/, '').substring(0, 12).toUpperCase(); 
 };
 
-const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, loading, downloadProgress, handleSyncOffline, onShowEventPicker, loadedEventId }) => (
+const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, onReorder, loading, downloadProgress, handleSyncOffline }) => {
+  const [draggedIdx, setDraggedIdx] = useState(null);
+
+  return (
   <aside style={{ 
     position: 'absolute', right: 0, top: 0, bottom: 0,
     width: '300px', background: 'rgba(15, 23, 42, 0.4)', 
@@ -111,21 +117,6 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, lo
           PREPARAR SHOW OFFLINE
         </button>
       )}
-
-      <button 
-        onClick={onShowEventPicker}
-        style={{ 
-          width: '100%', padding: '8px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', 
-          color: '#60a5fa', fontSize: '0.7rem', fontWeight: '800', borderRadius: '8px', cursor: 'pointer',
-          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.2s', marginTop: '8px'
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
-        title="Importar setlist de un evento programado"
-      >
-        <Icons.Calendar size={14} />
-        IMPORTAR DE EVENTO
-      </button>
     </div>
     
     <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column' }}>
@@ -135,15 +126,35 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, lo
           <div 
             key={`${song.id}-${idx}`} 
             onClick={() => onSelect(song)}
+            draggable={true}
+            onDragStart={(e) => {
+              setDraggedIdx(idx);
+              e.dataTransfer.effectAllowed = 'move';
+              // Fallback para navegadores antiguos
+              e.dataTransfer.setData('text/plain', idx);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (draggedIdx !== null && draggedIdx !== idx && onReorder) {
+                onReorder(draggedIdx, idx);
+              }
+              setDraggedIdx(null);
+            }}
+            onDragEnd={() => setDraggedIdx(null)}
             style={{ 
               padding: '16px', borderRadius: '10px', marginBottom: '8px',
               background: isActive ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)' : 'rgba(255,255,255,0.02)',
-              display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '14px', cursor: 'grab',
               transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
               border: '1px solid',
               borderColor: isActive ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255,255,255,0.03)',
               boxShadow: isActive ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
-              position: 'relative', overflow: 'hidden'
+              position: 'relative', overflow: 'hidden',
+              opacity: draggedIdx === idx ? 0.5 : 1
             }}
           >
             {isActive && (
@@ -180,6 +191,9 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, lo
             >
               <Icons.Trash2 size={14} />
             </button>
+            <div style={{ color: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center' }}>
+               <Icons.GripVertical size={16} />
+            </div>
           </div>
         );
       })}
@@ -191,7 +205,8 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, lo
       )}
     </div>
   </aside>
-));
+  );
+});
 
 const MemoizedMixerConsole = React.memo(ProMixerConsole);
 
@@ -423,7 +438,7 @@ const MemoizedTransportUI = React.memo(({
   );
 });
 
-export default function ProMixer({ session, events, profile }) {
+export default function ProMixer({ session }) {
   // isConfigured arranca en false — la auto-reconexión lo pone en true si el motor responde OK
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -431,6 +446,8 @@ export default function ProMixer({ session, events, profile }) {
   const [tracks, setTracks] = useState([]);
   const [peaks, setPeaks] = useState({}); // Estado independiente para picos de audio (Optimización de Rendimiento)
   const [isPlaying, setIsPlaying] = useState(false);
+  const [autoAdvanceTrigger, setAutoAdvanceTrigger] = useState(null);
+  const autoAdvanceRef = useRef({ wasPlaying: false });
   const [audioError, setAudioError] = useState(null); 
   const [metronome, setMetronome] = useState({ enabled: true, bpm: 120, volume: 0.5, outputCh: 0 });
   const [masterVolume, setMasterVolume] = useState(1);
@@ -442,9 +459,6 @@ export default function ProMixer({ session, events, profile }) {
   const [showPads, setShowPads] = useState(true); 
   const [markers, setMarkers] = useState([]);
   const [activeSequenceId, setActiveSequenceId] = useState(null);
-  const [showEventPicker, setShowEventPicker] = useState(false);
-  const [loadedEventId, setLoadedEventId] = useState(() => localStorage.getItem('promixer_loaded_event') || null);
-  const [eventSetlistHash, setEventSetlistHash] = useState(() => localStorage.getItem('promixer_event_hash') || null);
   
   const [totalSamples, setTotalSamples] = useState(0);
   const [playbackSample, setPlaybackSample] = useState(0);
@@ -498,78 +512,6 @@ export default function ProMixer({ session, events, profile }) {
   }, []);
 
   useEffect(() => {
-    if (!loadedEventId || songs.length === 0) return;
-    
-    const checkEventUpdate = async () => {
-      try {
-        const { data: eventSongs } = await supabase
-          .from('event_songs')
-          .select('song_id, selected_key, order_index')
-          .eq('event_id', loadedEventId)
-          .order('order_index');
-          
-        if (eventSongs) {
-          const newHash = JSON.stringify(eventSongs);
-          if (eventSetlistHash && eventSetlistHash !== newHash) {
-            if (window.confirm('El setlist del evento cargado ha sido modificado en la nube. ¿Deseas actualizar el setlist y descargar los audios nuevos?')) {
-              await loadEventSetlist(loadedEventId, eventSongs, newHash);
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Error verificando actualización de evento:', e);
-      }
-    };
-    checkEventUpdate();
-  }, [loadedEventId, songs]);
-
-  const loadEventSetlist = async (eventId, eventSongsData = null, newHash = null) => {
-    if (songs.length === 0) {
-      alert("Aún sincronizando el repertorio global con la nube. Por favor, intenta de nuevo en un par de segundos.");
-      return;
-    }
-    setLoading(true);
-    setShowEventPicker(false);
-    try {
-      let eSongs = eventSongsData;
-      if (!eSongs) {
-        const { data } = await supabase
-          .from('event_songs')
-          .select('song_id, selected_key, order_index')
-          .eq('event_id', eventId)
-          .order('order_index');
-        eSongs = data;
-      }
-      
-      if (eSongs) {
-        const hash = newHash || JSON.stringify(eSongs);
-        const mappedSetlist = eSongs.map(es => {
-          const song = songs.find(s => s.id === es.song_id);
-          return song ? { ...song, requested_key: es.selected_key } : null;
-        }).filter(Boolean);
-        
-        setSetlist(mappedSetlist);
-        setLoadedEventId(eventId);
-        setEventSetlistHash(hash);
-        localStorage.setItem('promixer_loaded_event', eventId);
-        localStorage.setItem('promixer_event_hash', hash);
-        
-        if (mappedSetlist.length > 0) {
-          setTimeout(() => {
-            if (window.confirm(`Setlist cargado correctamente con ${mappedSetlist.length} canciones. ¿Deseas descargar los audios para uso Offline ahora mismo?`)) {
-              handleSyncOfflineForSetlist(mappedSetlist);
-            }
-          }, 500);
-        }
-      }
-    } catch (e) {
-      alert('Error cargando el evento: ' + e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
     if (isTauri()) {
       const lastDevice = localStorage.getItem('bandly_last_audio_device');
       const savedBuffer = localStorage.getItem('bandly_buffer_size');
@@ -595,16 +537,12 @@ export default function ProMixer({ session, events, profile }) {
 
   // Sincronización Offline de Audios (Reemplaza la pre-descarga silenciosa)
   const handleSyncOffline = async () => {
-    handleSyncOfflineForSetlist(setlist);
-  };
-
-  const handleSyncOfflineForSetlist = async (targetSetlist) => {
-    if (!targetSetlist || targetSetlist.length === 0 || !isTauri()) return;
+    if (!songs.length || !isTauri()) return;
     const token = session?.access_token || '';
     
     // Contar cuántas canciones necesitan descarga
     const sequencesToDownload = [];
-    for (const song of targetSetlist) {
+    for (const song of songs) {
       const { data: seq } = await supabase.from('sequences').select('id, r2_zip_key').eq('song_id', song.id).maybeSingle();
       if (seq?.r2_zip_key) sequencesToDownload.push({ song, seq });
     }
@@ -634,7 +572,10 @@ export default function ProMixer({ session, events, profile }) {
     }
   };
 
-  // Removido auto-sync fantasma por estabilidad
+  useEffect(() => {
+    // Sincronizar automáticamente 2 segundos después de abrir el setlist
+    setTimeout(handleSyncOffline, 2000);
+  }, [songs]);
 
   const reconnectAudio = async () => {
     const lastDevice = localStorage.getItem('bandly_last_audio_device');
@@ -674,6 +615,11 @@ export default function ProMixer({ session, events, profile }) {
       setTotalSamples(report.total_samples);
 
       if (Date.now() - lastActionTime.current > 1000) {
+        // Lógica de Auto-Avance: Si estaba reproduciendo y se detuvo naturalmente al llegar al final
+        if (autoAdvanceRef.current.wasPlaying && !report.is_playing && report.total_samples > 0 && report.sample_pos >= report.total_samples - 22050) {
+          setAutoAdvanceTrigger(Date.now());
+        }
+        autoAdvanceRef.current.wasPlaying = report.is_playing;
         setIsPlaying(report.is_playing);
       }
 
@@ -697,7 +643,6 @@ export default function ProMixer({ session, events, profile }) {
   }, [activeSong]);
 
   // RE-SINCRONIZACIÓN DE ESTADO (Fuerza Bruta contra caché)
-  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   const handleStop = useCallback(async () => {
     setIsPlaying(false);
@@ -771,22 +716,23 @@ export default function ProMixer({ session, events, profile }) {
         if (type === 'panMode') next.isStereo = isStereo;
         if (type === 'output') next.outputIdx = output;
 
-        // Persistencia global por nombre de track (categorizado) para Ruteo/Paneo/Mute
-        if (type !== 'volume') {
-          try {
-            const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
-            const profile = JSON.parse(profileStr);
-            const trackKey = getTrackCategory(next.name);
-            if (!profile[trackKey]) profile[trackKey] = {};
-            if (type === 'output') profile[trackKey].outputIdx = output;
-            if (type === 'panMode') profile[trackKey].isStereo = isStereo;
-            if (type === 'mute') profile[trackKey].muted = muted;
-            if (type === 'solo') profile[trackKey].solo = solo;
-            localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
-          } catch(e) {}
-        }
+        // Persistencia global por nombre de track (categorizado) para Ruteo/Paneo/Mute/Volumen
+        try {
+          const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
+          const profile = JSON.parse(profileStr);
+          const trackKey = getTrackCategory(next.name);
+          if (!profile[trackKey]) profile[trackKey] = {};
+          
+          if (type === 'output') profile[trackKey].outputIdx = output;
+          if (type === 'panMode') profile[trackKey].isStereo = isStereo;
+          if (type === 'mute') profile[trackKey].muted = muted;
+          if (type === 'solo') profile[trackKey].solo = solo;
+          if (type === 'volume') profile[trackKey].volume = volume; // Guardar volumen globalmente para heredar
+          
+          localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
+        } catch(e) {}
         
-        // Persistencia local (Volumen) independiente por canal (stem)
+        // Persistencia local (Volumen) independiente por canal (stem específico)
         if (type === 'volume') {
           try {
             const volsStr = localStorage.getItem('bandly_mixer_volumes') || '{}';
@@ -873,7 +819,7 @@ export default function ProMixer({ session, events, profile }) {
           isStereo: savedGlobal.isStereo !== undefined ? savedGlobal.isStereo : true,
           muted: savedGlobal.muted !== undefined ? savedGlobal.muted : false,
           solo: savedGlobal.solo !== undefined ? savedGlobal.solo : false,
-          color: stem.color || '#2563eb', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
+          color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
       setTracks(sortTracks(resTracks));
@@ -950,41 +896,6 @@ export default function ProMixer({ session, events, profile }) {
     }
   }, []);
 
-  const lastBroadcastRef = useRef(null);
-
-  useEffect(() => {
-    if (!isPlaying || markers.length === 0) return;
-    
-    let currentMarker = null;
-    for (const m of markers) {
-      if (playbackSample >= m.sample) {
-        currentMarker = m;
-      } else {
-        break;
-      }
-    }
-
-    if (currentMarker && lastBroadcastRef.current !== currentMarker.id) {
-      lastBroadcastRef.current = currentMarker.id;
-      
-      const userPlan = profile?.organizations?.plan || 'free';
-      if (userPlan === 'pro' || userPlan === 'elite') {
-        // Broadcast silencioso al Presenter
-        supabase.from('presenter_state')
-          .update({ active_marker: currentMarker.label })
-          .eq('id', 1)
-          .then(() => console.log('[Presenter Sync] Sent Marker:', currentMarker.label))
-          .catch(() => {});
-      } else {
-        console.log('[Presenter Sync] Omitido: Requiere plan Pro o Elite');
-      }
-    }
-  }, [playbackSample, markers, isPlaying]);
-
-  useEffect(() => {
-    if (playbackSample === 0) lastBroadcastRef.current = null;
-  }, [playbackSample]);
-
   const onAddMarker = useCallback(async (bar, label, sample) => {
     if (!activeSequenceId) return;
     const colors = ['#22d3ee', '#818cf8', '#fbbf24', '#f472b6', '#34d399'];
@@ -1025,9 +936,31 @@ export default function ProMixer({ session, events, profile }) {
     });
   }, []);
 
+  const handleReorderSetlist = useCallback((fromIdx, toIdx) => {
+    setSetlist(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      localStorage.setItem('bandly_setlist', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   if (!isConfigured) return <HardwarePicker onConfigured={(device) => {
     setIsConfigured(true);
   }} />;
+
+  useEffect(() => {
+    if (autoAdvanceTrigger && activeSong && setlist.length > 0) {
+      const currentIdx = setlist.findIndex(s => s.id === activeSong.id);
+      if (currentIdx !== -1 && currentIdx < setlist.length - 1) {
+        const nextSong = setlist[currentIdx + 1];
+        setTimeout(() => {
+          handleSyncSong(nextSong);
+        }, 800); // Pequeño retraso para que se note el fin de la canción anterior
+      }
+    }
+  }, [autoAdvanceTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', background: '#020617' }}>
@@ -1086,79 +1019,9 @@ export default function ProMixer({ session, events, profile }) {
           </div>
              {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
           </div>
-        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} onShowEventPicker={() => setShowEventPicker(true)} loadedEventId={loadedEventId} />
+        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} onReorder={handleReorderSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
       </main>
-
-      {showCloudBrowser && (
-        <CloudRepertoire 
-          songs={songs} 
-          onClose={() => setShowCloudBrowser(false)}
-          onAddSong={(song) => setSetlist([...setlist, song])}
-        />
-      )}
-
-      {showEventPicker && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div style={{
-            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '16px', padding: '2rem', width: '100%', maxWidth: '600px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '80vh'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Icons.Calendar size={24} color="#60a5fa" /> Importar Setlist de Evento
-                </h2>
-                <p style={{ margin: '5px 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Selecciona un próximo evento. Esto reemplazará tu setlist actual y preparará las pistas.
-                </p>
-              </div>
-              <button onClick={() => setShowEventPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
-                <Icons.X size={24} />
-              </button>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: 1, paddingRight: '10px' }}>
-              {!events || events.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
-                  No hay próximos eventos programados.
-                </div>
-              ) : (
-                events.map(ev => {
-                  const evDate = new Date(ev.date + 'T12:00:00');
-                  const isPast = evDate < new Date(new Date().setHours(0,0,0,0));
-                  if (isPast) return null; // No mostrar eventos pasados
-                  return (
-                    <div 
-                      key={ev.id}
-                      onClick={() => loadEventSetlist(ev.id)}
-                      style={{
-                        padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                    >
-                      <div>
-                        <div style={{ fontWeight: '800', fontSize: '1.1rem' }}>{ev.name}</div>
-                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
-                          {evDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        </div>
-                      </div>
-                      <Icons.ChevronRight size={20} color="rgba(255,255,255,0.4)" />
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
+      {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); handleSyncSong(s); setShowCloudBrowser(false); }} />}
       {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
       
     </div>

@@ -4,6 +4,8 @@ import {
   X, Play, Pause, RotateCcw, Volume2, Loader2, AlertCircle,
   Headphones, Music, Guitar, Mic2, Piano, Drum, Wand2, Zap, RefreshCw
 } from 'lucide-react';
+import { safeInvoke, isTauri } from '../../utils/tauri';
+import { OfflineManager } from '../../utils/offlineManager';
 import { supabase } from '../../supabaseClient';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -162,6 +164,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       if (audioCtxRef.current) audioCtxRef.current.close();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       buffersRef.current = {};
+      OfflineManager.cleanupLocalUrls();
     };
   }, []);
 

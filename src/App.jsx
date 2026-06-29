@@ -45,7 +45,7 @@ export default function App() {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push((OneSignal) => {
       OneSignal.init({
-        appId: "d25fbf40-e87c-4c35-9ae9-753dc088eb64",
+        appId: import.meta.env.VITE_ONESIGNAL_APP_ID || "d25fbf40-e87c-4c35-9ae9-753dc088eb64",
         allowLocalhostAsSecureOrigin: true,
         notifyButton: { enable: false }
       }).then(() => {
@@ -56,7 +56,9 @@ export default function App() {
             OneSignal.login(existingSession.user.id).catch(() => {});
             // Small delay so the UI loads first before showing the prompt
             setTimeout(() => {
-              OneSignal.Slidedown.promptPush({ force: false }).catch(() => {});
+              if (window.OneSignal && window.OneSignal.Notifications) {
+                window.OneSignal.Notifications.requestPermission().catch(() => {});
+              }
             }, 3000);
           }
         });
@@ -99,8 +101,10 @@ export default function App() {
     if (oneSignalInitialized && window.OneSignal) {
       if (session?.user?.id) {
         window.OneSignal.login(session.user.id).catch(e => console.error("OneSignal Login Error:", e));
-        // Pedir permisos si no los ha dado
-        window.OneSignal.Slidedown.promptPush().catch(e => console.error("OneSignal Prompt Error:", e));
+        // Pedir permisos de forma nativa (más confiable que Slidedown)
+        if (window.OneSignal.Notifications) {
+          window.OneSignal.Notifications.requestPermission().catch(e => console.error("OneSignal Prompt Error:", e));
+        }
       } else {
         window.OneSignal.logout().catch(e => console.error("OneSignal Logout Error:", e));
       }

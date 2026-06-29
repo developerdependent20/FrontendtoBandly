@@ -47,6 +47,9 @@ export const OfflineManager = {
     }
   },
 
+  // Seguimiento de URLs temporales para evitar fugas de memoria
+  _activeBlobUrls: new Set(),
+
   /**
    * Obtiene la URL local de un archivo (para Tone.js)
    */
@@ -63,12 +66,22 @@ export const OfflineManager = {
         const ext = fileName.split('.').pop().toLowerCase();
         const mime = (ext === 'wav' || ext === 'aif' || ext === 'aiff') ? 'audio/wav' : 'audio/mpeg';
         const blob = new Blob([data], { type: mime });
-        return URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        this._activeBlobUrls.add(url);
+        return url;
       }
       return null;
     } catch (error) {
       console.error(`[OfflineManager] Error leyendo archivo local ${fileName}:`, error);
       return null;
     }
+  },
+
+  /**
+   * Libera la memoria de todas las URLs de Blob activas
+   */
+  cleanupLocalUrls() {
+    this._activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
+    this._activeBlobUrls.clear();
   }
 };

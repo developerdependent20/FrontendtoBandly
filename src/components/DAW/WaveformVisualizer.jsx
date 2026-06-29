@@ -82,7 +82,7 @@ export default function WaveformVisualizer({
       const h = Math.min(height * 0.48, Math.max(1.5, rawPeak * ampBase));
 
       const isActive = globalIdx <= playheadIdx;
-      ctx.fillStyle = isActive ? CYAN : INACTIVE;
+      ctx.fillStyle = isActive ? '#a855f7' : INACTIVE;
       ctx.fillRect(x, Math.floor(centerY - h), 1, Math.floor(h * 2));
     }
 

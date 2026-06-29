@@ -573,8 +573,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
       const { data: freshRoster, error: freshErr } = await supabase.from('event_roster').select('*').eq('event_id', evtId).eq('is_removed', false);
       if (freshErr) throw freshErr;
-      setNotifyData({ eventId: evtId, eventName, eventDate, description, candidates: diff.toNotify, allRoster: (freshRoster || []).map(r => ({ ...r, email: members.find(m => m.id === r.profile_id)?.email, name: members.find(m => m.id === r.profile_id)?.full_name })) });
+
+      // Generar la lista de todos con sus correos
+      const allRosterWithEmails = (freshRoster || []).map(r => ({ ...r, email: members.find(m => m.id === r.profile_id)?.email, name: members.find(m => m.id === r.profile_id)?.full_name }));
+
+      setNotifyData({ eventId: evtId, eventName, eventDate, description, candidates: diff.toNotify, allRoster: allRosterWithEmails });
       setShowModal(false);
+
+      // Auto-enviar notificaciones a los agregados recientemente
+      if (diff.toNotify && diff.toNotify.length > 0) {
+        // Ejecutamos en segundo plano para no bloquear
+        handleSendNotifications(diff.toNotify, 'delta', { eventName, eventDate, description });
+      }
+
+      // Si no hay candidatos nuevos, podemos saltarnos el modal, o mostrarlo siempre. Lo mostramos por si quieren reenviar a todos.
       setShowNotifyModal(true);
       if (refreshData) refreshData();
     } catch (e) { 
@@ -584,19 +596,30 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     finally { setSaving(false); }
   };
 
-  const handleSendNotifications = async (recipients, mode) => {
+  const handleSendNotifications = async (recipients, mode, overrideData = null) => {
     if (dispatching) return;
     setDispatching(true);
     try {
       const validRecipients = recipients.filter(r => r.email);
 
       if (validRecipients.length === 0) {
-        return alert('Sin correos válidos.');
+        return; // Silencioso si no hay a quien notificar
       }
+      
+      const evtName = overrideData ? overrideData.eventName : notifyData.eventName;
+      const evtDateRaw = overrideData ? overrideData.eventDate : notifyData.eventDate;
+      const evtDesc = overrideData ? overrideData.description : notifyData.description;
+
+      // Formatear la fecha a humano para evitar "Invalid Date" en los correos y notificaciones push
+      const dateObj = new Date(evtDateRaw + 'T12:00:00');
+      const formattedDate = dateObj.toLocaleDateString('es-ES', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      });
+
       const payload = { 
-        eventName: notifyData.eventName, 
-        eventDate: notifyData.eventDate, 
-        description: notifyData.description, 
+        eventName: evtName, 
+        eventDate: formattedDate, 
+        description: evtDesc, 
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
           profile_id: r.profile_id || r.id, // Ensure profile_id is sent
@@ -616,10 +639,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
       if (response.ok) {
         await supabase.from('event_roster').upsert(validRecipients.map(r => ({ id: r.id, last_invite_sent_at: new Date().toISOString(), invite_status: 'sent' })));
-        alert('Enviado.');
+        alert('Enviado correctamente.');
         closeModal(); setShowNotifyModal(false);
+      } else {
+        alert(`Error del Servidor: ${result.error || result.details || 'No se pudo enviar la notificación.'}`);
+        console.error("Notify API Error:", result);
       }
-    } catch (e) { alert(e.message); }
+    } catch (e) { alert(`Error de red: ${e.message}`); }
     finally { setDispatching(false); }
   };
 
@@ -1483,18 +1509,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
            <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '450px', border: '1px solid var(--primary)' }}>
              <Users size={40} color="var(--primary)" style={{ marginBottom: '1rem' }} />
              <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>¿Notificar al equipo?</h3>
-             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Los cambios se guardaron. Selecciona una opción de aviso.</p>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
+                Los cambios se guardaron y se notificó automáticamente a los {notifyData.candidates?.length || 0} integrantes nuevos.
+              </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <button onClick={() => handleSendNotifications(notifyData.candidates, 'delta')} className="btn-primary" style={{ padding: '1.2rem' }}>
-                  Enviar solo a nuevos ({notifyData.candidates.length})
-                </button>
-                
                 <button onClick={() => handleSendNotifications(notifyData.allRoster, 'all')} className="btn-primary" style={{ padding: '1.2rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid var(--primary)', color: 'white' }}>
-                  Notificar a todo el equipo ({notifyData.allRoster.length})
+                  Re-Notificar a TODO el equipo ({notifyData.allRoster.length})
                 </button>
 
                 <button onClick={() => { setShowNotifyModal(false); closeModal(); }} className="btn-secondary" style={{ padding: '1.2rem' }}>
-                  Finalizar sin notificar
+                  Finalizar (Ya se envió a los nuevos)
                 </button>
               </div>
            </div>
