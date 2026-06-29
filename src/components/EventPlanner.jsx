@@ -525,8 +525,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleSave = async () => {
-    if (!eventName) { setNotifyMessage({ type: 'error', text: 'Falta el nombre del evento' }); return; }
-    if (!eventDate) { setNotifyMessage({ type: 'error', text: 'Falta la fecha del evento' }); return; }
+    if (!eventName) { alert('Falta el nombre del evento'); return; }
+    if (!eventDate) { alert('Falta la fecha del evento'); return; }
     if (saving) return;
 
     const baseDate = eventDate.split('T')[0];
@@ -593,7 +593,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       if (refreshData) refreshData();
     } catch (e) { 
       console.error('Save Error:', e); 
-      setNotifyMessage({ type: 'error', text: 'Error crítico al guardar: ' + e.message }); 
+      alert('Error critico al guardar: ' + e.message + '\n\nRevisa la consola para más detalles.'); 
     }
     finally { setSaving(false); }
   };
