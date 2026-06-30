@@ -5,16 +5,21 @@ import { isTauri } from '../utils/tauri';
 
 export default function ProfileSettings({ profile, session, onLogout }) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
   const [blockedDates, setBlockedDates] = useState(profile?.blocked_dates || []);
   const [loading, setLoading] = useState(false);
   const [newDate, setNewDate] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [notifPermission, setNotifPermission] = useState(() => typeof window !== 'undefined' && window.Notification ? Notification.permission : 'default');
+
+  const checkNotifStatus = () => {
+    if (typeof window !== 'undefined' && window.Notification) {
+      setNotifPermission(Notification.permission);
+    }
+  };
 
   // Sincronizar estado local si el profile cambia
   useEffect(() => {
     setFullName(profile?.full_name || '');
-    setAvatarUrl(profile?.avatar_url || '');
     setBlockedDates(profile?.blocked_dates || []);
   }, [profile]);
 
@@ -26,7 +31,6 @@ export default function ProfileSettings({ profile, session, onLogout }) {
         .from('profiles')
         .update({
           full_name: fullName,
-          avatar_url: avatarUrl,
           blocked_dates: blockedDates
         })
         .eq('id', profile.id);
@@ -88,21 +92,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
               placeholder="Ej: Juan Pérez"
             />
           </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>URL de Avatar (Opcional)</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://..."
-            />
-            {avatarUrl && (
-              <div style={{ marginTop: '1rem', width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--primary)' }}>
-                <img src={avatarUrl} alt="Avatar Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            )}
-          </div>
+
         </div>
       </div>
 
@@ -114,31 +104,43 @@ export default function ProfileSettings({ profile, session, onLogout }) {
           Activa las notificaciones en este dispositivo para recibir alertas instantáneas cuando el director te asigne a un evento nuevo o envíe el Call-Sheet.
         </p>
         
-        <button 
-          className="btn-primary"
-          style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.8rem 1.5rem', width: 'auto' }}
-          onClick={() => {
-            const checkPermissions = () => {
-               if (window.Notification && Notification.permission === 'denied') {
-                 alert("🔒 Tu navegador bloqueó permanentemente las notificaciones.\n\nPARA ARREGLARLO:\n1. Haz clic en el ícono de Opciones (o un candadito 🔒) en la barra de direcciones superior de tu navegador.\n2. Busca 'Notificaciones' y cambia a 'Permitir'.\n3. Recarga la página.");
-               } else if (window.Notification && Notification.permission === 'granted') {
-                 alert("✅ ¡Las notificaciones Push ya están activadas en este dispositivo!");
-               } else if (window.OneSignal && window.OneSignal.Notifications) {
-                 window.OneSignal.Notifications.requestPermission().then(() => alert("Permisos solicitados. Revisa el borde de tu navegador."));
-               }
-            };
+        {notifPermission === 'granted' && (
+          <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Bell size={20} />
+            <span>¡Notificaciones Push <strong>Activadas</strong> en este navegador!</span>
+          </div>
+        )}
 
-            if (window.OneSignal && window.OneSignal.Notifications) {
-               checkPermissions();
-            } else if (window.OneSignalDeferred) {
-               alert("⏳ Cargando sistema de notificaciones... espera un par de segundos y vuelve a intentar.");
-            } else {
-               alert("El servicio de notificaciones no está disponible.");
-            }
-          }}
-        >
-          <Bell size={18} /> Activar Notificaciones en este Dispositivo
-        </button>
+        {notifPermission === 'denied' && (
+          <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Bell size={20} />
+              <span>Notificaciones bloqueadas por tu navegador.</span>
+            </div>
+            <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.8 }}>Haz clic en el ícono del candado 🔒 en la barra de direcciones de arriba, busca "Notificaciones", cámbialo a "Permitir" y recarga la página.</p>
+          </div>
+        )}
+
+        {notifPermission === 'default' && (
+          <button 
+            type="button"
+            className="btn-primary"
+            style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.8rem 1.5rem', width: 'auto' }}
+            onClick={() => {
+              if (window.OneSignal && window.OneSignal.Notifications) {
+                 window.OneSignal.Notifications.requestPermission().then(() => {
+                   checkNotifStatus();
+                 });
+              } else if (window.OneSignalDeferred) {
+                 alert("⏳ Cargando sistema de notificaciones... espera un par de segundos y vuelve a intentar.");
+              } else {
+                 alert("El servicio de notificaciones no está disponible.");
+              }
+            }}
+          >
+            <Bell size={18} /> Solicitar Permiso de Notificaciones
+          </button>
+        )}
       </div>
 
       <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
