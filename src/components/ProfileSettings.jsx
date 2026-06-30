@@ -127,14 +127,16 @@ export default function ProfileSettings({ profile, session, onLogout }) {
             className="btn-primary"
             style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.8rem 1.5rem', width: 'auto' }}
             onClick={() => {
-              if (window.OneSignal && window.OneSignal.Notifications) {
-                 window.OneSignal.Notifications.requestPermission().then(() => {
+              if ('Notification' in window) {
+                 Notification.requestPermission().then((permission) => {
                    checkNotifStatus();
+                   if (permission === 'granted' && window.OneSignal) {
+                     // Force OneSignal to sync with the new native permission
+                     window.OneSignal.Notifications.requestPermission().catch(()=>{});
+                   }
                  });
-              } else if (window.OneSignalDeferred) {
-                 alert("⏳ Cargando sistema de notificaciones... espera un par de segundos y vuelve a intentar.");
               } else {
-                 alert("El servicio de notificaciones no está disponible.");
+                 alert("Tu navegador no soporta Notificaciones Push.");
               }
             }}
           >
