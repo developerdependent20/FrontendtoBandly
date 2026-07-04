@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
-export default function WebUploadStudio({ songs = [], orgId, session, profile, refreshData }) {
+export default function WebUploadStudio({ songs = [], orgId, session, refreshData }) {
   const [selectedSong, setSelectedSong] = useState(null);
   const [showUploader, setShowUploader] = useState(false);
   const [sequences, setSequences] = useState({}); // songId -> boolean (has sequence)
@@ -18,7 +18,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, profile, r
 
   // Cargar qué canciones ya tienen secuencia
   useEffect(() => {
-    if (!songs.length) { setLoadingSeqs(false); return; }
+    if (!songs.length) { Promise.resolve().then(() => setLoadingSeqs(false)); return; }
     const ids = songs.map(s => s.id);
     supabase
       .from('sequences')
@@ -132,7 +132,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, profile, r
           </div>
         ) : filteredSongs.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem 0', fontSize: '0.9rem' }}>
-            No hay canciones en el repertorio todavía.
+            No hay canciones en el repertorio todavía. Brilla con tu talento aportando las primeras secuencias.
           </div>
         ) : (
           filteredSongs.map(song => {

@@ -27,7 +27,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       if (error) throw error;
       setSelectedMember(null);
       if (refreshData) refreshData();
-    } catch (e) {
+    } catch {
       alert("Error al actualizar avatar del miembro.");
     }
   };
@@ -91,7 +91,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
         .eq('id', userId);
       if (error) throw error;
       if (refreshData) refreshData();
-    } catch (e) {
+    } catch {
       alert("Error al actualizar rol de director.");
     }
   };

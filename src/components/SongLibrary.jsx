@@ -6,7 +6,7 @@ import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import ProMixer from './DAW/ProMixer';
-import { isTauri, safeInvoke } from '../utils/tauri';
+import { isTauri } from '../utils/tauri';
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -19,7 +19,6 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
   const [chartSong, setChartSong] = useState(null);
   const [seqUploadSong, setSeqUploadSong] = useState(null);
   const [seqMixerData, setSeqMixerData] = useState(null);
-  const [liveSongData, setLiveSongData] = useState(null);
   const [loadingSeq, setLoadingSeq] = useState(null);
   const [title, setTitle] = useState('');
   const [songKey, setSongKey] = useState('');
@@ -181,7 +180,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
       }
       if (refreshData) refreshData();
       alert("Secuencia eliminada correctamente. Ahora puedes subir una nueva.");
-    } catch (e) {
+    } catch {
       alert("Error al eliminar la secuencia.");
     }
   };
@@ -203,7 +202,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
       }
       await supabase.from('songs').delete().eq('id', id);
       if (refreshData) refreshData();
-    } catch (e) {
+    } catch {
       alert("Error al eliminar la canción.");
     }
   };
@@ -248,7 +247,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
         )}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {songs?.length === 0 ? <p style={{color:'var(--text-muted)'}}>No hay canciones en el registro.</p> : 
+        {songs?.length === 0 ? <p style={{color:'var(--text-muted)'}}>No hay canciones en el registro. Donde hay unidad y preparación, allí hay bendición.</p> : 
           songs?.map(s => (
             <div key={s.id} className="list-item song-library-item">
               <div className="song-identity">

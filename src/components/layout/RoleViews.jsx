@@ -8,10 +8,11 @@ import ProMixer from '../DAW/ProMixer';
 import WebUploadStudio from '../DAW/WebUploadStudio';
 import MusicianTools from '../MusicianTools';
 import ProfileSettings from '../ProfileSettings';
+import DownloadsPage from '../DownloadsPage';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 
-import { AVATARS, AvatarPicker } from './AvatarPicker';
+import { AvatarPicker } from './AvatarPicker';
 
 const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -25,7 +26,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
       const { error } = await supabase.from('profiles').update({ org_id: null, functions: [], role: 'member' }).eq('id', profile.id);
       if (error) throw error;
       window.location.reload();
-    } catch (e) {
+    } catch {
       alert("Error al abandonar el equipo.");
     }
   };
@@ -45,7 +46,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
       if (error) throw error;
       setCurrentAvatar(url);
       setShowPicker(false);
-    } catch (e) {
+    } catch {
       alert("Error al actualizar avatar.");
     }
   };
@@ -286,6 +287,11 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
+      {activeTab === 'downloads' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <DownloadsPage profile={profile} />
+        </div>
+      )}
       {activeTab === 'profile' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
@@ -330,6 +336,11 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
           ? <ProMixer songs={songs} session={session} profile={profile} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+      )}
+      {activeTab === 'downloads' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <DownloadsPage profile={profile} />
+        </div>
       )}
       {activeTab === 'profile' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

@@ -72,7 +72,7 @@ const getStandardName = (rawName) => {
   return rawName.replace(/^[0-9_.-]+/, '').substring(0, 12).toUpperCase(); 
 };
 
-const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, onReorder, loading, downloadProgress, handleSyncOffline }) => {
+const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, onReorder, downloadProgress, handleSyncOffline }) => {
   const [draggedIdx, setDraggedIdx] = useState(null);
 
   return (
@@ -210,16 +210,14 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, on
 
 const MemoizedMixerConsole = React.memo(ProMixerConsole);
 
-const MemoizedTransportUI = React.memo(({ 
-  isPlaying, isBuffering, togglePlay, handleStop, handleRestart, 
-  handleLoadProject, setShowCloudBrowser, activeSong, loading, 
-  engineReady, tracksLoadingCount, rawDbg, 
+const MemoizedTransportUI = React.memo(({
+  isPlaying, togglePlay, handleStop, handleRestart,
+  setShowCloudBrowser, engineReady,
   metronome, onMetronomeUpdate, deviceChannels,
   showPads, setShowPads,
   playbackSample, sampleRate, totalSamples,
   reconnectAudio, setIsConfigured,
-  isLoadingStems,
-  masterVolume, setMasterVolume
+  isLoadingStems
 }) => {
   const bpm = metronome.bpm || 120;
   const sr = sampleRate || 44100;
@@ -450,7 +448,6 @@ export default function ProMixer({ session }) {
   const autoAdvanceRef = useRef({ wasPlaying: false });
   const [audioError, setAudioError] = useState(null); 
   const [metronome, setMetronome] = useState({ enabled: true, bpm: 120, volume: 0.5, outputCh: 0 });
-  const [masterVolume, setMasterVolume] = useState(1);
   const [deviceChannels, setDeviceChannels] = useState(2); // Volvemos a 2 como base, la app se expandirá según el hardware real
   const [activeSong, setActiveSong] = useState(null);
   const [songs, setSongs] = useState([]);
@@ -465,12 +462,9 @@ export default function ProMixer({ session }) {
   const [playbackSR, setPlaybackSR] = useState(44100);
 
   const [engineReady, setEngineReady] = useState(false);
-  const [tracksLoadingCount, setTracksLoadingCount] = useState(0);
-  const [isBuffering, setIsBuffering] = useState(false);
   const [isPrerollActive, setIsPrerollActive] = useState(false);
   const [prerollBars, setPrerollBars] = useState(0);
 
-  const [rawDbg, setRawDbg] = useState(null);
   const lastActionTime = useRef(0);
 
   // RADAR DE RESILIENCIA (Detección de Hardware Live)
@@ -495,7 +489,7 @@ export default function ProMixer({ session }) {
   useEffect(() => {
     const saved = localStorage.getItem('bandly_setlist');
     if (saved) {
-      try { setSetlist(JSON.parse(saved)); } catch(e) {}
+      try { setSetlist(JSON.parse(saved)); } catch {}
     }
   }, []);
 
@@ -509,6 +503,17 @@ export default function ProMixer({ session }) {
       if (data) setSongs(data);
     };
     fetchSongs();
+
+    const channel = supabase.channel('daw_songs_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'songs' }, () => {
+        // Al haber cambios, volvemos a descargar todo para traer las secuencias y multitracks completos
+        fetchSongs();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -559,7 +564,7 @@ export default function ProMixer({ session }) {
           if (zipPath) {
             await safeInvoke('extract_multitrack_zip', { zipPath, songId: songDir }).catch(() => null);
           }
-        } catch(e) { /* Fallo silencioso por track */ }
+        } catch { /* Fallo silencioso por track */ }
         
         doneCount++;
         setDownloadProgress(prev => ({ ...prev, done: doneCount }));
@@ -581,14 +586,14 @@ export default function ProMixer({ session }) {
     const lastDevice = localStorage.getItem('bandly_last_audio_device');
     setLoading(true);
     try {
-      try { await safeInvoke('kill_audio_stream'); } catch(e) {}
+      try { await safeInvoke('kill_audio_stream'); } catch {}
       if (!lastDevice) {
         setIsConfigured(false);
         return;
       }
       await safeInvoke('init_audio_stream', { deviceId: lastDevice });
       setAudioError(null);
-    } catch (e) {
+    } catch {
       setIsConfigured(false);
     } finally {
       setLoading(false);
@@ -609,7 +614,6 @@ export default function ProMixer({ session }) {
       if (report.device_channels > 0 && report.device_channels !== deviceChannels) {
         setDeviceChannels(report.device_channels);
       }
-      setTracksLoadingCount(report.tracks_loading);
       setIsPrerollActive(report.preroll_active);
       setPrerollBars(report.preroll_bars);
       setTotalSamples(report.total_samples);
@@ -730,7 +734,7 @@ export default function ProMixer({ session }) {
           if (type === 'volume') profile[trackKey].volume = volume; // Guardar volumen globalmente para heredar
           
           localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
-        } catch(e) {}
+        } catch {}
         
         // Persistencia local (Volumen) independiente por canal (stem específico)
         if (type === 'volume') {
@@ -739,7 +743,7 @@ export default function ProMixer({ session }) {
             const vols = JSON.parse(volsStr);
             vols[trackId] = volume;
             localStorage.setItem('bandly_mixer_volumes', JSON.stringify(vols));
-          } catch(e) {}
+          } catch {}
         }
 
         return next;
@@ -753,7 +757,7 @@ export default function ProMixer({ session }) {
         if (type === 'solo') await safeInvoke('set_track_solo', { trackId, soloed: solo });
         if (type === 'panMode') await safeInvoke('set_track_pan_mode', { trackId, isStereo });
         if (type === 'output') await safeInvoke('set_track_output', { trackId, outputIdx: output });
-      } catch (e) {}
+      } catch {}
     }
   }, []);
 
@@ -768,7 +772,7 @@ export default function ProMixer({ session }) {
       try {
         const savedData = localStorage.getItem('bandly_metronome_profile');
         if (savedData) savedMetro = { ...savedMetro, ...JSON.parse(savedData) };
-      } catch (e) {}
+      } catch {}
 
       const next = { ...savedMetro, bpm: targetBpm };
       if (isTauri()) {
@@ -792,7 +796,6 @@ export default function ProMixer({ session }) {
       }
       if (!sequence) { setTracks([]); setMarkers([]); setActiveSequenceId(null); return; }
       const stems = sequence.sequence_stems || [];
-      const songDir = song.id.toString();
       setActiveSequenceId(sequence.id);
       setMarkers(sequence.markers || []);
 
@@ -802,7 +805,7 @@ export default function ProMixer({ session }) {
       try {
         mixerProfile = JSON.parse(localStorage.getItem('bandly_mixer_profile') || '{}');
         mixerVolumes = JSON.parse(localStorage.getItem('bandly_mixer_volumes') || '{}');
-      } catch(e) {}
+      } catch {}
 
       const resTracks = stems.map((stem) => {
         const rawName = stem.original_name || stem.instrument_label || 'Inst';
@@ -849,7 +852,7 @@ export default function ProMixer({ session }) {
                 stems: stemsWithState 
               });
               return true;
-            } catch (err) {
+            } catch {
               return false;
             }
           };
@@ -882,13 +885,13 @@ export default function ProMixer({ session }) {
             setIsLoadingStems(false);
           };
           applyStatesToRust();
-        } catch (err) {
+        } catch {
           // Error interno silenciado
         } finally {
           setIsLoadingStems(false);
         }
       }
-    } catch (e) { 
+    } catch {
       // Error de flujo general
     } finally { 
       setLoading(false); 
@@ -946,10 +949,6 @@ export default function ProMixer({ session }) {
     });
   }, []);
 
-  if (!isConfigured) return <HardwarePicker onConfigured={(device) => {
-    setIsConfigured(true);
-  }} />;
-
   useEffect(() => {
     if (autoAdvanceTrigger && activeSong && setlist.length > 0) {
       const currentIdx = setlist.findIndex(s => s.id === activeSong.id);
@@ -961,6 +960,10 @@ export default function ProMixer({ session }) {
       }
     }
   }, [autoAdvanceTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isConfigured) return <HardwarePicker onConfigured={() => {
+    setIsConfigured(true);
+  }} />;
 
   return (
     <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', background: '#020617' }}>
@@ -985,18 +988,18 @@ export default function ProMixer({ session }) {
         </div>
       )}
 
-      <MemoizedTransportUI 
-          isPlaying={isPlaying} isBuffering={isBuffering} togglePlay={togglePlay} handleStop={handleStop} 
-          handleRestart={handleRestart} activeSong={activeSong} loading={loading} engineReady={engineReady}
-          tracksLoadingCount={tracksLoadingCount} rawDbg={rawDbg} setShowCloudBrowser={setShowCloudBrowser}
+      <MemoizedTransportUI
+          isPlaying={isPlaying} togglePlay={togglePlay} handleStop={handleStop}
+          handleRestart={handleRestart} engineReady={engineReady}
+          setShowCloudBrowser={setShowCloudBrowser}
           metronome={metronome} deviceChannels={deviceChannels} showPads={showPads} setShowPads={setShowPads}
           playbackSample={playbackSample} sampleRate={playbackSR} totalSamples={totalSamples}
           reconnectAudio={reconnectAudio} setIsConfigured={setIsConfigured}
-          isLoadingStems={isLoadingStems} masterVolume={masterVolume} setMasterVolume={setMasterVolume}
+          isLoadingStems={isLoadingStems}
           onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
-          try { localStorage.setItem('bandly_metronome_profile', JSON.stringify({ volume: next.volume, outputCh: next.outputCh })); } catch(e){}
+          try { localStorage.setItem('bandly_metronome_profile', JSON.stringify({ volume: next.volume, outputCh: next.outputCh })); } catch{}
           if (isTauri()) await safeInvoke('set_metronome', { enabled: next.enabled, volume: next.volume, bpm: next.bpm, outputCh: next.outputCh, standalone: true });
         }}
       />

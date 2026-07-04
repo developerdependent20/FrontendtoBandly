@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-export default function VUMeter({ level = 0, isActive = false }) {
+export default function VUMeter({ level = 0 }) {
   const canvasRef = useRef(null);
   const smoothedLevel = useRef(0);
   const peakLevel = useRef(0);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, memo } from 'react';
 import { safeInvoke } from '../../utils/tauri';
 import { Flag, ChevronRight, AlertCircle, Search, Plus, Trash2, Maximize2, Timer, Magnet } from 'lucide-react';
 import WaveformVisualizer from './WaveformVisualizer';

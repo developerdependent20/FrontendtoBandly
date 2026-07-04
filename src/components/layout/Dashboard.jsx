@@ -1,6 +1,7 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
+import { isSuperAdmin } from '../../utils/permissions';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
 import '../DAW/DAW.css';
@@ -14,12 +15,9 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
     profile?.role === 'director' && !localStorage.getItem(`bandly_welcome_${profile?.id}`)
   );
   
-  const isSuperAdmin = profile?.email === 'dependent.mix@gmail.com';
+  const userIsSuperAdmin = isSuperAdmin(profile);
   const userFunctions = profile?.functions || [];
   const canAccessLibrary = profile?.role === 'director' || (userFunctions && userFunctions.some(f => ['musico', 'audio', 'media', 'maestro'].includes(f)));
-  // Ahora todos pueden ver el Planner, pero se validará lectura/escritura adentro
-  const canAccessPlanner = true;
-  const canAccessTeam = profile?.role === 'director' || (userFunctions && userFunctions.some(f => f.startsWith('admin_') || f === 'admin'));
 
   return (
     <div className="dashboard-layout">
@@ -64,17 +62,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             onClick={() => {
               if (isTauri()) {
                 const plan = (profile?.organizations?.plan || 'free').toLowerCase();
-                if (plan === 'free') {
-                  alert("La App de Escritorio (DAW) es una herramienta profesional exclusiva para planes de pago (Starter, Pro, Elite). Haz upgrade en la versión web para desbloquearla.");
+                if (plan === 'free' || plan === 'starter') {
+                  alert("La App de Escritorio (DAW) es una herramienta profesional exclusiva para planes Pro y Elite. Haz upgrade en la versión web para desbloquearla.");
                   return;
                 }
               }
               setActiveTab('daw');
             }}
-            title={isTauri() ? 'Bandly DAW' : 'Subir Secuencias'}
-            style={{ color: 'var(--primary)', filter: activeTab === 'daw' ? 'drop-shadow(0 0 8px var(--primary))' : 'none' }}
+            title="DAW / Multitracks"
           >
-            {isTauri() ? <Layout size={26} strokeWidth={2.5} /> : <Upload size={22} />}
+            <Cloud size={22} />
           </div>
         )}
 
@@ -86,7 +83,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           <Users size={22} />
         </div>
 
-        {isSuperAdmin && (
+        {userIsSuperAdmin && (
           <div 
             className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`} 
             onClick={() => setActiveTab('admin')}
@@ -94,6 +91,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             style={{ color: '#ef4444' }}
           >
             <ShieldCheck size={22} />
+          </div>
+        )}
+
+        {!isTauri() && (
+          <div 
+            className={`nav-item ${activeTab === 'downloads' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('downloads')}
+            title="Descargar Apps"
+          >
+            <Download size={22} />
           </div>
         )}
 

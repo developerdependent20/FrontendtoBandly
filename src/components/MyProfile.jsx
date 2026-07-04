@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Calendar, Trash2, ShieldCheck, Info } from 'lucide-react';
 
-export default function MyProfile({ profile, session }) {
+export default function MyProfile({ profile }) {
   const [blockedDates, setBlockedDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [loading, setLoading] = useState(false);

@@ -62,18 +62,9 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
     });
   }, [track.id, onVolumeChange]);
 
-  const handlePointerDown = (e) => {
-    isDragging.current = true;
-    calculateVolumeFromY(e.clientY);
-    
-    // Capturar eventos de mouse a nivel global para un arrastre fluido profesional
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-  };
-
   const handlePointerMove = useCallback((e) => {
     if (isDragging.current) {
-      e.preventDefault(); 
+      e.preventDefault();
       // Throttle con requestAnimationFrame para evitar IPC flooding a Tauri
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(() => calculateVolumeFromY(e.clientY));
@@ -85,8 +76,18 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
     if (rafId.current) cancelAnimationFrame(rafId.current);
     window.removeEventListener('pointermove', handlePointerMove);
 
+    // eslint-disable-next-line react-hooks/immutability -- self-cleanup: removes its own pointerup listener; valid at runtime via closure, safe.
     window.removeEventListener('pointerup', handlePointerUp);
   }, [handlePointerMove]);
+
+  const handlePointerDown = (e) => {
+    isDragging.current = true;
+    calculateVolumeFromY(e.clientY);
+
+    // Capturar eventos de mouse a nivel global para un arrastre fluido profesional
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
 
   // Clic doble = Reset a 100
   const handleDoubleClick = () => {

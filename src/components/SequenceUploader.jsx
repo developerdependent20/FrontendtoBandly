@@ -22,7 +22,7 @@ const INSTRUMENT_MAP = [
 ];
 
 function detectInstrument(fileName) {
-  const name = fileName.toLowerCase().replace(/[_\-\.]/g, ' ');
+  const name = fileName.toLowerCase().replace(/[_\-.]/g, ' ');
   for (const entry of INSTRUMENT_MAP) {
     for (const kw of entry.keywords) {
       if (name.includes(kw)) {
@@ -34,60 +34,6 @@ function detectInstrument(fileName) {
 }
 
 // ─────────────────────────────────────────────
-// Codificador WAV → MP3 (usando lamejs)
-// ─────────────────────────────────────────────
-async function encodeWavToMp3(wavArrayBuffer) {
-  const lamejs = (await import('lamejs')).default || await import('lamejs');
-
-  // Decodificar el WAV usando AudioContext
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const audioBuffer = await audioCtx.decodeAudioData(wavArrayBuffer.slice(0));
-  audioCtx.close();
-
-  const channels = audioBuffer.numberOfChannels;
-  const sampleRate = audioBuffer.sampleRate;
-  const kbps = 192;
-
-  // Obtener PCM samples
-  const left = audioBuffer.getChannelData(0);
-  const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
-
-  // Convertir Float32 a Int16
-  const toInt16 = (float32) => {
-    const int16 = new Int16Array(float32.length);
-    for (let i = 0; i < float32.length; i++) {
-      const s = Math.max(-1, Math.min(1, float32[i]));
-      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    return int16;
-  };
-
-  const leftInt16 = toInt16(left);
-  const rightInt16 = toInt16(right);
-
-  // Codificar con lamejs
-  const encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
-  const mp3Data = [];
-  const blockSize = 1152;
-
-  for (let i = 0; i < leftInt16.length; i += blockSize) {
-    const leftChunk = leftInt16.subarray(i, i + blockSize);
-    const rightChunk = rightInt16.subarray(i, i + blockSize);
-    const mp3buf = channels > 1
-      ? encoder.encodeBuffer(leftChunk, rightChunk)
-      : encoder.encodeBuffer(leftChunk);
-    if (mp3buf.length > 0) mp3Data.push(mp3buf);
-  }
-
-  const end = encoder.flush();
-  if (end.length > 0) mp3Data.push(end);
-
-  // Combinar todos los chunks en un solo Blob
-  const blob = new Blob(mp3Data, { type: 'audio/mpeg' });
-  return { blob, durationSeconds: audioBuffer.duration };
-}
-
-// ─────────────────────────────────────────────
 // Componente Principal
 // ─────────────────────────────────────────────
 export default function SequenceUploader({ song, orgId, session, onClose, onComplete, apiUrl }) {
@@ -96,7 +42,6 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
   const [zipFile, setZipFile] = useState(null); // Guardar el archivo original
   const [seqKey, setSeqKey] = useState(song?.key || '');
   const [seqBpm, setSeqBpm] = useState(song?.bpm || '');
-  const [progress, setProgress] = useState(0); // Ahora es progreso del ZIP único
   const [globalStatus, setGlobalStatus] = useState('');
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);

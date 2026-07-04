@@ -5,7 +5,7 @@ const getToken = () => {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key.includes('auth-token')) {
-      try { const t = JSON.parse(localStorage.getItem(key))?.access_token; if (t) return t; } catch(e) {}
+      try { const t = JSON.parse(localStorage.getItem(key))?.access_token; if (t) return t; } catch {}
     }
   }
   return null;
@@ -68,7 +68,7 @@ const AdminPanel = ({ onInspect }) => {
         headers: { 'Authorization': `Bearer ${getToken()}` }
       });
       await fetchOrgs();
-    } catch (err) { alert('Error en sincronizacion'); }
+    } catch { alert('Error en sincronizacion'); }
     finally { setOrgsLoading(false); }
   };
 

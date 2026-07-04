@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X, 
+  Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X,
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
-  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check
+  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check,
+  GripVertical, UserX, Sparkles
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
 import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
-import { isTauri } from '../utils/tauri';
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -229,9 +229,8 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
                   style={{ 
                     width: '100%', 
                     padding: '12px', 
-                    background: 'rgba(255,255,255,0.03)', 
-                    border: 'none', 
-                    color: 'var(--primary)', 
+                    background: 'rgba(255,255,255,0.03)',
+                    color: 'var(--primary)',
                     fontSize: '0.7rem', 
                     fontWeight: '900', 
                     cursor: 'pointer', 
@@ -255,7 +254,10 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
 
 const CustomDatePicker = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState(() => value ? new Date(value + 'T12:00:00') : new Date());
+  // Si `value` ya trae hora/zona (ej: viene de una columna timestamptz: "2026-07-04T00:00:00+00:00"),
+  // hay que quedarnos solo con la fecha antes de concatenar nuestra propia hora, o el string queda
+  // mal formado ("...+00:00T12:00:00") y produce un Invalid Date (mes "NaN", cuadrícula vacía).
+  const [currentDate, setCurrentDate] = useState(() => value ? new Date(value.split('T')[0] + 'T12:00:00') : new Date());
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -347,7 +349,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [description, setDescription] = useState('');
-  const [format, setFormat] = useState('full');
+  const [, setFormat] = useState('full');
   const [roster, setRoster] = useState([]);
   const [setlist, setSetlist] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -359,7 +361,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [notifyMessage, setNotifyMessage] = useState(null);
   const [eventToDelete, setEventToDelete] = useState(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
-  const [expandedCardIds, setExpandedCardIds] = useState({});
+  const [expandedCardIds] = useState({});
   const [activeYoutubeUrl, setActiveYoutubeUrl] = useState(null);
   const [chartSong, setChartSong] = useState(null);
   const [initialRoster, setInitialRoster] = useState([]);
@@ -370,20 +372,23 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [showNewEventPicker, setShowNewEventPicker] = useState(false);
   const [pendingEventDate, setPendingEventDate] = useState('');
+  const [draggedSongIdx, setDraggedSongIdx] = useState(null);
+  const [replacementPicker, setReplacementPicker] = useState(null); // { eventId, rosterEntry }
 
   const getYoutubeId = (url) => {
     if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
   const formatEventDate = (dateStr) => {
-    if (!dateStr) return 'Sin fecha';
+    if (!dateStr || dateStr.includes('NaN')) return 'Sin fecha';
     try {
       const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
+      if (isNaN(d.getTime())) return 'Fecha por confirmar';
       return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
-    } catch (e) { return 'Error fecha'; }
+    } catch { return 'Error fecha'; }
   };
 
   const getInstrumentIcon = (inst) => {
@@ -579,13 +584,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       // Generar la lista de todos con sus correos
       const allRosterWithEmails = (freshRoster || []).map(r => ({ ...r, email: members.find(m => m.id === r.profile_id)?.email, name: members.find(m => m.id === r.profile_id)?.full_name }));
 
-      setNotifyData({ eventId: evtId, eventName, eventDate, description, candidates: diff.toNotify, allRoster: allRosterWithEmails });
+      setNotifyData({ eventId: evtId, eventName, eventDate, description, setlist, candidates: diff.toNotify, allRoster: allRosterWithEmails });
       setShowModal(false);
 
       // Auto-enviar notificaciones a los agregados recientemente
       if (diff.toNotify && diff.toNotify.length > 0) {
         // Ejecutamos en segundo plano para no bloquear
-        handleSendNotifications(diff.toNotify, 'delta', { eventName, eventDate, description });
+        handleSendNotifications(diff.toNotify, 'delta', { eventName, eventDate, description, setlist });
       }
 
       // Si no hay candidatos nuevos, podemos saltarnos el modal, o mostrarlo siempre. Lo mostramos por si quieren reenviar a todos.
@@ -614,6 +619,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       const evtName = overrideData ? overrideData.eventName : notifyData?.eventName;
       const evtDateRaw = overrideData ? overrideData.eventDate : notifyData?.eventDate;
       const evtDesc = overrideData ? overrideData.description : notifyData?.description;
+      const evtSetlist = overrideData ? overrideData.setlist : notifyData?.setlist;
 
       if (!evtDateRaw) throw new Error("Falta la fecha del evento para notificar.");
 
@@ -623,14 +629,25 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       
       // Formatear la fecha a humano para evitar "Invalid Date"
       const dateObj = new Date(cleanDate + 'T12:00:00');
-      const formattedDate = dateObj.toLocaleDateString('es-ES', { 
+      const formattedDate = isNaN(dateObj.getTime()) ? 'Fecha por confirmar' : dateObj.toLocaleDateString('es-ES', { 
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      });
+
+      const setlistDetails = (evtSetlist || []).filter(s => s.song_id).map(s => {
+        const songData = songs.find(ss => ss.id === s.song_id);
+        const leadData = members.find(m => m.id === s.lead_id);
+        return {
+          title: songData ? songData.title : 'Canción Desconocida',
+          key: s.selected_key || '-',
+          lead: leadData ? leadData.full_name.split(' ')[0] : '---'
+        };
       });
 
       const payload = { 
         eventName: evtName, 
         eventDate: formattedDate, 
         description: evtDesc, 
+        setlist: setlistDetails,
         rosterWithEmails: validRecipients.map(r => ({ 
           event_roster_id: r.id, 
           profile_id: r.profile_id || r.id,
@@ -682,11 +699,34 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     }
   };
 
-  const updateRosterStatus = async (eventId, roleId, status) => {
+  const updateRosterStatus = async (event, roleId, status, instrument) => {
+    const eventId = event?.id ?? event;
     try {
       await supabase.from('event_roster').update({ status }).eq('event_id', eventId).eq('profile_id', roleId);
       if (refreshData) refreshData();
-    } catch (e) { alert("Error al confirmar."); }
+
+      // Alerta automática a los directores para que puedan buscar reemplazo cuanto antes.
+      if (status === 'declined' && event?.id) {
+        const decliningMember = (members || []).find(m => String(m.id) === String(roleId));
+        const directors = (members || [])
+          .filter(m => m.role === 'director' && (m.email || m.id))
+          .map(m => ({ profile_id: m.id, email: m.email, name: m.full_name }));
+
+        if (directors.length > 0) {
+          fetch(`${API_URL}/api/events/notify-decline`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+            body: JSON.stringify({
+              eventName: event.name,
+              eventDate: formatEventDate(event.date),
+              instrument: getBilingualName(instrument || ''),
+              memberName: decliningMember?.full_name || 'Un integrante',
+              directors
+            })
+          }).catch(err => console.error('No se pudo notificar el rechazo:', err));
+        }
+      }
+    } catch { alert("Error al confirmar."); }
   };
 
   const handleRemoveFromRoster = async (rosterId) => {
@@ -694,7 +734,31 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     try {
       await supabase.from('event_roster').delete().eq('id', rosterId);
       if (refreshData) refreshData();
-    } catch (e) { alert("Error al eliminar."); }
+    } catch { alert("Error al eliminar."); }
+  };
+
+  const handleAssignReplacement = async (newProfileId) => {
+    if (!replacementPicker) return;
+    const { event, rosterEntry } = replacementPicker;
+    try {
+      const { error } = await supabase.from('event_roster')
+        .update({ profile_id: newProfileId, status: 'pending' })
+        .eq('id', rosterEntry.id);
+      if (error) throw error;
+
+      if (refreshData) refreshData();
+      setReplacementPicker(null);
+
+      const newMember = (members || []).find(m => String(m.id) === String(newProfileId));
+      if (newMember?.email) {
+        handleSendNotifications([{
+          id: rosterEntry.id, profile_id: newProfileId, email: newMember.email,
+          name: newMember.full_name, instrument: rosterEntry.instrument
+        }], 'delta', { eventName: event.name, eventDate: event.date, description: event.description });
+      }
+    } catch {
+      alert('Error al asignar el reemplazo.');
+    }
   };
 
   const closeModal = () => { setShowModal(false); setEditingEventId(null); setSaving(false); };
@@ -710,7 +774,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   todayStart.setHours(0, 0, 0, 0);
 
   const upcomingEvents = eventsToShow.filter(ev => {
-    if (!ev.date) return true; // Sin fecha Ã¢â€ â€™ siempre próximo
+    if (!ev.date) return true; // Sin fecha -> siempre proximo
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
     return evDate >= todayStart;
   });
@@ -744,7 +808,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     if (list.length === 0) return (
       <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
         <CalendarIcon size={28} style={{ opacity: 0.15, display: 'block', margin: '0 auto 0.75rem' }} />
-        No hay eventos proximos
+        No hay eventos próximos. Prepárate con excelencia para lo que viene.
       </div>
     );
 
@@ -857,13 +921,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 {!isPast && (
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     {userSlots.some(s => s.status !== 'confirmed') && (
-                      <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'confirmed')}
+                      <button onClick={() => updateRosterStatus(ev, currentUserId, 'confirmed')}
                         style={{ padding: '5px 12px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Check size={11} /> Confirmar
                       </button>
                     )}
                     {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
-                      <button onClick={() => updateRosterStatus(ev.id, currentUserId, 'declined')}
+                      <button onClick={() => updateRosterStatus(ev, currentUserId, 'declined', userSlots[0]?.instrument)}
                         style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <X size={11} /> Declinar
                       </button>
@@ -915,8 +979,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             const dot = statusDot(s.status);
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
                             const roleName = getBilingualName(s.instrument);
+                            const isDeclined = s.status === 'declined' || s.status === 'rejected';
                             return (
-                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', position: 'relative' }}>
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: isDeclined ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isDeclined ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.07)'}`, borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
                                   <button onClick={() => handleRemoveFromRoster(s.id)}
                                     style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -931,6 +996,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                 {/* Member name */}
                                 <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
                                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
+                                {userRole === 'director' && isDeclined && (
+                                  <button onClick={() => setReplacementPicker({ event: ev, rosterEntry: s })}
+                                    title="Buscar reemplazo"
+                                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '2px 6px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.6rem', fontWeight: '800' }}>
+                                    <UserX size={10} /> Reemplazar
+                                  </button>
+                                )}
                               </div>
                             );
                           })}
@@ -1018,7 +1090,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
            )}
            <div id="visual-calendar" style={{ marginTop: '2rem' }}>
              <h4 style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>Calendario Visual</h4>
-             <VisualCalendar events={events} onEventClick={handleEditEvent} onDayClick={handleNewEvent} />
+             <VisualCalendar events={events} onEventClick={setSelectedEventDetails} onDayClick={readOnly ? null : handleNewEvent} />
            </div>
         </div>
       </section>
@@ -1087,7 +1159,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
                      {!isPast && userSlots.some(s => s.status !== 'confirmed') && (
                         <button onClick={() => {
-                            updateRosterStatus(selectedEventDetails.id, currentUserId, 'confirmed');
+                            updateRosterStatus(selectedEventDetails, currentUserId, 'confirmed');
                             setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'confirmed'} : r)});
                         }} style={{ width: '100%', padding: '1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
                           <CheckCircle2 size={20} /> Confirmar Asistencia
@@ -1096,7 +1168,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                      {!isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
                         <button onClick={() => {
                             if(window.confirm('¿Seguro que no puedes asistir?')) {
-                              updateRosterStatus(selectedEventDetails.id, currentUserId, 'declined');
+                              updateRosterStatus(selectedEventDetails, currentUserId, 'declined', userSlots[0]?.instrument);
                               setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'declined'} : r)});
                             }
                         }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -1136,10 +1208,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             {sorted.map((s, i) => {
                                const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || 'Sin Asignar';
                                const roleName = getBilingualName(s.instrument);
-                               const dot = s.status === 'confirmed' ? '#10b981' : (s.status === 'declined' || s.status === 'rejected') ? '#ef4444' : '#f59e0b';
-                               
+                               const isDeclined = s.status === 'declined' || s.status === 'rejected';
+                               const dot = s.status === 'confirmed' ? '#10b981' : isDeclined ? '#ef4444' : '#f59e0b';
+
                                return (
-                                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: isDeclined ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                        <div style={{ color: getEventTheme(selectedEventDetails.name).main, display: 'flex', alignItems: 'center' }}>
                                          {getInstrumentIcon(s.instrument)}
@@ -1149,7 +1222,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                           <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{roleName}</div>
                                        </div>
                                     </div>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: dot }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                       {userRole === 'director' && isDeclined && (
+                                         <button onClick={() => setReplacementPicker({ event: selectedEventDetails, rosterEntry: s })}
+                                           title="Buscar reemplazo"
+                                           style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '3px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', fontWeight: '800' }}>
+                                           <UserX size={11} /> Reemplazar
+                                         </button>
+                                       )}
+                                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: dot, flexShrink: 0 }} />
+                                    </div>
                                  </div>
                                );
                             })}
@@ -1338,7 +1420,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
                 <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
-                <CustomDatePicker value={eventDate} onChange={setEventDate} />
+                <input type="date" className="input-field" value={eventDate ? eventDate.split('T')[0] : ''} onChange={e => setEventDate(e.target.value)} style={{ width: '100%', colorScheme: 'dark' }} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
               </div>
             )}
@@ -1481,8 +1563,45 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'setlist' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {setlist.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0 }}>
-                    <select 
+                  <div key={idx}
+                    draggable
+                    onDragStart={() => setDraggedSongIdx(idx)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (draggedSongIdx !== null && draggedSongIdx !== idx) {
+                        setSetlist(prev => {
+                          const next = [...prev];
+                          const [moved] = next.splice(draggedSongIdx, 1);
+                          next.splice(idx, 0, moved);
+                          return next;
+                        });
+                      }
+                      setDraggedSongIdx(null);
+                    }}
+                    onDragEnd={() => setDraggedSongIdx(null)}
+                    style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, opacity: draggedSongIdx === idx ? 0.4 : 1, cursor: 'grab' }}>
+                    <GripVertical size={16} className="hide-mobile" style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                    {/* Flechas: alternativa táctil al drag-and-drop (iPad/celular no disparan dragstart nativo) */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+                      <button type="button" disabled={idx === 0} onClick={() => {
+                        if (idx === 0) return;
+                        const n = [...setlist];
+                        [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]];
+                        setSetlist(n);
+                      }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '4px', color: idx === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px', display: 'flex' }}>
+                        <ChevronUp size={12} />
+                      </button>
+                      <button type="button" disabled={idx === setlist.length - 1} onClick={() => {
+                        if (idx === setlist.length - 1) return;
+                        const n = [...setlist];
+                        [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]];
+                        setSetlist(n);
+                      }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '4px', color: idx === setlist.length - 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)', cursor: idx === setlist.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex' }}>
+                        <ChevronDown size={12} />
+                      </button>
+                    </div>
+                    <select
                       className="input-field" 
                       value={item.song_id} 
                       onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
@@ -1656,6 +1775,32 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 Sí, cambiar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buscador de Reemplazo (cuando un integrante declina) */}
+      {replacementPicker && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2rem', border: '1px solid rgba(251,191,36,0.25)', animation: 'modalFadeIn 0.3s ease-out' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+              <Sparkles size={20} color="#fbbf24" />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'white', margin: 0 }}>Buscar Reemplazo</h3>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
+              {(members.find(m => String(m.id) === String(replacementPicker.rosterEntry.profile_id))?.full_name?.split(' ')[0]) || 'Este integrante'} declinó su lugar de <strong style={{ color: 'white' }}>{getBilingualName(replacementPicker.rosterEntry.instrument)}</strong> en <strong style={{ color: 'white' }}>{replacementPicker.event.name}</strong>. Los miembros marcados con ✨ son los sugeridos para este rol; los que están "Ocupado" tienen esa fecha bloqueada.
+            </p>
+            <MemberSelector
+              value={null}
+              onChange={handleAssignReplacement}
+              members={(members || []).filter(m => String(m.id) !== String(replacementPicker.rosterEntry.profile_id))}
+              roleName={replacementPicker.rosterEntry.instrument}
+              eventDate={replacementPicker.event.date ? replacementPicker.event.date.split('T')[0] : ''}
+              placeholder="Elegir reemplazo"
+            />
+            <button onClick={() => setReplacementPicker(null)} className="btn-secondary" style={{ width: '100%', padding: '0.9rem', marginTop: '1.5rem' }}>
+              Cancelar
+            </button>
           </div>
         </div>
       )}

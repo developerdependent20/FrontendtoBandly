@@ -28,7 +28,7 @@ const getTone = async () => {
   return toneModule;
 };
 
-export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
+export default function PadBoard({ deviceChannels = 2 }) {
   const [activeKey, setActiveKey] = useState(null);
   const [loadedPads, setLoadedPads] = useState({});
   const [warmLevel, setWarmLevel] = useState(() => parseFloat(localStorage.getItem('bandly_pad_volume') || '0.7'));
@@ -50,8 +50,8 @@ export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
       loadWebPads();
     }
     return () => {
-      Object.values(webPlayers.current).forEach(p => { try { p.dispose(); } catch(e){} });
-      if (webOutput.current) { try { webOutput.current.dispose(); } catch(e){} }
+      Object.values(webPlayers.current).forEach(p => { try { p.dispose(); } catch{} });
+      if (webOutput.current) { try { webOutput.current.dispose(); } catch{} }
     };
   }, []);
 
@@ -108,7 +108,7 @@ export default function PadBoard({ deviceChannels = 2, sampleRate = 44100 }) {
           }).connect(webOutput.current);
           webPlayers.current[note] = player;
         });
-      } catch(e) {
+      } catch {
         setLoadedPads(prev => ({ ...prev, [note]: false }));
       }
     }

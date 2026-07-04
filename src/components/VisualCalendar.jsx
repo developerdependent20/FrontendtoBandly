@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
 
 export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // En pantallas angostas las celdas quedan muy apretadas (7 columnas) y es fácil tocar
+  // el día vecino por error. Damos más aire por celda y quitamos elementos secundarios.
+  const [isNarrow, setIsNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 480);
+  useEffect(() => {
+    const onResize = () => setIsNarrow(window.innerWidth <= 480);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -128,7 +137,7 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
       </div>
 
       {/* ── GRID ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '4px', padding: '0 1rem 1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: isNarrow ? '3px' : '4px', padding: isNarrow ? '0 0.4rem 0.75rem' : '0 1rem 1rem' }}>
         {calendarDays.map((day, idx) => {
           const col = idx % 7;
           const isWeekend = col === 0 || col === 6;
@@ -142,8 +151,8 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
               key={idx}
               onClick={() => day && onDayClick && onDayClick(dateStr)}
               style={{
-                minHeight: '90px',
-                borderRadius: '14px',
+                minHeight: isNarrow ? '64px' : '90px',
+                borderRadius: isNarrow ? '10px' : '14px',
                 border: isToday
                   ? '1.5px solid rgba(37,99,235,0.6)'
                   : '1px solid rgba(255,255,255,0.04)',
@@ -157,7 +166,7 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
                 boxShadow: isToday ? '0 0 20px rgba(37,99,235,0.15) inset' : 'none',
                 cursor: day ? 'pointer' : 'default',
                 transition: 'all 0.2s',
-                display: 'flex', flexDirection: 'column', padding: '8px', position: 'relative',
+                display: 'flex', flexDirection: 'column', padding: isNarrow ? '4px 2px' : '8px', position: 'relative',
                 opacity: hasPast && dayEvents.length === 0 ? 0.5 : 1,
               }}
               onMouseEnter={e => { if (day) e.currentTarget.style.background = isToday ? 'linear-gradient(135deg,rgba(37,99,235,0.25),rgba(99,102,241,0.15))' : 'rgba(255,255,255,0.06)'; }}
@@ -166,29 +175,29 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
               {day && (
                 <>
                   {/* Day number */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isNarrow ? '3px' : '6px' }}>
                     <span style={{
                       width: isToday ? '24px' : 'auto',
                       height: isToday ? '24px' : 'auto',
                       borderRadius: '50%',
                       background: isToday ? 'var(--primary)' : 'transparent',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.72rem',
+                      fontSize: isNarrow ? '0.68rem' : '0.72rem',
                       fontWeight: isToday ? '900' : isWeekend ? '700' : '500',
                       color: isToday ? 'white' : isWeekend ? 'rgba(249,115,22,0.8)' : 'rgba(255,255,255,0.45)',
                       boxShadow: isToday ? '0 0 12px rgba(37,99,235,0.5)' : 'none',
                       flexShrink: 0,
                     }}>{day}</span>
 
-                    {/* "+" icon on hover for new event */}
-                    {dayEvents.length === 0 && (
+                    {/* "+" icon on hover for new event (se oculta en pantallas angostas: le quita espacio a la celda) */}
+                    {!isNarrow && dayEvents.length === 0 && (
                       <Plus size={10} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
                     )}
                   </div>
 
                   {/* Events */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
-                    {dayEvents.slice(0, 3).map((ev, ei) => {
+                    {dayEvents.slice(0, 3).map((ev) => {
                       const c = getEventColor(ev.name);
                       return (
                         <div

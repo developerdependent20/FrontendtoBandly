@@ -4,7 +4,6 @@ import {
   X, Play, Pause, RotateCcw, Volume2, Loader2, AlertCircle,
   Headphones, Music, Guitar, Mic2, Piano, Drum, Wand2, Zap, RefreshCw
 } from 'lucide-react';
-import { safeInvoke, isTauri } from '../../utils/tauri';
 import { OfflineManager } from '../../utils/offlineManager';
 import { supabase } from '../../supabaseClient';
 
@@ -136,7 +135,7 @@ function StemChannel({ stem, onVolumeChange, onMuteToggle, onSoloToggle, isMuted
 }
 
 // ── Componente Principal ──────────────────────────────────────
-export default function WebStemPlayer({ song, preloadedSequence, session, onClose }) {
+export default function WebStemPlayer({ song, session, onClose }) {
   const [status, setStatus] = useState('idle'); // idle | loading | ready | playing | error
   const [loadingMsg, setLoadingMsg] = useState('');
   const [loadProgress, setLoadProgress] = useState(0);
@@ -175,7 +174,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       try {
         audioCtxRef.current = new AudioContext(isMobile ? { sampleRate: 22050 } : undefined);
-      } catch (e) {
+      } catch {
         audioCtxRef.current = new AudioContext(); // Fallback for old browsers
       }
     }
@@ -192,14 +191,14 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
       source.buffer = buffer;
       source.connect(ctx.destination);
       source.start(0);
-    } catch (e) {}
+    } catch {}
   };
 
   // Carga iniciada por tap del usuario (requerido por iOS Safari)
   const handleStartLoad = async () => {
     try {
       await unlockAudioContext();
-    } catch (e) {
+    } catch {
       setErrorMsg('Tu navegador no soporta Web Audio API.');
       setStatus('error');
       return;
@@ -358,7 +357,7 @@ export default function WebStemPlayer({ song, preloadedSequence, session, onClos
 
   // ── Transport ─────────────────────────────────────────────
   const stopAll = useCallback(() => {
-    sourcesRef.current.forEach(src => { try { src.stop(); } catch (_) {} });
+    sourcesRef.current.forEach(src => { try { src.stop(); } catch {} });
     sourcesRef.current = [];
     isPlayingRef.current = false;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);

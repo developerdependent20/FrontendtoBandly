@@ -3,7 +3,6 @@ import ChannelStrip from './ChannelStrip';
 import { Settings, Music, Layers } from 'lucide-react';
 
 const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceChannels = 2 }) => {
-  const [activeSolo, setActiveSolo] = useState(null);
   const [selectedTracks, setSelectedTracks] = useState([]);
   const scrollRef = useRef(null);
 
@@ -47,7 +46,6 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
   };
 
   const handleSolo = (trackId, solo) => {
-    setActiveSolo(solo ? trackId : null);
     if (selectedTracks.includes(trackId)) {
       selectedTracks.forEach(id => onTrackUpdate('solo', { trackId: id, solo }));
     } else {

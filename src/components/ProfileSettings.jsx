@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { User, Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut, Bell } from 'lucide-react';
-import { isTauri } from '../utils/tauri';
 
-export default function ProfileSettings({ profile, session, onLogout }) {
+export default function ProfileSettings({ profile, onLogout }) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [blockedDates, setBlockedDates] = useState(profile?.blocked_dates || []);
   const [loading, setLoading] = useState(false);
@@ -115,9 +114,14 @@ export default function ProfileSettings({ profile, session, onLogout }) {
           <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Bell size={20} />
-              <span>Notificaciones bloqueadas por tu navegador.</span>
+              <span>Notificaciones bloqueadas o no soportadas.</span>
             </div>
-            <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.8 }}>Haz clic en el ícono del candado 🔒 en la barra de direcciones de arriba, busca "Notificaciones", cámbialo a "Permitir" y recarga la página.</p>
+            <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.8 }}>
+              {typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream 
+                ? "🍎 En iPhone/iPad: Primero debes tocar el ícono de 'Compartir' (cuadro con flecha arriba) en la barra de abajo y seleccionar 'Agregar a la Pantalla de Inicio'. Luego abre Bandly desde tu pantalla de inicio."
+                : "Haz clic en el ícono del candado 🔒 en la barra de direcciones de arriba, busca 'Notificaciones', cámbialo a 'Permitir' y recarga la página."
+              }
+            </p>
           </div>
         )}
 
@@ -131,12 +135,16 @@ export default function ProfileSettings({ profile, session, onLogout }) {
                  Notification.requestPermission().then((permission) => {
                    checkNotifStatus();
                    if (permission === 'granted' && window.OneSignal) {
-                     // Force OneSignal to sync with the new native permission
                      window.OneSignal.Notifications.requestPermission().catch(()=>{});
                    }
                  });
               } else {
-                 alert("Tu navegador no soporta Notificaciones Push.");
+                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                 if (isIOS) {
+                   alert("🍎 Para recibir notificaciones en iPhone/iPad, primero debes instalar la app:\n\n1. Toca el botón de 'Compartir' (el cuadrado con la flecha hacia arriba) en la barra de tu navegador.\n2. Selecciona 'Agregar a la Pantalla de Inicio'.\n3. Abre Bandly desde tu pantalla de inicio y vuelve a intentar.");
+                 } else {
+                   alert("Tu navegador actual no soporta Notificaciones Push. Intenta usar Chrome, Firefox o Edge.");
+                 }
               }
             }}
           >

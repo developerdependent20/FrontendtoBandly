@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import ChordSheetJS from 'chordsheetjs';
 import { 
@@ -53,7 +53,6 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   const [transposeDelta, setTransposeDelta] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(true); // Start fullscreen
   const [copied, setCopied] = useState(false);
   const [chordSuffix, setChordSuffix] = useState(''); // For 7, maj7, etc.
 
@@ -67,12 +66,30 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   });
   const [currentStroke, setCurrentStroke] = useState([]);
   const [penColor, setPenColor] = useState('#facc15');
-  const [penSize, setPenSize] = useState(3);
+  const [penSize] = useState(3);
 
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const textareaRef = useRef(null);
   const scrollRef = useRef(null); // for auto-scroll animation
+  const overlayRef = useRef(null); // root element for the real Fullscreen API (proyección a pantalla externa)
+
+  // ── Pantalla Completa real (no solo CSS) — clave para proyectar en un TV/monitor externo sin la barra del navegador ──
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    } else {
+      overlayRef.current?.requestFullscreen?.().catch(() => {});
+    }
+  };
 
   // ── Auto-Scroll (Teleprompter) ──
   const [autoScrolling, setAutoScrolling] = useState(false);
@@ -295,7 +312,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
 
   // ── Render ──
   const modalContent = (
-    <div className="cs-overlay cs-fullscreen">
+    <div className="cs-overlay cs-fullscreen" ref={overlayRef}>
       <div className="cs-container cs-container-full">
         
         {/* ── Header ── */}
@@ -335,10 +352,18 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                   <Edit3 size={15} /> Editar
                 </button>
               )}
-              <button className={`cs-btn ${mode === 'preview' ? 'cs-btn-active' : ''}`} onClick={() => setMode('preview')}>
+              <button className={`cs-btn ${mode === 'preview' ? 'cs-btn-active' : ''}`} onClick={() => {
+                setMode('preview');
+                if (!document.fullscreenElement) overlayRef.current?.requestFullscreen?.().catch(() => {});
+              }}>
                 <Eye size={15} /> Atril
               </button>
             </div>
+
+            {/* Pantalla Completa real — para proyectar en TV/monitor externo sin barra del navegador */}
+            <button className={`cs-btn cs-btn-icon ${isFullscreen ? 'cs-btn-active' : ''}`} onClick={toggleFullscreen} title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa (proyección)'}>
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
 
             {/* Auto-scroll (teleprompter) — siempre visible en readOnly para uso en vivo */}
             <div className={`cs-autoscroll ${readOnly ? '' : 'hide-mobile-small'}`}>

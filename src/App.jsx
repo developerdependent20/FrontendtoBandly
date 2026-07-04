@@ -19,6 +19,7 @@ import { DirectorView, MemberView } from './components/layout/RoleViews';
 
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
+import { isSuperAdmin } from './utils/permissions';
 
 /**
  * App - Versión de Estabilidad Garantizada
@@ -116,6 +117,13 @@ export default function App() {
     localStorage.setItem('bandly_active_tab', activeTab);
   }, [activeTab]);
 
+  // Si el tab quedó en 'admin' (ej. restaurado de localStorage) sin ser superadmin, redirige.
+  useEffect(() => {
+    if (activeTab === 'admin' && profile && !isSuperAdmin(profile)) {
+      setActiveTab('planner');
+    }
+  }, [activeTab, profile]);
+
   useEffect(() => {
     localStorage.setItem('bandly_view', view);
   }, [view]);
@@ -142,6 +150,16 @@ export default function App() {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error; 
+      
+      // Bloqueo de características si el plan expiró
+      if (data && data.organizations && data.organizations.current_period_end) {
+        const endDate = new Date(data.organizations.current_period_end);
+        if (new Date() > endDate) {
+          // El plan ha expirado, degradar a gratis localmente para bloquear UI
+          data.organizations.plan = 'free';
+          data.organizations.subscription_status = 'expired';
+        }
+      }
       
       setProfile(data || null);
       
@@ -225,7 +243,7 @@ export default function App() {
       if (error) throw error;
       setProfile({ ...profile, accepted_terms: true });
       setShowLegalBlocking(false);
-    } catch (e) {
+    } catch {
       alert("Error al guardar aceptación legal.");
     }
   };
@@ -266,6 +284,7 @@ export default function App() {
   const isSectionalAdmin = userFunctions.some(f => f.startsWith('admin_') || f === 'admin');
   const isGlobalDirector = profile?.role === 'director';
   const hasAdminAccess = isGlobalDirector || isSectionalAdmin || inspectedOrg;
+  const userIsSuperAdmin = isSuperAdmin(profile);
 
   return (
     <>
@@ -300,7 +319,7 @@ export default function App() {
         handleCopyLink={handleCopyLink}
         handleJoinTeam={handleJoinTeam}
       >
-        {activeTab === 'admin' ? (
+        {activeTab === 'admin' && userIsSuperAdmin ? (
           <AdminPanel onInspect={(org) => { setInspectedOrg(org); setActiveTab('planner'); }} />
         ) : hasAdminAccess ? (
           <DirectorView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
