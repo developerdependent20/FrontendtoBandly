@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, Music, Loader2, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
-import { unzip } from 'fflate';
 import './SequenceUploader.css';
 
 // ─────────────────────────────────────────────
@@ -89,6 +88,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
       await new Promise(r => setTimeout(r, 100));
 
       // Usar unzip asíncrono para no bloquear la UI
+      const { unzip } = await import('fflate');
       const unzipped = await new Promise((resolve, reject) => {
         unzip(uint8, (err, data) => {
           if (err) reject(err);

@@ -90,13 +90,12 @@ export default function PercussionPad() {
       }
     });
 
-    return () => {
       isMounted = false;
       Object.values(synths.current).forEach(s => s.dispose());
       Object.values(players.current).forEach(p => p.dispose());
       if (volNode.current) volNode.current.dispose();
     };
-  }, []);
+  }, [volume]);
 
   const triggerPad = (id) => {
     if (!ready || !powerOn) return;

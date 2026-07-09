@@ -127,13 +127,13 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     { id: 'percusion', label: 'Percusión', icon: '🪘' }
   ];
 
-  const leadershipIds = new Set(leadershipRoles.map(r => r.id));
-  const productionIds = new Set(productionRoles.map(r => r.id));
-  const logisticsIds = new Set(logisticsRoles.map(r => r.id));
-  const instrumentIds = new Set(instrumentsCatalog.map(r => r.id));
-
   // 2. Agrupación Jerárquica Exclusiva
   const groupedMembers = useMemo(() => {
+    const leadershipIds = new Set(leadershipRoles.map(r => r.id));
+    const productionIds = new Set(productionRoles.map(r => r.id));
+    const logisticsIds = new Set(logisticsRoles.map(r => r.id));
+    const instrumentIds = new Set(instrumentsCatalog.map(r => r.id));
+
     let activeMembers = members || [];
     if (filterBlocked) {
       activeMembers = activeMembers.filter(m => m.blocked_dates && m.blocked_dates.length > 0);

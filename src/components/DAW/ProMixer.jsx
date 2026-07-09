@@ -897,7 +897,7 @@ export default function ProMixer({ session }) {
       setLoading(false); 
       setIsLoadingStems(false);
     }
-  }, []);
+  }, [session?.access_token]);
 
   const onAddMarker = useCallback(async (bar, label, sample) => {
     if (!activeSequenceId) return;

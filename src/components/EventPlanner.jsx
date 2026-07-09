@@ -861,7 +861,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {ev.name}
                 </h4>
 
-                {/* Description â€” button + expandable panel */}
+                {/* Description - button + expandable panel */}
                 {ev.description && (
                   <div style={{ marginTop: '6px' }}>
                     <button
