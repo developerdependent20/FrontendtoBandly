@@ -159,7 +159,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     const unassigned = remainingAfterLogistics.filter(m => !(m.functions || []).some(f => instrumentIds.has(f)));
 
     return { global, leadership, production, logistics, music, unassigned };
-  }, [members, filterBlocked, leadershipIds, productionIds, logisticsIds, instrumentIds]);
+  }, [members, filterBlocked, orgSettings]);
 
   const renderMemberCard = (m, level, categoryName) => {
     const mFunctions = m.functions || [];
