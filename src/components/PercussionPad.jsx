@@ -90,6 +90,7 @@ export default function PercussionPad() {
       }
     });
 
+    return () => {
       isMounted = false;
       Object.values(synths.current).forEach(s => s.dispose());
       Object.values(players.current).forEach(p => p.dispose());
