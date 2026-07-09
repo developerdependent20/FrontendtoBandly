@@ -961,6 +961,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     // Sort by Spanish ordinal if instrument name contains one
                     const ordinalRank = (name = '') => {
                       const n = name.toLowerCase();
+                      const match = n.match(/([1-9])/);
+                      if (match) return parseInt(match[1]);
                       if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
                       if (n.includes('segundo') || n.includes('second')) return 2;
                       if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
@@ -970,7 +972,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       if (n.includes('septimo') || n.includes('seventh')) return 7;
                       return 99;
                     };
-                    const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
+                    const sorted = [...items].sort((a, b) => {
+                      const nameA = getBilingualName(a.instrument);
+                      const nameB = getBilingualName(b.instrument);
+                      if (nameA < nameB) return -1;
+                      if (nameA > nameB) return 1;
+                      
+                      const rankDiff = ordinalRank(a.instrument) - ordinalRank(b.instrument);
+                      if (rankDiff !== 0) return rankDiff;
+                      
+                      return (a.instrument || '').localeCompare(b.instrument || '');
+                    });
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
@@ -1194,12 +1206,28 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   return Object.entries(groups).filter(([_, items]) => items.length > 0).map(([groupName, items]) => {
                      const ordinalRank = (name = '') => {
                        const n = name.toLowerCase();
+                       const match = n.match(/([1-9])/);
+                       if (match) return parseInt(match[1]);
                        if (n.includes('primer') || n.includes('primero') || n.includes('first')) return 1;
                        if (n.includes('segundo') || n.includes('second')) return 2;
                        if (n.includes('tercer') || n.includes('tercero') || n.includes('third')) return 3;
+                       if (n.includes('cuarto') || n.includes('fourth')) return 4;
+                       if (n.includes('quinto') || n.includes('fifth')) return 5;
+                       if (n.includes('sexto') || n.includes('sixth')) return 6;
+                       if (n.includes('septimo') || n.includes('seventh')) return 7;
                        return 99;
                      };
-                     const sorted = [...items].sort((a, b) => ordinalRank(a.instrument) - ordinalRank(b.instrument));
+                     const sorted = [...items].sort((a, b) => {
+                       const nameA = getBilingualName(a.instrument);
+                       const nameB = getBilingualName(b.instrument);
+                       if (nameA < nameB) return -1;
+                       if (nameA > nameB) return 1;
+                       
+                       const rankDiff = ordinalRank(a.instrument) - ordinalRank(b.instrument);
+                       if (rankDiff !== 0) return rankDiff;
+                       
+                       return (a.instrument || '').localeCompare(b.instrument || '');
+                     });
                      
                      return (
                        <div key={groupName} style={{ marginBottom: '1.5rem' }}>
