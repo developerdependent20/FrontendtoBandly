@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Crown, Check, X, Loader2 } from 'lucide-react';
-import { paymentService } from '../../services/paymentService';
+import { paddleService } from '../../services/paddleService';
 
 const SubscriptionModal = ({ profile, onClose }) => {
   const [loading, setLoading] = useState(null);
   const [billingPeriod, setBillingPeriod] = useState('monthly');
 
   const handleSubscribe = async (planId) => {
+    if (planId === 'free') return; // El plan gratis no pasa por checkout
     setLoading(planId);
     try {
-      const checkoutUrl = await paymentService.createCheckout(planId, billingPeriod, profile.id);
-      paymentService.openCheckout(checkoutUrl);
+      await paddleService.openCheckout(planId, billingPeriod, profile.id, profile.email);
     } catch (err) {
       alert(`Error al iniciar el pago: ${err.message}`);
     } finally {
@@ -187,7 +187,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
 
         <div style={{ padding: '16px 24px', background: 'rgba(255,255,255,0.02)', textAlign: 'center', flexShrink: 0 }}>
           <p style={{ margin: 0, fontSize: '0.65rem', opacity: 0.4 }}>
-            Pagos procesados de forma segura por Mercado Pago. Puedes cancelar en cualquier momento.
+            Pagos procesados de forma segura por Paddle. Puedes cancelar en cualquier momento.
           </p>
         </div>
       </div>
