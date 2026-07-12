@@ -3,23 +3,42 @@ import { safeInvoke } from '../../utils/tauri';
 import { Flag, ChevronRight, AlertCircle, Search, Plus, Trash2, Maximize2, Timer, Magnet } from 'lucide-react';
 import WaveformVisualizer from './WaveformVisualizer';
 
-const CueTimeline = memo(({ 
-  bpm = 120, 
-  markers = [], 
-  sampleRate = 44100, 
-  masterWaveform = [], 
-  totalSamples = 0, 
+function fmtClock(s) {
+  if (!isFinite(s) || s < 0) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+// Secciones típicas de una canción: un clic = marker con color consistente
+const SECTION_PRESETS = [
+  { label: 'INTRO', color: '#38bdf8' },
+  { label: 'VERSO', color: '#10b981' },
+  { label: 'PRE-CORO', color: '#fbbf24' },
+  { label: 'CORO', color: '#ef4444' },
+  { label: 'PUENTE', color: '#a855f7' },
+  { label: 'SOLO', color: '#f97316' },
+  { label: 'FINAL', color: '#64748b' },
+];
+
+const CueTimeline = memo(({
+  bpm = 120,
+  hasTempo = true,
+  markers = [],
+  sampleRate = 44100,
+  masterWaveform = [],
+  totalSamples = 0,
   playbackSample = 0,
   isPrerollActive = false,
   prerollBars = 0,
-  onAddMarker, 
+  onAddMarker,
   onRemoveMarker,
   onSeek
 }) => {
 
-  const [zoom, setZoom] = useState(1); 
-  const [scrollOffset, setScrollOffset] = useState(0); 
-  const [vZoom, setVZoom] = useState(1); 
+  const [zoom, setZoom] = useState(1);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [vZoom, setVZoom] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [markerLabel, setMarkerLabel] = useState('');
   const [snapEnabled, setSnapEnabled] = useState(true);
@@ -28,9 +47,35 @@ const CueTimeline = memo(({
   const samplesPerBeat = (sampleRate * 60) / bpm;
   const samplesPerBar = samplesPerBeat * 4;
   const currentBar = Math.floor(playbackSample / samplesPerBar) + 1;
-  const totalLengthSamples = totalSamples > 0 ? totalSamples : (samplesPerBar * 128); 
-  const progress = totalSamples > 0 ? playbackSample / totalLengthSamples : 0;
-  const totalBars = Math.ceil(totalLengthSamples / samplesPerBar);
+  const progress = totalSamples > 0 ? playbackSample / totalSamples : 0;
+  const durationSec = totalSamples > 0 ? totalSamples / sampleRate : 0;
+
+  // Modo de grilla: compases si la canción tiene tempo real; tiempo fijo si no.
+  // Sin datos reales (totalSamples=0) no se dibuja grilla — evita el "recálculo"
+  // visible al abrir mientras llegan BPM/SR/duración de forma asíncrona.
+  const gridMode = hasTempo ? 'bars' : 'time';
+  let gridTicks = 0;
+  let secondsPerTick = 0;
+  let majorEvery = 4;
+  if (totalSamples > 0) {
+    if (gridMode === 'bars') {
+      gridTicks = Math.ceil(totalSamples / samplesPerBar);
+    } else {
+      const candidates = [1, 2, 5, 10, 15, 30, 60];
+      secondsPerTick = candidates.find(s => durationSec / s <= 120) || 60;
+      gridTicks = Math.ceil(durationSec / secondsPerTick);
+      majorEvery = 5;
+    }
+  }
+  // Snap: a beats (4 por compás) con tempo, a ticks de tiempo sin tempo.
+  const snapDivisions = gridMode === 'bars' ? gridTicks * 4 : gridTicks;
+
+  // Sección activa: último marker cuyo sample ya pasó (markers viene ordenado)
+  let activeMarkerIdx = -1;
+  for (let i = 0; i < markers.length; i++) {
+    if (markers[i].sample <= playbackSample) activeMarkerIdx = i;
+    else break;
+  }
 
   const handleJump = async (marker) => {
     try {
@@ -68,7 +113,27 @@ const CueTimeline = memo(({
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
           }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '0.8rem', fontWeight: '900', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>NUEVO MARCADOR</h3>
-            <input 
+            {/* Presets de sección: un clic agrega y cierra */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+              {SECTION_PRESETS.map(p => (
+                <button
+                  key={p.label}
+                  onClick={() => {
+                    if (onAddMarker) onAddMarker(currentBar, p.label, playbackSample, p.color);
+                    setShowModal(false);
+                    setMarkerLabel('');
+                  }}
+                  style={{
+                    padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+                    background: `${p.color}22`, border: `1px solid ${p.color}66`,
+                    color: p.color, fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.5px'
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <input
               autoFocus
               value={markerLabel}
               onChange={(e) => setMarkerLabel(e.target.value)}
@@ -181,10 +246,12 @@ const CueTimeline = memo(({
       </div>
 
       <div style={{ padding: '0 20px', marginBottom: '8px', position: 'relative', height: '70px' }}>
-        <WaveformVisualizer 
+        <WaveformVisualizer
           progress={progress} peaks={masterWaveform} onSeek={onSeek}
           zoom={zoom} scrollOffset={scrollOffset} setScrollOffset={setScrollOffset}
-          vZoom={vZoom} totalBars={totalBars} snapToGrid={snapEnabled}
+          vZoom={vZoom} totalBars={gridTicks} snapToGrid={snapEnabled}
+          gridMode={gridMode} secondsPerTick={secondsPerTick}
+          majorEvery={majorEvery} snapDivisions={snapDivisions}
         />
         
         <div style={{ position: 'absolute', inset: '0 20px', pointerEvents: 'none', overflow: 'hidden' }}>
@@ -215,23 +282,35 @@ const CueTimeline = memo(({
 
       <div style={{ display: 'flex', gap: '8px', padding: '0 20px', flexWrap: 'wrap' }}>
         {markers.map((m, idx) => (
-          <div key={m.id} style={{ 
-            display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', 
-            borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)',
-            transition: 'all 0.2s hover:bg-white/10'
+          <div key={m.id} style={{
+            display: 'flex', alignItems: 'center',
+            background: idx === activeMarkerIdx ? `${m.color}18` : 'rgba(255,255,255,0.03)',
+            borderRadius: '4px',
+            border: `1px solid ${idx === activeMarkerIdx ? m.color : 'rgba(255,255,255,0.08)'}`,
+            boxShadow: idx === activeMarkerIdx ? `0 0 12px ${m.color}44` : 'none',
+            transition: 'all 0.2s'
           }}>
-            <button 
+            <button
               onClick={() => handleJump(m)}
-              title={`Saltar a compás ${m.bar}`}
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', 
+              title={`${gridMode === 'bars' ? `Saltar a compás ${m.bar}` : `Saltar a ${fmtClock(m.sample / sampleRate)}`}${idx < 9 ? ` — Atajo: tecla ${idx + 1}` : ''}`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px',
                 color: 'white', fontSize: '0.75rem', fontWeight: '900',
                 background: 'transparent', border: 'none', cursor: 'pointer'
               }}
             >
+              {idx < 9 && (
+                <span style={{
+                  fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.45)',
+                  border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px',
+                  padding: '1px 5px', lineHeight: 1.4
+                }}>{idx + 1}</span>
+              )}
               <Flag size={14} color={m.color} fill={m.color} />
               <span style={{ letterSpacing: '0.5px' }}>{m.label}</span>
-              <span style={{ opacity: 0.4, fontSize: '0.65rem' }}>B{m.bar}</span>
+              <span style={{ opacity: 0.4, fontSize: '0.65rem' }}>
+                {gridMode === 'bars' ? `B${m.bar}` : fmtClock(m.sample / sampleRate)}
+              </span>
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); onRemoveMarker(idx); }}

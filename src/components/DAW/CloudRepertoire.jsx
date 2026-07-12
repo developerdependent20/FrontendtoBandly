@@ -68,9 +68,11 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
 
   return (
     <div className="modal-overlay" style={{ backdropFilter: 'blur(10px)', zIndex: 1000, position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}>
-      <div className="glass-panel" style={{ 
-        width: '500px', 
-        maxHeight: '80vh', 
+      <div className="glass-panel" style={{
+        width: '100%',
+        maxWidth: '500px',
+        margin: '0 16px',
+        maxHeight: '80vh',
         padding: '2rem', 
         background: 'rgba(15, 23, 42, 0.95)',
         border: '1px solid var(--daw-border)',

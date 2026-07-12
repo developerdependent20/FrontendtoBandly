@@ -1,4 +1,4 @@
-import React, { useState, memo, useRef, useEffect } from 'react';
+import React, { useState, memo, useRef, useEffect, useCallback } from 'react';
 import ChannelStrip from './ChannelStrip';
 import { Settings, Music, Layers } from 'lucide-react';
 
@@ -29,46 +29,49 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
     });
   };
 
-  const handleVolumeChange = (trackId, volume) => {
+  // useCallback: referencia estable entre renders (solo cambia si selectedTracks u
+  // onTrackUpdate cambian) para que ChannelStrip (memo) no se re-renderice de más
+  // en cada latido del VU meter (100ms) por culpa de props de función "nuevas".
+  const handleVolumeChange = useCallback((trackId, volume) => {
     if (selectedTracks.includes(trackId)) {
       selectedTracks.forEach(id => onTrackUpdate('volume', { trackId: id, volume }));
     } else {
       onTrackUpdate('volume', { trackId, volume });
     }
-  };
+  }, [selectedTracks, onTrackUpdate]);
 
-  const handleMute = (trackId, muted) => {
+  const handleMute = useCallback((trackId, muted) => {
     if (selectedTracks.includes(trackId)) {
       selectedTracks.forEach(id => onTrackUpdate('mute', { trackId: id, muted }));
     } else {
       onTrackUpdate('mute', { trackId, muted });
     }
-  };
+  }, [selectedTracks, onTrackUpdate]);
 
-  const handleSolo = (trackId, solo) => {
+  const handleSolo = useCallback((trackId, solo) => {
     if (selectedTracks.includes(trackId)) {
       selectedTracks.forEach(id => onTrackUpdate('solo', { trackId: id, solo }));
     } else {
       onTrackUpdate('solo', { trackId, solo });
     }
-  };
+  }, [selectedTracks, onTrackUpdate]);
 
-  const handleOutput = (trackId, output) => {
+  const handleOutput = useCallback((trackId, output) => {
     // Si la pista cambiada está seleccionada, aplicamos a todas las seleccionadas
     if (selectedTracks.includes(trackId)) {
       selectedTracks.forEach(id => onTrackUpdate('output', { trackId: id, output }));
     } else {
       onTrackUpdate('output', { trackId, output });
     }
-  };
+  }, [selectedTracks, onTrackUpdate]);
 
-  const handlePanMode = (trackId, isStereo) => {
+  const handlePanMode = useCallback((trackId, isStereo) => {
     if (selectedTracks.includes(trackId)) {
       selectedTracks.forEach(id => onTrackUpdate('panMode', { trackId: id, isStereo }));
     } else {
       onTrackUpdate('panMode', { trackId, isStereo });
     }
-  };
+  }, [selectedTracks, onTrackUpdate]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', overflow: 'hidden', background: 'var(--daw-bg)' }}>

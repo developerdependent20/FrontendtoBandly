@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import ChordSheetJS from 'chordsheetjs';
-import { 
+import {
   X, ChevronUp, ChevronDown, Pencil, Eraser,
   Save, Maximize2, Minimize2, FileText, Copy, Check, Eye, Edit3,
   Play, Pause, ArrowLeft
@@ -27,23 +26,37 @@ const SECTIONS = [
 const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-function transposeChordString(chord, delta) {
-  if (delta === 0) return chord;
-  // Extraer la nota base y el sufijo (ej: "C#m7" -> "C#", "m7")
-  const match = chord.match(/^([A-G][#b]?)(.*)$/);
-  if (!match) return chord; // No es un acorde estándar
-  
-  const note = match[1];
-  const suffix = match[2];
-  
+// Frames de espera entre cada px de scroll (mayor número = más lento). A 60fps: 60 = 1px/seg, 30 = 2px/seg, etc.
+const SCROLL_SPEEDS = [0.5, 1, 1.5, 2, 3];
+const FRAMES_PER_PX = { 0.5: 80, 1: 40, 1.5: 20, 2: 10, 3: 5 };
+
+function transposeNote(note, delta) {
   let index = SHARP_NOTES.indexOf(note);
   if (index === -1) index = FLAT_NOTES.indexOf(note);
-  if (index === -1) return chord;
-  
+  if (index === -1) return note;
   let newIndex = (index + delta) % 12;
   if (newIndex < 0) newIndex += 12;
-  
-  return SHARP_NOTES[newIndex] + suffix;
+  return SHARP_NOTES[newIndex];
+}
+
+function transposeChordString(chord, delta) {
+  if (delta === 0) return chord;
+  // Acordes con bajo ("G/B", "D/F#") deben transponer AMBAS notas, o el bajo
+  // queda "pegado" y el acorde resultante es musicalmente incorrecto.
+  const parts = chord.split('/');
+  const transposed = parts.map((part, i) => {
+    if (i === 0) {
+      // Raíz: nota + sufijo (ej "C#m7" -> "C#", "m7")
+      const match = part.match(/^([A-G][#b]?)(.*)$/);
+      if (!match) return part;
+      return transposeNote(match[1], delta) + match[2];
+    }
+    // Bajo tras "/": solo nota, sin sufijo
+    const match = part.match(/^([A-G][#b]?)$/);
+    if (!match) return part;
+    return transposeNote(match[1], delta);
+  });
+  return transposed.join('/');
 }
 
 export default function ChartStudio({ song, onClose, onSave, readOnly = false }) {
@@ -94,10 +107,6 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   // ── Auto-Scroll (Teleprompter) ──
   const [autoScrolling, setAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(1);
-  // Frames de espera entre cada px de scroll (mayor número = más lento)
-  // A 60fps: 60 = 1px/seg, 30 = 2px/seg, etc.
-  const SCROLL_SPEEDS = [0.5, 1, 1.5, 2, 3];
-  const FRAMES_PER_PX = { 0.5: 80, 1: 40, 1.5: 20, 2: 10, 3: 5 };
 
   useEffect(() => {
     if (!autoScrolling) {
@@ -157,6 +166,19 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   const insertChord = (chord) => {
     const full = chordSuffix ? `[${chord}${chordSuffix}]` : `[${chord}]`;
     insertAtCursor(full);
+  };
+
+  // La fila "Menor" ya incluye la "m" en la raíz (ej. "Cm"): anexar el sufijo
+  // "m" o "m7" tal cual produciría notación inválida como "Cmm" o "Cmm7".
+  const minorSuffix = (suffix) => {
+    if (!suffix || suffix === 'm') return '';
+    if (suffix === 'm7') return '7';
+    return suffix;
+  };
+
+  const insertMinorChord = (chord) => {
+    const suffix = minorSuffix(chordSuffix);
+    insertAtCursor(suffix ? `[${chord}${suffix}]` : `[${chord}]`);
   };
 
   const insertSection = (section) => {
@@ -250,29 +272,46 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     setCurrentStroke([]);
   };
 
+  // El canvas debe cubrir TODO el contenido scrolleable, no solo el viewport visible:
+  // el contenedor tiene overflow:auto, así que un width/height:100% en CSS solo mide
+  // la parte visible. Fijamos tamaño en px reales (bitmap == CSS size, sin escalado
+  // del navegador) y lo mantenemos en sync ante cambios de layout (resize, edit/atril).
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-    canvas.width = container.scrollWidth;
-    canvas.height = container.scrollHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const allStrokes = [...strokes, ...(currentStroke.length > 1 ? [{ points: currentStroke, color: penColor, size: penSize }] : [])];
-    allStrokes.forEach(stroke => {
-      if (stroke.points.length < 2) return;
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.size;
-      ctx.globalAlpha = stroke.color === '#facc15' ? 0.4 : 0.8;
-      ctx.beginPath();
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      for (let i = 1; i < stroke.points.length; i++) { ctx.lineTo(stroke.points[i].x, stroke.points[i].y); }
-      ctx.stroke();
-    });
-    ctx.globalAlpha = 1;
-  }, [strokes, currentStroke, penColor, penSize]);
+
+    const resizeAndDraw = () => {
+      const w = container.scrollWidth;
+      const h = container.scrollHeight;
+      if (canvas.width !== w) canvas.width = w;
+      if (canvas.height !== h) canvas.height = h;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      const allStrokes = [...strokes, ...(currentStroke.length > 1 ? [{ points: currentStroke, color: penColor, size: penSize }] : [])];
+      allStrokes.forEach(stroke => {
+        if (stroke.points.length < 2) return;
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.globalAlpha = stroke.color === '#facc15' ? 0.4 : 0.8;
+        ctx.beginPath();
+        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) { ctx.lineTo(stroke.points[i].x, stroke.points[i].y); }
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    };
+
+    resizeAndDraw();
+    const ro = new ResizeObserver(resizeAndDraw);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [strokes, currentStroke, penColor, penSize, renderedHtml, mode]);
 
   // ── Actions ──
   const handleSave = async () => {
@@ -450,8 +489,8 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                   <span className="cs-row-label">Menor</span>
                   <div className="cs-chord-buttons">
                     {MINOR_CHORDS.map(c => (
-                      <button key={c} className="cs-chord-btn cs-chord-btn-minor" onClick={() => insertChord(c)}>
-                        {c}{chordSuffix && chordSuffix !== 'm' ? chordSuffix : ''}
+                      <button key={c} className="cs-chord-btn cs-chord-btn-minor" onClick={() => insertMinorChord(c)}>
+                        {c}{minorSuffix(chordSuffix)}
                       </button>
                     ))}
                   </div>

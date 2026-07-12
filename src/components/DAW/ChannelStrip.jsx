@@ -34,7 +34,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
       setLocalOutputIdx(safeIdx);
       onOutputToggle && onOutputToggle(track.id, safeIdx);
     }
-  }, [isStereo, deviceChannels]);
+  }, [isStereo, deviceChannels, localOutputIdx, onOutputToggle, track.id]);
 
   // --- DRAGGABLE FADER LOGIC ---
   const faderRef = useRef(null);
@@ -197,7 +197,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
               width: '100%',
               height: `${Math.min(100, smoothedLevel)}%`,
               background: getVUColor(smoothedLevel),
-              transition: 'height 80ms ease-out',
+              transition: 'height 100ms linear',
               boxShadow: `0 0 10px ${getVUColor(smoothedLevel)}44`
             }} />
 

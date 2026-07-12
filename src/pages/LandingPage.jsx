@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { landingDict } from './landingDict';
 import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor } from 'lucide-react';
 
@@ -6,6 +6,21 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = useState('annual');
   const [lang, setLang] = useState('es');
   const t = landingDict[lang];
+
+  // Mantener <html lang> sincronizado: evita que el traductor del navegador
+  // intente traducir contenido ya traducido (y destroce la marca)
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  // Scroll a la sección del hash (ej. #pricing) al montar: el auto-scroll nativo
+  // del navegador ya pasó antes de que React termine de renderizar el DOM.
+  useEffect(() => {
+    const hash = window.location.hash?.replace('#', '');
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (el) el.scrollIntoView({ behavior: 'instant' });
+  }, []);
 
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -28,7 +43,12 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           </div>
 
           <div className="landing-nav-links">
-            <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>{lang === 'es' ? 'EN' : 'ES'}</button>
+            {/* Selector: muestra ambos idiomas, el ACTIVO resaltado (antes mostraba el destino y confundía) */}
+            <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: lang === 'es' ? 'white' : 'rgba(255,255,255,0.35)' }}>ES</span>
+              <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
+              <span style={{ color: lang === 'en' ? 'white' : 'rgba(255,255,255,0.35)' }}>EN</span>
+            </button>
             <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>{t.btnLogin}</button>
             <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
           </div>
@@ -300,7 +320,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Comparison Section (The "Why Bandly" Factor) */}
       <section className="comparison-section" style={{ padding: '8rem 2rem', background: 'rgba(255,255,255,0.02)' }}>
         <div className="section-header-centered">
-          <h2 className="section-title-large">{t.whyTitle} <span className="serif-accent">Bandly</span>?</h2>
+          <h2 className="section-title-large">{t.whyTitle} <span className="serif-accent" translate="no">Bandly</span>?</h2>
           <p className="section-subtitle">{t.whyDesc}</p>
         </div>
 
@@ -509,6 +529,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <div className="footer-links" style={{ fontSize: '0.65rem' }}>
             <span onClick={() => onNavigate('legal_terms')} style={{ cursor: 'pointer' }}>{t.footTerms}</span>
             <span onClick={() => onNavigate('legal_privacy')} style={{ cursor: 'pointer' }}>{t.footPriv}</span>
+            <span onClick={() => onNavigate('legal_refund')} style={{ cursor: 'pointer' }}>{t.footRefund}</span>
             <a href="mailto:dependent.mix@gmail.com">{t.footContact}</a>
           </div>
           <p style={{ margin: '0.5rem 0', opacity: 0.8 }}>{t.footOp}</p>

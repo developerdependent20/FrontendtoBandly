@@ -156,9 +156,16 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
 
   useEffect(() => {
     if (isOpen) {
-      setLeadership(orgSettings?.leadership || [...oldLeadership, ...leftovers]);
-      setProduction(orgSettings?.production || getOld(DEFAULT_PRODUCTION_ROLES));
-      setLogistics(orgSettings?.logistics || getOld(DEFAULT_LOGISTICS_ROLES));
+      // Recalculado aquí adentro (no reutiliza getOld/oldLeadership/leftovers de
+      // afuera) para que la única dependencia real de este efecto sea orgSettings.
+      const oldRolesNow = orgSettings?.roles || [];
+      const knownIdsNow = [...DEFAULT_LEADERSHIP_ROLES, ...DEFAULT_PRODUCTION_ROLES, ...DEFAULT_LOGISTICS_ROLES].map(r => r.id);
+      const getOldNow = (list) => oldRolesNow.filter(r => list.some(d => d.id === r.id));
+      const leftoversNow = oldRolesNow.filter(r => !knownIdsNow.includes(r.id));
+
+      setLeadership(orgSettings?.leadership || [...getOldNow(DEFAULT_LEADERSHIP_ROLES), ...leftoversNow]);
+      setProduction(orgSettings?.production || getOldNow(DEFAULT_PRODUCTION_ROLES));
+      setLogistics(orgSettings?.logistics || getOldNow(DEFAULT_LOGISTICS_ROLES));
       setInstruments(orgSettings?.instruments || []);
     }
   }, [isOpen, orgSettings]);

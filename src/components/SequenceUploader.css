@@ -405,7 +405,7 @@
 
 /* Responsive */
 @media (max-width: 640px) {
-  .su-container { max-height: 100vh; border-radius: 0; }
+  .su-container { max-height: 100vh; max-height: 100dvh; border-radius: 0; }
   .su-meta-fields { grid-template-columns: 1fr; }
   .su-select-zone { padding: 3rem 1.5rem; }
   .su-stem-type-select { max-width: 100px; font-size: 0.65rem; }

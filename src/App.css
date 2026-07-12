@@ -1552,6 +1552,7 @@ input[type="datetime-local"] {
     width: 100% !important;
     height: 100% !important;
     max-height: 100vh !important;
+    max-height: 100dvh !important; /* iOS Safari: viewport real sin barra de URL */
     border-radius: 0 !important;
     margin: 0 !important;
     padding: 1.5rem !important;

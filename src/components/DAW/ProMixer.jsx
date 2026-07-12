@@ -217,7 +217,8 @@ const MemoizedTransportUI = React.memo(({
   showPads, setShowPads,
   playbackSample, sampleRate, totalSamples,
   reconnectAudio, setIsConfigured,
-  isLoadingStems
+  isLoadingStems,
+  transpose = 0, onTransposeChange
 }) => {
   const bpm = metronome.bpm || 120;
   const sr = sampleRate || 44100;
@@ -415,6 +416,34 @@ const MemoizedTransportUI = React.memo(({
             TAP
           </button>
         </div>
+
+        {/* TRANSPOSICIÓN (Varispeed) */}
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'center' }}
+          title={`Transposición varispeed: pitch y tempo cambian juntos (como cinta).\n±1 semitono ≈ ±6% de tempo. Cero costo de CPU, calidad intacta.`}
+        >
+          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: transpose !== 0 ? '#f59e0b' : 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>PITCH</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button
+              onClick={() => onTransposeChange && onTransposeChange(transpose - 1)}
+              disabled={transpose <= -6}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '950', fontSize: '0.75rem', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', opacity: transpose <= -6 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >−</button>
+            <span
+              className="mono-data"
+              onDoubleClick={() => onTransposeChange && onTransposeChange(0)}
+              title="Doble clic = volver a 0"
+              style={{ minWidth: '30px', textAlign: 'center', fontWeight: '900', fontSize: '0.8rem', color: transpose !== 0 ? '#f59e0b' : 'white', cursor: 'pointer' }}
+            >
+              {transpose > 0 ? `+${transpose}` : transpose}
+            </span>
+            <button
+              onClick={() => onTransposeChange && onTransposeChange(transpose + 1)}
+              disabled={transpose >= 6}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '950', fontSize: '0.75rem', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', opacity: transpose >= 6 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >+</button>
+          </div>
+        </div>
       </div>
 
     <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
@@ -448,6 +477,18 @@ export default function ProMixer({ session }) {
   const autoAdvanceRef = useRef({ wasPlaying: false });
   const [audioError, setAudioError] = useState(null); 
   const [metronome, setMetronome] = useState({ enabled: true, bpm: 120, volume: 0.5, outputCh: 0 });
+  // Transposición varispeed en semitonos (-6..+6). Los markers se guardan en
+  // unidades "pitch 0" en la BD y se convierten al pitch actual para mostrar/saltar.
+  const [transpose, setTranspose] = useState(0);
+  const pitchRatio = Math.pow(2, transpose / 12);
+  const pitchRatioRef = useRef(1);
+  pitchRatioRef.current = pitchRatio;
+
+  const handleTransposeChange = useCallback(async (semitones) => {
+    const clamped = Math.max(-6, Math.min(6, Math.round(semitones)));
+    setTranspose(clamped);
+    if (isTauri()) await safeInvoke('set_transpose', { semitones: clamped });
+  }, []);
   const [deviceChannels, setDeviceChannels] = useState(2); // Volvemos a 2 como base, la app se expandirá según el hardware real
   const [activeSong, setActiveSong] = useState(null);
   const [songs, setSongs] = useState([]);
@@ -541,7 +582,7 @@ export default function ProMixer({ session }) {
   const [downloadProgress, setDownloadProgress] = useState({ active: false, total: 0, done: 0 });
 
   // Sincronización Offline de Audios (Reemplaza la pre-descarga silenciosa)
-  const handleSyncOffline = async () => {
+  const handleSyncOffline = useCallback(async () => {
     if (!songs.length || !isTauri()) return;
     const token = session?.access_token || '';
     
@@ -575,12 +616,13 @@ export default function ProMixer({ session }) {
         setDownloadProgress({ active: false, total: 0, done: 0 });
       }, 3000);
     }
-  };
+  }, [songs, session?.access_token]);
 
   useEffect(() => {
     // Sincronizar automáticamente 2 segundos después de abrir el setlist
-    setTimeout(handleSyncOffline, 2000);
-  }, [songs]);
+    const timer = setTimeout(handleSyncOffline, 2000);
+    return () => clearTimeout(timer);
+  }, [handleSyncOffline]);
 
   const reconnectAudio = async () => {
     const lastDevice = localStorage.getItem('bandly_last_audio_device');
@@ -644,7 +686,8 @@ export default function ProMixer({ session }) {
     } catch (e) {
       console.error("[DAW] Sync Error:", e);
     }
-  }, [activeSong]);
+  }, [deviceChannels]); // 'deviceChannels' se lee para comparar contra el reporte del motor;
+  // sin esto quedaba "pegado" al valor de cuando se creó el callback (bug de closure obsoleto)
 
   // RE-SINCRONIZACIÓN DE ESTADO (Fuerza Bruta contra caché)
 
@@ -680,7 +723,9 @@ export default function ProMixer({ session }) {
   }, [isPlaying]);
 
   useEffect(() => {
-    const interval = setInterval(handleSyncState, 300);
+    // 100ms: VU meters y playhead fluidos. El costo es mínimo — cuando el motor
+    // está detenido los valores no cambian y React no re-renderiza (bailout).
+    const interval = setInterval(handleSyncState, 100);
     return () => clearInterval(interval);
   }, [handleSyncState]);
 
@@ -706,6 +751,26 @@ export default function ProMixer({ session }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePlay, handleStop]);
+
+  // Atajos 1-9: saltar al marker N con pre-roll de 2 compases (uso en vivo)
+  useEffect(() => {
+    const handleDigit = (e) => {
+      if (
+        document.activeElement.tagName === 'INPUT' ||
+        document.activeElement.tagName === 'TEXTAREA' ||
+        document.activeElement.tagName === 'SELECT' ||
+        document.activeElement.isContentEditable
+      ) return;
+      const m = e.code.match(/^Digit([1-9])$/);
+      if (!m) return;
+      const marker = markers[parseInt(m[1], 10) - 1]; // markers ya está ordenado por sample
+      if (!marker || !isTauri()) return;
+      e.preventDefault();
+      safeInvoke('play_with_preroll', { targetSample: Math.round(marker.sample / pitchRatioRef.current), bars: 2 });
+    };
+    window.addEventListener('keydown', handleDigit);
+    return () => window.removeEventListener('keydown', handleDigit);
+  }, [markers]);
 
 
   const onTrackUpdate = useCallback(async (type, data) => {
@@ -765,6 +830,7 @@ export default function ProMixer({ session }) {
     if (!song) return;
     // Ya no bloqueamos toda la pantalla con setLoading(true).
     // Usaremos isLoadingStems para que sea transparente y rápido en el botón Play.
+    setTranspose(0); // el motor ya resetea pitch_ratio en reset_audio_engine
     const targetBpm = parseFloat(song.bpm) || 120;
     setMetronome(prev => {
       // Intentar cargar la configuración guardada del metrónomo
@@ -899,10 +965,12 @@ export default function ProMixer({ session }) {
     }
   }, [session?.access_token]);
 
-  const onAddMarker = useCallback(async (bar, label, sample) => {
+  const onAddMarker = useCallback(async (bar, label, sample, color) => {
     if (!activeSequenceId) return;
     const colors = ['#22d3ee', '#818cf8', '#fbbf24', '#f472b6', '#34d399'];
-    const newMarker = { id: crypto.randomUUID(), bar, label, sample, color: colors[markers.length % colors.length] };
+    // Normalizar a unidades "pitch 0" para que el marker sea válido en cualquier transposición
+    const normalizedSample = Math.round(sample * pitchRatioRef.current);
+    const newMarker = { id: crypto.randomUUID(), bar, label, sample: normalizedSample, color: color || colors[markers.length % colors.length] };
     const nextMarkers = [...markers, newMarker].sort((a, b) => a.sample - b.sample);
     setMarkers(nextMarkers);
     
@@ -996,6 +1064,7 @@ export default function ProMixer({ session }) {
           playbackSample={playbackSample} sampleRate={playbackSR} totalSamples={totalSamples}
           reconnectAudio={reconnectAudio} setIsConfigured={setIsConfigured}
           isLoadingStems={isLoadingStems}
+          transpose={transpose} onTransposeChange={handleTransposeChange}
           onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
@@ -1009,10 +1078,12 @@ export default function ProMixer({ session }) {
           paddingRight: '300px' 
         }}>
           <div style={{ padding: '0.5rem 0', background: 'rgba(0,0,0,0.1)', borderBottom: '1px solid var(--daw-border)' }}>
-            <CueTimeline 
-              progress={totalSamples > 0 ? playbackSample / totalSamples : 0} totalSamples={totalSamples} 
-              playbackSample={playbackSample} bpm={metronome.bpm} sampleRate={playbackSR} 
-              markers={markers} onAddMarker={onAddMarker} onRemoveMarker={onRemoveMarker}
+            <CueTimeline
+              progress={totalSamples > 0 ? playbackSample / totalSamples : 0} totalSamples={totalSamples}
+              playbackSample={playbackSample} bpm={metronome.bpm} sampleRate={playbackSR}
+              hasTempo={!!parseFloat(activeSong?.bpm)}
+              markers={pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }))}
+              onAddMarker={onAddMarker} onRemoveMarker={onRemoveMarker}
               isPrerollActive={isPrerollActive} prerollBars={prerollBars}
               onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: Math.floor(p * totalSamples) })} 
             />

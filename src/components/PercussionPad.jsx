@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Upload, Trash2, Power } from 'lucide-react';
 import localforage from 'localforage';
 import AnalogKnob from './ui/AnalogKnob';
@@ -41,11 +41,18 @@ export default function PercussionPad() {
     import('tone').then(async (t) => {
       const Tone = t.default || t;
       ToneRef.current = Tone;
-      
+
       // Optimización: Reducir la latencia de programación a cero para live drumming
       Tone.context.lookAhead = 0;
-      
-      volNode.current = new Tone.Volume(Tone.gainToDb(volume)).toDestination();
+
+      // Volumen inicial leído directo de localStorage (no del estado `volume`):
+      // los cambios en vivo de la perilla ya los aplica el efecto de arriba via
+      // rampTo(). Si este efecto dependiera de `volume` reactivamente, cada
+      // movimiento de la perilla destruiría y reconstruiría TODO el motor
+      // (8 synths + recarga de samples personalizados) — glitches audibles y
+      // fuga de memoria por los blob URLs nunca liberados.
+      const initialVolume = parseFloat(localStorage.getItem('bandly_drum_vol') || '0.8');
+      volNode.current = new Tone.Volume(Tone.gainToDb(initialVolume)).toDestination();
 
       // Synthetic Fallbacks
       synths.current = {
@@ -73,9 +80,10 @@ export default function PercussionPad() {
                   player.connect(volNode.current);
                   players.current[pad.id] = player;
                   loadedCustoms[pad.id] = true;
+                  URL.revokeObjectURL(url); // el buffer ya está decodificado en memoria, liberar el blob
                   resolve();
                 },
-                onerror: () => resolve()
+                onerror: () => { URL.revokeObjectURL(url); resolve(); }
               });
             });
           }
@@ -90,15 +98,19 @@ export default function PercussionPad() {
       }
     });
 
+    // Capturamos las referencias AQUÍ (mismos objetos que se siguen mutando en
+    // vivo, nunca se reasignan) para satisfacer la regla de refs en cleanups.
+    const synthsMap = synths.current;
+    const playersMap = players.current;
     return () => {
       isMounted = false;
-      Object.values(synths.current).forEach(s => s.dispose());
-      Object.values(players.current).forEach(p => p.dispose());
+      Object.values(synthsMap).forEach(s => s.dispose());
+      Object.values(playersMap).forEach(p => p.dispose());
       if (volNode.current) volNode.current.dispose();
     };
-  }, [volume]);
+  }, []); // Solo al montar: ver comentario sobre initialVolume arriba
 
-  const triggerPad = (id) => {
+  const triggerPad = useCallback((id) => {
     if (!ready || !powerOn) return;
     
     if (ToneRef.current && ToneRef.current.context.state !== 'running') {
@@ -124,7 +136,7 @@ export default function PercussionPad() {
 
     setActivePad(id);
     setTimeout(() => setActivePad(null), 100);
-  };
+  }, [ready, powerOn]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -134,7 +146,7 @@ export default function PercussionPad() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [ready, powerOn]);
+  }, [powerOn, triggerPad]);
 
   const handleUploadClick = (e, padId) => {
     e.stopPropagation();
@@ -163,6 +175,7 @@ export default function PercussionPad() {
             player.connect(volNode.current);
             players.current[padId] = player;
             setCustomPads(prev => ({ ...prev, [padId]: true }));
+            URL.revokeObjectURL(url);
             resolve();
           }
         });

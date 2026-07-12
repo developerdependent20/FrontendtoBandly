@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 export function useOrgData(orgId) {
@@ -7,20 +7,19 @@ export function useOrgData(orgId) {
   const [songs, setSongs] = useState([]);
   const [orgSettings, setOrgSettings] = useState(null);
 
-  useEffect(() => {
-    if (orgId) fetchData();
-  }, [orgId]);
-
-  const fetchData = async () => {
+  // fetchData depende SOLO de orgId (usa el setState funcional para leer el estado
+  // más reciente sin cerrar sobre él). Si dependiera de members/events/songs/orgSettings
+  // —que la propia función actualiza— entraría en un loop infinito de refetch.
+  const fetchData = useCallback(async () => {
     try {
       // 1. Cargar rápido desde caché para Optimistic UI o Modo Offline
       const cachedData = localStorage.getItem(`bandly_offline_org_${orgId}`);
       if (cachedData) {
         const parsed = JSON.parse(cachedData);
-        if (members.length === 0) setMembers(parsed.members || []);
-        if (events.length === 0) setEvents(parsed.events || []);
-        if (songs.length === 0) setSongs(parsed.songs || []);
-        if (!orgSettings) setOrgSettings(parsed.orgSettings || null);
+        setMembers(prev => prev.length === 0 ? (parsed.members || []) : prev);
+        setEvents(prev => prev.length === 0 ? (parsed.events || []) : prev);
+        setSongs(prev => prev.length === 0 ? (parsed.songs || []) : prev);
+        setOrgSettings(prev => prev ? prev : (parsed.orgSettings || null));
       }
 
       // Si no hay internet, nos quedamos solo con la caché
@@ -62,7 +61,11 @@ export function useOrgData(orgId) {
         setOrgSettings(parsed.orgSettings || null);
       }
     }
-  };
+  }, [orgId]);
+
+  useEffect(() => {
+    if (orgId) fetchData();
+  }, [orgId, fetchData]);
 
   return { members, events, songs, orgSettings, fetchData };
 }

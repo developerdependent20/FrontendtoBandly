@@ -97,35 +97,37 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
   };
 
   // 1. Cargamos las categorías desde la DB (o usamos los defaults si no hay nada guardado aún)
-  const leadershipRoles = orgSettings?.leadership ?? [
+  // useMemo keyed en orgSettings: referencia estable entre renders para que el
+  // useMemo de groupedMembers (abajo) no recalcule de más ni quede con datos obsoletos.
+  const leadershipRoles = useMemo(() => orgSettings?.leadership ?? [
     { id: 'director_musical', label: 'Director Musical', icon: '🎼' },
     { id: 'eventos', label: 'Dir. Eventos', icon: '📅' },
     { id: 'lider_produccion', label: 'Líder Producción', icon: '🎬' },
     { id: 'lider_logistica', label: 'Líder Logística', icon: '📋' }
-  ];
+  ], [orgSettings]);
 
-  const productionRoles = orgSettings?.production ?? [
+  const productionRoles = useMemo(() => orgSettings?.production ?? [
     { id: 'media', label: 'Media/Visuales', icon: '📽️' },
     { id: 'sonido', label: 'Audio/Sonido', icon: '🎛️' },
     { id: 'transmision', label: 'Transmisión', icon: '📡' },
     { id: 'iluminacion', label: 'Iluminación', icon: '💡' }
-  ];
+  ], [orgSettings]);
 
-  const logisticsRoles = orgSettings?.logistics ?? [
+  const logisticsRoles = useMemo(() => orgSettings?.logistics ?? [
     { id: 'logistica', label: 'Staff/Logística', icon: '🛠️' },
     { id: 'decoracion', label: 'Decoración', icon: '🎨' },
     { id: 'bienvenida', label: 'Bienvenida', icon: '👋' },
     { id: 'finanzas', label: 'Finanzas', icon: '💰' }
-  ];
+  ], [orgSettings]);
 
-  const instrumentsCatalog = orgSettings?.instruments ?? [
+  const instrumentsCatalog = useMemo(() => orgSettings?.instruments ?? [
     { id: 'bateria', label: 'Batería', icon: '🥁' },
     { id: 'bajo', label: 'Bajo', icon: '🎸' },
     { id: 'guitarra', label: 'Guitarra', icon: '🎸' },
     { id: 'piano', label: 'Teclado', icon: '🎹' },
     { id: 'voz', label: 'Voz/Cantante', icon: '🎤' },
     { id: 'percusion', label: 'Percusión', icon: '🪘' }
-  ];
+  ], [orgSettings]);
 
   // 2. Agrupación Jerárquica Exclusiva
   const groupedMembers = useMemo(() => {
@@ -159,7 +161,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     const unassigned = remainingAfterLogistics.filter(m => !(m.functions || []).some(f => instrumentIds.has(f)));
 
     return { global, leadership, production, logistics, music, unassigned };
-  }, [members, filterBlocked, orgSettings]);
+  }, [members, filterBlocked, leadershipRoles, productionRoles, logisticsRoles, instrumentsCatalog]);
 
   const renderMemberCard = (m, level, categoryName) => {
     const mFunctions = m.functions || [];

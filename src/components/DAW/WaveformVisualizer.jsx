@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 
 // COLORES DE ALTO CONTRASTE (DAW STYLE)
 const CYAN = 'linear-gradient(135deg, #a855f7, #3b82f6)';
@@ -8,23 +8,34 @@ const BG_COLOR = '#020617';
 const GRID_MINOR = 'rgba(255, 255, 255, 0.03)';
 const GRID_MAJOR = 'rgba(255, 255, 255, 0.08)';
 
-export default function WaveformVisualizer({ 
-  progress = 0, 
-  peaks = [], 
-  onSeek, 
-  zoom = 1, 
-  scrollOffset = 0, 
-  setScrollOffset, 
-  vZoom = 1, 
+function fmtClock(s) {
+  if (!isFinite(s) || s < 0) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+export default function WaveformVisualizer({
+  progress = 0,
+  peaks = [],
+  onSeek,
+  zoom = 1,
+  scrollOffset = 0,
+  setScrollOffset,
+  vZoom = 1,
   totalBars = 64,
   snapToGrid = false,
-  onZoomWheel = null 
+  gridMode = 'bars',       // 'bars' (compases) | 'time' (grilla fija por segundos)
+  secondsPerTick = 0,      // solo en modo 'time'
+  majorEvery = 4,
+  snapDivisions = 0,
+  onZoomWheel = null
 }) {
   const staticCanvasRef = useRef(null);
   const dynamicCanvasRef = useRef(null);
 
   // DIBUJO ESTÁTICO: Grilla y Números (Solo se ejecuta al hacer Zoom o Scroll)
-  const drawStatic = () => {
+  const drawStatic = useCallback(() => {
     const canvas = staticCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -33,6 +44,9 @@ export default function WaveformVisualizer({
     ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, width, height);
 
+    // Sin datos reales todavía: fondo neutro, sin líneas (evita grilla falsa al abrir)
+    if (totalBars < 1) return;
+
     const pixPerBar = (width * zoom) / Math.max(1, totalBars);
     const barOffset = zoom > 1 ? (scrollOffset * (totalBars * pixPerBar - width)) : 0;
 
@@ -40,7 +54,7 @@ export default function WaveformVisualizer({
       const x = Math.floor(i * pixPerBar - barOffset) + 0.5;
       if (x < -10 || x > width + 10) continue;
 
-      const isMajor = i % 4 === 0;
+      const isMajor = i % Math.max(1, majorEvery) === 0;
       ctx.lineWidth = 1;
       ctx.strokeStyle = isMajor ? GRID_MAJOR : GRID_MINOR;
       ctx.beginPath();
@@ -49,13 +63,14 @@ export default function WaveformVisualizer({
       if (isMajor || pixPerBar > 100) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.font = '700 10px monospace';
-        ctx.fillText(i + 1, x + 4, 14);
+        const label = gridMode === 'time' ? fmtClock(i * secondsPerTick) : (i + 1);
+        ctx.fillText(label, x + 4, 14);
       }
     }
-  };
+  }, [zoom, scrollOffset, totalBars, gridMode, secondsPerTick, majorEvery]);
 
   // DIBUJO DINÁMICO: Forma de Onda y Playhead (Se ejecuta cuando cambia progress o peaks)
-  const drawDynamic = () => {
+  const drawDynamic = useCallback(() => {
     const canvas = dynamicCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -93,17 +108,17 @@ export default function WaveformVisualizer({
       ctx.fillRect(Math.floor(playX) - 1, 0, 2, height);
       ctx.shadowBlur = 0;
     }
-  };
+  }, [progress, peaks, vZoom, zoom, scrollOffset]);
 
   // Efecto para redibujar la grilla (Solo zoom/scroll/bars)
   useEffect(() => {
     drawStatic();
-  }, [zoom, scrollOffset, totalBars]);
+  }, [drawStatic]);
 
   // Efecto para redibujar la onda (progress/peaks/vZoom + dependencias de escala)
   useEffect(() => {
     drawDynamic();
-  }, [progress, peaks, vZoom, zoom, scrollOffset]);
+  }, [drawDynamic]);
 
   const handleClick = (e) => {
     if (!onSeek) return;
@@ -115,13 +130,11 @@ export default function WaveformVisualizer({
       : Math.max(0, Math.min(1, lPos));
       
     // SNAP TO GRID LOGIC (Estabilidad perfecta, cálculos 100% frontend)
-    // Asumimos un compás de 4/4 (4 beats por bar)
-    if (snapToGrid && totalBars > 0) {
-      const beatsPerBar = 4;
-      const totalBeats = totalBars * beatsPerBar;
-      const beatProgress = 1 / totalBeats;
-      const nearestBeatIndex = Math.round(rawPos / beatProgress);
-      rawPos = nearestBeatIndex * beatProgress;
+    // Con tempo: beats en 4/4. Sin tempo: ticks de tiempo fijos.
+    const divisions = snapDivisions > 0 ? snapDivisions : totalBars * 4;
+    if (snapToGrid && divisions > 0) {
+      const step = 1 / divisions;
+      rawPos = Math.round(rawPos / step) * step;
     }
     
     onSeek(Math.max(0, Math.min(1, rawPos)));

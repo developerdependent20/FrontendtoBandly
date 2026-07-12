@@ -31,7 +31,7 @@ const AdminPanel = ({ onInspect }) => {
 
   useEffect(() => {
     if (activeTab === 'users' && !usersFetched) fetchUsers();
-  }, [activeTab]);
+  }, [activeTab, usersFetched]);
 
   const fetchOrgs = async () => {
     setOrgsLoading(true);

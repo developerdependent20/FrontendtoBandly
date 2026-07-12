@@ -9,6 +9,7 @@ import OnboardingScreen from './pages/OnboardingScreen';
 import ResetPassword from './pages/ResetPassword';
 import TermsPage from './pages/legal/TermsPage';
 import PrivacyPage from './pages/legal/PrivacyPage';
+import RefundPage from './pages/legal/RefundPage';
 
 // Components & Layout
 import LoadingScreen from './components/LoadingScreen';
@@ -187,12 +188,18 @@ export default function App() {
   useEffect(() => {
     const path = window.location.pathname;
     if (path === '/terminos') setView('legal_terms');
-    if (path === '/privacidad') setView('legal_privacy');
-    
+    else if (path === '/privacidad') setView('legal_privacy');
+    else if (path === '/reembolsos') setView('legal_refund');
+    // Enlaces directos con ancla (ej. getbandly.com/#pricing) deben mostrar la
+    // landing, no la última vista guardada en localStorage (ej. quedó en 'auth'
+    // de una visita anterior) — si no, el visitante ve un login en vez del precio.
+    else if (window.location.hash) setView('landing');
+
     const handlePopState = () => {
       const p = window.location.pathname;
       if (p === '/terminos') setView('legal_terms');
       else if (p === '/privacidad') setView('legal_privacy');
+      else if (p === '/reembolsos') setView('legal_refund');
       else if (p === '/') setView('landing');
     };
     window.addEventListener('popstate', handlePopState);
@@ -252,6 +259,7 @@ export default function App() {
   
   if (view === 'legal_terms') return <TermsPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
   if (view === 'legal_privacy') return <PrivacyPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
+  if (view === 'legal_refund') return <RefundPage onBack={() => { window.history.pushState({}, '', '/'); setView('landing'); }} />;
 
   // Prioridad: Si estamos recuperando contraseña, mostrar esa pantalla
   if (isRecovering) {

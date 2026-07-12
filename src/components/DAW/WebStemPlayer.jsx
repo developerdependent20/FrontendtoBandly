@@ -13,6 +13,35 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
+const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+// Reduce RAM en móvil (~4x menos): mono + 22050Hz en el AudioBuffer.
+// El buffer a menor rate se remuestrea automáticamente al reproducir;
+// NO se fuerza el rate del contexto (eso causaba el bug de pitch en iOS).
+function compactBufferForMobile(ctx, buffer) {
+  const targetRate = Math.min(22050, buffer.sampleRate);
+  if (buffer.sampleRate <= targetRate && buffer.numberOfChannels === 1) return buffer;
+  const ratio = buffer.sampleRate / targetRate;
+  const newLength = Math.max(1, Math.floor(buffer.length / ratio));
+  const out = ctx.createBuffer(1, newLength, targetRate);
+  const dst = out.getChannelData(0);
+  const chans = [];
+  for (let c = 0; c < buffer.numberOfChannels; c++) chans.push(buffer.getChannelData(c));
+  const win = Math.max(1, Math.floor(ratio)); // promedio de ventana: menos aliasing que decimar
+  for (let i = 0; i < newLength; i++) {
+    const start = Math.floor(i * ratio);
+    let sum = 0, count = 0;
+    for (let w = 0; w < win; w++) {
+      const idx = start + w;
+      if (idx >= buffer.length) break;
+      for (let c = 0; c < chans.length; c++) sum += chans[c][idx];
+      count += chans.length;
+    }
+    dst[i] = count > 0 ? sum / count : 0;
+  }
+  return out;
+}
+
 // Icono por tipo de instrumento (sin emojis para evitar problemas de encoding)
 function StemIcon({ type, size = 16 }) {
   const props = { size, color: 'white' };
@@ -157,6 +186,16 @@ export default function WebStemPlayer({ song, session, onClose }) {
   const isPlayingRef = useRef(false);
   const buffersRef = useRef({});
 
+  // ── Transport ─────────────────────────────────────────────
+  // Declarada antes del efecto de cleanup de abajo: se referencia en su
+  // dependency array, que se evalúa en cada render (no solo al desmontar).
+  const stopAll = useCallback(() => {
+    sourcesRef.current.forEach(src => { try { src.stop(); } catch {} });
+    sourcesRef.current = [];
+    isPlayingRef.current = false;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
+
   useEffect(() => {
     return () => {
       stopAll();
@@ -165,18 +204,30 @@ export default function WebStemPlayer({ song, session, onClose }) {
       buffersRef.current = {};
       OfflineManager.cleanupLocalUrls();
     };
-  }, []);
+  }, [stopAll]);
 
   // Helper to reliably unlock Web Audio API on iOS/Mobile
   const unlockAudioContext = async () => {
     if (!audioCtxRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      try {
-        audioCtxRef.current = new AudioContext(isMobile ? { sampleRate: 22050 } : undefined);
-      } catch {
-        audioCtxRef.current = new AudioContext(); // Fallback for old browsers
-      }
+      // Siempre al sample rate nativo del dispositivo: forzar un rate distinto
+      // hace que iOS reproduzca a doble velocidad/pitch cuando otro audio
+      // (Tone.js, llamadas) renegocia la ruta de hardware.
+      audioCtxRef.current = new AudioContext();
+
+      // iOS suspende el contexto en llamadas/Siri/otras apps de audio:
+      // pausar limpio en vez de dejar la reproducción corrupta.
+      audioCtxRef.current.onstatechange = () => {
+        const c = audioCtxRef.current;
+        if (c && c.state !== 'running' && isPlayingRef.current) {
+          pauseOffsetRef.current = c.currentTime - startTimeRef.current;
+          sourcesRef.current.forEach(src => { try { src.stop(); } catch {} });
+          sourcesRef.current = [];
+          isPlayingRef.current = false;
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          setStatus('ready');
+        }
+      };
     }
     const ctx = audioCtxRef.current;
     
@@ -254,6 +305,7 @@ export default function WebStemPlayer({ song, session, onClose }) {
         const merged = new Uint8Array(received);
         let offset = 0;
         for (const chunk of chunks) { merged.set(chunk, offset); offset += chunk.length; }
+        chunks.length = 0; // liberar las copias parciales cuanto antes (RAM móvil)
         zipBuffer = merged.buffer;
       } else {
         zipBuffer = await zipResp.arrayBuffer();
@@ -277,8 +329,9 @@ export default function WebStemPlayer({ song, session, onClose }) {
       const audioExtensions = ['.wav', '.mp3', '.aif', '.aiff', '.ogg', '.flac'];
       const validStems = [];
 
-      // 4. Decodificar stems en lotes (chunks) de 4 para usar multithreading sin saturar la RAM móvil
-      const chunkSize = 4;
+      // 4. Decodificar stems en lotes: 4 en desktop (multithreading),
+      // de 1 en 1 en móvil para que el pico de RAM no mate la pestaña (iOS)
+      const chunkSize = IS_MOBILE ? 1 : 4;
       for (let i = 0; i < stemsMeta.length; i += chunkSize) {
         const chunk = stemsMeta.slice(i, i + chunkSize);
         
@@ -300,7 +353,8 @@ export default function WebStemPlayer({ song, session, onClose }) {
             const ab = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
             delete unzipped[zipEntryKey];
             
-            const buffer = await ctx.decodeAudioData(ab);
+            let buffer = await ctx.decodeAudioData(ab);
+            if (IS_MOBILE) buffer = compactBufferForMobile(ctx, buffer);
             const stemId = stemMeta.id || (i + chunkIdx);
             buffersRef.current[stemId] = buffer;
             
@@ -354,14 +408,6 @@ export default function WebStemPlayer({ song, session, onClose }) {
       setStatus('error');
     }
   };
-
-  // ── Transport ─────────────────────────────────────────────
-  const stopAll = useCallback(() => {
-    sourcesRef.current.forEach(src => { try { src.stop(); } catch {} });
-    sourcesRef.current = [];
-    isPlayingRef.current = false;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-  }, []);
 
   const startPlayback = useCallback(async (offset = 0) => {
     if (!audioCtxRef.current || stems.length === 0) return;

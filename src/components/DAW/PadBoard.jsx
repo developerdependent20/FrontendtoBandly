@@ -21,6 +21,10 @@ const NOTE_TO_VITE_FILE = {
 // pad_id que usa Rust internamente (sin # en el ID)
 const noteToPadId = (note) => `bethel_pad_${note.replace('#', 'sharp').toLowerCase()}`;
 
+// Lectura pura de localStorage (sin depender de estado reactivo) para que la carga
+// inicial de pads no necesite re-suscribirse a cambios de warmLevel.
+const getStoredPadVolume = () => parseFloat(localStorage.getItem('bandly_pad_volume') || '0.7');
+
 // Fallback Web-Engine
 let toneModule = null;
 const getTone = async () => {
@@ -31,7 +35,7 @@ const getTone = async () => {
 export default function PadBoard({ deviceChannels = 2 }) {
   const [activeKey, setActiveKey] = useState(null);
   const [loadedPads, setLoadedPads] = useState({});
-  const [warmLevel, setWarmLevel] = useState(() => parseFloat(localStorage.getItem('bandly_pad_volume') || '0.7'));
+  const [warmLevel, setWarmLevel] = useState(getStoredPadVolume);
   const [isAmbient, setIsAmbient] = useState(true);
   const [padOutput, setPadOutput] = useState(() => parseInt(localStorage.getItem('bandly_pad_output') || '0'));
   const [engineMode, setEngineMode] = useState('loading'); // 'rust' | 'web'
@@ -40,54 +44,14 @@ export default function PadBoard({ deviceChannels = 2 }) {
   const webPlayers = useRef({});
   const webOutput = useRef(null);
 
-  // ─── Inicialización ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (isTauri()) {
-      setEngineMode('rust');
-      loadRustPads();
-    } else {
-      setEngineMode('web');
-      loadWebPads();
-    }
-    return () => {
-      Object.values(webPlayers.current).forEach(p => { try { p.dispose(); } catch{} });
-      if (webOutput.current) { try { webOutput.current.dispose(); } catch{} }
-    };
-  }, []);
-
-  // ─── RUST ENGINE ─────────────────────────────────────────────────────────────
-  // Flujo:
-  //  1. Rust intenta copiar el pad desde el bundle (resource_dir) → app_local_data_dir/pads/
-  //  2. Si no encuentra en el bundle, usa la URL que le pasa JS (asset:// de Vite) como fallback HTTP
-  //  3. Siempre devuelve la ruta local desde donde symphonia puede leer
-  // ─── RUST ENGINE ─────────────────────────────────────────────────────────────
-  const loadRustPads = async () => {
-    setStatusMsg('Cargando pads...');
-    try {
-      const loadedIds = await safeInvoke('load_pads_from_assets');
-      
-      const results = {};
-      NOTES.forEach(note => {
-        const padId = noteToPadId(note);
-        results[note] = (loadedIds || []).includes(padId);
-      });
-
-      setLoadedPads(results);
-      const count = (loadedIds || []).length;
-      setStatusMsg(count > 0 ? `RUST ENGINE · ${count}/12 ✓` : 'Error: No se encontraron archivos');
-    } catch (err) {
-      console.error('[PadBoard/Rust] Error:', err);
-      setStatusMsg('Error de conexión con el motor');
-      setEngineMode('web'); // Fallback si Rust falla totalmente
-      loadWebPads();
-    }
-  };
-
   // ─── WEB ENGINE: Fallback con Tone.js (solo en desarrollo/browser) ───────────
-  const loadWebPads = async () => {
+  // Usa getStoredPadVolume() (lectura directa) en vez del estado `warmLevel`: el
+  // volumen inicial no necesita ser reactivo, ya hay un efecto aparte que lo
+  // sincroniza en vivo (ver más abajo). Así esta función es 100% estable.
+  const loadWebPads = useCallback(async () => {
     setStatusMsg('Cargando pads (Web)...');
     const Tone = await getTone();
-    webOutput.current = new Tone.Volume(Tone.gainToDb(warmLevel)).toDestination();
+    webOutput.current = new Tone.Volume(Tone.gainToDb(getStoredPadVolume())).toDestination();
     let loaded = 0;
     for (const note of NOTES) {
       try {
@@ -113,7 +77,53 @@ export default function PadBoard({ deviceChannels = 2 }) {
       }
     }
     setStatusMsg(`WEB ENGINE · ${loaded}/12 pads`);
-  };
+  }, []);
+
+  // ─── RUST ENGINE ─────────────────────────────────────────────────────────────
+  // Flujo:
+  //  1. Rust intenta copiar el pad desde el bundle (resource_dir) → app_local_data_dir/pads/
+  //  2. Si no encuentra en el bundle, usa la URL que le pasa JS (asset:// de Vite) como fallback HTTP
+  //  3. Siempre devuelve la ruta local desde donde symphonia puede leer
+  // ─── RUST ENGINE ─────────────────────────────────────────────────────────────
+  const loadRustPads = useCallback(async () => {
+    setStatusMsg('Cargando pads...');
+    try {
+      const loadedIds = await safeInvoke('load_pads_from_assets');
+
+      const results = {};
+      NOTES.forEach(note => {
+        const padId = noteToPadId(note);
+        results[note] = (loadedIds || []).includes(padId);
+      });
+
+      setLoadedPads(results);
+      const count = (loadedIds || []).length;
+      setStatusMsg(count > 0 ? `RUST ENGINE · ${count}/12 ✓` : 'Error: No se encontraron archivos');
+    } catch (err) {
+      console.error('[PadBoard/Rust] Error:', err);
+      setStatusMsg('Error de conexión con el motor');
+      setEngineMode('web'); // Fallback si Rust falla totalmente
+      loadWebPads();
+    }
+  }, [loadWebPads]);
+
+  // ─── Inicialización ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isTauri()) {
+      setEngineMode('rust');
+      loadRustPads();
+    } else {
+      setEngineMode('web');
+      loadWebPads();
+    }
+    // Capturamos la referencia AQUÍ (mismo objeto que se sigue mutando en vivo,
+    // nunca se reasigna) para satisfacer la regla de refs en cleanups de React.
+    const players = webPlayers.current;
+    return () => {
+      Object.values(players).forEach(p => { try { p.dispose(); } catch{} });
+      if (webOutput.current) { try { webOutput.current.dispose(); } catch{} }
+    };
+  }, [loadRustPads, loadWebPads]);
 
   // ─── Sincronizar volumen ─────────────────────────────────────────────────────
   useEffect(() => {
