@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Users, Loader2, ChevronRight, ChevronLeft, Plus, X, Star, Monitor, Calendar as CalendarIcon, FileText, Download } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import TermsModal from '../components/TermsModal';
+import { alertDialog } from '../utils/dialogService';
 
 const DEFAULT_INSTRUMENTS = [
   { id: 'bateria', label: 'Batería', icon: '🥁' },
@@ -81,7 +82,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   };
 
   const createOrganization = async () => {
-    if(!termsAccepted) { alert("Debes aceptar los términos de servicio para continuar."); return; }
+    if(!termsAccepted) { alertDialog("Debes aceptar los términos de servicio para continuar."); return; }
     setLoading(true);
     try {
       const code = inviteCodeInput.toUpperCase().replace(/\s+/g, '');
@@ -119,15 +120,15 @@ export default function OnboardingScreen({ session, fetchProfile }) {
       
       await fetchProfile(session.user.id);
     } catch (e) {
-      alert(e.message);
+      alertDialog(e.message);
       setLoading(false);
     }
   };
 
   const joinByCode = async () => {
-    if (!inviteCodeInput) { alert("Ingresa un código"); return; }
-    if (!termsAccepted) { alert("Debes aceptar los términos de servicio."); return; }
-    if (selectedFunctions.length === 0) { alert("Por favor selecciona al menos una función."); return; }
+    if (!inviteCodeInput) { alertDialog("Ingresa un código"); return; }
+    if (!termsAccepted) { alertDialog("Debes aceptar los términos de servicio."); return; }
+    if (selectedFunctions.length === 0) { alertDialog("Por favor selecciona al menos una función."); return; }
     
     setLoading(true);
     try {
@@ -150,7 +151,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
 
       await fetchProfile(session.user.id);
     } catch (e) {
-      alert(e.message);
+      alertDialog(e.message);
       setLoading(false);
     }
   };
@@ -190,7 +191,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
           <button onClick={() => setCurrentStep(0)} className="btn-secondary-outline" style={{ flex: 1 }}>Volver</button>
           <button 
             onClick={() => {
-              if(!orgName || !inviteCodeInput) return alert("Completa ambos campos.");
+              if(!orgName || !inviteCodeInput) return alertDialog("Completa ambos campos.");
               setCurrentStep(2);
             }} 
             className="btn-primary" 

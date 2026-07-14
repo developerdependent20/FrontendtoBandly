@@ -1,23 +1,28 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { AVATARS } from './avatars';
 
 export const AvatarPicker = ({ isOpen, onClose, onSelect, currentAvatar }) => {
   if (!isOpen) return null;
-  
+
   const content = (
-    <div style={{ 
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-      background: 'rgba(0,0,0,0.9)', zIndex: 999999, 
-      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.9)', zIndex: 999999,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px', backdropFilter: 'blur(10px)'
     }}>
-      <div className="glass-panel" style={{ 
-        maxWidth: '800px', width: '100%', padding: '3rem', 
+      <div className="glass-panel" style={{
+        maxWidth: '800px', width: '100%', padding: '3rem',
         textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)',
         animation: 'dropdownFadeIn 0.3s ease-out',
-        boxShadow: '0 0 100px rgba(0,0,0,1)'
+        boxShadow: '0 0 100px rgba(0,0,0,1)',
+        position: 'relative'
       }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: '1.2rem', right: '1.2rem', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>
+          <X size={22} />
+        </button>
         <h3 style={{ marginBottom: '2.5rem', fontSize: '2rem', fontWeight: '900' }}>Elige tu Avatar</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '25px', marginBottom: '3rem' }}>
           {AVATARS.map((url, i) => (

@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import { AvatarPicker } from './layout/AvatarPicker';
 import OrgSettingsModal from './OrgSettingsModal';
 import { Settings } from 'lucide-react';
+import { alertDialog, confirmDialog } from '../utils/dialogService';
 
 export default function TeamList({ members, isDirector, refreshData, orgSettings, orgId }) {
   const [selectedMember, setSelectedMember] = useState(null);
@@ -28,26 +29,26 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       setSelectedMember(null);
       if (refreshData) refreshData();
     } catch {
-      alert("Error al actualizar avatar del miembro.");
+      alertDialog("Error al actualizar avatar del miembro.");
     }
   };
 
   const handleDeleteMember = async (member) => {
     if (!isDirector) {
-      alert("No tienes permisos de director para esta acción.");
+      alertDialog("No tienes permisos de director para esta acción.");
       return;
     }
     if (member.role === 'director' && members.filter(m => m.role === 'director').length === 1) {
-      alert("No puedes eliminar al único director de la organización.");
+      alertDialog("No puedes eliminar al único director de la organización.");
       return;
     }
 
-    const confirm = window.confirm(`¿Estás seguro de que quieres eliminar a ${member.full_name} de la organización?`);
-    if (!confirm) return;
+    const confirmed = await confirmDialog({ message: `¿Estás seguro de que quieres eliminar a ${member.full_name} de la organización?`, danger: true });
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase.from('profiles')
-        .update({ 
+        .update({
           org_id: null,
           functions: [],
           role: 'member'
@@ -57,7 +58,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       if (error) throw error;
       if (refreshData) refreshData();
     } catch (e) {
-      alert("Error al eliminar miembro: " + e.message);
+      alertDialog("Error al eliminar miembro: " + e.message);
     }
   };
 
@@ -78,7 +79,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       if (error) throw error;
       if (refreshData) refreshData();
     } catch (e) {
-      alert("Error al actualizar funciones: " + e.message);
+      alertDialog("Error al actualizar funciones: " + e.message);
     }
   };
 
@@ -92,7 +93,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       if (error) throw error;
       if (refreshData) refreshData();
     } catch {
-      alert("Error al actualizar rol de director.");
+      alertDialog("Error al actualizar rol de director.");
     }
   };
 
@@ -136,7 +137,15 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     const logisticsIds = new Set(logisticsRoles.map(r => r.id));
     const instrumentIds = new Set(instrumentsCatalog.map(r => r.id));
 
-    let activeMembers = members || [];
+    // Fechas ya pasadas: la limpieza real solo ocurre cuando el dueño abre su
+    // propio perfil, así que aquí filtramos defensivamente para que un
+    // director nunca vea bloqueos vencidos, incluso si esa limpieza no ha
+    // corrido todavía para ese miembro.
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let activeMembers = (members || []).map(m => ({
+      ...m,
+      blocked_dates: (m.blocked_dates || []).filter(d => d >= todayStr),
+    }));
     if (filterBlocked) {
       activeMembers = activeMembers.filter(m => m.blocked_dates && m.blocked_dates.length > 0);
     }

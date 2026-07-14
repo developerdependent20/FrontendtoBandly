@@ -73,6 +73,14 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
     }
   }, [selectedTracks, onTrackUpdate]);
 
+  const handleEq = useCallback((trackId, band, gainDb) => {
+    if (selectedTracks.includes(trackId)) {
+      selectedTracks.forEach(id => onTrackUpdate('eq', { trackId: id, band, gainDb }));
+    } else {
+      onTrackUpdate('eq', { trackId, band, gainDb });
+    }
+  }, [selectedTracks, onTrackUpdate]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', overflow: 'hidden', background: 'var(--daw-bg)' }}>
 
@@ -94,6 +102,7 @@ const ProMixerConsole = memo(({ tracks = [], peaks = {}, onTrackUpdate, deviceCh
               onSoloToggle={handleSolo}
               onOutputToggle={handleOutput}
               onPanModeToggle={handlePanMode}
+              onEqChange={handleEq}
               onSelect={(isShift) => toggleSelection(track.id, isShift)}
               isSelected={selectedTracks.includes(track.id)}
               deviceChannels={deviceChannels}

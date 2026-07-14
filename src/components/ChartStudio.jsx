@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { supabase } from '../supabaseClient';
 import {
   X, ChevronUp, ChevronDown, Pencil, Eraser,
   Save, Maximize2, Minimize2, FileText, Copy, Check, Eye, Edit3,
   Play, Pause, ArrowLeft
 } from 'lucide-react';
+import { alertDialog, confirmDialog } from '../utils/dialogService';
+import FirstUseTip from './FirstUseTip';
 import './ChartStudio.css';
 
 // ─────────────────────────────────────────────────
@@ -69,6 +72,27 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   const [copied, setCopied] = useState(false);
   const [chordSuffix, setChordSuffix] = useState(''); // For 7, maj7, etc.
 
+  // Si la canción no tiene cifrado todavía, heredamos la letra ya preparada en
+  // el editor de "Letras para Presenter" — así solo falta insertar acordes,
+  // sin retipear el texto que ya se escribió una vez.
+  useEffect(() => {
+    if (song?.chart_data || !song?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from('presenter_slides').select('slides').eq('song_id', song.id).maybeSingle();
+      if (cancelled || !data?.slides?.length) return;
+      const template = data.slides.map((slide) => {
+        const body = slide.text || '';
+        if (slide.marker_sync) {
+          return `{start_of_verse: ${slide.marker_sync}}\n${body}\n{end_of_verse}`;
+        }
+        return body;
+      }).join('\n\n');
+      setSource(template);
+    })();
+    return () => { cancelled = true; };
+  }, [song?.id, song?.chart_data]);
+
   // ── Annotation State ──
   const [drawingActive, setDrawingActive] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -79,7 +103,8 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   });
   const [currentStroke, setCurrentStroke] = useState([]);
   const [penColor, setPenColor] = useState('#facc15');
-  const [penSize] = useState(3);
+  const [penSize, setPenSize] = useState(3);
+  const [tool, setTool] = useState('pen'); // 'pen' | 'eraser'
 
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -107,6 +132,10 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
   // ── Auto-Scroll (Teleprompter) ──
   const [autoScrolling, setAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(1);
+  // Sincroniza el scroll al BPM real de la canción en vez de una velocidad fija
+  // arbitraria — 120bpm es la referencia "1x" (mismo frameDelay que FRAMES_PER_PX[1]).
+  const [tempoSync, setTempoSync] = useState(false);
+  const TEMPO_REFERENCE_BPM = 120;
 
   useEffect(() => {
     if (!autoScrolling) {
@@ -116,7 +145,11 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     const container = containerRef.current;
     if (!container) return;
 
-    const delay = FRAMES_PER_PX[scrollSpeed] ?? 40; // Frames a esperar entre cada px
+    const baseFrames = FRAMES_PER_PX[1]; // frames/px a la velocidad de referencia (1x @ 120bpm)
+    const bpm = Math.min(220, Math.max(40, Number(song?.bpm) || TEMPO_REFERENCE_BPM));
+    const delay = (tempoSync && song?.bpm)
+      ? baseFrames / (bpm / TEMPO_REFERENCE_BPM)
+      : (FRAMES_PER_PX[scrollSpeed] ?? 40); // Frames a esperar entre cada px
     let frameCount = 0;
 
     const tick = () => {
@@ -136,7 +169,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     
     scrollRef.current = requestAnimationFrame(tick);
     return () => { if (scrollRef.current) cancelAnimationFrame(scrollRef.current); };
-  }, [autoScrolling, scrollSpeed]);
+  }, [autoScrolling, scrollSpeed, tempoSync, song?.bpm]);
 
 
   // ── Insert chord at cursor ──
@@ -183,6 +216,92 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
 
   const insertSection = (section) => {
     insertAtCursor('\n' + section.tag + '\n');
+  };
+
+  // ── Duración de secciones (en compases) → sincronización de markers con el DAW ──
+  // No calculamos "segundos exactos": el motor del DAW ya construye su grilla y sus
+  // markers en compases a partir del BPM/métrica de la secuencia (ver CueTimeline.jsx),
+  // así que aquí solo replicamos ese mismo cálculo, no inventamos uno nuevo.
+  const detectedSections = React.useMemo(() => {
+    return source.split('\n')
+      .map(line => line.match(/^\{start_of_[a-z]+:\s*([^}]+)\}/i))
+      .filter(Boolean)
+      .map(m => m[1].trim());
+  }, [source]);
+
+  const [sectionBars, setSectionBars] = useState(() => {
+    try {
+      return song?.chart_section_bars ? JSON.parse(song.chart_section_bars) : [];
+    } catch { return []; }
+  });
+
+  const updateSectionBars = (index, bars) => {
+    setSectionBars(prev => {
+      const next = [...prev];
+      next[index] = Math.max(1, parseInt(bars, 10) || 1);
+      return next;
+    });
+  };
+
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | done | error
+
+  const beatsPerBarFromSignature = (sig) => {
+    const n = parseInt((sig || '4/4').split('/')[0], 10);
+    return Number.isFinite(n) && n > 0 ? n : 4;
+  };
+
+  const handleSyncMarkersToDAW = async () => {
+    if (!song?.id || detectedSections.length === 0) return;
+    setSyncStatus('syncing');
+    try {
+      const { data: sequence, error } = await supabase
+        .from('sequences')
+        .select('id, bpm, time_signature, markers')
+        .eq('song_id', song.id)
+        .maybeSingle();
+
+      if (error || !sequence) {
+        alertDialog('Esta canción todavía no tiene una secuencia de audio subida al DAW — sube el audio primero.');
+        setSyncStatus('error');
+        return;
+      }
+      if (!sequence.bpm) {
+        alertDialog('Esta secuencia no tiene tempo (BPM) definido en el DAW. Ponle un tempo primero para poder ubicar los marcadores por compás.');
+        setSyncStatus('error');
+        return;
+      }
+
+      const sampleRate = 44100;
+      const beatsPerBar = beatsPerBarFromSignature(sequence.time_signature);
+      const samplesPerBar = (sampleRate * 60 / sequence.bpm) * beatsPerBar;
+      const palette = ['#38bdf8', '#10b981', '#fbbf24', '#ef4444', '#a855f7', '#f97316', '#64748b'];
+
+      let cumulativeBar = 1;
+      const generatedMarkers = detectedSections.map((label, i) => {
+        const marker = {
+          id: crypto.randomUUID(),
+          bar: cumulativeBar,
+          label,
+          sample: Math.round((cumulativeBar - 1) * samplesPerBar),
+          color: palette[i % palette.length],
+          source: 'chart'
+        };
+        cumulativeBar += sectionBars[i] || 8;
+        return marker;
+      });
+
+      // Conservamos cualquier marker puesto a mano en el DAW; solo reemplazamos
+      // los que vinieron de una sincronización anterior desde el chart.
+      const manualMarkers = (sequence.markers || []).filter(m => m.source !== 'chart');
+      const mergedMarkers = [...manualMarkers, ...generatedMarkers].sort((a, b) => a.sample - b.sample);
+
+      await supabase.from('sequences').update({ markers: mergedMarkers }).eq('id', sequence.id);
+      setSyncStatus('done');
+      setTimeout(() => setSyncStatus('idle'), 2500);
+    } catch (e) {
+      alertDialog('Error al sincronizar: ' + e.message);
+      setSyncStatus('error');
+    }
   };
 
   // ── Parse & Render ChordPro ──
@@ -248,11 +367,20 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     };
   };
 
+  const ERASER_RADIUS = 18; // px en coords del canvas — qué tan cerca hay que pasar de un trazo para borrarlo
+
+  const eraseNear = (x, y) => {
+    setStrokes(prev => prev.filter(stroke =>
+      !stroke.points.some(p => Math.hypot(p.x - x, p.y - y) < ERASER_RADIUS)
+    ));
+  };
+
   const startDrawing = (e) => {
     if (!drawingActive) return;
     e.preventDefault();
     setIsDrawing(true);
     const { x, y } = getCanvasCoords(e);
+    if (tool === 'eraser') { eraseNear(x, y); return; }
     setCurrentStroke([{ x, y }]);
   };
 
@@ -260,17 +388,20 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     if (!isDrawing || !drawingActive) return;
     e.preventDefault();
     const { x, y } = getCanvasCoords(e);
+    if (tool === 'eraser') { eraseNear(x, y); return; }
     setCurrentStroke(prev => [...prev, { x, y }]);
   };
 
   const stopDrawing = () => {
     if (!isDrawing) return;
     setIsDrawing(false);
-    if (currentStroke.length > 1) {
+    if (tool === 'pen' && currentStroke.length > 1) {
       setStrokes(prev => [...prev, { points: currentStroke, color: penColor, size: penSize }]);
     }
     setCurrentStroke([]);
   };
+
+  const undoStroke = () => setStrokes(prev => prev.slice(0, -1));
 
   // El canvas debe cubrir TODO el contenido scrolleable, no solo el viewport visible:
   // el contenedor tiene overflow:auto, así que un width/height:100% en CSS solo mide
@@ -318,11 +449,11 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     if (!onSave) return;
     setIsSaving(true);
     try {
-      await onSave({ chart_data: source, chart_annotations: JSON.stringify(strokes) });
+      await onSave({ chart_data: source, chart_annotations: JSON.stringify(strokes), chart_section_bars: JSON.stringify(sectionBars) });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
-      alert('Error al guardar: ' + e.message);
+      alertDialog('Error al guardar: ' + e.message);
     } finally { setIsSaving(false); }
   };
 
@@ -332,8 +463,8 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const clearAnnotations = () => {
-    if (confirm('¿Borrar todas las anotaciones?')) setStrokes([]);
+  const clearAnnotations = async () => {
+    if (await confirmDialog({ message: '¿Borrar todas las anotaciones?', danger: true })) setStrokes([]);
   };
 
   const getCurrentKey = () => {
@@ -414,8 +545,17 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                 {autoScrolling ? <Pause size={16} /> : <Play size={16} />}
               </button>
               <div className={`cs-speed-picker ${readOnly ? '' : 'hide-tablet'}`}>
-                {SCROLL_SPEEDS.map(sp => (
-                  <button 
+                {song?.bpm && (
+                  <button
+                    className={`cs-speed-btn ${tempoSync ? 'active' : ''}`}
+                    onClick={() => setTempoSync(t => !t)}
+                    title={`Sincronizar scroll con el tempo de la canción (${song.bpm} BPM)`}
+                  >
+                    🎵 {song.bpm}
+                  </button>
+                )}
+                {!tempoSync && SCROLL_SPEEDS.map(sp => (
+                  <button
                     key={sp}
                     className={`cs-speed-btn ${scrollSpeed === sp ? 'active' : ''}`}
                     onClick={() => setScrollSpeed(sp)}
@@ -427,18 +567,36 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
             </div>
 
             {/* Drawing tools */}
-            <button className={`cs-btn cs-btn-icon ${drawingActive ? 'cs-btn-active' : ''}`} onClick={() => setDrawingActive(!drawingActive)} title="Lápiz">
+            <button className={`cs-btn cs-btn-icon ${drawingActive ? 'cs-btn-active' : ''}`} onClick={() => { setDrawingActive(!drawingActive); setTool('pen'); }} title="Lápiz">
               <Pencil size={16} />
             </button>
             {drawingActive && (
               <>
                 <div className="cs-color-picker">
                   {['#facc15', '#ef4444', '#3b82f6', '#1a1a2e'].map(color => (
-                    <button key={color} className={`cs-color-dot ${penColor === color ? 'cs-color-active' : ''}`} style={{ background: color }} onClick={() => setPenColor(color)} />
+                    <button key={color} className={`cs-color-dot ${tool === 'pen' && penColor === color ? 'cs-color-active' : ''}`} style={{ background: color }} onClick={() => { setPenColor(color); setTool('pen'); }} />
                   ))}
                 </div>
-                <button className="cs-btn cs-btn-icon cs-btn-danger" onClick={clearAnnotations} title="Borrar anotaciones">
+                <div className="cs-color-picker" title="Grosor del trazo">
+                  {[2, 4, 8].map(size => (
+                    <button
+                      key={size}
+                      className={`cs-btn cs-btn-icon ${tool === 'pen' && penSize === size ? 'cs-btn-active' : ''}`}
+                      onClick={() => { setPenSize(size); setTool('pen'); }}
+                      title={size === 2 ? 'Fino' : size === 4 ? 'Medio' : 'Grueso'}
+                    >
+                      <span style={{ display: 'inline-block', width: size + 2, height: size + 2, borderRadius: '50%', background: 'currentColor' }} />
+                    </button>
+                  ))}
+                </div>
+                <button className={`cs-btn cs-btn-icon ${tool === 'eraser' ? 'cs-btn-active' : ''}`} onClick={() => setTool(tool === 'eraser' ? 'pen' : 'eraser')} title="Goma — borra un trazo tocándolo">
                   <Eraser size={16} />
+                </button>
+                <button className="cs-btn cs-btn-icon" onClick={undoStroke} disabled={strokes.length === 0} title="Deshacer último trazo">
+                  ↶
+                </button>
+                <button className="cs-btn cs-btn-icon cs-btn-danger" onClick={clearAnnotations} title="Borrar todas las anotaciones">
+                  <X size={16} />
                 </button>
               </>
             )}
@@ -463,6 +621,17 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
           {/* ── Editor Panel (left) ── */}
           {mode === 'edit' && (
             <div className="cs-editor-pane">
+              {!readOnly && (
+                <FirstUseTip
+                  storageKey="bandly_tip_chartstudio"
+                  title="Cómo armar tu chart"
+                  items={[
+                    'Escribe la letra y usa los botones de acordes para insertarlos donde va cada uno.',
+                    'Los botones de "Secciones" agregan encabezados (Verso, Coro...) para ordenar la canción.',
+                    'Cambia a "Atril" arriba para ver cómo se verá en vivo, con auto-scroll y anotaciones.'
+                  ]}
+                />
+              )}
               {/* Chord Palette */}
               <div className="cs-chord-palette">
                 <div className="cs-palette-header">
@@ -506,6 +675,38 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                     ))}
                   </div>
                 </div>
+
+                {detectedSections.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '8px', width: '100%', boxSizing: 'border-box', padding: '0.5rem 0' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compases por sección (para el DAW)</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {detectedSections.map((label, i) => (
+                        <div key={`${label}-${i}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontSize: '0.8rem' }}>
+                          <span style={{ flex: 1, minWidth: 0, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            className="input-field"
+                            value={sectionBars[i] ?? 8}
+                            onChange={e => updateSectionBars(i, e.target.value)}
+                            style={{ width: '64px', padding: '4px 8px', fontSize: '0.8rem', textAlign: 'center' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {song?.id && (
+                      <button
+                        className="cs-btn cs-btn-sm"
+                        onClick={handleSyncMarkersToDAW}
+                        disabled={syncStatus === 'syncing'}
+                        style={{ marginTop: '4px', width: '100%', justifyContent: 'center' }}
+                        title="Genera los marcadores de sección en el DAW usando el tempo real de la secuencia"
+                      >
+                        {syncStatus === 'syncing' ? 'Sincronizando...' : syncStatus === 'done' ? '✓ Sincronizado con el DAW' : syncStatus === 'error' ? 'Reintentar sincronización' : 'Sincronizar con el DAW'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Text Editor */}

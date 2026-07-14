@@ -11,6 +11,7 @@ import ProfileSettings from '../ProfileSettings';
 import DownloadsPage from '../DownloadsPage';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
+import { alertDialog } from '../../utils/dialogService';
 
 import { AvatarPicker } from './AvatarPicker';
 
@@ -27,7 +28,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
       if (error) throw error;
       window.location.reload();
     } catch {
-      alert("Error al abandonar el equipo.");
+      alertDialog("Error al abandonar el equipo.");
     }
   };
 
@@ -47,7 +48,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
       setCurrentAvatar(url);
       setShowPicker(false);
     } catch {
-      alert("Error al actualizar avatar.");
+      alertDialog("Error al actualizar avatar.");
     }
   };
 

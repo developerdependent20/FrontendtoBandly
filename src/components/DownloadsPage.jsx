@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download, MonitorPlay, Sliders, Lock, Monitor, Apple } from 'lucide-react';
+import { alertDialog } from '../utils/dialogService';
 
 export default function DownloadsPage({ profile }) {
   const plan = (profile?.organizations?.plan || 'free').toLowerCase();
@@ -8,7 +9,7 @@ export default function DownloadsPage({ profile }) {
   const hasAccess = plan === 'pro' || plan === 'elite';
 
   const handleDownload = (appName, os) => {
-    alert(`El instalador de ${appName} para ${os} estará disponible muy pronto. ¡Estamos afinando los últimos detalles!`);
+    alertDialog(`El instalador de ${appName} para ${os} estará disponible muy pronto. ¡Estamos afinando los últimos detalles!`);
   };
 
   if (!hasAccess) {
@@ -24,7 +25,7 @@ export default function DownloadsPage({ profile }) {
         <button 
           className="btn-primary" 
           onClick={() => {
-            alert('Abre tu perfil o el panel de facturación para realizar el Upgrade.');
+            alertDialog('Abre tu perfil o el panel de facturación para realizar el Upgrade.');
           }}
           style={{ padding: '16px 32px', fontSize: '1.1rem', background: 'linear-gradient(135deg, #a855f7, #6366f1)', border: 'none' }}
         >

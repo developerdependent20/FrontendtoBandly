@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { 
+import {
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X,
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
   Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check,
-  GripVertical, UserX, Sparkles
+  GripVertical, UserX, Sparkles, Guitar
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
 import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
+import { DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
+import EventDayStatus from './EventDayStatus';
+import { alertDialog, confirmDialog } from '../utils/dialogService';
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -17,22 +20,9 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
-// [ESTABLE] MAPA DE INTELIGENCIA: Traduce nombres de roles a etiquetas de instrumentos
-// [ESTABLE] MAPA DE LÓGICA: Para sugerencias internas
-const INSTRUMENT_MATCH_MAP = {
-  'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
-  'bajo': 'instr:bajo', 'bass': 'instr:bajo',
-  'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
-  'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
-  'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz',
-  'sonido': 'instr:sonido', 'audio': 'instr:sonido',
-  'streaming': 'instr:sonido_media', 'video': 'instr:sonido_media', 'pantalla': 'instr:sonido_media', 'media': 'instr:sonido_media',
-  'roadie': 'instr:roadie', 'logistica': 'instr:roadie', 'staff': 'instr:roadie'
-};
-
-// [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas de interfaz
+// [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas bilingües en el roster
 const INSTRUMENT_DISPLAY_MAP = {
-  'instr:bateria': 'DRUMS / BATERÃA',
+  'instr:bateria': 'DRUMS / BATERÍA',
   'instr:bajo': 'BASS / BAJO',
   'instr:piano': 'KEYS / TECLADO',
   'instr:guitarra': 'GTR / GUITARRA',
@@ -40,69 +30,54 @@ const INSTRUMENT_DISPLAY_MAP = {
   'instr:sonido': 'AUDIO / SONIDO',
   'instr:sonido_media': 'VISUALS / PANTALLAS'
 };
-
-const cleanEncoding = (str) => {
-  if (!str) return str;
-  return str
-    .replace(/BATERÃA/g, 'BATERÃA')
-    .replace(/PERCUSIÓN/g, 'PERCUSIÓN')
-    .replace(/ELÉCTRICA/g, 'ELÉCTRICA')
-    .replace(/ACÚSTICA/g, 'ACÚSTICA')
-    .replace(/LOGÍSTICA/g, 'LOGÍSTICA')
-    .replace(/DIRECCIÓN/g, 'DIRECCIÓN')
-    .replace(/batería/g, 'batería')
-    .replace(/Vacíos/g, 'Vacíos');
+const INSTRUMENT_MATCH_TAGS = {
+  'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
+  'bajo': 'instr:bajo', 'bass': 'instr:bajo',
+  'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
+  'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
+  'voz': 'instr:voz', 'voice': 'instr:voz', 'lead': 'instr:voz', 'cantante': 'instr:voz', 'coros': 'instr:voz',
+  'sonido': 'instr:sonido', 'audio': 'instr:sonido',
+  'streaming': 'instr:sonido_media', 'video': 'instr:sonido_media', 'pantalla': 'instr:sonido_media', 'media': 'instr:sonido_media',
 };
 
 const getBilingualName = (inst) => {
   const normalized = (inst || '').toLowerCase();
-  if (INSTRUMENT_DISPLAY_MAP[normalized]) return cleanEncoding(INSTRUMENT_DISPLAY_MAP[normalized]);
-  const tag = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k)) 
-    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalized.includes(k))] 
+  if (INSTRUMENT_DISPLAY_MAP[normalized]) return INSTRUMENT_DISPLAY_MAP[normalized];
+  const tag = Object.keys(INSTRUMENT_MATCH_TAGS).find(k => normalized.includes(k))
+    ? INSTRUMENT_MATCH_TAGS[Object.keys(INSTRUMENT_MATCH_TAGS).find(k => normalized.includes(k))]
     : null;
-  return cleanEncoding(INSTRUMENT_DISPLAY_MAP[tag] || inst);
+  return INSTRUMENT_DISPLAY_MAP[tag] || inst;
 };
 
-const getSuggestedMembers = (roleName, members) => {
+// Sugerencias: ya NO usan un mapa fijo de palabras clave — comparan el rol
+// contra los departamentos/instrumentos REALES configurados en Equipo.
+const getSuggestedMembers = (roleName, members, allRoles) => {
   if (!roleName || !members) return { suggested: [], others: (members || []) };
-  const normalizedRole = roleName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const tagToFind = Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k)) 
-    ? INSTRUMENT_MATCH_MAP[Object.keys(INSTRUMENT_MATCH_MAP).find(k => normalizedRole.includes(k))] 
-    : null;
-  if (!tagToFind) return { suggested: [], others: (members || []) };
-  const suggested = (members || []).filter(m => (m.functions || []).includes(tagToFind));
-  const others = (members || []).filter(m => !(m.functions || []).includes(tagToFind));
+  const normalizedRole = roleName.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const matched = (allRoles || []).find(r => {
+    const normLabel = (r.label || '').toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    return normLabel && (normalizedRole.includes(normLabel) || normLabel.includes(normalizedRole));
+  });
+  if (!matched) return { suggested: [], others: (members || []) };
+  const suggested = (members || []).filter(m => (m.functions || []).includes(matched.id));
+  const others = (members || []).filter(m => !(m.functions || []).includes(matched.id));
   return { suggested, others };
 };
 
-const ROLE_BANK = [
-  {
-    category: 'MÚSICOS',
-    color: 'var(--primary)',
-    bg: 'rgba(59,130,246,0.1)',
-    roles: ['Voz', 'Coros', 'Batería', 'Bajo', 'Teclados', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Percusión']
-  },
-  {
-    category: 'PRODUCCIÓN / MEDIA',
-    color: 'var(--accent)',
-    bg: 'rgba(139,92,246,0.1)',
-    roles: ['Sonido', 'Pantallas', 'Cámaras', 'Transmisión', 'Luces', 'Roadie', 'Director Musical']
-  },
-  {
-    category: 'LOGÍSTICA / STAFF',
-    color: '#fbbf24',
-    bg: 'rgba(251,191,36,0.1)',
-    roles: ['Coordinador', 'Bienvenida', 'Maestro de Niños', 'Oración']
-  }
-];
+const buildRoleBank = (orgSettings) => ([
+  { category: "MÚSICOS", color: "var(--primary)", bg: "rgba(59,130,246,0.1)", roles: orgSettings?.instruments ?? DEFAULT_INSTRUMENTS },
+  { category: "LIDERAZGO", color: "#eab308", bg: "rgba(234,179,8,0.1)", roles: orgSettings?.leadership ?? DEFAULT_LEADERSHIP_ROLES },
+  { category: "PRODUCCIÓN / MEDIA", color: "var(--accent)", bg: "rgba(139,92,246,0.1)", roles: orgSettings?.production ?? DEFAULT_PRODUCTION_ROLES },
+  { category: "LOGÍSTICA / STAFF", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", roles: orgSettings?.logistics ?? DEFAULT_LOGISTICS_ROLES }
+]);
 
-// [ESTABLE] COMPONENTE EXTRAÃ DO (Con arreglos de truncado y visibilidad)
-const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight, eventDate }) => {
+// [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
+const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight, eventDate, allRoles }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const selectedMember = members?.find(m => m.id === value);
-  const { suggested, others } = getSuggestedMembers(roleName, members);
+  const { suggested, others } = getSuggestedMembers(roleName, members, allRoles);
 
   const handleSelect = (id) => {
     onChange(id);
@@ -111,8 +86,44 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
     setSearchTerm('');
   };
 
-  const listToRender = (suggested.length > 0 && !showAll && !searchTerm) ? suggested : [...suggested, ...others];
-  const filteredList = listToRender.filter(m => m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Modo compacto (sin buscar, sin "mostrar todos"): separamos sugeridos y
+  // resto en dos listas con encabezado propio, en vez de un solo listado
+  // donde la única pista era una estrellita pequeña.
+  const isCompact = suggested.length > 0 && !showAll && !searchTerm;
+  const suggestedFiltered = suggested.filter(m => m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const othersFiltered = others.filter(m => m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredList = isCompact ? suggestedFiltered : [...suggestedFiltered, ...othersFiltered];
+
+  const renderMemberRow = (m, isSuggested) => {
+    const isBlocked = eventDate && m.blocked_dates?.includes(eventDate);
+    return (
+      <div
+        key={m.id}
+        onClick={() => { if (!isBlocked) handleSelect(m.id); }}
+        style={{
+          padding: '10px 14px',
+          borderRadius: '12px',
+          cursor: isBlocked ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent',
+          marginBottom: '4px',
+          transition: 'all 0.2s ease',
+          opacity: isBlocked ? 0.5 : 1
+        }}
+        className={isBlocked ? '' : "dropdown-item-custom"}
+      >
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isBlocked ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', color: isBlocked ? '#ef4444' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: isBlocked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+          {m.full_name?.[0]}
+        </div>
+        <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: isBlocked ? '#ef4444' : (value === m.id ? 'var(--primary)' : 'white'), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {m.full_name} {isBlocked && <span style={{ fontSize: '0.75rem', fontWeight: 'normal', opacity: 0.8 }}>(Ocupado)</span>}
+        </div>
+        {isSuggested && !isBlocked && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }} title="Sugerido para este rol">✨</span>}
+      </div>
+    );
+  };
 
   return (
     <div style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
@@ -188,41 +199,34 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
             </div>
             
             <div style={{ overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
-              {filteredList.map(m => {
-                const isBlocked = eventDate && m.blocked_dates?.includes(eventDate);
-                return (
-                  <div 
-                    key={m.id} 
-                    onClick={() => { if (!isBlocked) handleSelect(m.id); }} 
-                    style={{ 
-                      padding: '10px 14px', 
-                      borderRadius: '12px', 
-                      cursor: isBlocked ? 'not-allowed' : 'pointer', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '12px', 
-                      background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent', 
-                      marginBottom: '4px',
-                      transition: 'all 0.2s ease',
-                      opacity: isBlocked ? 0.5 : 1
-                    }} 
-                    className={isBlocked ? '' : "dropdown-item-custom"}
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isBlocked ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', color: isBlocked ? '#ef4444' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: isBlocked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-                      {m.full_name?.[0]}
-                    </div>
-                    <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: isBlocked ? '#ef4444' : (value === m.id ? 'var(--primary)' : 'white'), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {m.full_name} {isBlocked && <span style={{fontSize: '0.75rem', fontWeight: 'normal', opacity: 0.8}}>(Ocupado)</span>}
-                    </div>
-                    {suggested.find(s => s.id === m.id) && !isBlocked && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }} title="Sugerido para este rol">✨</span>}
-                  </div>
-                );
-              })}
-              
+              {value && (
+                <div
+                  onClick={() => handleSelect(null)}
+                  className="dropdown-item-custom"
+                  style={{ padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: '700', border: '1px dashed rgba(255,255,255,0.15)' }}
+                >
+                  <X size={14} /> Quitar asignación
+                </div>
+              )}
+
+              {suggestedFiltered.length > 0 && (
+                <div style={{ fontSize: '0.62rem', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', padding: '4px 10px 6px' }}>
+                  ✨ SUGERIDOS PARA ESTE ROL
+                </div>
+              )}
+              {suggestedFiltered.map(m => renderMemberRow(m, true))}
+
+              {!isCompact && othersFiltered.length > 0 && (
+                <div style={{ fontSize: '0.62rem', fontWeight: '900', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '10px 10px 6px' }}>
+                  TODO EL EQUIPO
+                </div>
+              )}
+              {!isCompact && othersFiltered.map(m => renderMemberRow(m, false))}
+
               {filteredList.length === 0 && (
                 <div style={{ padding: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>No se encontraron miembros</div>
               )}
-              
+
               {suggested.length > 0 && !showAll && !searchTerm && others.length > 0 && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); setShowAll(true); }} 
@@ -344,7 +348,13 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session }) {
+export default function EventPlanner({ readOnly, events, members, orgId, refreshData, songs, profile, session, orgSettings }) {
+  // Banco de roles y lista plana para sugerencias — derivados de lo que la
+  // organización configuró en la pestaña Equipo (con los defaults como
+  // respaldo si aún no ha personalizado nada).
+  const roleBank = useMemo(() => buildRoleBank(orgSettings), [orgSettings]);
+  const allRoles = useMemo(() => roleBank.flatMap(cat => cat.roles), [roleBank]);
+
   const [showModal, setShowModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -374,6 +384,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [pendingEventDate, setPendingEventDate] = useState('');
   const [draggedSongIdx, setDraggedSongIdx] = useState(null);
   const [replacementPicker, setReplacementPicker] = useState(null); // { eventId, rosterEntry }
+  const [recurWeekly, setRecurWeekly] = useState(false);
+  const [recurWeeks, setRecurWeeks] = useState(4);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -395,7 +407,11 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (i.includes('drums') || i.includes('bateria') || i.includes('perc')) return <Drum size={20} />;
     if (i.includes('bass') || i.includes('bajo')) return <Zap size={20} />;
-    if (i.includes('gtr') || i.includes('guitar') || i.includes('electrica') || i.includes('acustica')) return <Music size={20} />;
+    // Ícono real de guitarra (Lucide sí lo tiene) en vez del genérico <Music/> de antes.
+    // Acústica usa un color distinto (ámbar, tono "madera") ya que Lucide no tiene
+    // variantes eléctrica/acústica separadas — así no se confunden a simple vista.
+    if (i.includes('acustica')) return <Guitar size={20} color="#f59e0b" />;
+    if (i.includes('gtr') || i.includes('guitar') || i.includes('electrica')) return <Guitar size={20} />;
     if (i.includes('keys') || i.includes('piano') || i.includes('teclado')) return <Layout size={20} />;
     if (i.includes('voice') || i.includes('voz') || i.includes('coro')) return <Mic2 size={20} />;
     if (i.includes('audio') || i.includes('sonido')) return <Headphones size={20} />;
@@ -411,6 +427,85 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
     if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
     return 'OTROS';
+  };
+
+  const escapeHtml = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const handleExportPlan = (ev) => {
+    const groups = { 'MÚSICOS': [], 'PRODUCCIÓN / MEDIA': [], 'LOGÍSTICA / STAFF': [], 'OTROS': [] };
+    (ev.event_roster || []).filter(r => !r.is_removed).forEach(s => {
+      const g = getRoleGroup(s.instrument);
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(s);
+    });
+
+    const rosterHtml = Object.entries(groups).filter(([, items]) => items.length > 0).map(([groupName, items]) => `
+      <h3>${escapeHtml(groupName)}</h3>
+      <table>
+        <tbody>
+          ${items.map(s => {
+            const memberName = members?.find(m => m.id === s.profile_id)?.full_name || 'Sin asignar';
+            const roleName = getBilingualName(s.instrument);
+            const isDeclined = s.status === 'declined' || s.status === 'rejected';
+            const statusLabel = isDeclined ? 'Declinó' : (s.status === 'confirmed' ? 'Confirmado' : 'Pendiente');
+            return `<tr class="${isDeclined ? 'declined' : ''}"><td class="role">${escapeHtml(roleName)}</td><td class="name">${escapeHtml(memberName)}</td><td class="status">${statusLabel}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `).join('');
+
+    const sortedSongs = [...(ev.event_songs || [])].sort((a, b) => a.order_index - b.order_index);
+    const setlistHtml = sortedSongs.length === 0 ? '' : `
+      <h3>Setlist</h3>
+      <table>
+        <thead><tr><th>#</th><th>Canción</th><th>Líder</th><th>Tono</th></tr></thead>
+        <tbody>
+          ${sortedSongs.map((es, i) => {
+            const song = songs?.find(s => s.id === es.song_id);
+            const leader = members?.find(m => m.id === es.lead_id);
+            return `<tr><td>${i + 1}</td><td>${escapeHtml(song?.title || 'Desconocida')}</td><td>${escapeHtml(leader?.full_name || '--')}</td><td>${escapeHtml(es.selected_key || '--')}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    const blockedForDate = (members || []).filter(m => ev.date && m.blocked_dates?.includes(ev.date.split('T')[0]));
+    const blockedHtml = blockedForDate.length === 0 ? '' : `
+      <p class="blocked-note"><strong>No disponibles esta fecha:</strong> ${blockedForDate.map(m => escapeHtml(m.full_name)).join(', ')}</p>
+    `;
+
+    const html = `<!DOCTYPE html>
+      <html><head><meta charset="utf-8"><title>${escapeHtml(ev.name)} — Plan del evento</title>
+      <style>
+        body { font-family: -apple-system, Segoe UI, Arial, sans-serif; color: #111; padding: 32px; max-width: 720px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0; }
+        .date { color: #555; font-size: 0.95rem; margin-top: 4px; text-transform: capitalize; }
+        .desc { white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 0.9rem; }
+        h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: #333; margin-top: 28px; border-bottom: 2px solid #ddd; padding-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        td, th { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { color: #777; font-size: 0.75rem; text-transform: uppercase; }
+        tr.declined td { color: #b91c1c; }
+        .role { color: #666; width: 40%; }
+        .status { text-align: right; color: #999; font-size: 0.8rem; }
+        .blocked-note { margin-top: 24px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 8px; font-size: 0.85rem; }
+        @media print { body { padding: 0; } }
+      </style></head>
+      <body>
+        <h1>${escapeHtml(ev.name)}</h1>
+        <div class="date">${escapeHtml(formatEventDate(ev.date))}</div>
+        ${ev.description ? `<div class="desc">${escapeHtml(ev.description)}</div>` : ''}
+        ${blockedHtml}
+        ${rosterHtml}
+        ${setlistHtml}
+      </body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { alertDialog('El navegador bloqueó la ventana de impresión. Habilita popups para este sitio.'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 250);
   };
 
   const generateTemplate = (fmt) => {
@@ -434,6 +529,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventName(ev.name);
     setEventDate(ev.date || '');
     setDescription(ev.description || '');
+    setRecurWeekly(false);
+    setRecurWeeks(4);
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
     const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
@@ -495,6 +592,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const handleNewEvent = (selectedDate) => {
     setPendingEventDate(selectedDate || '');
+    setRecurWeekly(false);
+    setRecurWeeks(4);
     setShowNewEventPicker(true);
   };
 
@@ -530,8 +629,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   };
 
   const handleSave = async () => {
-    if (!eventName) { alert('Falta el nombre del evento'); return; }
-    if (!eventDate) { alert('Falta la fecha del evento'); return; }
+    if (!eventName) { alertDialog('Falta el nombre del evento'); return; }
+    if (!eventDate) { alertDialog('Falta la fecha del evento'); return; }
     if (saving) return;
 
     const baseDate = eventDate.split('T')[0];
@@ -541,8 +640,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     }).filter(Boolean);
     const uniqueBlocked = [...new Set(blockedNames)];
     if (uniqueBlocked.length > 0) {
-      const msg = `⚠️ ATENCIÓN ⚠️\n\nLas siguientes personas han marcado el ${baseDate} como NO DISPONIBLE en sus perfiles:\n\n${uniqueBlocked.map(n => `- ${n}`).join('\n')}\n\n¿Estás seguro de que deseas asignarlos de todos modos?`;
-      if (!window.confirm(msg)) return;
+      const msg = `Las siguientes personas han marcado el ${baseDate} como NO DISPONIBLE en sus perfiles:\n\n${uniqueBlocked.map(n => `- ${n}`).join('\n')}\n\n¿Estás seguro de que deseas asignarlos de todos modos?`;
+      if (!(await confirmDialog({ title: '⚠️ Atención', message: msg, danger: true }))) return;
     }
 
     setSaving(true);
@@ -581,6 +680,33 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       const { data: freshRoster, error: freshErr } = await supabase.from('event_roster').select('*').eq('event_id', evtId).eq('is_removed', false);
       if (freshErr) throw freshErr;
 
+      // Repetir semanalmente: clona el mismo equipo (sin setlist, eso cambia cada semana)
+      // en las próximas N fechas. Va en su propio try/catch para que un fallo aquí no
+      // dispare la alerta de "error crítico" sobre un evento principal que sí se guardó bien.
+      if (!editingEventId && recurWeekly && recurWeeks > 1) {
+        try {
+          const filledRoster = roster.filter(r => r.profile_id);
+          const baseDateObj = new Date(baseDate + 'T12:00:00');
+          for (let i = 1; i < recurWeeks; i++) {
+            const nextDateObj = new Date(baseDateObj);
+            nextDateObj.setDate(nextDateObj.getDate() + 7 * i);
+            const nextDate = nextDateObj.toISOString().split('T')[0];
+
+            const { data: nextEvt, error: nextErr } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: nextDate, description }]).select().single();
+            if (nextErr) throw nextErr;
+
+            if (filledRoster.length > 0) {
+              const nextRosterRows = filledRoster.map(r => ({ event_id: nextEvt.id, profile_id: r.profile_id, instrument: r.instrument, category: r.category, status: 'pending' }));
+              const { error: nextRosterErr } = await supabase.from('event_roster').insert(nextRosterRows);
+              if (nextRosterErr) throw nextRosterErr;
+            }
+          }
+        } catch (recurErr) {
+          console.error('Error al generar semanas recurrentes:', recurErr);
+          alertDialog(`El evento se guardó bien, pero hubo un problema generando las semanas siguientes: ${recurErr.message}`);
+        }
+      }
+
       // Generar la lista de todos con sus correos
       const allRosterWithEmails = (freshRoster || []).map(r => ({ ...r, email: members.find(m => m.id === r.profile_id)?.email, name: members.find(m => m.id === r.profile_id)?.full_name }));
 
@@ -598,7 +724,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       if (refreshData) refreshData();
     } catch (e) { 
       console.error('Save Error:', e); 
-      alert('Error critico al guardar: ' + e.message + '\n\nRevisa la consola para más detalles.'); 
+      alertDialog('Error critico al guardar: ' + e.message + '\n\nRevisa la consola para más detalles.');
     }
     finally { setSaving(false); }
   };
@@ -726,15 +852,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           }).catch(err => console.error('No se pudo notificar el rechazo:', err));
         }
       }
-    } catch { alert("Error al confirmar."); }
+    } catch { alertDialog("Error al confirmar."); }
   };
 
   const handleRemoveFromRoster = async (rosterId) => {
-    if (!confirm('¿Seguro que quieres eliminar a este usuario del evento?')) return;
+    if (!(await confirmDialog({ message: '¿Seguro que quieres eliminar a este usuario del evento?', danger: true }))) return;
     try {
       await supabase.from('event_roster').delete().eq('id', rosterId);
       if (refreshData) refreshData();
-    } catch { alert("Error al eliminar."); }
+    } catch { alertDialog("Error al eliminar."); }
   };
 
   const handleAssignReplacement = async (newProfileId) => {
@@ -757,7 +883,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         }], 'delta', { eventName: event.name, eventDate: event.date, description: event.description });
       }
     } catch {
-      alert('Error al asignar el reemplazo.');
+      alertDialog('Error al asignar el reemplazo.');
     }
   };
 
@@ -784,6 +910,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
     return evDate < todayStart; // Solo pasa a "pasados" cuando el día del evento ya terminó
   });
+
+  // Eventos que son HOY exactamente — para el widget de estado en vivo del equipo.
+  const todayStr = `${todayStart.getFullYear()}-${String(todayStart.getMonth() + 1).padStart(2, '0')}-${String(todayStart.getDate()).padStart(2, '0')}`;
+  const todaysEvents = eventsToShow.filter(ev => ev.date && ev.date.split('T')[0] === todayStr);
 
   // [ESTABLE] Temas Joya Premium
   const cardThemes = [
@@ -1044,7 +1174,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             </div>
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
-                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alert('Requiere plan PRO'); }}
+                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alertDialog('Requiere plan PRO'); }}
                                   style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
                                   <Headphones size={12} />
                                 </button>
@@ -1081,6 +1211,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         <div style={{ marginLeft: '1rem' }}><h4>Calendario & Planeación</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
       </div>
 
+      {todaysEvents.map(ev => (
+        <EventDayStatus key={ev.id} event={ev} members={members} />
+      ))}
+
       <section id="upcoming-events" className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="section-title" style={{ margin: 0 }}><CalendarIcon size={20} color="var(--accent)" /> Próxima Agenda</h3>
@@ -1115,16 +1249,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
              <button onClick={() => setSelectedEventDetails(null)} style={{ background: 'transparent', border: 'none', color: 'white', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem', cursor: 'pointer' }}>
                <ChevronDown style={{ transform: 'rotate(90deg)' }} size={20} /> Volver
              </button>
-             {!readOnly && (
-               <div style={{ display: 'flex', gap: '8px' }}>
-                 <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                   <Edit2 size={14} /> Editar
-                 </button>
-                 <button onClick={() => setEventToDelete(selectedEventDetails)} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                   <Trash2 size={14} />
-                 </button>
-               </div>
-             )}
+             <div style={{ display: 'flex', gap: '8px' }}>
+               <button onClick={() => handleExportPlan(selectedEventDetails)} title="Exportar plan completo (PDF / imprimir)" style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                 <FileText size={14} /> Exportar
+               </button>
+               {!readOnly && (
+                 <>
+                   <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                     <Edit2 size={14} /> Editar
+                   </button>
+                   <button onClick={() => setEventToDelete(selectedEventDetails)} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                     <Trash2 size={14} />
+                   </button>
+                 </>
+               )}
+             </div>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', paddingBottom: '4rem' }} className="custom-scrollbar">
@@ -1178,8 +1317,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         </button>
                      )}
                      {!isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
-                        <button onClick={() => {
-                            if(window.confirm('¿Seguro que no puedes asistir?')) {
+                        <button onClick={async () => {
+                            if(await confirmDialog('¿Seguro que no puedes asistir?')) {
                               updateRosterStatus(selectedEventDetails, currentUserId, 'declined', userSlots[0]?.instrument);
                               setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'declined'} : r)});
                             }
@@ -1295,7 +1434,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                            </div>
                            <div style={{ display: 'flex', gap: '6px' }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
-                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alert('Requiere plan PRO'); }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alertDialog('Requiere plan PRO'); }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <Headphones size={16} />
                                 </button>
                               )}
@@ -1345,94 +1484,114 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     
 
             {showNewEventPicker && createPortal((
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="glass-panel" style={{ padding: '2.5rem', width: '90%', maxWidth: '500px', textAlign: 'center', animation: 'modalFadeIn 0.3s ease-out' }}>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>Crear Nuevo Evento</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <button onClick={() => {
-                setShowNewEventPicker(false);
-                setEditingEventId(null);
-                setEventName('');
-                setEventDate(pendingEventDate);
-                setDescription('');
-                setFormat('blank');
-                setRoster([]);
-                setInitialRoster([]);
-                setDbHistory([]);
-                setSetlist([]);
-                setModalTab('info');
-                setShowModal(true);
-              }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)' }}>
-                <FileText size={20} /> Evento en Blanco
-              </button>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)' }}>
+          <div className="glass-panel" style={{
+            padding: '2.5rem', width: '92%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto',
+            animation: 'modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative',
+            background: 'linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
+            border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
+          }} className="custom-scrollbar">
 
-              <button onClick={() => {
-                setShowNewEventPicker(false);
-                setEditingEventId(null);
-                setEventName('');
-                setEventDate(pendingEventDate);
-                setDescription('');
-                setFormat('full');
-                const template = generateTemplate('full');
-                setRoster(template);
-                setInitialRoster(JSON.parse(JSON.stringify(template)));
-                setDbHistory([]);
-                setSetlist([]);
-                setModalTab('info');
-                setShowModal(true);
-              }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
-                <Music size={20} /> Plantilla: Banda Base
-              </button>
+            <button onClick={() => setShowNewEventPicker(false)} style={{ position: 'absolute', top: '1.2rem', right: '1.2rem', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>
+              <X size={22} />
+            </button>
 
-              <button onClick={() => {
-                setShowNewEventPicker(false);
-                setEditingEventId(null);
-                setEventName('');
-                setEventDate(pendingEventDate);
-                setDescription('');
-                setFormat('general');
-                const template = generateTemplate('general');
-                setRoster(template);
-                setInitialRoster(JSON.parse(JSON.stringify(template)));
-                setDbHistory([]);
-                setSetlist([]);
-                setModalTab('info');
-                setShowModal(true);
-              }} className="btn-primary" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
-                <Users size={20} /> Plantilla: Reunión General
-              </button>
-              
-              <div style={{ margin: '1rem 0', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>O DUPLICAR PASADO</div>
-              
-              <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '0.5rem' }} className="custom-scrollbar">
-                {pastEvents.length === 0 ? <div style={{ padding: '1rem', color: 'var(--text-muted)' }}>No hay eventos pasados</div> : 
-                  pastEvents.map(ev => (
-                    <button key={ev.id} onClick={() => {
-                      setShowNewEventPicker(false);
-                      setEditingEventId(null);
-                      setEventName(ev.name + ' (Copia)');
-                      setEventDate(pendingEventDate);
-                      setDescription(ev.description || '');
-                      setFormat('copy');
-                      const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
-                      const merged = activeRosterFromDb.map(er => ({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: 'pending' }));
-                      setRoster(merged);
-                      setInitialRoster(JSON.parse(JSON.stringify(merged)));
-                      setDbHistory([]);
-                      setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
-                      setModalTab('info');
-                      setShowModal(true);
-                    }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600' }}>{ev.name}</span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{formatEventDate(ev.date)}</span>
-                    </button>
-                  ))
-                }
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'inline-flex', background: 'rgba(59,130,246,0.12)', padding: '0.9rem', borderRadius: '50%', marginBottom: '1rem', border: '1px solid rgba(59,130,246,0.25)' }}>
+                <CalendarIcon size={26} color="var(--primary)" />
               </div>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'white', letterSpacing: '-0.02em' }}>Crear Nuevo Evento</h3>
+              <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', fontSize: '0.9rem' }}>Elige cómo quieres empezar</p>
             </div>
-            
-            <button onClick={() => setShowNewEventPicker(false)} className="btn-secondary" style={{ marginTop: '1.5rem', width: '100%' }}>Cancelar</button>
+
+            {(() => {
+              const startOptions = [
+                {
+                  id: 'blank', icon: <FileText size={22} />, label: 'Evento en Blanco', desc: 'Arma el equipo desde cero',
+                  color: 'rgba(255,255,255,0.6)', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.15)',
+                  onClick: () => {
+                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription('');
+                    setFormat('blank'); setRoster([]); setInitialRoster([]); setDbHistory([]); setSetlist([]);
+                  }
+                },
+                {
+                  id: 'full', icon: <Music size={22} />, label: 'Banda Base', desc: 'Batería, bajo, guitarras, voces...',
+                  color: 'var(--primary)', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.3)',
+                  onClick: () => {
+                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setFormat('full');
+                    const template = generateTemplate('full');
+                    setRoster(template); setInitialRoster(JSON.parse(JSON.stringify(template))); setDbHistory([]); setSetlist([]);
+                  }
+                },
+                {
+                  id: 'general', icon: <Users size={22} />, label: 'Reunión General', desc: 'Equipo reducido y staff',
+                  color: '#eab308', bg: 'rgba(234,179,8,0.1)', border: 'rgba(234,179,8,0.3)',
+                  onClick: () => {
+                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setFormat('general');
+                    const template = generateTemplate('general');
+                    setRoster(template); setInitialRoster(JSON.parse(JSON.stringify(template))); setDbHistory([]); setSetlist([]);
+                  }
+                }
+              ];
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.9rem', marginBottom: '2rem' }}>
+                  {startOptions.map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => { opt.onClick(); setShowNewEventPicker(false); setModalTab('info'); setShowModal(true); }}
+                      style={{
+                        padding: '1.4rem 1rem', borderRadius: '16px', background: opt.bg, border: `1px solid ${opt.border}`,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', cursor: 'pointer',
+                        transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{ color: opt.color }}>{opt.icon}</div>
+                      <div style={{ color: 'white', fontWeight: '800', fontSize: '0.9rem', textAlign: 'center' }}>{opt.label}</div>
+                      <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.72rem', textAlign: 'center', lineHeight: 1.3 }}>{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 1rem 0' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '1.5px' }}>O DUPLICAR UN EVENTO PASADO</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+            </div>
+
+            <div style={{ maxHeight: '220px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }} className="custom-scrollbar">
+              {pastEvents.length === 0 ? (
+                <div style={{ padding: '1.5rem', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>No hay eventos pasados todavía</div>
+              ) : (
+                pastEvents.map(ev => (
+                  <button key={ev.id} onClick={() => {
+                    setShowNewEventPicker(false);
+                    setEditingEventId(null);
+                    setEventName(ev.name + ' (Copia)');
+                    setEventDate(pendingEventDate);
+                    setDescription(ev.description || '');
+                    setFormat('copy');
+                    const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
+                    const merged = activeRosterFromDb.map(er => ({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: 'pending' }));
+                    setRoster(merged);
+                    setInitialRoster(JSON.parse(JSON.stringify(merged)));
+                    setDbHistory([]);
+                    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
+                    setModalTab('info');
+                    setShowModal(true);
+                  }}
+                    className="dropdown-item-custom"
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
+                  >
+                    <span style={{ fontWeight: '700', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.name}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', flexShrink: 0, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: '20px' }}>{formatEventDate(ev.date)}</span>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       ), document.body)}
@@ -1450,11 +1609,56 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
                 <input type="date" className="input-field" value={eventDate ? eventDate.split('T')[0] : ''} onChange={e => setEventDate(e.target.value)} style={{ width: '100%', colorScheme: 'dark' }} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
+
+                {!editingEventId && (
+                  <div style={{ padding: '1rem', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '12px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '700', color: 'white' }}>
+                      <input type="checkbox" checked={recurWeekly} onChange={e => setRecurWeekly(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }} />
+                      🔁 Repetir cada semana
+                    </label>
+                    {recurWeekly && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', paddingLeft: '28px' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Crear las próximas</span>
+                        <input
+                          type="number"
+                          min="2"
+                          max="26"
+                          className="input-field"
+                          value={recurWeeks}
+                          onChange={e => setRecurWeeks(Math.min(26, Math.max(2, parseInt(e.target.value, 10) || 2)))}
+                          style={{ width: '64px', padding: '4px 8px', fontSize: '0.85rem', textAlign: 'center' }}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>semanas con el mismo equipo (el setlist lo armas cada semana)</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             {modalTab === 'equipo' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                
+
+                {/* Aviso de bloqueados: quién NO puede venir esta fecha, visible de una vez
+                    sin tener que abrir cada selector para descubrirlo. */}
+                {(() => {
+                  const dateKey = eventDate ? eventDate.split('T')[0] : '';
+                  const blockedMembers = dateKey ? (members || []).filter(m => m.blocked_dates?.includes(dateKey)) : [];
+                  if (!dateKey || blockedMembers.length === 0) return null;
+                  return (
+                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <UserX size={20} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>
+                          {blockedMembers.length} {blockedMembers.length === 1 ? 'persona no está disponible' : 'personas no están disponibles'} el {formatEventDate(eventDate)}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, wordBreak: 'break-word' }}>
+                          {blockedMembers.map(m => m.full_name).join(', ')}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* 1. BANCO DE ROLES (Tienda) - AHORA ARRIBA */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1462,19 +1666,22 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   </h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-                    {ROLE_BANK.map(cat => (
+                    {roleBank.map(cat => (
                       <div key={cat.category}>
                         <h4 style={{ fontSize: '0.8rem', color: cat.color, marginBottom: '1rem', borderBottom: `1px solid ${cat.color}33`, paddingBottom: '0.5rem', letterSpacing: '1px' }}>
                           {cat.category}
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                          {cat.roles.map(role => {
+                          {cat.roles.map(roleObj => {
+                            const role = roleObj.label;
                             const count = roster.filter(r => r.instrument === role || r.instrument.startsWith(role + ' ')).length;
                             return (
-                              <div key={role} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{role}</span>
+                              <div key={roleObj.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {roleObj.icon && <span>{roleObj.icon}</span>} {role}
+                                </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '20px' }}>
-                                  <button 
+                                  <button
                                     onClick={() => {
                                       const lastIndex = roster.map(r => r.instrument).lastIndexOf(role);
                                       if (lastIndex >= 0) {
@@ -1492,7 +1699,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                     -
                                   </button>
                                   <span style={{ fontSize: '0.9rem', fontWeight: '800', width: '16px', textAlign: 'center', color: count > 0 ? 'white' : 'var(--text-muted)' }}>{count}</span>
-                                  <button 
+                                  <button
                                     onClick={() => {
                                       const suffix = count > 0 ? ` ${count + 1}` : '';
                                       setRoster([...roster, { id: Math.random().toString(), instrument: `${role}${suffix}`, profile_id: '', category: 'custom' }]);
@@ -1566,7 +1773,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                       value={r.instrument}
                                       onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
                                     />
-                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} eventDate={eventDate} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
+                                    <MemberSelector value={r.profile_id} members={members} roleName={r.instrument} eventDate={eventDate} allRoles={allRoles} onChange={v => setRoster(roster.map(x => x.id === r.id ? { ...x, profile_id: v } : x))} />
                                   </div>
                                   <button 
                                     onClick={() => setRoster(roster.filter(x => x.id !== r.id))}
@@ -1668,7 +1875,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
 
                     <div style={{ flex: 1.5, minWidth: 0 }}>
-                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" eventDate={eventDate} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>
@@ -1824,6 +2031,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               members={(members || []).filter(m => String(m.id) !== String(replacementPicker.rosterEntry.profile_id))}
               roleName={replacementPicker.rosterEntry.instrument}
               eventDate={replacementPicker.event.date ? replacementPicker.event.date.split('T')[0] : ''}
+              allRoles={allRoles}
               placeholder="Elegir reemplazo"
             />
             <button onClick={() => setReplacementPicker(null)} className="btn-secondary" style={{ width: '100%', padding: '0.9rem', marginTop: '1.5rem' }}>

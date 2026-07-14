@@ -3,6 +3,7 @@ import { Music, CloudDownload, X, Search, CheckCircle2, Loader2 } from 'lucide-r
 import { supabase } from '../../supabaseClient';
 import { OfflineManager } from '../../utils/offlineManager';
 import { safeInvoke, isTauri } from '../../utils/tauri';
+import { alertDialog } from '../../utils/dialogService';
 
 export default function CloudRepertoire({ songs, onSelect, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,7 +59,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
     } catch (error) {
       console.error("[CloudRepertoire] Error sincronizando:", error);
       setSyncingProgress(prev => ({ ...prev, [song.id]: null }));
-      alert("Error al sincronizar. Revisa tu conexión.");
+      alertDialog("Error al sincronizar. Revisa tu conexión.");
     }
   };
   

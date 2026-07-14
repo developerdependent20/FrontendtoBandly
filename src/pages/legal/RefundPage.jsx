@@ -64,7 +64,7 @@ export default function RefundPage({ onBack }) {
         <div style={{ height: '100px' }}></div>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .legal-page-container {
           background: #080809;
           color: #eee;

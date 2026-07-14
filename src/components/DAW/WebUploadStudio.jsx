@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
     : ''
 );
 
-export default function WebUploadStudio({ songs = [], orgId, session, refreshData }) {
+export default function WebUploadStudio({ songs = [], orgId, session, refreshData, profile }) {
   const [selectedSong, setSelectedSong] = useState(null);
   const [showUploader, setShowUploader] = useState(false);
   const [sequences, setSequences] = useState({}); // songId -> boolean (has sequence)
@@ -207,6 +207,8 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
           orgId={orgId}
           session={session}
           apiUrl={API_URL}
+          orgStorageUsedMb={profile?.organizations?.storage_used_mb || 0}
+          orgStorageLimitMb={profile?.organizations?.storage_limit_mb || null}
           onClose={() => { setShowUploader(false); setSelectedSong(null); }}
           onComplete={handleUploadComplete}
         />

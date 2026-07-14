@@ -2,17 +2,19 @@ import React from 'react';
 import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import { isSuperAdmin } from '../../utils/permissions';
+import { alertDialog } from '../../utils/dialogService';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
+import GlobalSearch from './GlobalSearch';
 import '../DAW/DAW.css';
 
-export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink }) {
+export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink, songs, events, members }) {
   const [showSubscription, setShowSubscription] = React.useState(false);
   const [showTeamAction, setShowTeamAction] = React.useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const [showWelcome, setShowWelcome] = React.useState(
-    profile?.role === 'director' && !localStorage.getItem(`bandly_welcome_${profile?.id}`)
+    !!profile?.id && !localStorage.getItem(`bandly_welcome_${profile?.id}`)
   );
   
   const userIsSuperAdmin = isSuperAdmin(profile);
@@ -63,7 +65,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               if (isTauri()) {
                 const plan = (profile?.organizations?.plan || 'free').toLowerCase();
                 if (plan === 'free' || plan === 'starter') {
-                  alert("La App de Escritorio (DAW) es una herramienta profesional exclusiva para planes Pro y Elite. Haz upgrade en la versión web para desbloquearla.");
+                  alertDialog("La App de Escritorio (DAW) es una herramienta profesional exclusiva para planes Pro y Elite. Haz upgrade en la versión web para desbloquearla.");
                   return;
                 }
               }
@@ -167,7 +169,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                 onClick={() => { 
                   setShowTeamAction(false); 
                   if (profile?.organizations?.plan === 'pro' || profile?.organizations?.plan === 'elite') {
-                    window.alert("Creación multi-equipo en proceso. Pronto habilitaremos el panel para alternar entre tus equipos.");
+                    alertDialog("Creación multi-equipo en proceso. Pronto habilitaremos el panel para alternar entre tus equipos.");
                   } else {
                     setShowUpgradeModal(true);
                   }
@@ -293,6 +295,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           padding: '8px 1rem', gap: '8px'
         }}>
 
+          <div style={{ marginRight: 'auto' }} className="hide-on-tiny">
+            <GlobalSearch songs={songs} events={events} members={members} setActiveTab={setActiveTab} />
+          </div>
+
           {profile?.role === 'director' && profile?.organizations?.invite_code && (
             <div 
               onClick={handleCopyLink}
@@ -399,13 +405,17 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         )}
 
         {showWelcome && (
-          <WelcomeModal 
-            profile={profile} 
-            onClose={() => setShowWelcome(false)} 
+          <WelcomeModal
+            profile={profile}
+            onClose={() => setShowWelcome(false)}
             onOpenSettings={() => {
               setShowWelcome(false);
               setActiveTab('team');
-            }} 
+            }}
+            onOpenSubscription={() => {
+              setShowWelcome(false);
+              setShowSubscription(true);
+            }}
           />
         )}
 

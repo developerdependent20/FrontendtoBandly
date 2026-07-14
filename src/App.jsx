@@ -21,6 +21,7 @@ import { DirectorView, MemberView } from './components/layout/RoleViews';
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
 import { isSuperAdmin } from './utils/permissions';
+import { alertDialog, promptDialog } from './utils/dialogService';
 
 /**
  * App - Versión de Estabilidad Garantizada
@@ -211,11 +212,11 @@ export default function App() {
   const handleCopyLink = () => {
     const link = `${window.location.origin}/?join=${profile.organizations?.invite_code}`;
     navigator.clipboard.writeText(link);
-    alert('¡Link mágico copiado! Envíaselo a los miembros de tu organización.');
+    alertDialog('¡Link mágico copiado! Envíaselo a los miembros de tu organización.');
   };
 
   const handleJoinTeam = async () => {
-    const code = prompt("Pega el CÓDIGO o LINK MÁGICO de la organización a la que te quieres unir (Ej. TEAM24):");
+    const code = await promptDialog("Pega el CÓDIGO o LINK MÁGICO de la organización a la que te quieres unir (Ej. TEAM24):");
     if (!code) return;
     try {
       const cleanCode = code.includes('?join=') ? code.split('?join=')[1] : code;
@@ -237,10 +238,10 @@ export default function App() {
       const { error: updateErr } = await supabase.from('profiles').update({ org_id: org.id }).eq('id', profile.id);
       if (updateErr) throw updateErr;
       
-      alert("¡Te has unido al equipo exitosamente!");
+      alertDialog("¡Te has unido al equipo exitosamente!");
       window.location.reload();
     } catch(e) {
-      alert(e.message);
+      alertDialog(e.message);
     }
   };
 
@@ -251,7 +252,7 @@ export default function App() {
       setProfile({ ...profile, accepted_terms: true });
       setShowLegalBlocking(false);
     } catch {
-      alert("Error al guardar aceptación legal.");
+      alertDialog("Error al guardar aceptación legal.");
     }
   };
 
@@ -318,14 +319,17 @@ export default function App() {
           </button>
         </div>
       )}
-      <Dashboard 
-        profile={profile} 
-        session={session} 
-        onLogout={handleLogout} 
-        activeTab={activeTab} 
+      <Dashboard
+        profile={profile}
+        session={session}
+        onLogout={handleLogout}
+        activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleCopyLink={handleCopyLink}
         handleJoinTeam={handleJoinTeam}
+        songs={songs}
+        events={events}
+        members={members}
       >
         {activeTab === 'admin' && userIsSuperAdmin ? (
           <AdminPanel onInspect={(org) => { setInspectedOrg(org); setActiveTab('planner'); }} />

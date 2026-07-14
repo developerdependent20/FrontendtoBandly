@@ -2,41 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, X, Loader2, Save } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-
-const DEFAULT_LEADERSHIP_ROLES = [
-  { id: 'director_musical', label: 'Director Musical', icon: '🎼' },
-  { id: 'eventos', label: 'Dir. Eventos', icon: '📅' },
-  { id: 'lider_produccion', label: 'Líder Producción', icon: '🎬' },
-  { id: 'lider_logistica', label: 'Líder Logística', icon: '📋' }
-];
-
-const DEFAULT_PRODUCTION_ROLES = [
-  { id: 'media', label: 'Media/Visuales', icon: '📽️' },
-  { id: 'sonido', label: 'Audio/Sonido', icon: '🎛️' },
-  { id: 'transmision', label: 'Transmisión', icon: '📡' },
-  { id: 'iluminacion', label: 'Iluminación', icon: '💡' }
-];
-
-const DEFAULT_LOGISTICS_ROLES = [
-  { id: 'logistica', label: 'Staff/Logística', icon: '🛠️' },
-  { id: 'decoracion', label: 'Decoración', icon: '🎨' },
-  { id: 'bienvenida', label: 'Bienvenida', icon: '👋' },
-  { id: 'finanzas', label: 'Finanzas', icon: '💰' }
-];
-
-const DEFAULT_INSTRUMENTS = [
-  { id: 'bateria', label: 'Batería', icon: '🥁' },
-  { id: 'bajo', label: 'Bajo', icon: '🎸' },
-  { id: 'guitarra', label: 'Guitarra', icon: '🎸' },
-  { id: 'piano', label: 'Teclado', icon: '🎹' },
-  { id: 'voz', label: 'Voz/Cantante', icon: '🎤' },
-  { id: 'percusion', label: 'Percusión', icon: '🪘' },
-  { id: 'acustica', label: 'Acústica', icon: '🎸' },
-  { id: 'cuerdas', label: 'Cuerdas', icon: '🎻' },
-  { id: 'brass', label: 'Metales (Brass)', icon: '🎺' },
-  { id: 'saxo', label: 'Saxofón', icon: '🎷' },
-  { id: 'sintetizador', label: 'Sintetizador', icon: '🎛️' },
-];
+import { alertDialog } from '../utils/dialogService';
+import {
+  DEFAULT_LEADERSHIP_ROLES,
+  DEFAULT_PRODUCTION_ROLES,
+  DEFAULT_LOGISTICS_ROLES,
+  DEFAULT_INSTRUMENTS
+} from '../utils/defaultRoles';
 
 function SectionBuilder({ title, defaultList, currentList, setList, showCustomizer, colorClass }) {
   const [newLabel, setNewLabel] = useState('');
@@ -187,7 +159,7 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
       if (refreshData) refreshData();
       onClose();
     } catch (e) {
-      alert("Error al guardar: " + e.message);
+      alertDialog("Error al guardar: " + e.message);
     } finally {
       setSaving(false);
     }

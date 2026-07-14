@@ -8,14 +8,15 @@ import ProMixerConsole from './ProMixerConsole';
 import PadBoard from './PadBoard'; 
 import CloudRepertoire from './CloudRepertoire';
 import { supabase } from '../../supabaseClient';
-import { OfflineManager } from '../../utils/offlineManager'; 
+import { OfflineManager } from '../../utils/offlineManager';
+import FirstUseTip from '../FirstUseTip';
 import './DAW.css';
 import * as Icons from 'lucide-react';
 
-const { 
-  Settings, Play, Pause, Layout, Volume2, Bell, BellOff, FolderOpen, 
-  Save, Activity, Cloud, X, Loader2, Square, SkipBack, Trash2, 
-  ChevronUp, ChevronDown, Grid, Crown 
+const {
+  Settings, Play, Pause, Layout, Volume2, Bell, BellOff, FolderOpen,
+  Save, Activity, Cloud, X, Loader2, Square, SkipBack, Trash2,
+  ChevronUp, ChevronDown, Grid, Crown, Pencil, Check
 } = Icons;
 
 const sortTracks = (tracksList) => {
@@ -72,7 +73,7 @@ const getStandardName = (rawName) => {
   return rawName.replace(/^[0-9_.-]+/, '').substring(0, 12).toUpperCase(); 
 };
 
-const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, onReorder, downloadProgress, handleSyncOffline }) => {
+const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, onSelect, onRemove, onReorder, downloadProgress, handleSyncOffline }) => {
   const [draggedIdx, setDraggedIdx] = useState(null);
 
   return (
@@ -179,9 +180,16 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, on
                 {song.title}
               </div>
               <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>{song.bpm || '120'} BPM</span>
+                {/* Para la canción ACTIVA usamos los datos reales de la secuencia cargada
+                    (puede diferir del tono/tempo base de la canción); para el resto del
+                    setlist, solo tenemos el dato base de la canción como preview. */}
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>
+                  {(isActive ? activeSequenceMeta?.bpm : null) || song.bpm || '—'} BPM
+                </span>
                 <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)' }}>•</span>
-                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>{song.key || 'G#m'}</span>
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>
+                  {(isActive ? activeSequenceMeta?.key : null) || song.key || '—'}
+                </span>
               </div>
             </div>
 
@@ -210,6 +218,78 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, onSelect, onRemove, on
 
 const MemoizedMixerConsole = React.memo(ProMixerConsole);
 
+// "6/8" -> 6, "4/4" -> 4, etc. Usado para el conteo de compás/beat en pantalla.
+function beatsPerBarFromSignature(sig) {
+  const n = parseInt((sig || '4/4').split('/')[0], 10);
+  return Number.isFinite(n) && n > 0 ? n : 4;
+}
+
+const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '2/4'];
+
+function SequenceMetaEditor({ initial, onCancel, onSave }) {
+  const [key, setKey] = useState(initial?.key || '');
+  const [bpm, setBpm] = useState(initial?.bpm || '');
+  const [timeSignature, setTimeSignature] = useState(initial?.timeSignature || '4/4');
+
+  return (
+    <div style={{
+      position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 300,
+      background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px',
+      padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px',
+      boxShadow: '0 15px 30px rgba(0,0,0,0.5)', width: '220px'
+    }}>
+      <span style={{ fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
+        EDITAR SECUENCIA
+      </span>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>TONO</label>
+        <input
+          type="text" value={key} onChange={(e) => setKey(e.target.value)}
+          placeholder="Ej: A, Bb, C#m"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '6px 8px', color: 'white', fontSize: '0.8rem', outline: 'none' }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>TEMPO (BPM)</label>
+        <input
+          type="number" value={bpm} onChange={(e) => setBpm(e.target.value)}
+          placeholder="Ej: 120"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '6px 8px', color: 'white', fontSize: '0.8rem', outline: 'none' }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>MÉTRICA</label>
+        <select
+          value={timeSignature} onChange={(e) => setTimeSignature(e.target.value)}
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '6px 8px', color: 'white', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
+        >
+          {TIME_SIGNATURES.map((ts) => (
+            <option key={ts} value={ts} style={{ background: '#0f172a' }}>{ts}</option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+        <button
+          onClick={onCancel}
+          style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '900', cursor: 'pointer' }}
+        >
+          CANCELAR
+        </button>
+        <button
+          onClick={() => onSave({ key, bpm, timeSignature })}
+          style={{ flex: 1, padding: '8px', background: 'var(--daw-cyan)', border: 'none', color: '#000', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '950', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+        >
+          <Check size={13} /> GUARDAR
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const MemoizedTransportUI = React.memo(({
   isPlaying, togglePlay, handleStop, handleRestart,
   setShowCloudBrowser, engineReady,
@@ -218,12 +298,13 @@ const MemoizedTransportUI = React.memo(({
   playbackSample, sampleRate, totalSamples,
   reconnectAudio, setIsConfigured,
   isLoadingStems,
-  transpose = 0, onTransposeChange
+  transpose = 0, onTransposeChange,
+  activeSequenceMeta, editingSequenceMeta, setEditingSequenceMeta, onSaveSequenceMeta
 }) => {
   const bpm = metronome.bpm || 120;
   const sr = sampleRate || 44100;
   const samplesPerBeat = (sr * 60) / bpm;
-  const samplesPerBar = samplesPerBeat * 4;
+  const samplesPerBar = samplesPerBeat * beatsPerBarFromSignature(activeSequenceMeta?.timeSignature);
   
   const bar = Math.floor(playbackSample / samplesPerBar) + 1;
   const beat = Math.floor((playbackSample % samplesPerBar) / samplesPerBeat) + 1;
@@ -346,20 +427,46 @@ const MemoizedTransportUI = React.memo(({
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.03)', padding: '6px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.03)', padding: '6px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, position: 'relative' }}>
         {/* Bell toggle */}
-        <button 
+        <button
           onClick={() => onMetronomeUpdate('enabled', !metronome.enabled)}
           className={`transport-btn ${metronome.enabled ? 'active-cyan' : ''}`}
           title="Metrónomo (Click)"
         >
           {metronome.enabled ? <Bell size={18} fill="currentColor" /> : <BellOff size={18} />}
         </button>
-        
+
+        {/* TONO / TEMPO / MÉTRICA — datos reales de la secuencia cargada */}
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '70px' }}>
+          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>TONO / MÉTRICA</span>
+          <span className="mono-data" style={{ color: 'white', fontWeight: '900', fontSize: '0.8rem' }}>
+            {activeSequenceMeta?.key || '—'} · {activeSequenceMeta?.timeSignature || '4/4'}
+          </span>
+        </div>
+
+        <button
+          onClick={() => setEditingSequenceMeta && setEditingSequenceMeta(v => !v)}
+          className={`transport-btn ${editingSequenceMeta ? 'active-cyan' : ''}`}
+          title="Editar tono, tempo y métrica de esta secuencia"
+          disabled={!activeSequenceMeta}
+          style={{ opacity: activeSequenceMeta ? 1 : 0.3 }}
+        >
+          <Pencil size={15} />
+        </button>
+
+        {editingSequenceMeta && activeSequenceMeta && (
+          <SequenceMetaEditor
+            initial={activeSequenceMeta}
+            onCancel={() => setEditingSequenceMeta(false)}
+            onSave={(meta) => { onSaveSequenceMeta(meta); setEditingSequenceMeta(false); }}
+          />
+        )}
+
         {/* TEMPO */}
         <div style={{ display: 'flex', flexDirection: 'column', width: '52px' }}>
           <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>TEMPO</span>
-          <input 
+          <input
             type="number"
             value={metronome.bpm}
             onChange={(e) => onMetronomeUpdate('bpm', parseFloat(e.target.value))}
@@ -497,6 +604,11 @@ export default function ProMixer({ session }) {
   const [showPads, setShowPads] = useState(true); 
   const [markers, setMarkers] = useState([]);
   const [activeSequenceId, setActiveSequenceId] = useState(null);
+  // Metadatos REALES de la secuencia cargada (tono/tempo/métrica) — distintos
+  // de los del song base: una canción puede tener secuencias subidas en otro
+  // tono, y la UI debe reflejar la secuencia activa, no siempre el default.
+  const [activeSequenceMeta, setActiveSequenceMeta] = useState(null);
+  const [editingSequenceMeta, setEditingSequenceMeta] = useState(false);
   
   const [totalSamples, setTotalSamples] = useState(0);
   const [playbackSample, setPlaybackSample] = useState(0);
@@ -775,7 +887,7 @@ export default function ProMixer({ session }) {
 
   const onTrackUpdate = useCallback(async (type, data) => {
     if (!data.trackId) return;
-    const { trackId, volume, muted, solo, isStereo, output } = data;
+    const { trackId, volume, muted, solo, isStereo, output, band, gainDb } = data;
     setTracks(prev => prev.map(t => {
       if (t.id === trackId) {
         const next = { ...t };
@@ -784,32 +896,47 @@ export default function ProMixer({ session }) {
         if (type === 'solo') next.solo = solo;
         if (type === 'panMode') next.isStereo = isStereo;
         if (type === 'output') next.outputIdx = output;
+        if (type === 'eq' && band === 'low') next.eqLow = gainDb;
+        if (type === 'eq' && band === 'mid') next.eqMid = gainDb;
+        if (type === 'eq' && band === 'high') next.eqHigh = gainDb;
 
-        // Persistencia global por nombre de track (categorizado) para Ruteo/Paneo/Mute/Volumen
-        try {
-          const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
-          const profile = JSON.parse(profileStr);
-          const trackKey = getTrackCategory(next.name);
-          if (!profile[trackKey]) profile[trackKey] = {};
-          
-          if (type === 'output') profile[trackKey].outputIdx = output;
-          if (type === 'panMode') profile[trackKey].isStereo = isStereo;
-          if (type === 'mute') profile[trackKey].muted = muted;
-          if (type === 'solo') profile[trackKey].solo = solo;
-          if (type === 'volume') profile[trackKey].volume = volume; // Guardar volumen globalmente para heredar
-          
-          localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
-        } catch {}
-        
-        // Persistencia local (Volumen) independiente por canal (stem específico)
-        if (type === 'volume') {
+        // Persistencia global por nombre de track (categorizado): SOLO para
+        // ruteo de salida (output) — es lo único donde compartir tiene sentido
+        // real (la batería casi siempre va a la misma salida física, sin
+        // importar la canción). Volumen/mute/solo/estéreo NUNCA se comparten
+        // entre canciones — cada una es 100% independiente desde el inicio.
+        if (type === 'output') {
           try {
-            const volsStr = localStorage.getItem('bandly_mixer_volumes') || '{}';
-            const vols = JSON.parse(volsStr);
-            vols[trackId] = volume;
-            localStorage.setItem('bandly_mixer_volumes', JSON.stringify(vols));
+            const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
+            const profile = JSON.parse(profileStr);
+            const trackKey = getTrackCategory(next.name);
+            if (!profile[trackKey]) profile[trackKey] = {};
+            profile[trackKey].outputIdx = output;
+            localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
           } catch {}
         }
+
+        // Persistencia POR CANCIÓN (stem específico, id único): tiene prioridad
+        // sobre el default global de arriba. Así, cambiar el ruteo de una canción
+        // puntual no afecta a las demás — cada una recuerda su propia decisión.
+        try {
+          const overridesStr = localStorage.getItem('bandly_mixer_song_overrides') || '{}';
+          const overrides = JSON.parse(overridesStr);
+          if (!overrides[trackId]) overrides[trackId] = {};
+
+          if (type === 'output') overrides[trackId].outputIdx = output;
+          if (type === 'panMode') overrides[trackId].isStereo = isStereo;
+          if (type === 'mute') overrides[trackId].muted = muted;
+          if (type === 'solo') overrides[trackId].solo = solo;
+          if (type === 'volume') overrides[trackId].volume = volume;
+          // EQ: 100% por canción, igual que volumen/mute/solo — un realce que
+          // suena bien en una canción puede no servir en absoluto en otra.
+          if (type === 'eq' && band === 'low') overrides[trackId].eqLow = gainDb;
+          if (type === 'eq' && band === 'mid') overrides[trackId].eqMid = gainDb;
+          if (type === 'eq' && band === 'high') overrides[trackId].eqHigh = gainDb;
+
+          localStorage.setItem('bandly_mixer_song_overrides', JSON.stringify(overrides));
+        } catch {}
 
         return next;
       }
@@ -822,6 +949,7 @@ export default function ProMixer({ session }) {
         if (type === 'solo') await safeInvoke('set_track_solo', { trackId, soloed: solo });
         if (type === 'panMode') await safeInvoke('set_track_pan_mode', { trackId, isStereo });
         if (type === 'output') await safeInvoke('set_track_output', { trackId, outputIdx: output });
+        if (type === 'eq') await safeInvoke('set_track_eq', { trackId, band, gainDb });
       } catch {}
     }
   }, []);
@@ -831,21 +959,6 @@ export default function ProMixer({ session }) {
     // Ya no bloqueamos toda la pantalla con setLoading(true).
     // Usaremos isLoadingStems para que sea transparente y rápido en el botón Play.
     setTranspose(0); // el motor ya resetea pitch_ratio en reset_audio_engine
-    const targetBpm = parseFloat(song.bpm) || 120;
-    setMetronome(prev => {
-      // Intentar cargar la configuración guardada del metrónomo
-      let savedMetro = { ...prev };
-      try {
-        const savedData = localStorage.getItem('bandly_metronome_profile');
-        if (savedData) savedMetro = { ...savedMetro, ...JSON.parse(savedData) };
-      } catch {}
-
-      const next = { ...savedMetro, bpm: targetBpm };
-      if (isTauri()) {
-        safeInvoke('set_metronome', { enabled: false, volume: next.volume, bpm: next.bpm, outputCh: next.outputCh, standalone: true });
-      }
-      return { ...next, enabled: false };
-    });
     try {
       setIsPlaying(false);
       lastActionTime.current = Date.now();
@@ -860,17 +973,43 @@ export default function ProMixer({ session }) {
         const { data } = await supabase.from('sequences').select('*, sequence_stems(*)').eq('song_id', song.id).maybeSingle();
         sequence = data;
       }
-      if (!sequence) { setTracks([]); setMarkers([]); setActiveSequenceId(null); return; }
+      if (!sequence) {
+        setTracks([]); setMarkers([]); setActiveSequenceId(null); setActiveSequenceMeta(null);
+        return;
+      }
       const stems = sequence.sequence_stems || [];
       setActiveSequenceId(sequence.id);
+      const loadedTimeSignature = sequence.time_signature || '4/4';
+      setActiveSequenceMeta({ key: sequence.key, bpm: sequence.bpm, timeSignature: loadedTimeSignature });
+      if (isTauri()) safeInvoke('set_beats_per_bar', { beats: beatsPerBarFromSignature(loadedTimeSignature) });
       setMarkers(sequence.markers || []);
 
-      // Recuperar perfil global de mezcla y volumenes individuales
+      // El tempo de LA SECUENCIA manda sobre el de la canción base — una canción
+      // puede tener secuencias subidas en otro tono/tempo (ver bug reportado).
+      const targetBpm = parseFloat(sequence.bpm) || parseFloat(song.bpm) || 120;
+      setMetronome(prev => {
+        let savedMetro = { ...prev };
+        try {
+          const savedData = localStorage.getItem('bandly_metronome_profile');
+          if (savedData) savedMetro = { ...savedMetro, ...JSON.parse(savedData) };
+        } catch {}
+        const next = { ...savedMetro, bpm: targetBpm };
+        if (isTauri()) {
+          safeInvoke('set_metronome', { enabled: false, volume: next.volume, bpm: next.bpm, outputCh: next.outputCh, standalone: true });
+        }
+        return { ...next, enabled: false };
+      });
+
+      // Recuperar: override por canción (prioridad) > default global por categoría > valores base.
+      // mixerVolumes es el store viejo (solo volumen) — se mantiene como respaldo
+      // para no perder ajustes guardados antes de este cambio.
       let mixerProfile = {};
       let mixerVolumes = {};
+      let songOverrides = {};
       try {
         mixerProfile = JSON.parse(localStorage.getItem('bandly_mixer_profile') || '{}');
         mixerVolumes = JSON.parse(localStorage.getItem('bandly_mixer_volumes') || '{}');
+        songOverrides = JSON.parse(localStorage.getItem('bandly_mixer_song_overrides') || '{}');
       } catch {}
 
       const resTracks = stems.map((stem) => {
@@ -879,15 +1018,23 @@ export default function ProMixer({ session }) {
         const trackKey = getTrackCategory(cleanName);
         const displayName = getStandardName(cleanName);
         const savedGlobal = mixerProfile[trackKey] || {};
-        const savedVol = mixerVolumes[stem.id];
+        const savedSong = songOverrides[stem.id] || {};
+        const savedVol = savedSong.volume !== undefined ? savedSong.volume : mixerVolumes[stem.id];
 
         return {
-          id: stem.id, name: displayName, peak: 0, 
-          outputIdx: savedGlobal.outputIdx !== undefined ? savedGlobal.outputIdx : 0, 
-          volume: savedVol !== undefined ? savedVol : (savedGlobal.volume !== undefined ? savedGlobal.volume : 1),
-          isStereo: savedGlobal.isStereo !== undefined ? savedGlobal.isStereo : true,
-          muted: savedGlobal.muted !== undefined ? savedGlobal.muted : false,
-          solo: savedGlobal.solo !== undefined ? savedGlobal.solo : false,
+          // outputIdx: único campo que hereda un default compartido entre canciones (a propósito).
+          id: stem.id, name: displayName, peak: 0,
+          outputIdx: savedSong.outputIdx !== undefined ? savedSong.outputIdx : (savedGlobal.outputIdx !== undefined ? savedGlobal.outputIdx : 0),
+          // Volumen/estéreo/mute/solo: SOLO el ajuste propio de esta canción, o el
+          // valor base — nunca heredan de otra canción.
+          volume: savedVol !== undefined ? savedVol : 1,
+          isStereo: savedSong.isStereo !== undefined ? savedSong.isStereo : true,
+          muted: savedSong.muted !== undefined ? savedSong.muted : false,
+          solo: savedSong.solo !== undefined ? savedSong.solo : false,
+          // EQ: 100% por canción, igual que volumen/mute/solo — nunca hereda de otra.
+          eqLow: savedSong.eqLow !== undefined ? savedSong.eqLow : 0,
+          eqMid: savedSong.eqMid !== undefined ? savedSong.eqMid : 0,
+          eqHigh: savedSong.eqHigh !== undefined ? savedSong.eqHigh : 0,
           color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
@@ -895,6 +1042,24 @@ export default function ProMixer({ session }) {
       setActiveSong(song);
       if (isTauri()) {
         try {
+          // PRECARGA: si esta canción ya fue precargada en segundo plano
+          // (regla todo-o-nada: solo se usa si terminó de decodificar Y
+          // coincide exactamente), el swap es instantáneo — nos saltamos
+          // toda la decodificación de abajo. Si no, camino normal de siempre.
+          const usedPreload = await safeInvoke('commit_staged_song', { songId: song.id.toString() }).catch(() => false);
+
+          if (usedPreload) {
+            setIsLoadingStems(false);
+            for (const t of resTracks) {
+              safeInvoke('set_track_volume', { trackId: t.id, volume: t.volume }).catch(() => {});
+              safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(() => {});
+              safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(() => {});
+              safeInvoke('set_track_mute', { trackId: t.id, muted: t.muted }).catch(() => {});
+              safeInvoke('set_track_eq', { trackId: t.id, band: 'low', gainDb: t.eqLow }).catch(() => {});
+              safeInvoke('set_track_eq', { trackId: t.id, band: 'mid', gainDb: t.eqMid }).catch(() => {});
+              safeInvoke('set_track_eq', { trackId: t.id, band: 'high', gainDb: t.eqHigh }).catch(() => {});
+            }
+          } else {
           setIsLoadingStems(true); // Fase 2: Mostrar estado de carga
           const token = session?.access_token || "";
           const songDir = song.id.toString();
@@ -913,9 +1078,9 @@ export default function ProMixer({ session }) {
                 };
               });
 
-              await safeInvoke('sync_stems_to_engine', { 
-                songId: songId.toString(), 
-                stems: stemsWithState 
+              await safeInvoke('sync_stems_to_engine', {
+                songId: songId.toString(),
+                stems: stemsWithState
               });
               return true;
             } catch {
@@ -943,6 +1108,9 @@ export default function ProMixer({ session }) {
                    safeInvoke('set_track_output', { trackId: t.id, outputIdx: t.outputIdx }).catch(()=>{});
                    safeInvoke('set_track_pan_mode', { trackId: t.id, isStereo: t.isStereo }).catch(()=>{});
                    safeInvoke('set_track_mute', { trackId: t.id, muted: t.muted }).catch(()=>{});
+                   safeInvoke('set_track_eq', { trackId: t.id, band: 'low', gainDb: t.eqLow }).catch(()=>{});
+                   safeInvoke('set_track_eq', { trackId: t.id, band: 'mid', gainDb: t.eqMid }).catch(()=>{});
+                   safeInvoke('set_track_eq', { trackId: t.id, band: 'high', gainDb: t.eqHigh }).catch(()=>{});
                 }
                 break;
               }
@@ -951,6 +1119,30 @@ export default function ProMixer({ session }) {
             setIsLoadingStems(false);
           };
           applyStatesToRust();
+          }
+
+          // Precargar la SIGUIENTE canción del setlist en segundo plano (ventana
+          // de 2 canciones). No afecta lo que acaba de cargar/sonar — el motor
+          // se salta la precarga solo si la RAM del sistema está baja.
+          const idx = setlist.findIndex(s => s.id === song.id);
+          const nextSong = idx >= 0 ? setlist[idx + 1] : null;
+          if (nextSong) {
+            (async () => {
+              let nextSeq = nextSong.sequences && nextSong.sequences.length > 0 ? nextSong.sequences[0] : null;
+              if (!nextSeq || !nextSeq.sequence_stems) {
+                const { data } = await supabase.from('sequences').select('*, sequence_stems(*)').eq('song_id', nextSong.id).maybeSingle();
+                nextSeq = data;
+              }
+              if (!nextSeq || !nextSeq.sequence_stems) return;
+              const preloadStems = nextSeq.sequence_stems.map(s => ({
+                id: s.id.toString(), original_name: s.original_name || 'track',
+                volume: 1.0, output_idx: 0, is_stereo: true, is_muted: false, is_soloed: false
+              }));
+              safeInvoke('preload_song', { songId: nextSong.id.toString(), stems: preloadStems }).catch(() => {});
+            })();
+          } else {
+            safeInvoke('cancel_staging').catch(() => {});
+          }
         } catch {
           // Error interno silenciado
         } finally {
@@ -959,11 +1151,11 @@ export default function ProMixer({ session }) {
       }
     } catch {
       // Error de flujo general
-    } finally { 
-      setLoading(false); 
+    } finally {
+      setLoading(false);
       setIsLoadingStems(false);
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, setlist]);
 
   const onAddMarker = useCallback(async (bar, label, sample, color) => {
     if (!activeSequenceId) return;
@@ -998,6 +1190,32 @@ export default function ProMixer({ session }) {
 
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
   }, [activeSequenceId, markers, activeSong]);
+
+  // Guarda tono/tempo/métrica de la secuencia ACTIVA (no de la canción base) —
+  // corrige el bug donde la UI mostraba siempre el tono/tempo original de la
+  // canción aunque se hubiera subido una secuencia distinta en otro tono.
+  const handleSaveSequenceMeta = useCallback(async ({ key, bpm, timeSignature }) => {
+    if (!activeSequenceId) return;
+    const parsedBpm = bpm ? parseInt(bpm, 10) : null;
+
+    setActiveSequenceMeta({ key: key || null, bpm: parsedBpm, timeSignature });
+    setMetronome(prev => ({ ...prev, bpm: parsedBpm || prev.bpm }));
+
+    await supabase
+      .from('sequences')
+      .update({ key: key || null, bpm: parsedBpm, time_signature: timeSignature })
+      .eq('id', activeSequenceId);
+
+    if (isTauri()) {
+      await safeInvoke('set_beats_per_bar', { beats: beatsPerBarFromSignature(timeSignature) });
+    }
+    if (isTauri() && parsedBpm) {
+      await safeInvoke('set_metronome', {
+        enabled: metronome.enabled, volume: metronome.volume, bpm: parsedBpm,
+        outputCh: metronome.outputCh, standalone: true,
+      });
+    }
+  }, [activeSequenceId, metronome]);
 
   const handleRemoveFromSetlist = useCallback((index) => {
     setSetlist(prev => {
@@ -1056,6 +1274,20 @@ export default function ProMixer({ session }) {
         </div>
       )}
 
+      {session?.user?.id && (
+        <div style={{ padding: '0.5rem 1rem 0' }}>
+          <FirstUseTip
+            storageKey={`bandly_tip_daw_${session.user.id}`}
+            title="Cómo usar el DAW"
+            items={[
+              'El transporte de arriba controla play/stop y el metrónomo — el tempo lo trae la secuencia que subiste.',
+              'Cada canal del mixer tiene volumen, mute/solo y ruteo de salida independiente por canción.',
+              'Los marcadores de sección (compás, letra) se ven abajo en la línea de tiempo — puedes saltar a cualquiera con las teclas 1-9.'
+            ]}
+          />
+        </div>
+      )}
+
       <MemoizedTransportUI
           isPlaying={isPlaying} togglePlay={togglePlay} handleStop={handleStop}
           handleRestart={handleRestart} engineReady={engineReady}
@@ -1065,6 +1297,9 @@ export default function ProMixer({ session }) {
           reconnectAudio={reconnectAudio} setIsConfigured={setIsConfigured}
           isLoadingStems={isLoadingStems}
           transpose={transpose} onTransposeChange={handleTransposeChange}
+          activeSequenceMeta={activeSequenceMeta}
+          editingSequenceMeta={editingSequenceMeta} setEditingSequenceMeta={setEditingSequenceMeta}
+          onSaveSequenceMeta={handleSaveSequenceMeta}
           onMetronomeUpdate={async (type, val) => {
           const next = { ...metronome, [type]: val };
           setMetronome(next);
@@ -1081,7 +1316,8 @@ export default function ProMixer({ session }) {
             <CueTimeline
               progress={totalSamples > 0 ? playbackSample / totalSamples : 0} totalSamples={totalSamples}
               playbackSample={playbackSample} bpm={metronome.bpm} sampleRate={playbackSR}
-              hasTempo={!!parseFloat(activeSong?.bpm)}
+              hasTempo={!!parseFloat(activeSequenceMeta?.bpm ?? activeSong?.bpm)}
+              timeSignature={activeSequenceMeta?.timeSignature || '4/4'}
               markers={pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }))}
               onAddMarker={onAddMarker} onRemoveMarker={onRemoveMarker}
               isPrerollActive={isPrerollActive} prerollBars={prerollBars}
@@ -1093,7 +1329,7 @@ export default function ProMixer({ session }) {
           </div>
              {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
           </div>
-        <SetlistSidebar setlist={setlist} activeSong={activeSong} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} onReorder={handleReorderSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
+        <SetlistSidebar setlist={setlist} activeSong={activeSong} activeSequenceMeta={activeSequenceMeta} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} onReorder={handleReorderSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
       </main>
       {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); handleSyncSong(s); setShowCloudBrowser(false); }} />}
       {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}

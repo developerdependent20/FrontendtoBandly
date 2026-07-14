@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings } from 'lucide-react';
+import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings, Mic2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import ProMixer from './DAW/ProMixer';
+import LyricsEditor from './LyricsEditor';
 import { isTauri } from '../utils/tauri';
+import { alertDialog, confirmDialog } from '../utils/dialogService';
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -16,6 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 export default function SongLibrary({ songs, events, orgId, readOnly, refreshData, session, profile, setActiveTab }) {
   const [showModal, setShowModal] = useState(false);
   const [chartSong, setChartSong] = useState(null);
+  const [lyricsSong, setLyricsSong] = useState(null);
   const [seqUploadSong, setSeqUploadSong] = useState(null);
   const [seqMixerData, setSeqMixerData] = useState(null);
   const [loadingSeq, setLoadingSeq] = useState(null);
@@ -74,7 +77,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
 
   const openMixer = async (song) => {
     if (!session?.access_token) {
-      alert("No se encontró una sesión activa. Por favor, intenta cerrar sesión y volver a entrar.");
+      alertDialog("No se encontró una sesión activa. Por favor, intenta cerrar sesión y volver a entrar.");
       setLoadingSeq(null);
       return;
     }
@@ -97,7 +100,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
       if (mainSequence && (mainSequence.sequence_stems?.length > 0)) {
         const plan = (profile?.organizations?.plan || 'free').toLowerCase();
         if (plan === 'free') {
-          alert("El Reproductor Multi-Track es una función exclusiva para planes de pago (Starter, Pro, Elite). ¡Haz upgrade para escucharlo!");
+          alertDialog("El Reproductor Multi-Track es una función exclusiva para planes de pago (Starter, Pro, Elite). ¡Haz upgrade para escucharlo!");
           setLoadingSeq(null);
           return;
         }
@@ -114,18 +117,18 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
         if (canEditSongs && !readOnly) {
           setSeqUploadSong(song);
         } else {
-          alert('Esta canción no tiene secuencia subida aún.');
+          alertDialog('Esta canción no tiene secuencia subida aún.');
         }
       }
     } catch (e) {
-      alert(`Error al verificar secuencia: ${e.message}`);
+      alertDialog(`Error al verificar secuencia: ${e.message}`);
     } finally {
       setLoadingSeq(null);
     }
   };
 
   const handleSave = async () => {
-    if(!title) return alert("El título es obligatorio");
+    if(!title) return alertDialog("El título es obligatorio");
 
     // NORMALIZACIÓN DEFENSIVA (v1.0): Evita error de sintaxis integer en Postgres
     const normalizeInt = (val) => {
@@ -157,13 +160,13 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
       closeOverlay();
       if (refreshData) refreshData();
     } catch(e) { 
-      alert("Error de base de datos: " + (e.message || "Fallo al guardar")); 
+      alertDialog("Error de base de datos: " + (e.message || "Fallo al guardar"));
     }
   };
   
 
   const handleDeleteSequence = async (songId) => {
-    if(!confirm("¿Estás seguro de eliminar la secuencia/multitrack de esta canción? Esto borrará los archivos en la nube y te permitirá subir uno nuevo.")) return;
+    if(!(await confirmDialog({ message: "¿Estás seguro de eliminar la secuencia/multitrack de esta canción? Esto borrará los archivos en la nube y te permitirá subir uno nuevo.", danger: true }))) return;
     try {
       const { data: sequences } = await supabase.from('sequences').select('id').eq('song_id', songId);
       if (sequences && sequences.length > 0) {
@@ -178,14 +181,14 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
         }
       }
       if (refreshData) refreshData();
-      alert("Secuencia eliminada correctamente. Ahora puedes subir una nueva.");
+      alertDialog("Secuencia eliminada correctamente. Ahora puedes subir una nueva.");
     } catch {
-      alert("Error al eliminar la secuencia.");
+      alertDialog("Error al eliminar la secuencia.");
     }
   };
 
   const handleDelete = async (id) => {
-    if(!confirm("¿Estás seguro de eliminar esta canción del repertorio? Se borrarán también los multitracks asociados para ahorrar espacio en la nube.")) return;
+    if(!(await confirmDialog({ message: "¿Estás seguro de eliminar esta canción del repertorio? Se borrarán también los multitracks asociados para ahorrar espacio en la nube.", danger: true }))) return;
     try {
       const { data: sequences } = await supabase.from('sequences').select('id').eq('song_id', id);
       if (sequences && sequences.length > 0) {
@@ -202,7 +205,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
       await supabase.from('songs').delete().eq('id', id);
       if (refreshData) refreshData();
     } catch {
-      alert("Error al eliminar la canción.");
+      alertDialog("Error al eliminar la canción.");
     }
   };
 
@@ -273,8 +276,8 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 
                 <div className="song-metadata" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
                    <div className="meta-tag">Orig: <span>{s.key || '-'}</span></div>
-                   <div className="meta-tag male">👨 Voz: <span>{s.key_male || '-'}</span></div>
-                   <div className="meta-tag female">👩 Voz: <span>{s.key_female || '-'}</span></div>
+                   <div className="meta-tag male" style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.25)' }}>Voz H: <span>{s.key_male || '-'}</span></div>
+                   <div className="meta-tag female" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.25)' }}>Voz M: <span>{s.key_female || '-'}</span></div>
                    <div className="meta-tag bpm">BPM: <span>{s.bpm || '-'}</span></div>
                    <div className="meta-tag" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                      Tocado: <span style={{ fontWeight: '800' }}>{getLastPlayedText(s.id)}</span>
@@ -299,11 +302,14 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 )}
               </div>
 
-              <div className="song-actions-grid" style={{ display: 'grid', gridTemplateColumns: (canEditSongs && !readOnly) ? '1fr 1.1fr 36px' : '1fr 1.1fr', gap: '8px', alignItems: 'center', minWidth: (canEditSongs && !readOnly) ? '280px' : '236px', justifyContent: 'flex-end' }}>
+              <div className="song-actions-grid" style={{ display: 'grid', gridTemplateColumns: (canEditSongs && !readOnly) ? '1fr 1fr 1.1fr 36px' : '1fr 1fr 1.1fr', gap: '8px', alignItems: 'center', minWidth: (canEditSongs && !readOnly) ? '340px' : '296px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn" style={{ width: '100%', whiteSpace: 'nowrap', padding: '10px', height: '38px' }}>
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
-                <button 
+                <button onClick={() => setLyricsSong(s)} className="song-action-btn chart-btn" title="Letras para Bandly Presenter" style={{ width: '100%', whiteSpace: 'nowrap', padding: '10px', height: '38px' }}>
+                  <Mic2 size={14} /> Letras
+                </button>
+                <button
                   onClick={() => openMixer(s)} 
                   disabled={loadingSeq === s.id} 
                   className={`song-action-btn sequence-btn ${loadingSeq === s.id ? 'loading' : ''} ${s.sequences?.length > 0 || (s.stems && s.stems.length > 0) ? 'ready' : ''}`}
@@ -396,7 +402,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
           song={chartSong}
           onClose={() => setChartSong(null)}
           onSave={async (chartData) => {
-            const { error } = await supabase.from('songs').update({ chart_data: chartData.chart_data, chart_annotations: chartData.chart_annotations }).eq('id', chartSong.id);
+            const { error } = await supabase.from('songs').update({ chart_data: chartData.chart_data, chart_annotations: chartData.chart_annotations, chart_section_bars: chartData.chart_section_bars }).eq('id', chartSong.id);
             if (error) throw error;
             setChartSong(prev => ({ ...prev, ...chartData }));
             if (refreshData) refreshData();
@@ -404,8 +410,17 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
         />
       )}
 
+      {lyricsSong && (
+        <LyricsEditor song={lyricsSong} onClose={() => setLyricsSong(null)} />
+      )}
+
       {seqUploadSong && (
-        <SequenceUploader song={seqUploadSong} orgId={orgId} session={session} apiUrl={API_URL} onClose={() => setSeqUploadSong(null)} onComplete={() => { if (refreshData) refreshData(); }} />
+        <SequenceUploader
+          song={seqUploadSong} orgId={orgId} session={session} apiUrl={API_URL}
+          orgStorageUsedMb={profile?.organizations?.storage_used_mb || 0}
+          orgStorageLimitMb={profile?.organizations?.storage_limit_mb || null}
+          onClose={() => setSeqUploadSong(null)} onComplete={() => { if (refreshData) refreshData(); }}
+        />
       )}
 
       {seqMixerData && (

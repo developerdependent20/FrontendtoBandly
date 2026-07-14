@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { User, Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut, Bell } from 'lucide-react';
+import { alertDialog } from '../utils/dialogService';
 
 export default function ProfileSettings({ profile, onLogout }) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
@@ -16,10 +17,20 @@ export default function ProfileSettings({ profile, onLogout }) {
     }
   };
 
-  // Sincronizar estado local si el profile cambia
+  // Sincronizar estado local si el profile cambia, y limpiar fechas que ya
+  // pasaron (no tiene sentido seguir bloqueando un día que ya ocurrió).
   useEffect(() => {
     setFullName(profile?.full_name || '');
-    setBlockedDates(profile?.blocked_dates || []);
+    const allDates = profile?.blocked_dates || [];
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const futureDates = allDates.filter(d => d >= todayStr);
+    setBlockedDates(futureDates);
+
+    // Si había fechas vencidas, limpiarlas también en la base de datos
+    // silenciosamente, para que no se acumulen para siempre.
+    if (futureDates.length !== allDates.length && profile?.id) {
+      supabase.from('profiles').update({ blocked_dates: futureDates }).eq('id', profile.id);
+    }
   }, [profile]);
 
   const handleSave = async () => {
@@ -40,7 +51,7 @@ export default function ProfileSettings({ profile, onLogout }) {
       // Auto ocultar mensaje
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (e) {
-      alert("Error al guardar perfil: " + e.message);
+      alertDialog("Error al guardar perfil: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -53,8 +64,17 @@ export default function ProfileSettings({ profile, onLogout }) {
     setNewDate('');
   };
 
-  const removeBlockedDate = (date) => {
-    setBlockedDates(blockedDates.filter(d => d !== date));
+  // Borrado inmediato: no depende de que el usuario recuerde darle a "Guardar
+  // Cambios" después — al quitar una fecha, se persiste de una vez.
+  const removeBlockedDate = async (date) => {
+    const next = blockedDates.filter(d => d !== date);
+    setBlockedDates(next);
+    try {
+      await supabase.from('profiles').update({ blocked_dates: next }).eq('id', profile.id);
+    } catch (e) {
+      alertDialog('Error al borrar la fecha: ' + e.message);
+      setBlockedDates(blockedDates); // revertir si falló
+    }
   };
 
   const formatDate = (dateStr) => {
@@ -141,9 +161,9 @@ export default function ProfileSettings({ profile, onLogout }) {
               } else {
                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                  if (isIOS) {
-                   alert("🍎 Para recibir notificaciones en iPhone/iPad, primero debes instalar la app:\n\n1. Toca el botón de 'Compartir' (el cuadrado con la flecha hacia arriba) en la barra de tu navegador.\n2. Selecciona 'Agregar a la Pantalla de Inicio'.\n3. Abre Bandly desde tu pantalla de inicio y vuelve a intentar.");
+                   alertDialog("🍎 Para recibir notificaciones en iPhone/iPad, primero debes instalar la app:\n\n1. Toca el botón de 'Compartir' (el cuadrado con la flecha hacia arriba) en la barra de tu navegador.\n2. Selecciona 'Agregar a la Pantalla de Inicio'.\n3. Abre Bandly desde tu pantalla de inicio y vuelve a intentar.");
                  } else {
-                   alert("Tu navegador actual no soporta Notificaciones Push. Intenta usar Chrome, Firefox o Edge.");
+                   alertDialog("Tu navegador actual no soporta Notificaciones Push. Intenta usar Chrome, Firefox o Edge.");
                  }
               }
             }}

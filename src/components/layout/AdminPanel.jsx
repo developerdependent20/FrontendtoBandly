@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, Database, HardDrive, Search, Users, Mail, ShieldCheck, Calendar } from 'lucide-react';
+import { alertDialog, confirmDialog } from '../../utils/dialogService';
 
 const getToken = () => {
   for (let i = 0; i < localStorage.length; i++) {
@@ -61,14 +62,14 @@ const AdminPanel = ({ onInspect }) => {
   };
 
   const handleSync = async () => {
-    if (!confirm('Sincronizar almacenamiento de todas las bandas?')) return;
+    if (!(await confirmDialog('Sincronizar almacenamiento de todas las bandas?'))) return;
     setOrgsLoading(true);
     try {
       await fetch('https://bandly-backend.onrender.com/api/admin/sync-storage', {
         headers: { 'Authorization': `Bearer ${getToken()}` }
       });
       await fetchOrgs();
-    } catch { alert('Error en sincronizacion'); }
+    } catch { alertDialog('Error en sincronizacion'); }
     finally { setOrgsLoading(false); }
   };
 

@@ -1,15 +1,36 @@
 import React, { useState, useEffect, memo, useRef, useCallback } from 'react';
 import { Volume2, VolumeX, Headphones } from 'lucide-react';
+import AnalogKnob from '../ui/AnalogKnob';
 
 // Constantes físicas del Fader
 const FADER_HEIGHT = 140;
 
-const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, onSelect, isSelected, deviceChannels = 2 }) => {
+const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, onEqChange, onSelect, isSelected, deviceChannels = 2 }) => {
   const [localVol, setLocalVol] = useState(track.volume !== undefined ? Math.round(track.volume * 100) : 100);
   const [isMuted, setIsMuted] = useState(track.muted || false);
   const [isSolo, setIsSolo] = useState(track.solo || false);
   const [isStereo, setIsStereo] = useState(track.isStereo !== undefined ? track.isStereo : true);
   const [localOutputIdx, setLocalOutputIdx] = useState(track.outputIdx || 0);
+  // EQ de 3 bandas — 0dB = sin efecto (identidad exacta en el motor), rango ±12dB.
+  const [eqLow, setEqLow] = useState(track.eqLow ?? 0);
+  const [eqMid, setEqMid] = useState(track.eqMid ?? 0);
+  const [eqHigh, setEqHigh] = useState(track.eqHigh ?? 0);
+
+  useEffect(() => {
+    setEqLow(track.eqLow ?? 0);
+    setEqMid(track.eqMid ?? 0);
+    setEqHigh(track.eqHigh ?? 0);
+  }, [track.id, track.eqLow, track.eqMid, track.eqHigh]);
+
+  const handleEqChange = (band, setter) => (val) => {
+    const rounded = Math.round(val * 10) / 10;
+    setter(rounded);
+    onEqChange && onEqChange(track.id, band, rounded);
+  };
+  const handleEqReset = (band, setter) => () => {
+    setter(0);
+    onEqChange && onEqChange(track.id, band, 0);
+  };
 
   // Sincronizar estado local cuando cambia la prop (vital para ruteo simultáneo)
   useEffect(() => {
@@ -291,8 +312,20 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
         </button>
       </div>
 
+      <div style={{ padding: '8px 4px', borderTop: '1px solid var(--daw-border)', display: 'flex', justifyContent: 'space-around' }} title="Doble clic en un knob = Reset a 0dB">
+        <div onDoubleClick={handleEqReset('low', setEqLow)}>
+          <AnalogKnob value={eqLow} min={-12} max={12} size={22} label="L" color="#38bdf8" onChange={handleEqChange('low', setEqLow)} />
+        </div>
+        <div onDoubleClick={handleEqReset('mid', setEqMid)}>
+          <AnalogKnob value={eqMid} min={-12} max={12} size={22} label="M" color="#a855f7" onChange={handleEqChange('mid', setEqMid)} />
+        </div>
+        <div onDoubleClick={handleEqReset('high', setEqHigh)}>
+          <AnalogKnob value={eqHigh} min={-12} max={12} size={22} label="H" color="#f97316" onChange={handleEqChange('high', setEqHigh)} />
+        </div>
+      </div>
+
       <div style={{ padding: '6px 8px 8px', borderTop: '1px solid var(--daw-border)' }}>
-        <select 
+        <select
            value={localOutputIdx}
            onChange={(e) => {
              const val = parseInt(e.target.value);

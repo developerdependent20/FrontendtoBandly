@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
+import { alertDialog } from '../utils/dialogService';
 
 export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -56,7 +57,7 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
   const exportToICS = () => {
     try {
       const monthEvents = events?.filter(e => e.date && e.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)) || [];
-      if (monthEvents.length === 0) return alert('No hay eventos este mes para exportar.');
+      if (monthEvents.length === 0) return alertDialog('No hay eventos este mes para exportar.');
       let ics = ['BEGIN:VCALENDAR','VERSION:2.0','PROID:-//Bandly//Calendar//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
       monthEvents.forEach(ev => {
         const d = new Date(ev.date);
@@ -69,7 +70,7 @@ export default function VisualCalendar({ events, onEventClick, onDayClick }) {
       const a = document.createElement('a');
       a.href = url; a.setAttribute('download', `Bandly_${monthNames[month]}_${year}.ics`);
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    } catch(e) { alert('Error: ' + e.message); }
+    } catch(e) { alertDialog('Error: ' + e.message); }
   };
 
   const today = new Date();

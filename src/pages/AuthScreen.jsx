@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { alertDialog } from '../utils/dialogService';
 
 export default function AuthScreen({ onBack, initialMode }) {
   const [isSignUp, setIsSignUp] = useState(() => {
@@ -69,7 +70,7 @@ export default function AuthScreen({ onBack, initialMode }) {
           } 
         });
         if (error) throw error;
-        alert('¡Bienvenido a Bandly! Tu cuenta ha sido creada exitosamente.');
+        alertDialog('¡Bienvenido a Bandly! Tu cuenta ha sido creada exitosamente.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

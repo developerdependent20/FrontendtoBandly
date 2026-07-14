@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Upload, Trash2, Power } from 'lucide-react';
 import localforage from 'localforage';
 import AnalogKnob from './ui/AnalogKnob';
+import { alertDialog } from '../utils/dialogService';
 
 const DRUM_PADS = [
   { id: 'kick', label: 'Kick', color: '#ef4444', key: '1' },
@@ -182,7 +183,7 @@ export default function PercussionPad() {
       });
     } catch (err) {
       console.error("Error saving custom pad", err);
-      alert("Error al guardar el sonido.");
+      alertDialog("Error al guardar el sonido.");
     }
     
     e.target.value = '';

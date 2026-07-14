@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { landingDict } from './landingDict';
-import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor } from 'lucide-react';
+import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor, Zap, Tv, Image as ImageIcon } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = useState('annual');
@@ -61,7 +61,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <span className="serif-accent">{t.heroSub}</span>
           </h1>
           <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-muted)', maxWidth: '700px', margin: '1.5rem auto 0 auto', lineHeight: '1.6', fontWeight: '500' }}>
-            {t.heroDesc.split(' multitracks')[0]} multitracks <br className="hide-mobile" /> {t.heroDesc.split('multitracks ')[1]}
+            {t.heroDesc}
           </p>
           <p className="hero-clarifier" style={{ marginTop: '2rem', opacity: 0.6 }}>
             <span>{t.heroTags.split(' • ')[0]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[1]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[2]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[3]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[4]}</span>
@@ -205,6 +205,29 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Bandly Presenter Showcase */}
+      <section className="presenter-showcase" style={{ padding: '8rem 2rem', background: 'rgba(168,85,247,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
+          <p className="statement-mini">{t.presenterMini}</p>
+          <h2 className="section-title-large">{t.presenterTitle1} <span className="serif-accent">{t.presenterTitle2}</span></h2>
+          <p className="section-subtitle">{t.presenterDesc}</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
+          {[
+            { icon: <Zap size={28} color="#a855f7" />, title: t.presenterFeat1, desc: t.presenterFeat1Desc },
+            { icon: <Tv size={28} color="#a855f7" />, title: t.presenterFeat2, desc: t.presenterFeat2Desc },
+            { icon: <ImageIcon size={28} color="#a855f7" />, title: t.presenterFeat3, desc: t.presenterFeat3Desc }
+          ].map((item, i) => (
+            <div key={i} className="hover-scale" style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#fff' }}>{item.title}</h3>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.88rem', lineHeight: '1.6' }}>{item.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -360,7 +383,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Pricing Section */}
       <section id="pricing" className="landing-pricing-section">
         <div className="section-header-centered">
-          <h2 className="section-title-large">{t.navPricing} diseñados para cada etapa de tu equipo</h2>
+          <h2 className="section-title-large">{t.pricingTitle}</h2>
           <p className="section-subtitle">{t.pricingDesc}</p>
           
           {/* Billing Toggle */}

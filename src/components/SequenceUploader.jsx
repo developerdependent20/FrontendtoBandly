@@ -35,16 +35,21 @@ function detectInstrument(fileName) {
 // ─────────────────────────────────────────────
 // Componente Principal
 // ─────────────────────────────────────────────
-export default function SequenceUploader({ song, orgId, session, onClose, onComplete, apiUrl }) {
+export default function SequenceUploader({ song, orgId, session, onClose, onComplete, apiUrl, orgStorageUsedMb = 0, orgStorageLimitMb = null }) {
   const [step, setStep] = useState('select'); // select | review | uploading | done
   const [stems, setStems] = useState([]);
   const [zipFile, setZipFile] = useState(null); // Guardar el archivo original
   const [seqKey, setSeqKey] = useState(song?.key || '');
   const [seqBpm, setSeqBpm] = useState(song?.bpm || '');
+  const [seqTimeSignature, setSeqTimeSignature] = useState('4/4');
   const [globalStatus, setGlobalStatus] = useState('');
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Aviso proactivo: si el ZIP seleccionado supera el espacio libre del plan,
+  // avisamos ANTES de subir en vez de dejar que la subida falle a mitad de camino.
+  const wouldExceedStorage = !!(orgStorageLimitMb && zipFile && (orgStorageUsedMb + zipFile.size / (1024 * 1024)) > orgStorageLimitMb);
 
   // ── Handlers de Drag & Drop ──
   const handleDragOver = useCallback((e) => {
@@ -180,6 +185,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
           songId: song.id,
           key: seqKey,
           bpm: seqBpm,
+          timeSignature: seqTimeSignature,
           stems: stems.map(s => ({
             fileName: s.fileName,
             instrumentType: s.instrumentType,
@@ -336,6 +342,19 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
                     className="su-input"
                   />
                 </div>
+                <div className="su-field">
+                  <label>Métrica</label>
+                  <select
+                    value={seqTimeSignature}
+                    onChange={e => setSeqTimeSignature(e.target.value)}
+                    className="su-input"
+                  >
+                    <option value="4/4">4/4</option>
+                    <option value="3/4">3/4</option>
+                    <option value="6/8">6/8</option>
+                    <option value="2/4">2/4</option>
+                  </select>
+                </div>
               </div>
 
               {/* Stems list */}
@@ -376,6 +395,15 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
                   </div>
                 ))}
               </div>
+
+              {wouldExceedStorage && (
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '0.8rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <div style={{ fontSize: '0.8rem', color: '#fca5a5', lineHeight: 1.5 }}>
+                    Este archivo ({(zipFile.size / (1024 * 1024)).toFixed(0)} MB) probablemente supera el almacenamiento disponible de tu organización ({Math.max(0, orgStorageLimitMb - orgStorageUsedMb).toFixed(0)} MB libres de {orgStorageLimitMb} MB). La subida puede fallar a mitad de camino — considera hacer upgrade de plan o liberar espacio antes de subir.
+                  </div>
+                </div>
+              )}
 
               <button className="su-btn-upload" onClick={handleUpload}>
                 <Upload size={18} /> Subir Archivo ZIP

@@ -21,9 +21,16 @@ const SECTION_PRESETS = [
   { label: 'FINAL', color: '#64748b' },
 ];
 
+// "6/8" -> 6, "4/4" -> 4, etc.
+function beatsPerBarFromSignature(sig) {
+  const n = parseInt((sig || '4/4').split('/')[0], 10);
+  return Number.isFinite(n) && n > 0 ? n : 4;
+}
+
 const CueTimeline = memo(({
   bpm = 120,
   hasTempo = true,
+  timeSignature = '4/4',
   markers = [],
   sampleRate = 44100,
   masterWaveform = [],
@@ -43,9 +50,10 @@ const CueTimeline = memo(({
   const [markerLabel, setMarkerLabel] = useState('');
   const [snapEnabled, setSnapEnabled] = useState(true);
 
-  // Cálculos de barras y compás actual
+  // Cálculos de barras y compás actual — respeta la métrica real (4/4, 3/4, 6/8...)
+  const beatsPerBar = beatsPerBarFromSignature(timeSignature);
   const samplesPerBeat = (sampleRate * 60) / bpm;
-  const samplesPerBar = samplesPerBeat * 4;
+  const samplesPerBar = samplesPerBeat * beatsPerBar;
   const currentBar = Math.floor(playbackSample / samplesPerBar) + 1;
   const progress = totalSamples > 0 ? playbackSample / totalSamples : 0;
   const durationSec = totalSamples > 0 ? totalSamples / sampleRate : 0;
@@ -67,8 +75,8 @@ const CueTimeline = memo(({
       majorEvery = 5;
     }
   }
-  // Snap: a beats (4 por compás) con tempo, a ticks de tiempo sin tempo.
-  const snapDivisions = gridMode === 'bars' ? gridTicks * 4 : gridTicks;
+  // Snap: a beats reales por compás con tempo, a ticks de tiempo sin tempo.
+  const snapDivisions = gridMode === 'bars' ? gridTicks * beatsPerBar : gridTicks;
 
   // Sección activa: último marker cuyo sample ya pasó (markers viene ordenado)
   let activeMarkerIdx = -1;

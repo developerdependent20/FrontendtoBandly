@@ -16,13 +16,13 @@ export default function PrivacyPage({ onBack }) {
         <div className="legal-header">
           <ShieldCheck size={48} className="icon" />
           <h1>Política de Privacidad y Tratamiento de Datos</h1>
-          <p className="update-date">Última actualización: 26 de mayo de 2026</p>
+          <p className="update-date">Última actualización: 13 de julio de 2026</p>
         </div>
 
         <section className="legal-section">
           <h2>1. Introducción</h2>
           <p>En Bandly reconocemos la importancia absoluta de la privacidad y nos comprometemos firmemente al tratamiento ético, transparente y responsable de los datos personales de todos nuestros usuarios.</p>
-          <p>Esta política describe en detalle cómo recolectamos, almacenamos, usamos, protegemos y, en su momento, eliminamos tu información personal al utilizar nuestra aplicación web, app móvil, app de escritorio y sitio web (conjuntamente, el "Servicio").</p>
+          <p>Esta política describe en detalle cómo recolectamos, almacenamos, usamos, protegemos y, en su momento, eliminamos tu información personal al utilizar nuestra aplicación web, app móvil, app de escritorio (Bandly y Bandly Presenter) y sitio web (conjuntamente, el "Servicio").</p>
         </section>
 
         <section className="legal-section">
@@ -41,10 +41,13 @@ export default function PrivacyPage({ onBack }) {
 
         <section className="legal-section">
           <h2>3. ¿Qué datos recolectamos?</h2>
-          <p>Para brindarte el servicio, recolectamos dos tipos principales de información:</p>
+          <p>Para brindarte el servicio, recolectamos los siguientes tipos de información:</p>
           <ul style={{ paddingLeft: '1.2rem', color: '#aaa', fontSize: '0.9rem', lineHeight: '1.6' }}>
             <li><strong>Información proporcionada por ti:</strong> Tu nombre completo, dirección de correo electrónico, contraseña (cifrada criptográficamente) y foto de perfil opcional cuando creas una cuenta.</li>
-            <li><strong>Información técnica y de uso automática:</strong> Direcciones IP temporales, tipo de navegador, sistema operativo, idioma preferido, métricas de rendimiento de la app (Crashlytics) e identificadores seguros de sesión provistos por nuestros proveedores de autenticación.</li>
+            <li><strong>Información de disponibilidad y planeación:</strong> Fechas que marcas como no disponible ("fechas bloqueadas"), rol(es) e instrumento(s) asignados dentro de tu organización, y tu estado de confirmación en cada evento (pendiente, confirmado, declinado).</li>
+            <li><strong>Contenido que creas en la Plataforma:</strong> Letras, cifrados/charts musicales, anotaciones, marcadores de sección, listas de repertorio y archivos de audio (multitracks/secuencias) que subas o generes dentro de tu organización.</li>
+            <li><strong>Información de pago:</strong> Cuando contratas un plan pagado, tu información de pago (número de tarjeta, dirección de facturación, etc.) es recolectada y procesada directamente por nuestro procesador de pagos, <strong>Paddle</strong>. Bandly nunca recibe, ve ni almacena los datos completos de tu método de pago — solo recibimos confirmaciones de estado de tu suscripción (activa, cancelada, etc.).</li>
+            <li><strong>Información técnica y de uso automática:</strong> Direcciones IP temporales, tipo de navegador, sistema operativo, idioma preferido, métricas de rendimiento de la app e identificadores seguros de sesión provistos por nuestros proveedores de autenticación.</li>
           </ul>
         </section>
 
@@ -65,9 +68,20 @@ export default function PrivacyPage({ onBack }) {
           <h2>5. Infraestructura y Subencargados (Terceros)</h2>
           <p>Bandly está construido sobre infraestructuras de clase mundial que actúan como nuestros procesadores de datos. Compartimos la información mínima necesaria para que el servicio exista:</p>
           <ul style={{ paddingLeft: '1.2rem', color: '#aaa', fontSize: '0.9rem', lineHeight: '1.6' }}>
-            <li><strong>Supabase:</strong> Se encarga de la base de datos principal, autenticación segura de usuarios y cifrado de contraseñas.</li>
+            <li><strong>Supabase:</strong> Se encarga de la base de datos principal (incluyendo eventos, roster, repertorios, secuencias y archivos), autenticación segura de usuarios y cifrado de contraseñas.</li>
             <li><strong>Vercel / Cloudflare:</strong> Proveen el alojamiento web y redes de distribución de contenido (CDN) para entregar la aplicación de forma rápida.</li>
             <li><strong>OneSignal:</strong> Utilizado exclusivamente para entregarte notificaciones push si decides activarlas en tu dispositivo.</li>
+            <li><strong>Paddle:</strong> Procesa los pagos de suscripciones, actuando como Merchant of Record. Paddle mantiene su propia política de privacidad respecto a los datos de pago que recolecta directamente, disponible en paddle.com/legal/privacy.</li>
+          </ul>
+        </section>
+
+        <section className="legal-section">
+          <h2>5.1 Visibilidad de tu información dentro de tu organización</h2>
+          <p>Bandly es una herramienta colaborativa. Por su propia naturaleza, cierta información tuya es visible para otros miembros de tu misma organización, no solo para nosotros como operador del Servicio:</p>
+          <ul style={{ paddingLeft: '1.2rem', color: '#aaa', fontSize: '0.9rem', lineHeight: '1.6' }}>
+            <li>Tu nombre, foto de perfil y rol(es)/instrumento(s) son visibles para los demás miembros de tu organización.</li>
+            <li>Tus fechas bloqueadas y estado de confirmación en cada evento son visibles para los directores y administradores de tu organización, con el fin de planear eventos.</li>
+            <li>El contenido que subas o generes (letras, cifrados, audio) queda disponible únicamente para los miembros autorizados de tu misma organización, nunca para otras organizaciones ajenas.</li>
           </ul>
         </section>
 
@@ -118,7 +132,7 @@ export default function PrivacyPage({ onBack }) {
         <div style={{ height: '100px' }}></div>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .legal-page-container {
           background: #080809;
           color: #eee;

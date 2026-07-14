@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  X, Play, Pause, RotateCcw, Volume2, Loader2, AlertCircle,
+  X, Play, Pause, RotateCcw, Volume2, Loader2, AlertCircle, Info,
   Headphones, Music, Guitar, Mic2, Piano, Drum, Wand2, Zap, RefreshCw
 } from 'lucide-react';
 import { OfflineManager } from '../../utils/offlineManager';
@@ -584,10 +584,12 @@ export default function WebStemPlayer({ song, session, onClose }) {
               }}>
                 <Play size={18} /> Cargar Secuencia
               </button>
-              <div style={{ marginTop: '1.5rem', fontSize: '0.75rem', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '10px 16px', borderRadius: '10px', display: 'inline-flex', alignItems: 'flex-start', gap: '8px', textAlign: 'left', maxWidth: '400px' }}>
-                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span><b>Aviso Móvil:</b> El reproductor rinde al máximo en computadora. En celulares, procesar todos los canales de audio puede tardar más tiempo del usual.</span>
-              </div>
+              {IS_MOBILE && (
+                <div style={{ marginTop: '1.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.03)', padding: '8px 14px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '7px', textAlign: 'left', maxWidth: '380px' }}>
+                  <Info size={13} style={{ flexShrink: 0 }} />
+                  <span>En celular puede tardar un poco más en cargar que en computadora.</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -604,9 +606,11 @@ export default function WebStemPlayer({ song, session, onClose }) {
                 }} />
               </div>
               <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '8px' }}>{loadProgress}%</p>
-              <p style={{ fontSize: '0.7rem', color: '#f59e0b', marginTop: '1.5rem', opacity: 0.9 }}>
-                Procesando canales... Si estás en celular, ten paciencia, esto puede tardar un poco.
-              </p>
+              {IS_MOBILE && (
+                <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', marginTop: '1.5rem' }}>
+                  Procesando canales, un momento...
+                </p>
+              )}
             </div>
           )}
 
