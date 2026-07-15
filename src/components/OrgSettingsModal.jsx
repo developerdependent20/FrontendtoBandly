@@ -15,14 +15,6 @@ function DepartmentEditor({ department, onUpdate, onDelete }) {
 
   const roles = department.roles || [];
 
-  const handleToggleItem = (item) => {
-    if (roles.some(i => i.id === item.id)) {
-      onUpdate({ ...department, roles: roles.filter(i => i.id !== item.id) });
-    } else {
-      onUpdate({ ...department, roles: [...roles, item] });
-    }
-  };
-
   const handleAddCustom = () => {
     if (!newLabel.trim()) return;
     const customId = newLabel.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substr(2, 5);
@@ -224,8 +216,8 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
 
         <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'white' }}>Permitir Declinaciones</h3>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Si se desactiva, nadie podrá declinar invitaciones a eventos.</p>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'white' }}>Permitir Declinaciones (default)</h3>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Valor inicial al crear un evento nuevo. Cada evento puede cambiarlo por su cuenta desde su propia configuración.</p>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <div style={{ position: 'relative', width: '44px', height: '24px', background: allowDeclines ? 'var(--primary)' : 'rgba(255,255,255,0.2)', borderRadius: '12px', transition: '0.3s' }}>

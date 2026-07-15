@@ -1,9 +1,10 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download, MessageCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download, Radio } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import { isSuperAdmin } from '../../utils/permissions';
 import { alertDialog } from '../../utils/dialogService';
 import { supabase } from '../../supabaseClient';
+import { sendNotification } from '../../utils/notifications';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
 import GlobalSearch from './GlobalSearch';
@@ -19,14 +20,27 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
   );
   const [showNotifications, setShowNotifications] = React.useState(false);
 
-  const pendingRequests = React.useMemo(() => {
-    if (profile?.role !== 'director') return [];
-    return (events || []).flatMap(ev => 
-      (ev.event_roster || [])
-        .filter(r => r.status === 'decline_requested' && !r.is_removed)
-        .map(r => ({ ...r, event: ev }))
-    );
-  }, [events, profile]);
+  const [notifications, setNotifications] = React.useState([]);
+
+  React.useEffect(() => {
+    if (!profile?.id) return;
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('profile_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (!error && data) {
+        setNotifications(data);
+      }
+    };
+    fetchNotifications();
+    const intervalId = setInterval(fetchNotifications, 15000); // Check every 15s
+    return () => clearInterval(intervalId);
+  }, [profile?.id]);
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
   
   const userIsSuperAdmin = isSuperAdmin(profile);
   const userFunctions = profile?.functions || [];
@@ -61,8 +75,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           </div>
         )}
 
-        <div 
-          className={`nav-item ${activeTab === 'play' ? 'active' : ''}`} 
+        <div
+          className={`nav-item ${activeTab === 'live' ? 'active' : ''}`}
+          onClick={() => setActiveTab('live')}
+          title="Modo En Vivo (control remoto del DAW)"
+        >
+          <Radio size={22} />
+        </div>
+
+        <div
+          className={`nav-item ${activeTab === 'play' ? 'active' : ''}`}
           onClick={() => setActiveTab('play')}
           title="Herramientas / Play en Vivo"
         >
@@ -388,32 +410,20 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             </span>
           </div>
 
-          {/* Icono de Mensajes para todos (Chat futuro) */}
+          {/* Icono de Notificaciones (Para todos) */}
           <div
-            onClick={() => alertDialog("La mensajería de equipo estará disponible próximamente.")}
+            onClick={() => setShowNotifications(true)}
             style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s' }}
             className="hover-scale"
-            title="Mensajes del Equipo"
+            title="Notificaciones"
           >
-            <MessageCircle size={16} color="white" />
+            <Bell size={16} color="white" />
+            {unreadCount > 0 && (
+              <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.6rem', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-dark)' }}>
+                {unreadCount}
+              </span>
+            )}
           </div>
-
-          {/* Icono de Notificaciones (Solo Directores o Admin) */}
-          {(profile?.role === 'director' || userIsSuperAdmin) && (
-            <div
-              onClick={() => setShowNotifications(true)}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s' }}
-              className="hover-scale"
-              title="Notificaciones de Declinación"
-            >
-              <Bell size={16} color="white" />
-              {pendingRequests.length > 0 && (
-                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.6rem', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-dark)' }}>
-                  {pendingRequests.length}
-                </span>
-              )}
-            </div>
-          )}
 
           <div 
             onClick={() => setShowSubscription(true)}
@@ -449,41 +459,67 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                 <Bell size={20} color="var(--primary)" /> Notificaciones
               </h3>
               
-              {pendingRequests.length === 0 ? (
+              {notifications.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>No tienes notificaciones nuevas.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {pendingRequests.map(req => {
-                    const memberName = (members || []).find(m => String(m.id) === String(req.profile_id))?.full_name || 'Alguien';
-                    const eventDate = req.event.date ? req.event.date.split('T')[0] : '';
+                  {notifications.map(req => {
+                    const memberName = (members || []).find(m => String(m.id) === String(req.actor_id))?.full_name || 'Alguien';
+                    const eventData = req.event_id ? (events || []).find(e => String(e.id) === String(req.event_id)) : null;
+                    const eventDate = eventData && eventData.date ? eventData.date.split('T')[0] : '';
+                    const isUnread = !req.is_read;
+
+                    const markAsRead = async () => {
+                      await supabase.from('notifications').update({ is_read: true }).eq('id', req.id);
+                      setNotifications(prev => prev.map(n => n.id === req.id ? { ...n, is_read: true } : n));
+                    };
+
                     return (
-                      <div key={req.id} style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '12px' }}>
-                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}><strong>{memberName}</strong> solicitó declinar:</div>
-                        <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{req.event.name} ({eventDate})</div>
-                        <div style={{ fontSize: '0.8rem', color: '#fbbf24', marginTop: '8px', background: 'rgba(251, 191, 36, 0.1)', padding: '8px', borderRadius: '8px', fontStyle: 'italic' }}>
-                          "{req.decline_reason || 'Sin justificación proporcionada'}"
+                      <div key={req.id} style={{ opacity: isUnread ? 1 : 0.6, background: isUnread ? (req.type === 'decline_request' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.05)') : 'rgba(255,255,255,0.02)', border: `1px solid ${isUnread ? (req.type === 'decline_request' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)') : 'rgba(255,255,255,0.05)'}`, padding: '1rem', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>
+                          <strong>{memberName}</strong> 
+                          {req.type === 'decline_request' ? ' solicitó declinar:' : req.type === 'confirmation' ? ' confirmó asistencia:' : ' te dejó un mensaje:'}
                         </div>
+                        {eventData && <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{eventData.name} ({eventDate})</div>}
+                        
+                        {req.message && (
+                          <div style={{ fontSize: '0.8rem', color: req.type === 'decline_request' ? '#fbbf24' : '#6ee7b7', marginTop: '8px', background: req.type === 'decline_request' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(110, 231, 183, 0.1)', padding: '8px', borderRadius: '8px', fontStyle: 'italic' }}>
+                            "{req.message}"
+                          </div>
+                        )}
+                        
                         <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-                          <button onClick={async () => {
-                            supabase.from('event_roster').update({ status: 'declined' }).eq('id', req.id).then(() => setShowNotifications(false));
-                          }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                            Aceptar (Excusionar)
-                          </button>
-                          <button onClick={async () => {
-                            supabase.from('event_roster').delete().eq('id', req.id).then(() => setShowNotifications(false));
-                          }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                            Remover del evento
-                          </button>
-                          <button onClick={async () => {
-                            supabase.from('event_roster').update({ status: 'confirmed' }).eq('id', req.id).then(() => setShowNotifications(false));
-                          }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>
-                            Rechazar excusa y Confirmar
-                          </button>
-                          <button onClick={async () => {
-                            supabase.from('event_roster').update({ status: 'pending' }).eq('id', req.id).then(() => setShowNotifications(false));
-                          }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>
-                            Rechazar y dejar Pendiente
-                          </button>
+                          {req.type === 'decline_request' ? (
+                            <>
+                              <button onClick={async () => {
+                                await markAsRead();
+                                await supabase.from('event_roster').update({ status: 'declined' }).eq('event_id', req.event_id).eq('profile_id', req.actor_id);
+                                await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Tu declinación fue aceptada. Has sido excusado del evento.' });
+                              }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Aceptar (Excusionar)</button>
+                              
+                              <button onClick={async () => {
+                                await markAsRead();
+                                await supabase.from('event_roster').delete().eq('event_id', req.event_id).eq('profile_id', req.actor_id);
+                                await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Fuiste removido del evento por el director.' });
+                              }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Remover del evento</button>
+                              
+                              <button onClick={async () => {
+                                await markAsRead();
+                                await supabase.from('event_roster').update({ status: 'confirmed' }).eq('event_id', req.event_id).eq('profile_id', req.actor_id);
+                                await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Tu excusa fue rechazada. Debes asistir al evento.' });
+                              }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>Rechazar excusa y Confirmar</button>
+                              
+                              <button onClick={async () => {
+                                await markAsRead();
+                                await supabase.from('event_roster').update({ status: 'pending' }).eq('event_id', req.event_id).eq('profile_id', req.actor_id);
+                                await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Tu solicitud fue dejada en pendiente por el director. Por favor habla con él.' });
+                              }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>Rechazar y dejar Pendiente</button>
+                            </>
+                          ) : isUnread ? (
+                            <button onClick={markAsRead} style={{ width: '100%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                              Entendido
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     );

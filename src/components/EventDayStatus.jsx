@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Radio, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Radio, CheckCircle2, Clock, XCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 // Vista compartida (director Y equipo, no solo el editor del evento) de quién
@@ -32,9 +32,12 @@ export default function EventDayStatus({ event, members }) {
   const stats = useMemo(() => {
     const confirmed = roster.filter(r => r.status === 'confirmed');
     const declined = roster.filter(r => r.status === 'declined' || r.status === 'rejected');
-    const pending = roster.filter(r => r.status !== 'confirmed' && r.status !== 'declined' && r.status !== 'rejected');
+    // Declinación enviada pero el director todavía no la aprueba/rechaza — no
+    // es lo mismo que "sin responder" (pending), así que se muestra aparte.
+    const declineRequested = roster.filter(r => r.status === 'decline_requested');
+    const pending = roster.filter(r => r.status !== 'confirmed' && r.status !== 'declined' && r.status !== 'rejected' && r.status !== 'decline_requested');
     const nameOf = (r) => members?.find(m => m.id === r.profile_id)?.full_name?.split(' ')[0] || 'Alguien';
-    return { confirmed, declined, pending, nameOf };
+    return { confirmed, declined, declineRequested, pending, nameOf };
   }, [roster, members]);
 
   if (roster.length === 0) return null;
@@ -68,6 +71,16 @@ export default function EventDayStatus({ event, members }) {
             {stats.pending.length > 0 ? stats.pending.map(stats.nameOf).join(', ') : '—'}
           </div>
         </div>
+        {stats.declineRequested.length > 0 && (
+          <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fb923c', fontSize: '0.75rem', fontWeight: '800', marginBottom: '6px' }}>
+              <AlertCircle size={14} /> ESPERANDO TU APROBACIÓN ({stats.declineRequested.length})
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, wordBreak: 'break-word' }}>
+              {stats.declineRequested.map(stats.nameOf).join(', ')}
+            </div>
+          </div>
+        )}
         {stats.declined.length > 0 && (
           <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '0.75rem', fontWeight: '800', marginBottom: '6px' }}>

@@ -9,6 +9,7 @@ import WebUploadStudio from '../DAW/WebUploadStudio';
 import MusicianTools from '../MusicianTools';
 import ProfileSettings from '../ProfileSettings';
 import DownloadsPage from '../DownloadsPage';
+import LiveRemote from '../LiveRemote';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 import { alertDialog } from '../../utils/dialogService';
@@ -281,6 +282,11 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
           <MusicianTools />
         </div>
       )}
+      {activeTab === 'live' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <LiveRemote orgId={profile.org_id} events={events} />
+        </div>
+      )}
       {activeTab === 'daw' && (
         isTauri()
           // En la app de escritorio: DAW completo con ProMixer
@@ -329,6 +335,11 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       {activeTab === 'play' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <MusicianTools />
+        </div>
+      )}
+      {activeTab === 'live' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <LiveRemote orgId={profile.org_id} events={events} />
         </div>
       )}
       {activeTab === 'daw' && canAccessLibrary && (

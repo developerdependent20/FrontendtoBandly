@@ -7,6 +7,7 @@ import {
   GripVertical, UserX, Sparkles, Guitar
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { sendNotification } from '../utils/notifications';
 import VisualCalendar from './VisualCalendar';
 import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
@@ -403,7 +404,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [recurWeekly, setRecurWeekly] = useState(false);
   const [recurWeeks, setRecurWeeks] = useState(4);
   const [declineModal, setDeclineModal] = useState({ isOpen: false, event: null, roleId: null, instrument: null, reason: '' });
-  const allowDeclines = orgSettings?.allowDeclines !== false;
+  // "Permitir declinar" ahora es POR EVENTO (no global de la organización) —
+  // cada evento puede tener su propia política. orgSettings.allowDeclines solo
+  // se usa como default al crear un evento nuevo.
+  const [eventAllowDeclines, setEventAllowDeclines] = useState(true);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -552,6 +556,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setDescription(ev.description || '');
     setRecurWeekly(false);
     setRecurWeeks(4);
+    setEventAllowDeclines(ev.allow_declines !== false);
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
     const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
@@ -615,6 +620,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setPendingEventDate(selectedDate || '');
     setRecurWeekly(false);
     setRecurWeeks(4);
+    setEventAllowDeclines(orgSettings?.allowDeclines !== false);
     setShowNewEventPicker(true);
   };
 
@@ -669,10 +675,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     try {
       let evtId = editingEventId;
       if (editingEventId) {
-        const { error } = await supabase.from('events').update({ name: eventName, date: eventDate, description }).eq('id', editingEventId);
+        const { error } = await supabase.from('events').update({ name: eventName, date: eventDate, description, allow_declines: eventAllowDeclines }).eq('id', editingEventId);
         if (error) throw error;
       } else {
-        const { data: evt, error } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description }]).select().single();
+        const { data: evt, error } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description, allow_declines: eventAllowDeclines }]).select().single();
         if (error) throw error;
         evtId = evt.id;
       }
@@ -713,7 +719,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             nextDateObj.setDate(nextDateObj.getDate() + 7 * i);
             const nextDate = nextDateObj.toISOString().split('T')[0];
 
-            const { data: nextEvt, error: nextErr } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: nextDate, description }]).select().single();
+            const { data: nextEvt, error: nextErr } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: nextDate, description, allow_declines: eventAllowDeclines }]).select().single();
             if (nextErr) throw nextErr;
 
             if (filledRoster.length > 0) {
@@ -873,10 +879,27 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           }).catch(err => console.error('No se pudo notificar el rechazo:', err));
         }
       }
+      
+      if (status === 'confirmed') {
+        const directorIds = (members || []).filter(m => m.role === 'director').map(m => m.id);
+        const memberName = profile?.full_name || 'Un integrante';
+        await sendNotification({
+          orgId,
+          targetProfileIds: directorIds,
+          actorId: roleId,
+          eventId: event.id,
+          type: 'confirmation',
+          message: `${memberName} ha confirmado asistencia.`
+        });
+      }
     } catch { alertDialog("Error al confirmar."); }
   };
 
   const submitDeclineReason = async () => {
+    if (declineModal.event?.allow_declines === false) {
+      alertDialog("El director desactivó las declinaciones para este evento.");
+      return;
+    }
     if (!declineModal.reason.trim()) {
       alertDialog("Debes proporcionar una justificación.");
       return;
@@ -895,6 +918,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
          setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(declineModal.roleId) ? {...r, status: 'decline_requested', decline_reason: declineModal.reason} : r)});
       }
       
+      const directorIds = (members || []).filter(m => m.role === 'director').map(m => m.id);
+      await sendNotification({
+        orgId,
+        targetProfileIds: directorIds,
+        actorId: declineModal.roleId,
+        eventId: eventId,
+        type: 'decline_request',
+        message: declineModal.reason
+      });
+
       setDeclineModal({ isOpen: false, event: null, roleId: null, instrument: null, reason: '' });
       alertDialog("Tu justificación ha sido enviada al director para aprobación.");
     } catch {
@@ -1103,7 +1136,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         <Check size={11} /> Confirmar
                       </button>
                     )}
-                    {allowDeclines && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
+                    {ev.allow_declines !== false && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
                       <button onClick={() => setDeclineModal({ isOpen: true, event: ev, roleId: currentUserId, instrument: userSlots[0]?.instrument, reason: '' })}
                         style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <X size={11} /> Declinar
@@ -1378,7 +1411,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           <CheckCircle2 size={20} /> Confirmar Asistencia
                         </button>
                      )}
-                     {allowDeclines && !isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
+                     {selectedEventDetails.allow_declines !== false && !isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
                         <button onClick={() => {
                             setDeclineModal({ isOpen: true, event: selectedEventDetails, roleId: currentUserId, instrument: userSlots[0]?.instrument, reason: '' });
                         }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -1668,6 +1701,26 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
                 <input type="date" className="input-field" value={eventDate ? eventDate.split('T')[0] : ''} onChange={e => setEventDate(e.target.value)} style={{ width: '100%', colorScheme: 'dark' }} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
+
+                <div style={{ padding: '1rem', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'white', marginBottom: '10px' }}>¿Se puede declinar este evento?</div>
+                  <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', borderRadius: '10px', padding: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setEventAllowDeclines(false)}
+                      style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '800', background: !eventAllowDeclines ? '#ef4444' : 'transparent', color: !eventAllowDeclines ? 'white' : 'var(--text-muted)', transition: 'all 0.15s' }}
+                    >
+                      🚫 No se puede declinar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEventAllowDeclines(true)}
+                      style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '800', background: eventAllowDeclines ? 'var(--primary)' : 'transparent', color: eventAllowDeclines ? 'white' : 'var(--text-muted)', transition: 'all 0.15s' }}
+                    >
+                      ✍️ Declinar con razón
+                    </button>
+                  </div>
+                </div>
 
                 {!editingEventId && (
                   <div style={{ padding: '1rem', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '12px' }}>
