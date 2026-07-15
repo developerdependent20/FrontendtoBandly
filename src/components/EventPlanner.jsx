@@ -13,6 +13,7 @@ import WebStemPlayer from './DAW/WebStemPlayer';
 import { DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
 import EventDayStatus from './EventDayStatus';
 import { alertDialog, confirmDialog } from '../utils/dialogService';
+import FirstUseTip from './FirstUseTip';
 
 const API_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -423,9 +424,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const getRoleGroup = (inst) => {
     const i = (inst || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff')) return 'LOGÍSTICA / STAFF';
-    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice')) return 'MÚSICOS';
+    if (i.includes('coordinador') || i.includes('bienvenida') || i.includes('maestro') || i.includes('nino') || i.includes('seguridad') || i.includes('oraci') || i.includes('ujier') || i.includes('staff') || i.includes('predicador') || i.includes('preacher')) return 'LOGÍSTICA / STAFF';
+    if (i.includes('sonido') || i.includes('audio') || i.includes('pantalla') || i.includes('camara') || i.includes('transmis') || i.includes('luce') || i.includes('roadie') || i.includes('director') || i.includes('direccion') || i.includes('video') || i.includes('visual') || i.includes('media')) return 'PRODUCCIÓN / MEDIA';
+    // 'gtr' cubre las etiquetas abreviadas de las plantillas ("E. GTR", "A. GTR") que
+    // no contienen la palabra completa "guitar" — antes caían en OTROS sin razón.
+    // Mismo caso para brass/metales, que tampoco estaban cubiertos.
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice') || i.includes('brass') || i.includes('metales')) return 'MÚSICOS';
     return 'OTROS';
   };
 
@@ -458,7 +462,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const setlistHtml = sortedSongs.length === 0 ? '' : `
       <h3>Setlist</h3>
       <table>
-        <thead><tr><th>#</th><th>Canción</th><th>Líder</th><th>Tono</th></tr></thead>
+        <thead><tr><th>#</th><th>Canción</th><th>Dirige</th><th>Tono</th></tr></thead>
         <tbody>
           ${sortedSongs.map((es, i) => {
             const song = songs?.find(s => s.id === es.song_id);
@@ -1211,6 +1215,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         <div style={{ marginLeft: '1rem' }}><h4>Calendario & Planeación</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
       </div>
 
+      <FirstUseTip
+        storageKey={`bandly_tip_planner_${profile?.id || 'anon'}`}
+        title="Tu calendario, sin fricción"
+        accentColor="var(--accent)"
+        items={!readOnly ? [
+          'Al crear un evento elige una plantilla (Banda Base, Reunión General) para no armar el equipo desde cero cada vez.',
+          'Marca "Repetir cada semana" al crear el evento y se clona automáticamente el equipo para las próximas semanas.',
+          'Verás en rojo a cualquier miembro que ya tenga esa fecha bloqueada, antes de asignarlo.'
+        ] : [
+          'El día del evento verás aquí un estado en vivo de quién ya confirmó su llegada.',
+          'Si no puedes asistir a una fecha, márcala como bloqueada desde tu perfil para que tu director lo vea antes de asignarte.',
+          'Toca cualquier evento para ver el equipo completo y el setlist.'
+        ]}
+      />
+
       {todaysEvents.map(ev => (
         <EventDayStatus key={ev.id} event={ev} members={members} />
       ))}
@@ -1425,7 +1444,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                            <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: '1rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Desconocida'}</div>
                               <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                <span>Líder: {leader?.full_name?.split(' ')[0] || '--'}</span>
+                                <span>Dirige: {leader?.full_name?.split(' ')[0] || '--'}</span>
                                 <span style={{ opacity: 0.5 }}>|</span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                   {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '800' }}>{es.selected_key || '--'}</strong>
@@ -1875,7 +1894,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
 
                     <div style={{ flex: 1.5, minWidth: 0 }}>
-                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Líder" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
+                      <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Dirige" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                   </div>

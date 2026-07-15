@@ -5,6 +5,7 @@ import { AvatarPicker } from './layout/AvatarPicker';
 import OrgSettingsModal from './OrgSettingsModal';
 import { Settings } from 'lucide-react';
 import { alertDialog, confirmDialog } from '../utils/dialogService';
+import FirstUseTip from './FirstUseTip';
 
 export default function TeamList({ members, isDirector, refreshData, orgSettings, orgId }) {
   const [selectedMember, setSelectedMember] = useState(null);
@@ -405,6 +406,21 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           onClose={() => setSelectedMember(null)} 
           onSelect={handleAvatarUpdate}
           currentAvatar={selectedMember?.avatar_url}
+        />
+
+        <FirstUseTip
+          storageKey="bandly_tip_team"
+          title="Tu equipo, organizado solo"
+          accentColor="#60a5fa"
+          items={isDirector ? [
+            'Un miembro puede tener varias funciones a la vez (ej. Batería + Sonido) — aparece agrupado bajo la de mayor jerarquía.',
+            'Configura tus propios departamentos e instrumentos en "Configurar Departamentos" para que coincidan con tu organización.',
+            'Usa "Filtrar bloqueados" antes de armar un evento para ver quién no está disponible esa fecha.'
+          ] : [
+            'Toca tu avatar para cambiarlo, y desde tu perfil puedes marcar tus propias fechas bloqueadas.',
+            'Tus funciones asignadas definen en qué grupo del equipo apareces.',
+            'Si tu rol o instrumento no está listado, pídele a tu director que lo agregue en Configurar Departamentos.'
+          ]}
         />
 
         <div className="member-list-container">

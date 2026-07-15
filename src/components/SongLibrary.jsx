@@ -363,7 +363,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
                 <div className="input-group">
-                  <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Tono Orig.</label>
+                  <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Tono Original</label>
                   <input type="text" className="input-field" placeholder="Ex: A" value={songKey} onChange={e=>setSongKey(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
                 </div>
                 <div className="input-group">

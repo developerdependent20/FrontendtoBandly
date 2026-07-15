@@ -99,7 +99,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
           </div>
           <div>
             <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: '900', letterSpacing: '-2px' }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
-            <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '1.2rem' }}>Bienvenido de nuevo a tu centro de control musical.</p>
+            <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '1.2rem' }}>Bienvenido de nuevo a tu centro de control.</p>
           </div>
         </div>
 

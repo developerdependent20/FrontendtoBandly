@@ -5,14 +5,14 @@ import AnalogKnob from './ui/AnalogKnob';
 import { alertDialog } from '../utils/dialogService';
 
 const DRUM_PADS = [
-  { id: 'kick', label: 'Kick', color: '#ef4444', key: '1' },
-  { id: 'snare', label: 'Snare', color: '#f59e0b', key: '2' },
-  { id: 'hihat_c', label: 'Hi-Hat (C)', color: '#10b981', key: '3' },
-  { id: 'hihat_o', label: 'Hi-Hat (O)', color: '#3b82f6', key: '4' },
-  { id: 'tom_l', label: 'Low Tom', color: '#8b5cf6', key: 'q' },
-  { id: 'tom_m', label: 'Mid Tom', color: '#a855f7', key: 'w' },
-  { id: 'tom_h', label: 'High Tom', color: '#d946ef', key: 'e' },
-  { id: 'clap', label: 'Clap', color: '#ec4899', key: 'r' },
+  { id: 'kick', label: 'Kick', color: '#ef4444', key: '1', file: 'kick.wav' },
+  { id: 'snare', label: 'Snare', color: '#f59e0b', key: '2', file: 'snare.wav' },
+  { id: 'hihat_c', label: 'Hi-Hat (C)', color: '#10b981', key: '3', file: 'hihat-closed.wav' },
+  { id: 'hihat_o', label: 'Hi-Hat (O)', color: '#3b82f6', key: '4', file: 'hihat-open.wav' },
+  { id: 'tom_l', label: 'Floor Tom', color: '#8b5cf6', key: 'q', file: 'tom-floor.wav' },
+  { id: 'tom_h', label: 'Tom', color: '#d946ef', key: 'w', file: 'tom.wav' },
+  { id: 'drop', label: 'Drop', color: '#a855f7', key: 'e', file: 'drop.wav' },
+  { id: 'swell', label: 'Swell', color: '#ec4899', key: 'r', file: 'swell.wav' },
 ];
 
 export default function PercussionPad() {
@@ -55,39 +55,45 @@ export default function PercussionPad() {
       const initialVolume = parseFloat(localStorage.getItem('bandly_drum_vol') || '0.8');
       volNode.current = new Tone.Volume(Tone.gainToDb(initialVolume)).toDestination();
 
-      // Synthetic Fallbacks
+      // Synthetic Fallbacks (solo se usan si el sample real -por defecto o
+      // personalizado- falla al cargar; en uso normal nunca suenan)
       synths.current = {
         kick: new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 4 }).connect(volNode.current),
         snare: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).connect(volNode.current),
         hihat_c: new Tone.MetalSynth({ frequency: 200, envelope: { attack: 0.001, decay: 0.1, release: 0.01 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(volNode.current),
         hihat_o: new Tone.MetalSynth({ frequency: 200, envelope: { attack: 0.001, decay: 0.4, release: 0.01 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).connect(volNode.current),
         tom_l: new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 2 }).connect(volNode.current),
-        tom_m: new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 2 }).connect(volNode.current),
         tom_h: new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 2 }).connect(volNode.current),
-        clap: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.3, sustain: 0 } }).connect(volNode.current)
+        drop: new Tone.MembraneSynth({ pitchDecay: 0.2, octaves: 6 }).connect(volNode.current),
+        swell: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.5, decay: 0.5, sustain: 0.3, release: 1.5 } }).connect(volNode.current)
       };
 
-      // Load Custom Samples from localforage
+      // Cargar el audio real de cada pad: el sample personalizado del usuario
+      // (localforage) tiene prioridad; si no hay uno, usamos el sample de
+      // fábrica en /audio/drums. El synth de arriba solo entra si ambos fallan.
       const loadedCustoms = {};
       for (const pad of DRUM_PADS) {
         try {
-          const file = await localforage.getItem(`bandly_pad_${pad.id}`);
-          if (file) {
-            const url = URL.createObjectURL(file);
-            await new Promise((resolve) => {
-              const player = new Tone.Player({
-                url,
-                onload: () => {
-                  player.connect(volNode.current);
-                  players.current[pad.id] = player;
+          const customFile = await localforage.getItem(`bandly_pad_${pad.id}`);
+          const isCustom = !!customFile;
+          const url = isCustom ? URL.createObjectURL(customFile) : (pad.file ? `/audio/drums/${pad.file}` : null);
+          if (!url) continue;
+
+          await new Promise((resolve) => {
+            const player = new Tone.Player({
+              url,
+              onload: () => {
+                player.connect(volNode.current);
+                players.current[pad.id] = player;
+                if (isCustom) {
                   loadedCustoms[pad.id] = true;
                   URL.revokeObjectURL(url); // el buffer ya está decodificado en memoria, liberar el blob
-                  resolve();
-                },
-                onerror: () => { URL.revokeObjectURL(url); resolve(); }
-              });
+                }
+                resolve();
+              },
+              onerror: () => { if (isCustom) URL.revokeObjectURL(url); resolve(); }
             });
-          }
+          });
         } catch (e) {
           console.error(`Error loading pad ${pad.id}`, e);
         }
@@ -128,9 +134,10 @@ export default function PercussionPad() {
       const s = synths.current[id];
       if (s) {
         if (id === 'kick') s.triggerAttackRelease('C1', '8n', now);
-        else if (id.startsWith('tom_l')) s.triggerAttackRelease('G1', '8n', now);
-        else if (id.startsWith('tom_m')) s.triggerAttackRelease('C2', '8n', now);
-        else if (id.startsWith('tom_h')) s.triggerAttackRelease('G2', '8n', now);
+        else if (id === 'tom_l') s.triggerAttackRelease('G1', '8n', now);
+        else if (id === 'tom_h') s.triggerAttackRelease('G2', '8n', now);
+        else if (id === 'drop') s.triggerAttackRelease('C1', '2n', now);
+        else if (id === 'swell') s.triggerAttackRelease('2n', now);
         else s.triggerAttackRelease('16n', now);
       }
     }
@@ -202,6 +209,15 @@ export default function PercussionPad() {
       delete copy[padId];
       return copy;
     });
+
+    // Al quitar el sample propio, volvemos al sample de fábrica (no al synth)
+    const pad = DRUM_PADS.find(p => p.id === padId);
+    if (pad?.file && ToneRef.current) {
+      const player = new ToneRef.current.Player({
+        url: `/audio/drums/${pad.file}`,
+        onload: () => { player.connect(volNode.current); players.current[padId] = player; }
+      });
+    }
   };
 
   return (
