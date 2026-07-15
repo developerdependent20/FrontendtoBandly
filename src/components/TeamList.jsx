@@ -361,7 +361,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
         <FirstUseTip
           storageKey="bandly_tip_team"
-          title="Tu equipo, organizado solo"
+          title="Cómo usar el equipo"
           accentColor="#60a5fa"
           items={isDirector ? [
             'Un miembro puede tener varias funciones a la vez (ej. Batería + Sonido) — aparece agrupado bajo la de mayor jerarquía.',

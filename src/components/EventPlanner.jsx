@@ -1293,7 +1293,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
       <FirstUseTip
         storageKey={`bandly_tip_planner_${profile?.id || 'anon'}`}
-        title="Tu calendario, sin fricción"
+        title="Cómo usar el calendario"
         accentColor="var(--accent)"
         items={!readOnly ? [
           'Al crear un evento elige una plantilla (Banda Base, Reunión General) para no armar el equipo desde cero cada vez.',
