@@ -1,5 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
+import { DEFAULT_DEPARTMENTS } from '../utils/defaultRoles';
+
+const migrateSettings = (settings) => {
+  if (!settings) return null;
+  if (settings.departments) return settings;
+  
+  // Migrate from old structure to new structure
+  return {
+    ...settings,
+    departments: [
+      { ...DEFAULT_DEPARTMENTS[0], roles: settings.leadership || DEFAULT_DEPARTMENTS[0].roles },
+      { ...DEFAULT_DEPARTMENTS[1], roles: settings.production || DEFAULT_DEPARTMENTS[1].roles },
+      { ...DEFAULT_DEPARTMENTS[2], roles: settings.logistics || DEFAULT_DEPARTMENTS[2].roles },
+      { ...DEFAULT_DEPARTMENTS[3], roles: settings.instruments || DEFAULT_DEPARTMENTS[3].roles }
+    ]
+  };
+};
 
 export function useOrgData(orgId) {
   const [members, setMembers] = useState([]);
@@ -38,14 +55,14 @@ export function useOrgData(orgId) {
       setMembers(resMem.data);
       setSongs(resSongs.data);
       setEvents(resEv.data);
-      if (resOrg.data) setOrgSettings(resOrg.data.settings);
+      if (resOrg.data) setOrgSettings(migrateSettings(resOrg.data.settings));
 
       // 2. Guardar en Caché Local para la próxima vez (o para cuando se vaya el internet)
       localStorage.setItem(`bandly_offline_org_${orgId}`, JSON.stringify({
         members: resMem.data,
         songs: resSongs.data,
         events: resEv.data,
-        orgSettings: resOrg.data?.settings || null,
+        orgSettings: resOrg.data?.settings ? migrateSettings(resOrg.data.settings) : null,
         lastSync: new Date().toISOString()
       }));
 
@@ -58,7 +75,7 @@ export function useOrgData(orgId) {
         setMembers(parsed.members || []);
         setEvents(parsed.events || []);
         setSongs(parsed.songs || []);
-        setOrgSettings(parsed.orgSettings || null);
+        setOrgSettings(migrateSettings(parsed.orgSettings));
       }
     }
   }, [orgId]);

@@ -6,6 +6,7 @@ import OrgSettingsModal from './OrgSettingsModal';
 import { Settings } from 'lucide-react';
 import { alertDialog, confirmDialog } from '../utils/dialogService';
 import FirstUseTip from './FirstUseTip';
+import { DEFAULT_DEPARTMENTS } from '../utils/defaultRoles';
 
 export default function TeamList({ members, isDirector, refreshData, orgSettings, orgId }) {
   const [selectedMember, setSelectedMember] = useState(null);
@@ -98,126 +99,79 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     }
   };
 
-  // 1. Cargamos las categorías desde la DB (o usamos los defaults si no hay nada guardado aún)
-  // useMemo keyed en orgSettings: referencia estable entre renders para que el
-  // useMemo de groupedMembers (abajo) no recalcule de más ni quede con datos obsoletos.
-  const leadershipRoles = useMemo(() => orgSettings?.leadership ?? [
-    { id: 'director_musical', label: 'Director Musical', icon: '🎼' },
-    { id: 'eventos', label: 'Dir. Eventos', icon: '📅' },
-    { id: 'lider_produccion', label: 'Líder Producción', icon: '🎬' },
-    { id: 'lider_logistica', label: 'Líder Logística', icon: '📋' }
-  ], [orgSettings]);
+  const departments = useMemo(() => orgSettings?.departments || DEFAULT_DEPARTMENTS, [orgSettings]);
 
-  const productionRoles = useMemo(() => orgSettings?.production ?? [
-    { id: 'media', label: 'Media/Visuales', icon: '📽️' },
-    { id: 'sonido', label: 'Audio/Sonido', icon: '🎛️' },
-    { id: 'transmision', label: 'Transmisión', icon: '📡' },
-    { id: 'iluminacion', label: 'Iluminación', icon: '💡' }
-  ], [orgSettings]);
-
-  const logisticsRoles = useMemo(() => orgSettings?.logistics ?? [
-    { id: 'logistica', label: 'Staff/Logística', icon: '🛠️' },
-    { id: 'decoracion', label: 'Decoración', icon: '🎨' },
-    { id: 'bienvenida', label: 'Bienvenida', icon: '👋' },
-    { id: 'finanzas', label: 'Finanzas', icon: '💰' }
-  ], [orgSettings]);
-
-  const instrumentsCatalog = useMemo(() => orgSettings?.instruments ?? [
-    { id: 'bateria', label: 'Batería', icon: '🥁' },
-    { id: 'bajo', label: 'Bajo', icon: '🎸' },
-    { id: 'guitarra', label: 'Guitarra', icon: '🎸' },
-    { id: 'piano', label: 'Teclado', icon: '🎹' },
-    { id: 'voz', label: 'Voz/Cantante', icon: '🎤' },
-    { id: 'percusion', label: 'Percusión', icon: '🪘' }
-  ], [orgSettings]);
-
-  // 2. Agrupación Jerárquica Exclusiva
+  // 2. Agrupación Jerárquica Dinámica
   const groupedMembers = useMemo(() => {
-    const leadershipIds = new Set(leadershipRoles.map(r => r.id));
-    const productionIds = new Set(productionRoles.map(r => r.id));
-    const logisticsIds = new Set(logisticsRoles.map(r => r.id));
-    const instrumentIds = new Set(instrumentsCatalog.map(r => r.id));
-
-    // Fechas ya pasadas: la limpieza real solo ocurre cuando el dueño abre su
-    // propio perfil, así que aquí filtramos defensivamente para que un
-    // director nunca vea bloqueos vencidos, incluso si esa limpieza no ha
-    // corrido todavía para ese miembro.
     const todayStr = new Date().toISOString().slice(0, 10);
     let activeMembers = (members || []).map(m => ({
       ...m,
       blocked_dates: (m.blocked_dates || []).filter(d => d >= todayStr),
     }));
+    
     if (filterBlocked) {
       activeMembers = activeMembers.filter(m => m.blocked_dates && m.blocked_dates.length > 0);
     }
     
-    if (!activeMembers || activeMembers.length === 0) return { global: [], leadership: [], production: [], logistics: [], music: [], unassigned: [] };
+    if (!activeMembers || activeMembers.length === 0) return { global: [], dynamic: [], unassigned: [] };
     
     const global = activeMembers.filter(m => m.role === 'director');
-    const remainingAfterGlobal = activeMembers.filter(m => m.role !== 'director');
+    let remaining = activeMembers.filter(m => m.role !== 'director');
 
-    // Nivel 2: Líderes de área (Prioridad alta)
-    const leadership = remainingAfterGlobal.filter(m => (m.functions || []).some(f => leadershipIds.has(f)));
-    const remainingAfterLeadership = remainingAfterGlobal.filter(m => !(m.functions || []).some(f => leadershipIds.has(f)));
+    const dynamic = departments.map(dept => {
+      const deptIds = new Set(dept.roles.map(r => r.id));
+      const inDept = remaining.filter(m => (m.functions || []).some(f => deptIds.has(f)));
+      remaining = remaining.filter(m => !(m.functions || []).some(f => deptIds.has(f)));
+      return { ...dept, members: inDept };
+    });
 
-    // Nivel 3: Equipos operativos (Música, Producción, Logística)
-    const production = remainingAfterLeadership.filter(m => (m.functions || []).some(f => productionIds.has(f)));
-    const remainingAfterProd = remainingAfterLeadership.filter(m => !(m.functions || []).some(f => productionIds.has(f)));
+    const unassigned = remaining;
 
-    const logistics = remainingAfterProd.filter(m => (m.functions || []).some(f => logisticsIds.has(f)));
-    const remainingAfterLogistics = remainingAfterProd.filter(m => !(m.functions || []).some(f => logisticsIds.has(f)));
+    return { global, dynamic, unassigned };
+  }, [members, filterBlocked, departments]);
 
-    const music = remainingAfterLogistics.filter(m => (m.functions || []).some(f => instrumentIds.has(f)));
-    const unassigned = remainingAfterLogistics.filter(m => !(m.functions || []).some(f => instrumentIds.has(f)));
-
-    return { global, leadership, production, logistics, music, unassigned };
-  }, [members, filterBlocked, leadershipRoles, productionRoles, logisticsRoles, instrumentsCatalog]);
-
-  const renderMemberCard = (m, level, categoryName) => {
+  const renderMemberCard = (m, level, categoryName, badgeLabel, colorClass) => {
     const mFunctions = m.functions || [];
     const isUserDirector = m.role === 'director';
     
-    // level: 1 = Global, 2 = Leadership, 3 = Staff (Music, Prod, Logistics)
     let cardStyle = {};
     let avatarStyle = { border: '1px solid rgba(255,255,255,0.1)' };
     let badge = null;
+
+    let accentHex = '#3b82f6';
+    let rgbAccent = '59, 130, 246';
+    
+    if (colorClass === 'purple') { accentHex = '#c084fc'; rgbAccent = '168, 85, 247'; }
+    else if (colorClass === 'yellow') { accentHex = '#eab308'; rgbAccent = '234, 179, 8'; }
+    else if (colorClass === 'orange') { accentHex = '#fb923c'; rgbAccent = '249, 115, 22'; }
+    else if (colorClass === 'green') { accentHex = '#4ade80'; rgbAccent = '34, 197, 94'; }
+    else if (colorClass === 'red') { accentHex = '#f87171'; rgbAccent = '239, 68, 68'; }
 
     if (level === 1) {
       cardStyle = { border: '1px solid rgba(234, 179, 8, 0.4)', background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.05) 0%, rgba(0,0,0,0.4) 100%)' };
       avatarStyle = { border: '2px solid rgba(234, 179, 8, 0.8)', boxShadow: '0 0 20px rgba(234, 179, 8, 0.3)' };
       badge = <span className="director-badge" style={{ fontSize: '0.6rem', background: 'rgba(234, 179, 8, 0.2)', color: '#eab308' }}>DIRECTOR GLOBAL</span>;
-    } else if (level === 2) {
-      cardStyle = { border: '1px solid rgba(168, 85, 247, 0.4)', background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.05) 0%, rgba(0,0,0,0.4) 100%)' };
-      avatarStyle = { border: '2px solid rgba(168, 85, 247, 0.6)', boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)' };
-      badge = <span className="director-badge" style={{ fontSize: '0.6rem', background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc' }}>LÍDER DE ÁREA</span>;
     } else {
-      // Level 3 badges
-      let bColor = 'rgba(59, 130, 246, 0.2)';
-      let tColor = '#3b82f6';
-      if (categoryName === 'production') {
-        bColor = 'rgba(168, 85, 247, 0.1)';
-        tColor = '#c084fc';
-      } else if (categoryName === 'logistics') {
-        bColor = 'rgba(249, 115, 22, 0.1)';
-        tColor = '#fb923c';
-      }
-      badge = <span className="director-badge" style={{ fontSize: '0.6rem', background: bColor, color: tColor }}>EQUIPO OPERATIVO</span>;
+      cardStyle = { border: `1px solid rgba(${rgbAccent}, 0.4)`, background: `linear-gradient(145deg, rgba(${rgbAccent}, 0.05) 0%, rgba(0,0,0,0.4) 100%)` };
+      avatarStyle = { border: `2px solid rgba(${rgbAccent}, 0.6)`, boxShadow: `0 0 20px rgba(${rgbAccent}, 0.2)` };
+      badge = <span className="director-badge" style={{ fontSize: '0.6rem', background: `rgba(${rgbAccent}, 0.2)`, color: accentHex }}>{badgeLabel.toUpperCase()}</span>;
     }
 
-    const renderRoleSection = (title, list, colorClass) => {
-      // Si no es director y no tiene roles de esta sección, la ocultamos para limpiar la UI
+    const renderRoleSection = (title, list, colClass) => {
       const hasAnyRole = list.some(r => mFunctions.includes(r.id));
       if (!isDirector && !hasAnyRole) return null;
 
-      let accentColor = '#3b82f6';
+      let aColor = '#3b82f6';
       let bgActive = 'rgba(59, 130, 246, 0.15)';
-      if (colorClass === 'yellow') { accentColor = '#eab308'; bgActive = 'rgba(234, 179, 8, 0.15)'; }
-      else if (colorClass === 'purple') { accentColor = '#a855f7'; bgActive = 'rgba(168, 85, 247, 0.15)'; }
-      else if (colorClass === 'orange') { accentColor = '#f97316'; bgActive = 'rgba(249, 115, 22, 0.15)'; }
+      if (colClass === 'yellow') { aColor = '#eab308'; bgActive = 'rgba(234, 179, 8, 0.15)'; }
+      else if (colClass === 'purple') { aColor = '#a855f7'; bgActive = 'rgba(168, 85, 247, 0.15)'; }
+      else if (colClass === 'orange') { aColor = '#f97316'; bgActive = 'rgba(249, 115, 22, 0.15)'; }
+      else if (colClass === 'green') { aColor = '#22c55e'; bgActive = 'rgba(34, 197, 94, 0.15)'; }
+      else if (colClass === 'red') { aColor = '#ef4444'; bgActive = 'rgba(239, 68, 68, 0.15)'; }
 
       return (
-        <div className="role-selector-section" style={{ marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <span className="section-mini-label" style={{ color: accentColor }}>{title}</span>
+        <div key={title} className="role-selector-section" style={{ marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <span className="section-mini-label" style={{ color: aColor }}>{title}</span>
           <div className="role-selector-grid">
             {isDirector ? (
               list.map(func => {
@@ -229,20 +183,20 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
                     className={`role-chip ${isActive ? 'active' : ''}`}
                     style={{ 
                       background: isActive ? bgActive : 'rgba(255,255,255,0.02)',
-                      border: isActive ? `1px solid ${accentColor}80` : '1px solid rgba(255,255,255,0.05)',
+                      border: isActive ? `1px solid ${aColor}80` : '1px solid rgba(255,255,255,0.05)',
                       opacity: isActive ? 1 : 0.6
                     }}
                   >
                     <span className="chip-icon">{func.icon}</span>
                     {func.label}
-                    {isActive && <CheckCircle2 size={12} className="check-icon" style={{ color: accentColor }} />}
+                    {isActive && <CheckCircle2 size={12} className="check-icon" style={{ color: aColor }} />}
                   </button>
                 )
               })
             ) : (
               <div className="role-display-row">
                 {list.filter(f => mFunctions.includes(f.id)).map(f => (
-                  <span key={f.id} className="static-role-chip" style={{ border: `1px solid ${accentColor}40`, color: '#fff' }}>
+                  <span key={f.id} className="static-role-chip" style={{ border: `1px solid ${aColor}40`, color: '#fff' }}>
                     {f.icon} {f.label}
                   </span>
                 ))}
@@ -272,7 +226,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
               <span style={{ fontSize: '2.5rem', fontWeight: '900' }}>{m.full_name?.[0]?.toUpperCase()}</span>
             )}
             {isUserDirector && <div className="director-shield" style={{ zIndex: 10, background: '#eab308' }}><Crown size={12} color="black" /></div>}
-            {!isUserDirector && level === 2 && <div className="director-shield" style={{ zIndex: 10, background: '#a855f7' }}><Star size={12} color="white" /></div>}
+            {!isUserDirector && level === 2 && <div className="director-shield" style={{ zIndex: 10, background: accentHex }}><Star size={12} color="white" /></div>}
             {isDirector && (
               <div style={{ 
                 position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', 
@@ -335,10 +289,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
         {/* Sections for Roles */}
         <div style={{ padding: '0 10px 10px 10px' }}>
-          {renderRoleSection("👑 Roles de Liderazgo", leadershipRoles, 'yellow')}
-          {renderRoleSection("📽️ Equipo de Producción", productionRoles, 'purple')}
-          {renderRoleSection("📋 Equipo de Logística", logisticsRoles, 'orange')}
-          {renderRoleSection("🎵 Instrumentos", instrumentsCatalog, 'blue')}
+          {departments.map(dept => renderRoleSection(`${dept.icon} ${dept.title}`, dept.roles, dept.colorClass))}
         </div>
       </div>
     );
@@ -436,54 +387,32 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
                     <Crown size={22} /> Dirección Global
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.global.map(m => renderMemberCard(m, 1, 'global'))}
+                    {groupedMembers.global.map(m => renderMemberCard(m, 1, 'global', 'DIRECTOR GLOBAL', 'yellow'))}
                   </div>
                 </div>
               )}
 
-              {groupedMembers.leadership.length > 0 && (
-                <div style={{ marginBottom: '3rem' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fcd34d', marginBottom: '1.5rem', borderBottom: '1px solid rgba(252, 211, 77, 0.2)', paddingBottom: '0.5rem' }}>
-                    <Star size={22} /> Roles de Liderazgo (Directores de Área)
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.leadership.map(m => renderMemberCard(m, 2, 'leadership'))}
-                  </div>
-                </div>
-              )}
+              {groupedMembers.dynamic.map((dept, idx) => {
+                if (dept.members.length === 0) return null;
+                let hColor = '#3b82f6';
+                let borderColor = 'rgba(59, 130, 246, 0.2)';
+                if (dept.colorClass === 'yellow') { hColor = '#fcd34d'; borderColor = 'rgba(252, 211, 77, 0.2)'; }
+                if (dept.colorClass === 'purple') { hColor = '#c084fc'; borderColor = 'rgba(168, 85, 247, 0.2)'; }
+                if (dept.colorClass === 'orange') { hColor = '#fb923c'; borderColor = 'rgba(251, 146, 60, 0.2)'; }
+                if (dept.colorClass === 'green') { hColor = '#4ade80'; borderColor = 'rgba(74, 222, 128, 0.2)'; }
+                if (dept.colorClass === 'red') { hColor = '#f87171'; borderColor = 'rgba(248, 113, 113, 0.2)'; }
 
-              {groupedMembers.production.length > 0 && (
-                <div style={{ marginBottom: '3rem' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#c084fc', marginBottom: '1.5rem', borderBottom: '1px solid rgba(168, 85, 247, 0.2)', paddingBottom: '0.5rem' }}>
-                    <MonitorPlay size={22} /> Equipo de Producción y Media
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.production.map(m => renderMemberCard(m, 3, 'production'))}
+                return (
+                  <div key={dept.id} style={{ marginBottom: '3rem' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: hColor, marginBottom: '1.5rem', borderBottom: `1px solid ${borderColor}`, paddingBottom: '0.5rem' }}>
+                      <span>{dept.icon}</span> {dept.title}
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      {dept.members.map(m => renderMemberCard(m, 2 + idx, dept.id, dept.title, dept.colorClass))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {groupedMembers.logistics.length > 0 && (
-                <div style={{ marginBottom: '3rem' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fb923c', marginBottom: '1.5rem', borderBottom: '1px solid rgba(251, 146, 60, 0.2)', paddingBottom: '0.5rem' }}>
-                    <ClipboardCheck size={22} /> Equipo de Logística y Staff
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.logistics.map(m => renderMemberCard(m, 3, 'logistics'))}
-                  </div>
-                </div>
-              )}
-
-              {groupedMembers.music.length > 0 && (
-                <div style={{ marginBottom: '3rem' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#60a5fa', marginBottom: '1.5rem', borderBottom: '1px solid rgba(96, 165, 250, 0.2)', paddingBottom: '0.5rem' }}>
-                    <Music size={22} /> Instrumentos y Operación (Músicos)
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.music.map(m => renderMemberCard(m, 3, 'music'))}
-                  </div>
-                </div>
-              )}
+                );
+              })}
               
               {groupedMembers.unassigned.length > 0 && (
                 <div style={{ marginBottom: '3rem', opacity: 0.7 }}>
@@ -491,7 +420,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
                     <Users size={22} /> Sin Asignación Específica
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {groupedMembers.unassigned.map(m => renderMemberCard(m, 3, 'unassigned'))}
+                    {groupedMembers.unassigned.map(m => renderMemberCard(m, 99, 'unassigned', 'Sin Rol', 'blue'))}
                   </div>
                 </div>
               )}

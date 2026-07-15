@@ -10,7 +10,7 @@ import { supabase } from '../supabaseClient';
 import VisualCalendar from './VisualCalendar';
 import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
-import { DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
+import { DEFAULT_DEPARTMENTS, DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
 import EventDayStatus from './EventDayStatus';
 import { alertDialog, confirmDialog } from '../utils/dialogService';
 import FirstUseTip from './FirstUseTip';
@@ -65,12 +65,27 @@ const getSuggestedMembers = (roleName, members, allRoles) => {
   return { suggested, others };
 };
 
-const buildRoleBank = (orgSettings) => ([
-  { category: "MÚSICOS", color: "var(--primary)", bg: "rgba(59,130,246,0.1)", roles: orgSettings?.instruments ?? DEFAULT_INSTRUMENTS },
-  { category: "LIDERAZGO", color: "#eab308", bg: "rgba(234,179,8,0.1)", roles: orgSettings?.leadership ?? DEFAULT_LEADERSHIP_ROLES },
-  { category: "PRODUCCIÓN / MEDIA", color: "var(--accent)", bg: "rgba(139,92,246,0.1)", roles: orgSettings?.production ?? DEFAULT_PRODUCTION_ROLES },
-  { category: "LOGÍSTICA / STAFF", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", roles: orgSettings?.logistics ?? DEFAULT_LOGISTICS_ROLES }
-]);
+
+
+const buildRoleBank = (orgSettings) => {
+  const departments = orgSettings?.departments || DEFAULT_DEPARTMENTS;
+  return departments.map(dept => {
+    let colorHex = '#3b82f6';
+    let bg = 'rgba(59,130,246,0.1)';
+    if (dept.colorClass === 'yellow') { colorHex = '#eab308'; bg = 'rgba(234,179,8,0.1)'; }
+    else if (dept.colorClass === 'purple') { colorHex = '#a855f7'; bg = 'rgba(168,85,247,0.1)'; }
+    else if (dept.colorClass === 'orange') { colorHex = '#f97316'; bg = 'rgba(249,115,22,0.1)'; }
+    else if (dept.colorClass === 'green') { colorHex = '#22c55e'; bg = 'rgba(34,197,94,0.1)'; }
+    else if (dept.colorClass === 'red') { colorHex = '#ef4444'; bg = 'rgba(239,68,68,0.1)'; }
+    
+    return {
+      category: dept.title.toUpperCase(),
+      color: colorHex,
+      bg: bg,
+      roles: dept.roles || []
+    };
+  });
+};
 
 // [ESTABLE] COMPONENTE EXTRAÍDO (Con arreglos de truncado y visibilidad)
 const MemberSelector = ({ value, onChange, members, roleName, placeholder, alignRight, eventDate, allRoles }) => {
@@ -387,6 +402,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [replacementPicker, setReplacementPicker] = useState(null); // { eventId, rosterEntry }
   const [recurWeekly, setRecurWeekly] = useState(false);
   const [recurWeeks, setRecurWeeks] = useState(4);
+  const [declineModal, setDeclineModal] = useState({ isOpen: false, event: null, roleId: null, instrument: null, reason: '' });
+  const allowDeclines = orgSettings?.allowDeclines !== false;
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -859,6 +876,32 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     } catch { alertDialog("Error al confirmar."); }
   };
 
+  const submitDeclineReason = async () => {
+    if (!declineModal.reason.trim()) {
+      alertDialog("Debes proporcionar una justificación.");
+      return;
+    }
+    const eventId = declineModal.event?.id ?? declineModal.event;
+    try {
+      await supabase.from('event_roster')
+        .update({ status: 'decline_requested', decline_reason: declineModal.reason })
+        .eq('event_id', eventId)
+        .eq('profile_id', declineModal.roleId);
+        
+      if (refreshData) refreshData();
+      
+      // Update local state if needed
+      if (selectedEventDetails && selectedEventDetails.id === eventId) {
+         setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(declineModal.roleId) ? {...r, status: 'decline_requested', decline_reason: declineModal.reason} : r)});
+      }
+      
+      setDeclineModal({ isOpen: false, event: null, roleId: null, instrument: null, reason: '' });
+      alertDialog("Tu justificación ha sido enviada al director para aprobación.");
+    } catch {
+      alertDialog("Error al enviar la justificación.");
+    }
+  };
+
   const handleRemoveFromRoster = async (rosterId) => {
     if (!(await confirmDialog({ message: '¿Seguro que quieres eliminar a este usuario del evento?', danger: true }))) return;
     try {
@@ -1046,7 +1089,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
                       <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
                       <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={statusLabel(slot.status)} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={slot.status === 'decline_requested' ? 'Pendiente de Aprobación' : statusLabel(slot.status)} />
                     </div>
                   ))}
                 </div>
@@ -1060,8 +1103,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         <Check size={11} /> Confirmar
                       </button>
                     )}
-                    {userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
-                      <button onClick={() => updateRosterStatus(ev, currentUserId, 'declined', userSlots[0]?.instrument)}
+                    {allowDeclines && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
+                      <button onClick={() => setDeclineModal({ isOpen: true, event: ev, roleId: currentUserId, instrument: userSlots[0]?.instrument, reason: '' })}
                         style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <X size={11} /> Declinar
                       </button>
@@ -1335,12 +1378,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                           <CheckCircle2 size={20} /> Confirmar Asistencia
                         </button>
                      )}
-                     {!isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected') && (
-                        <button onClick={async () => {
-                            if(await confirmDialog('¿Seguro que no puedes asistir?')) {
-                              updateRosterStatus(selectedEventDetails, currentUserId, 'declined', userSlots[0]?.instrument);
-                              setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'declined'} : r)});
-                            }
+                     {allowDeclines && !isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
+                        <button onClick={() => {
+                            setDeclineModal({ isOpen: true, event: selectedEventDetails, roleId: currentUserId, instrument: userSlots[0]?.instrument, reason: '' });
                         }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                           <X size={16} /> Declinar
                         </button>
@@ -2056,6 +2096,35 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             <button onClick={() => setReplacementPicker(null)} className="btn-secondary" style={{ width: '100%', padding: '0.9rem', marginTop: '1.5rem' }}>
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Declinación con Justificación */}
+      {declineModal.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2rem', border: '1px solid rgba(239,68,68,0.25)', animation: 'modalFadeIn 0.3s ease-out' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+              <X size={24} color="#ef4444" />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white', margin: 0 }}>Justificar Declinación</h3>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
+              Estás a punto de declinar tu participación como <strong>{getBilingualName(declineModal.instrument)}</strong>. Por favor, indícale al director el motivo por el cual no puedes asistir. Esta solicitud quedará pendiente de aprobación.
+            </p>
+            <textarea
+              value={declineModal.reason}
+              onChange={(e) => setDeclineModal({ ...declineModal, reason: e.target.value })}
+              placeholder="Ej: Tengo un compromiso laboral ineludible..."
+              style={{ width: '100%', minHeight: '100px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', padding: '12px', fontSize: '0.9rem', marginBottom: '1.5rem', resize: 'vertical' }}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setDeclineModal({ isOpen: false, event: null, roleId: null, instrument: null, reason: '' })} className="btn-secondary" style={{ flex: 1, padding: '0.9rem' }}>
+                Cancelar
+              </button>
+              <button onClick={submitDeclineReason} style={{ flex: 1, padding: '0.9rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '800', cursor: 'pointer' }}>
+                Enviar Justificación
+              </button>
+            </div>
           </div>
         </div>
       )}

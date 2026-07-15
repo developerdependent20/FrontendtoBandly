@@ -1,8 +1,9 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download, MessageCircle } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import { isSuperAdmin } from '../../utils/permissions';
 import { alertDialog } from '../../utils/dialogService';
+import { supabase } from '../../supabaseClient';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
 import GlobalSearch from './GlobalSearch';
@@ -16,6 +17,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
   const [showWelcome, setShowWelcome] = React.useState(
     !!profile?.id && !localStorage.getItem(`bandly_welcome_${profile?.id}`)
   );
+  const [showNotifications, setShowNotifications] = React.useState(false);
+
+  const pendingRequests = React.useMemo(() => {
+    if (profile?.role !== 'director') return [];
+    return (events || []).flatMap(ev => 
+      (ev.event_roster || [])
+        .filter(r => r.status === 'decline_requested' && !r.is_removed)
+        .map(r => ({ ...r, event: ev }))
+    );
+  }, [events, profile]);
   
   const userIsSuperAdmin = isSuperAdmin(profile);
   const userFunctions = profile?.functions || [];
@@ -377,6 +388,33 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             </span>
           </div>
 
+          {/* Icono de Mensajes para todos (Chat futuro) */}
+          <div
+            onClick={() => alertDialog("La mensajería de equipo estará disponible próximamente.")}
+            style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="hover-scale"
+            title="Mensajes del Equipo"
+          >
+            <MessageCircle size={16} color="white" />
+          </div>
+
+          {/* Icono de Notificaciones (Solo Directores o Admin) */}
+          {(profile?.role === 'director' || userIsSuperAdmin) && (
+            <div
+              onClick={() => setShowNotifications(true)}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.2s' }}
+              className="hover-scale"
+              title="Notificaciones de Declinación"
+            >
+              <Bell size={16} color="white" />
+              {pendingRequests.length > 0 && (
+                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.6rem', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-dark)' }}>
+                  {pendingRequests.length}
+                </span>
+              )}
+            </div>
+          )}
+
           <div 
             onClick={() => setShowSubscription(true)}
             style={{ 
@@ -402,6 +440,58 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
 
         {showSubscription && (
           <SubscriptionModal profile={profile} onClose={() => setShowSubscription(false)} />
+        )}
+
+        {showNotifications && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '20px' }} onClick={() => setShowNotifications(false)}>
+            <div style={{ background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', width: '100%', maxWidth: '380px', maxHeight: '80vh', overflowY: 'auto', padding: '1.5rem', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', animation: 'dropdownFadeIn 0.2s ease-out' }} onClick={e => e.stopPropagation()}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Bell size={20} color="var(--primary)" /> Notificaciones
+              </h3>
+              
+              {pendingRequests.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>No tienes notificaciones nuevas.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {pendingRequests.map(req => {
+                    const memberName = (members || []).find(m => String(m.id) === String(req.profile_id))?.full_name || 'Alguien';
+                    const eventDate = req.event.date ? req.event.date.split('T')[0] : '';
+                    return (
+                      <div key={req.id} style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}><strong>{memberName}</strong> solicitó declinar:</div>
+                        <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{req.event.name} ({eventDate})</div>
+                        <div style={{ fontSize: '0.8rem', color: '#fbbf24', marginTop: '8px', background: 'rgba(251, 191, 36, 0.1)', padding: '8px', borderRadius: '8px', fontStyle: 'italic' }}>
+                          "{req.decline_reason || 'Sin justificación proporcionada'}"
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                          <button onClick={async () => {
+                            supabase.from('event_roster').update({ status: 'declined' }).eq('id', req.id).then(() => setShowNotifications(false));
+                          }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                            Aceptar (Excusionar)
+                          </button>
+                          <button onClick={async () => {
+                            supabase.from('event_roster').delete().eq('id', req.id).then(() => setShowNotifications(false));
+                          }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                            Remover del evento
+                          </button>
+                          <button onClick={async () => {
+                            supabase.from('event_roster').update({ status: 'confirmed' }).eq('id', req.id).then(() => setShowNotifications(false));
+                          }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>
+                            Rechazar excusa y Confirmar
+                          </button>
+                          <button onClick={async () => {
+                            supabase.from('event_roster').update({ status: 'pending' }).eq('id', req.id).then(() => setShowNotifications(false));
+                          }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>
+                            Rechazar y dejar Pendiente
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {showWelcome && (

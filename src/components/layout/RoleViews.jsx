@@ -284,7 +284,7 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
       {activeTab === 'daw' && (
         isTauri()
           // En la app de escritorio: DAW completo con ProMixer
-          ? <ProMixer songs={songs} session={session} profile={profile} />
+          ? <ProMixer songs={songs} session={session} profile={profile} orgId={profile?.org_id} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}
@@ -334,7 +334,7 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       {activeTab === 'daw' && canAccessLibrary && (
         isTauri()
           // En la app de escritorio: DAW completo con ProMixer
-          ? <ProMixer songs={songs} session={session} profile={profile} />
+          ? <ProMixer songs={songs} session={session} profile={profile} orgId={profile?.org_id} />
           // En la web: solo subida de secuencias, sin DAW
           : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
       )}

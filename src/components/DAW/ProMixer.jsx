@@ -572,7 +572,7 @@ const MemoizedTransportUI = React.memo(({
   );
 });
 
-export default function ProMixer({ session }) {
+export default function ProMixer({ session, orgId }) {
   // isConfigured arranca en false — la auto-reconexión lo pone en true si el motor responde OK
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1175,6 +1175,66 @@ export default function ProMixer({ session }) {
 
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
   }, [activeSequenceId, markers, activeSong]);
+
+  // ── Modo En Vivo (control remoto desde el celular) ──
+  // El celular no toca el motor de audio directamente: manda un comando por
+  // Supabase Realtime (broadcast, sin tabla — es efímero) y esta computadora,
+  // que es la que está conectada a la interfaz real, hace el load+play.
+  const remoteChannelRef = useRef(null);
+
+  const handleRemotePlaySong = useCallback(async (songId) => {
+    const song = songs.find(s => String(s.id) === String(songId));
+    if (!song) return;
+    await handleSyncSong(song);
+    if (isTauri()) {
+      // Esperamos a que el motor confirme que terminó de sincronizar los stems
+      // (mismo chequeo que usa handleSyncSong internamente) antes de arrancar,
+      // para no pisar el play mientras el audio todavía se está cargando.
+      for (let i = 0; i < 20; i++) {
+        const report = await safeInvoke('get_engine_report').catch(() => null);
+        if (report && report.tracks_loading === 0) break;
+        await new Promise(r => setTimeout(r, 300));
+      }
+      setIsPlaying(true);
+      safeInvoke('toggle_playback', { playing: true });
+    }
+  }, [songs, handleSyncSong]);
+
+  useEffect(() => {
+    if (!orgId) return;
+    const channel = supabase.channel(`daw_remote_${orgId}`)
+      .on('broadcast', { event: 'play_song' }, ({ payload }) => {
+        if (payload?.songId) handleRemotePlaySong(payload.songId);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          // Ping inicial: así el celular sabe de inmediato que esta computadora
+          // está conectada y escuchando, sin esperar al primer cambio de canción.
+          channel.send({
+            type: 'broadcast',
+            event: 'daw_status',
+            payload: { songId: activeSong?.id || null, songTitle: activeSong?.title || null, isPlaying }
+          });
+        }
+      });
+    remoteChannelRef.current = channel;
+    return () => {
+      remoteChannelRef.current = null;
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId, handleRemotePlaySong]);
+
+  // Cada vez que cambia la canción activa o el estado de play, avisamos al
+  // celular para que muestre "sonando ahora" en el lugar correcto.
+  useEffect(() => {
+    if (!remoteChannelRef.current) return;
+    remoteChannelRef.current.send({
+      type: 'broadcast',
+      event: 'daw_status',
+      payload: { songId: activeSong?.id || null, songTitle: activeSong?.title || null, isPlaying }
+    });
+  }, [activeSong, isPlaying]);
 
   const onRemoveMarker = useCallback(async (index) => {
     if (!activeSequenceId) return;

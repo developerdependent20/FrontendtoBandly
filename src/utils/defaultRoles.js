@@ -41,3 +41,10 @@ export const DEFAULT_INSTRUMENTS = [
   { id: 'saxo', label: 'Saxofón', icon: '🎷' },
   { id: 'sintetizador', label: 'Sintetizador', icon: '🎛️' },
 ];
+
+export const DEFAULT_DEPARTMENTS = [
+  { id: 'leadership', title: 'Roles de Liderazgo', icon: '👑', colorClass: 'yellow', roles: DEFAULT_LEADERSHIP_ROLES },
+  { id: 'production', title: 'Equipo de Producción y Media', icon: '📽️', colorClass: 'purple', roles: DEFAULT_PRODUCTION_ROLES },
+  { id: 'logistics', title: 'Equipo de Logística y Staff', icon: '📋', colorClass: 'orange', roles: DEFAULT_LOGISTICS_ROLES },
+  { id: 'instruments', title: 'Instrumentos y Operación (Músicos)', icon: '🎵', colorClass: 'blue', roles: DEFAULT_INSTRUMENTS }
+];
