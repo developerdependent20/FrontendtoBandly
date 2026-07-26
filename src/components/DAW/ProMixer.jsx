@@ -9,7 +9,6 @@ import PadBoard from './PadBoard';
 import CloudRepertoire from './CloudRepertoire';
 import { supabase } from '../../supabaseClient';
 import { OfflineManager } from '../../utils/offlineManager';
-import FirstUseTip from '../FirstUseTip';
 import './DAW.css';
 import * as Icons from 'lucide-react';
 
@@ -736,6 +735,28 @@ export default function ProMixer({ session, orgId }) {
     return () => clearTimeout(timer);
   }, [handleSyncOffline]);
 
+  // Descarga en segundo plano el audio de UNA canción para dejarla lista
+  // offline apenas se añade al setlist desde el Repertorio Cloud — a
+  // diferencia de handleSyncSong, esto NO carga la canción en el motor ni
+  // interrumpe lo que esté sonando ahora mismo, solo la deja guardada en
+  // disco para cuando el usuario la toque.
+  const downloadSongForOffline = useCallback(async (song) => {
+    if (!isTauri() || !song?.id) return;
+    try {
+      const { data: seq } = await supabase.from('sequences').select('r2_zip_key').eq('song_id', song.id).maybeSingle();
+      if (!seq?.r2_zip_key) return;
+      const token = session?.access_token || '';
+      const songDir = song.id.toString();
+      const zipUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${seq.r2_zip_key}`;
+      const zipPath = await safeInvoke('download_multitrack', { url: zipUrl, songId: songDir, fileName: 'multitrack.zip', token }).catch(() => null);
+      if (zipPath) {
+        await safeInvoke('extract_multitrack_zip', { zipPath, songId: songDir }).catch(() => null);
+      }
+    } catch {
+      // Fallo silencioso — si esto falla, igual se descarga sola al reproducirla (camino normal de handleSyncSong)
+    }
+  }, [session]);
+
   const reconnectAudio = async () => {
     const lastDevice = localStorage.getItem('bandly_last_audio_device');
     setLoading(true);
@@ -900,25 +921,12 @@ export default function ProMixer({ session, orgId }) {
         if (type === 'eq' && band === 'mid') next.eqMid = gainDb;
         if (type === 'eq' && band === 'high') next.eqHigh = gainDb;
 
-        // Persistencia global por nombre de track (categorizado): SOLO para
-        // ruteo de salida (output) — es lo único donde compartir tiene sentido
-        // real (la batería casi siempre va a la misma salida física, sin
-        // importar la canción). Volumen/mute/solo/estéreo NUNCA se comparten
-        // entre canciones — cada una es 100% independiente desde el inicio.
-        if (type === 'output') {
-          try {
-            const profileStr = localStorage.getItem('bandly_mixer_profile') || '{}';
-            const profile = JSON.parse(profileStr);
-            const trackKey = getTrackCategory(next.name);
-            if (!profile[trackKey]) profile[trackKey] = {};
-            profile[trackKey].outputIdx = output;
-            localStorage.setItem('bandly_mixer_profile', JSON.stringify(profile));
-          } catch {}
-        }
-
-        // Persistencia POR CANCIÓN (stem específico, id único): tiene prioridad
-        // sobre el default global de arriba. Así, cambiar el ruteo de una canción
-        // puntual no afecta a las demás — cada una recuerda su propia decisión.
+        // Persistencia POR CANCIÓN (stem específico, id único) — el ruteo de
+        // salida ya NO se comparte entre canciones (se probó y era riesgoso:
+        // una canción sin configurar todavía podía heredar en silencio lo
+        // último que se haya tocado en cualquier otra, justo el mismo tipo de
+        // fuga de estado que ya nos quemó una vez con otro parámetro). Cada
+        // canción es 100% independiente, igual que volumen/mute/solo/EQ.
         try {
           const overridesStr = localStorage.getItem('bandly_mixer_song_overrides') || '{}';
           const overrides = JSON.parse(overridesStr);
@@ -1000,14 +1008,13 @@ export default function ProMixer({ session, orgId }) {
         return { ...next, enabled: false };
       });
 
-      // Recuperar: override por canción (prioridad) > default global por categoría > valores base.
+      // Recuperar: override por canción (prioridad) > valor base. Ya nada hereda
+      // de otra canción, ni siquiera el ruteo de salida (ver nota en onTrackUpdate).
       // mixerVolumes es el store viejo (solo volumen) — se mantiene como respaldo
       // para no perder ajustes guardados antes de este cambio.
-      let mixerProfile = {};
       let mixerVolumes = {};
       let songOverrides = {};
       try {
-        mixerProfile = JSON.parse(localStorage.getItem('bandly_mixer_profile') || '{}');
         mixerVolumes = JSON.parse(localStorage.getItem('bandly_mixer_volumes') || '{}');
         songOverrides = JSON.parse(localStorage.getItem('bandly_mixer_song_overrides') || '{}');
       } catch {}
@@ -1015,17 +1022,14 @@ export default function ProMixer({ session, orgId }) {
       const resTracks = stems.map((stem) => {
         const rawName = stem.original_name || stem.instrument_label || 'Inst';
         const cleanName = rawName.replace(/\.[^/.]+$/, ""); // Quita la extensión (.mp3, .wav, etc)
-        const trackKey = getTrackCategory(cleanName);
         const displayName = getStandardName(cleanName);
-        const savedGlobal = mixerProfile[trackKey] || {};
         const savedSong = songOverrides[stem.id] || {};
         const savedVol = savedSong.volume !== undefined ? savedSong.volume : mixerVolumes[stem.id];
 
         return {
-          // outputIdx: único campo que hereda un default compartido entre canciones (a propósito).
           id: stem.id, name: displayName, peak: 0,
-          outputIdx: savedSong.outputIdx !== undefined ? savedSong.outputIdx : (savedGlobal.outputIdx !== undefined ? savedGlobal.outputIdx : 0),
-          // Volumen/estéreo/mute/solo: SOLO el ajuste propio de esta canción, o el
+          outputIdx: savedSong.outputIdx !== undefined ? savedSong.outputIdx : 0,
+          // Volumen/estéreo/mute/solo/salida: SOLO el ajuste propio de esta canción, o el
           // valor base — nunca heredan de otra canción.
           volume: savedVol !== undefined ? savedVol : 1,
           isStereo: savedSong.isStereo !== undefined ? savedSong.isStereo : true,
@@ -1200,12 +1204,25 @@ export default function ProMixer({ session, orgId }) {
     }
   }, [songs, handleSyncSong]);
 
+  // Pausar/reanudar remoto: la canción ya está cargada en el motor, así que
+  // a diferencia de handleRemotePlaySong no hace falta volver a sincronizar
+  // stems — solo cambia el estado de reproducción (evita el gap de recarga).
+  const handleRemoteSetPlaying = useCallback(async (playing) => {
+    if (!isTauri()) return;
+    setIsPlaying(playing);
+    lastActionTime.current = Date.now();
+    await safeInvoke('toggle_playback', { playing });
+  }, []);
+
   useEffect(() => {
     if (!orgId) return;
     const channel = supabase.channel(`daw_remote_${orgId}`)
       .on('broadcast', { event: 'play_song' }, ({ payload }) => {
         if (payload?.songId) handleRemotePlaySong(payload.songId);
       })
+      .on('broadcast', { event: 'pause_song' }, () => handleRemoteSetPlaying(false))
+      .on('broadcast', { event: 'resume_song' }, () => handleRemoteSetPlaying(true))
+      .on('broadcast', { event: 'stop_song' }, () => handleStop())
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           // Ping inicial: así el celular sabe de inmediato que esta computadora
@@ -1223,7 +1240,7 @@ export default function ProMixer({ session, orgId }) {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId, handleRemotePlaySong]);
+  }, [orgId, handleRemotePlaySong, handleRemoteSetPlaying, handleStop]);
 
   // Cada vez que cambia la canción activa o el estado de play, avisamos al
   // celular para que muestre "sonando ahora" en el lugar correcto.
@@ -1334,20 +1351,6 @@ export default function ProMixer({ session, orgId }) {
         </div>
       )}
 
-      {session?.user?.id && (
-        <div style={{ padding: '0.5rem 1rem 0' }}>
-          <FirstUseTip
-            storageKey={`bandly_tip_daw_${session.user.id}`}
-            title="Cómo usar el DAW"
-            items={[
-              'El transporte de arriba controla play/stop y el metrónomo — el tempo lo trae la secuencia que subiste.',
-              'Cada canal del mixer tiene volumen, mute/solo y ruteo de salida independiente por canción.',
-              'Los marcadores de sección (compás, letra) se ven abajo en la línea de tiempo — puedes saltar a cualquiera con las teclas 1-9.'
-            ]}
-          />
-        </div>
-      )}
-
       <MemoizedTransportUI
           isPlaying={isPlaying} togglePlay={togglePlay} handleStop={handleStop}
           handleRestart={handleRestart} engineReady={engineReady}
@@ -1391,7 +1394,7 @@ export default function ProMixer({ session, orgId }) {
           </div>
         <SetlistSidebar setlist={setlist} activeSong={activeSong} activeSequenceMeta={activeSequenceMeta} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} onReorder={handleReorderSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
       </main>
-      {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); handleSyncSong(s); setShowCloudBrowser(false); }} />}
+      {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); downloadSongForOffline(s); setShowCloudBrowser(false); }} />}
       {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
       
     </div>

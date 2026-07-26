@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Trash2, Loader2, Save, Mic2 } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, Save, Mic2, ClipboardPaste } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { alertDialog } from '../utils/dialogService';
+import { alertDialog, confirmDialog } from '../utils/dialogService';
+
+// Una línea en blanco = separador de diapositiva. Es el mismo criterio que ya
+// usa ChartStudio al revés (junta diapositivas con "\n\n" al heredar letra
+// sin cifrado) — acá lo invertimos para partir un pegado completo en una sola.
+const splitIntoSlides = (fullText) =>
+  fullText
+    .split(/\n\s*\n+/)
+    .map(t => t.trim())
+    .filter(Boolean)
+    .map(text => ({ id: crypto.randomUUID(), text, marker_sync: '' }));
 
 // ─────────────────────────────────────────────
 // LYRICS EDITOR — Prepara letras desde la web para
@@ -18,6 +28,8 @@ export default function LyricsEditor({ song, onClose }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [existingRowId, setExistingRowId] = useState(null);
+  const [showPasteMode, setShowPasteMode] = useState(false);
+  const [pasteText, setPasteText] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +59,24 @@ export default function LyricsEditor({ song, onClose }) {
   const updateSlide = useCallback((id, field, value) => {
     setSlides(prev => prev.map(s => (s.id === id ? { ...s, [field]: value } : s)));
   }, []);
+
+  const handleGenerateFromPaste = useCallback(async () => {
+    const generated = splitIntoSlides(pasteText);
+    if (generated.length === 0) {
+      alertDialog('Pega la letra completa primero, separando cada diapositiva con una línea en blanco.');
+      return;
+    }
+    if (slides.length > 0) {
+      const ok = await confirmDialog({
+        message: `Esto reemplaza las ${slides.length} diapositiva(s) que ya tenías por las ${generated.length} nuevas. ¿Continuar?`,
+        danger: true
+      });
+      if (!ok) return;
+    }
+    setSlides(generated);
+    setPasteText('');
+    setShowPasteMode(false);
+  }, [pasteText, slides.length]);
 
   const removeSlide = useCallback((id) => {
     setSlides(prev => prev.filter(s => s.id !== id));
@@ -114,6 +144,52 @@ export default function LyricsEditor({ song, onClose }) {
                 Prepara las letras ahora — el día del evento, abre Bandly Presenter y ya van a estar cargadas ahí, listas para proyectar.
                 {markers.length === 0 && ' Sube una secuencia con markers de sección en el DAW para poder sincronizar automáticamente.'}
               </p>
+
+              {!showPasteMode ? (
+                <button
+                  onClick={() => setShowPasteMode(true)}
+                  style={{
+                    width: '100%', marginBottom: '16px', padding: '12px', background: 'rgba(168,85,247,0.08)',
+                    border: '1px solid rgba(168,85,247,0.25)', color: '#a855f7', borderRadius: '10px',
+                    cursor: 'pointer', fontWeight: '800', fontSize: '0.8rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                  }}
+                >
+                  <ClipboardPaste size={16} /> PEGAR LETRA COMPLETA
+                </button>
+              ) : (
+                <div style={{ marginBottom: '16px', background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '12px', padding: '14px' }}>
+                  <p style={{ fontSize: '0.72rem', opacity: 0.6, margin: '0 0 8px' }}>
+                    Pega la letra entera y deja una línea en blanco (Enter dos veces) entre cada diapositiva. Cada bloque separado se vuelve una diapositiva.
+                  </p>
+                  <textarea
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                    placeholder={'Verso 1 línea 1\nVerso 1 línea 2\n\nCoro línea 1\nCoro línea 2'}
+                    rows={8}
+                    autoFocus
+                    style={{
+                      width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px', padding: '10px', color: 'white', fontSize: '0.9rem',
+                      resize: 'vertical', outline: 'none', fontFamily: 'inherit', marginBottom: '10px'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={handleGenerateFromPaste}
+                      style={{ flex: 1, padding: '10px', background: '#a855f7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '0.78rem', cursor: 'pointer' }}
+                    >
+                      GENERAR DIAPOSITIVAS
+                    </button>
+                    <button
+                      onClick={() => { setShowPasteMode(false); setPasteText(''); }}
+                      style={{ padding: '10px 16px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {slides.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.4, fontSize: '0.85rem' }}>

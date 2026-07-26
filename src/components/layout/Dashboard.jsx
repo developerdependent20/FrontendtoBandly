@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download, Radio } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, LogOut, Plus, Music, Layout, Crown, ShieldCheck, Home, Upload, Cloud, UserCircle, Building2, AlertTriangle, ArrowRight, UserPlus, Headphones, Bell, Download, Radio, BarChart3 } from 'lucide-react';
 import { isTauri } from '../../utils/tauri';
 import { isSuperAdmin } from '../../utils/permissions';
 import { alertDialog } from '../../utils/dialogService';
@@ -110,12 +110,20 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           </div>
         )}
 
-        <div 
-          className={`nav-item ${activeTab === 'team' ? 'active' : ''}`} 
+        <div
+          className={`nav-item ${activeTab === 'team' ? 'active' : ''}`}
           onClick={() => setActiveTab('team')}
           title="Gestión de Equipo"
         >
           <Users size={22} />
+        </div>
+
+        <div
+          className={`nav-item ${activeTab === 'polls' ? 'active' : ''}`}
+          onClick={() => setActiveTab('polls')}
+          title="Encuestas"
+        >
+          <BarChart3 size={22} />
         </div>
 
         {userIsSuperAdmin && (

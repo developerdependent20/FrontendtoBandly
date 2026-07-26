@@ -10,6 +10,7 @@ import MusicianTools from '../MusicianTools';
 import ProfileSettings from '../ProfileSettings';
 import DownloadsPage from '../DownloadsPage';
 import LiveRemote from '../LiveRemote';
+import Polls from '../Polls';
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 import { alertDialog } from '../../utils/dialogService';
@@ -277,6 +278,11 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
           <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
         </div>
       )}
+      {activeTab === 'polls' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <Polls profile={profile} orgId={profile.org_id} members={members} />
+        </div>
+      )}
       {activeTab === 'play' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <MusicianTools />
@@ -330,6 +336,11 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       {activeTab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
+        </div>
+      )}
+      {activeTab === 'polls' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <Polls profile={profile} orgId={profile.org_id} members={members} />
         </div>
       )}
       {activeTab === 'play' && (

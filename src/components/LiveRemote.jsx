@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Radio, Play, CheckCircle2, Loader2, Pause, WifiOff } from 'lucide-react';
+import { Radio, Play, CheckCircle2, Loader2, Pause, Square, WifiOff } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 // "Modo En Vivo": control remoto desde el celular (o cualquier navegador)
@@ -43,12 +43,25 @@ export default function LiveRemote({ orgId, events }) {
     };
   }, [orgId]);
 
-  const handlePlay = async (songId) => {
+  const sendCommand = async (event, songId) => {
     if (!channelRef.current) return;
     setSendingId(songId);
-    await channelRef.current.send({ type: 'broadcast', event: 'play_song', payload: { songId } });
+    await channelRef.current.send({ type: 'broadcast', event, payload: { songId } });
     setTimeout(() => setSendingId(prev => (prev === songId ? null : prev)), 2000);
   };
+
+  // "play_song" carga la canción de cero en el motor (para cuando todavía no
+  // está en memoria). "resume_song" solo retoma donde quedó — la canción ya
+  // está cargada, así que evitamos recargarla desde cero al reanudar.
+  const handlePlay = (songId) => sendCommand('play_song', songId);
+  const handleResume = (songId) => sendCommand('resume_song', songId);
+  const handlePause = (songId) => sendCommand('pause_song', songId);
+  const handleStop = (songId) => sendCommand('stop_song', songId);
+
+  const circleBtn = (bg, enabled) => ({
+    width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0, background: bg, border: 'none', cursor: enabled ? 'pointer' : 'not-allowed'
+  });
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', width: '100%', padding: '1rem' }}>
@@ -106,13 +119,10 @@ export default function LiveRemote({ orgId, events }) {
             const isPlayingOnDaw = isLoadedOnDaw && daw?.isPlaying;
 
             return (
-              <button
+              <div
                 key={es.id || i}
-                onClick={() => handlePlay(es.song_id)}
-                disabled={!daw}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '14px', padding: '1rem 1.2rem', borderRadius: '14px',
-                  textAlign: 'left', cursor: daw ? 'pointer' : 'not-allowed', width: '100%',
                   background: isPlayingOnDaw ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isPlayingOnDaw ? '#10b981' : 'rgba(255,255,255,0.08)'}`,
                   opacity: daw ? 1 : 0.5, transition: 'all 0.2s'
@@ -135,13 +145,39 @@ export default function LiveRemote({ orgId, events }) {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Tono: {es.selected_key}</div>
                   ) : null}
                 </div>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  background: isPlayingOnDaw ? '#10b981' : 'var(--primary)'
-                }}>
-                  {isSending ? <Loader2 size={18} color="white" className="animate-spin" /> : <Play size={18} color="white" fill="white" />}
+
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  {isLoadedOnDaw ? (
+                    <>
+                      <button
+                        onClick={() => (isPlayingOnDaw ? handlePause(es.song_id) : handleResume(es.song_id))}
+                        disabled={!daw}
+                        title={isPlayingOnDaw ? 'Pausar' : 'Reanudar'}
+                        style={circleBtn(isPlayingOnDaw ? '#f59e0b' : 'var(--primary)', !!daw)}
+                      >
+                        {isSending ? <Loader2 size={16} color="white" className="animate-spin" /> : isPlayingOnDaw ? <Pause size={16} color="white" fill="white" /> : <Play size={16} color="white" fill="white" />}
+                      </button>
+                      <button
+                        onClick={() => handleStop(es.song_id)}
+                        disabled={!daw}
+                        title="Detener"
+                        style={circleBtn('#ef4444', !!daw)}
+                      >
+                        <Square size={14} color="white" fill="white" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handlePlay(es.song_id)}
+                      disabled={!daw}
+                      title="Reproducir"
+                      style={circleBtn('var(--primary)', !!daw)}
+                    >
+                      {isSending ? <Loader2 size={16} color="white" className="animate-spin" /> : <Play size={16} color="white" fill="white" />}
+                    </button>
+                  )}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

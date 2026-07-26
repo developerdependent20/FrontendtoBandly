@@ -1,18 +1,24 @@
 import React from 'react';
-import { Download, MonitorPlay, Sliders, Lock, Monitor, Apple } from 'lucide-react';
+import { MonitorPlay, Sliders, Lock, Monitor, Apple } from 'lucide-react';
 import { alertDialog } from '../utils/dialogService';
 
 export default function DownloadsPage({ profile }) {
   const plan = (profile?.organizations?.plan || 'free').toLowerCase();
-  
-  // Disponible solo para Pro y Elite
-  const hasAccess = plan === 'pro' || plan === 'elite';
+
+  // Free: ninguno. Starter: solo DAW. Pro/Elite: los dos.
+  const canAccessDaw = ['starter', 'pro', 'elite'].includes(plan);
+  const canAccessPresenter = ['pro', 'elite'].includes(plan);
+  const hasAnyAccess = canAccessDaw || canAccessPresenter;
 
   const handleDownload = (appName, os) => {
     alertDialog(`El instalador de ${appName} para ${os} estará disponible muy pronto. ¡Estamos afinando los últimos detalles!`);
   };
 
-  if (!hasAccess) {
+  const handleUpgradePrompt = () => {
+    alertDialog('Abre tu perfil o el panel de facturación para realizar el Upgrade.');
+  };
+
+  if (!hasAnyAccess) {
     return (
       <div className="view-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center' }}>
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '24px', borderRadius: '50%', marginBottom: '24px' }}>
@@ -20,16 +26,14 @@ export default function DownloadsPage({ profile }) {
         </div>
         <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '1rem' }}>Herramientas Profesionales</h2>
         <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', maxWidth: '600px', marginBottom: '32px', lineHeight: 1.6 }}>
-          Bandly DAW y Bandly Presenter son aplicaciones de escritorio nativas de alto rendimiento, exclusivas para los planes <strong>Pro</strong> y <strong>Elite</strong>.
+          Bandly DAW y Bandly Presenter son aplicaciones de escritorio nativas de alto rendimiento, disponibles desde el plan <strong>Starter</strong>.
         </p>
-        <button 
-          className="btn-primary" 
-          onClick={() => {
-            alertDialog('Abre tu perfil o el panel de facturación para realizar el Upgrade.');
-          }}
+        <button
+          className="btn-primary"
+          onClick={handleUpgradePrompt}
           style={{ padding: '16px 32px', fontSize: '1.1rem', background: 'linear-gradient(135deg, #a855f7, #6366f1)', border: 'none' }}
         >
-          Hacer Upgrade a Pro
+          Hacer Upgrade
         </button>
       </div>
     );
@@ -47,12 +51,12 @@ export default function DownloadsPage({ profile }) {
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-        
+
         {/* Bandly DAW Card */}
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.03)', 
-          border: '1px solid rgba(255, 255, 255, 0.05)', 
-          borderRadius: '24px', 
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '24px',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column'
@@ -65,30 +69,40 @@ export default function DownloadsPage({ profile }) {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', flex: 1 }}>
               La estación de trabajo de audio digital definitiva para tus directos. Reproduce multitracks con latencia cero, controla los volúmenes independientemente y sincroniza a todo tu equipo.
             </p>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => handleDownload('Bandly DAW', 'Windows')}
-                className="btn-secondary hover-scale" 
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
+            {canAccessDaw ? (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => handleDownload('Bandly DAW', 'Windows')}
+                  className="btn-secondary hover-scale"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
+                >
+                  <Monitor size={18} /> Windows (.exe)
+                </button>
+                <button
+                  onClick={() => handleDownload('Bandly DAW', 'macOS')}
+                  className="btn-secondary hover-scale"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
+                >
+                  <Apple size={18} /> macOS (.dmg)
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleUpgradePrompt}
+                className="btn-secondary hover-scale"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }}
               >
-                <Monitor size={18} /> Windows (.exe)
+                <Lock size={16} /> Disponible desde el plan Starter
               </button>
-              <button 
-                onClick={() => handleDownload('Bandly DAW', 'macOS')}
-                className="btn-secondary hover-scale" 
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
-              >
-                <Apple size={18} /> macOS (.dmg)
-              </button>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Bandly Presenter Card */}
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.03)', 
-          border: '1px solid rgba(255, 255, 255, 0.05)', 
-          borderRadius: '24px', 
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '24px',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column'
@@ -101,22 +115,32 @@ export default function DownloadsPage({ profile }) {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', flex: 1 }}>
               Toma el control visual de tus eventos. Proyecta letras, imágenes y videos en pantallas externas de forma instantánea y sincronizada desde el panel de control.
             </p>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => handleDownload('Bandly Presenter', 'Windows')}
-                className="btn-secondary hover-scale" 
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
+            {canAccessPresenter ? (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => handleDownload('Bandly Presenter', 'Windows')}
+                  className="btn-secondary hover-scale"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
+                >
+                  <Monitor size={18} /> Windows (.exe)
+                </button>
+                <button
+                  onClick={() => handleDownload('Bandly Presenter', 'macOS')}
+                  className="btn-secondary hover-scale"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
+                >
+                  <Apple size={18} /> macOS (.dmg)
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleUpgradePrompt}
+                className="btn-secondary hover-scale"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }}
               >
-                <Monitor size={18} /> Windows (.exe)
+                <Lock size={16} /> Disponible desde el plan Pro
               </button>
-              <button 
-                onClick={() => handleDownload('Bandly Presenter', 'macOS')}
-                className="btn-secondary hover-scale" 
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: 'rgba(255,255,255,0.05)' }}
-              >
-                <Apple size={18} /> macOS (.dmg)
-              </button>
-            </div>
+            )}
           </div>
         </div>
 
