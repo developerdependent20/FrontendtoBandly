@@ -618,6 +618,10 @@ export default function ProMixer({ session, orgId }) {
   const [prerollBars, setPrerollBars] = useState(0);
 
   const lastActionTime = useRef(0);
+  // Evita que el poll de 100ms pise un seek recién hecho (a stop/restart) con
+  // un reporte del motor que todavía refleja la posición de ANTES del seek —
+  // ese race hacía que el playhead "rebotara" a la posición vieja tras un stop.
+  const pinnedPlaybackSample = useRef(null); // { value, until }
 
   // RADAR DE RESILIENCIA (Detección de Hardware Live)
   useEffect(() => {
@@ -782,7 +786,12 @@ export default function ProMixer({ session, orgId }) {
       const report = await safeInvoke('get_engine_report');
       if (!report) return;
 
-      setPlaybackSample(report.sample_pos);
+      if (pinnedPlaybackSample.current && Date.now() < pinnedPlaybackSample.current.until) {
+        setPlaybackSample(pinnedPlaybackSample.current.value);
+      } else {
+        pinnedPlaybackSample.current = null;
+        setPlaybackSample(report.sample_pos);
+      }
       setPlaybackSR(report.sample_rate);
       setEngineReady(report.is_ready);
       // Sincronización Real: La UI se ajusta exactamente a lo que el hardware reporta
@@ -831,6 +840,7 @@ export default function ProMixer({ session, orgId }) {
       await safeInvoke('toggle_playback', { playing: false });
       await safeInvoke('seek_to_sample', { sample: 0 });
     }
+    pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
     setPlaybackSample(0);
   }, []);
 
@@ -839,6 +849,7 @@ export default function ProMixer({ session, orgId }) {
     if (isTauri()) {
       await safeInvoke('seek_to_sample', { sample: 0 });
     }
+    pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
     setPlaybackSample(0);
   }, []);
 

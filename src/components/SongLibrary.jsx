@@ -241,7 +241,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
 
       <section className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio Grupal</h3>
+          <h3 className="section-title" style={{ margin: 0 }}><Music size={20} color="var(--primary)" /> Repertorio Grupal ({songs?.length || 0})</h3>
         {canEditSongs && !readOnly && (
           <button onClick={() => { setEditingSongId(null); setShowModal(true); }} className="btn-primary" style={{ padding: '0.4rem 1rem', width: 'auto', fontSize: '0.85rem' }}>
             <Plus size={16} /> Añadir Canción

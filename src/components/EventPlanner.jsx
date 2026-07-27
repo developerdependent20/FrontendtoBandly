@@ -13,7 +13,7 @@ import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import { DEFAULT_DEPARTMENTS, DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
 import EventDayStatus from './EventDayStatus';
-import { alertDialog, confirmDialog } from '../utils/dialogService';
+import { alertDialog, confirmDialog, promptDialog } from '../utils/dialogService';
 import FirstUseTip from './FirstUseTip';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -264,6 +264,110 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
                 >
                   + Mostrar resto del equipo
                 </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// Selector de canción con buscador — antes era un <select> plano, incómodo
+// en organizaciones con muchas canciones en el repertorio.
+const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const selectedSong = (songs || []).find(s => String(s.id) === String(value));
+
+  const handleSelect = (id) => {
+    onChange(id);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  const filtered = (songs || []).filter(s => s.title?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  return (
+    <div style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="input-field"
+        style={{
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'rgba(255,255,255,0.03)',
+          padding: '0.6rem 0.8rem',
+          minHeight: '45px',
+          border: isOpen ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.05)',
+          borderRadius: '12px',
+          transition: 'all 0.2s ease',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}
+      >
+        <span style={{
+          color: selectedSong ? 'white' : 'rgba(255,255,255,0.4)',
+          fontSize: '0.85rem', fontWeight: '600', whiteSpace: 'nowrap',
+          overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0
+        }}>
+          {selectedSong ? selectedSong.title : (placeholder || 'Seleccionar Canción')}
+        </span>
+        <ChevronDown size={14} style={{ opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', flexShrink: 0, marginLeft: '8px' }} />
+      </div>
+
+      {isOpen && (
+        <>
+          <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} />
+          <div style={{
+            position: 'absolute', top: '115%', left: 0, minWidth: '260px',
+            background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px',
+            zIndex: 101, maxHeight: '320px', display: 'flex', flexDirection: 'column',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.8)', padding: '8px', animation: 'dropdownFadeIn 0.2s ease-out'
+          }}>
+            <div style={{ paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px' }}>
+              <input
+                autoFocus
+                placeholder="Buscar canción..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem', outline: 'none' }}
+                onClick={e => e.stopPropagation()}
+              />
+            </div>
+
+            <div style={{ overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
+              {value && (
+                <div
+                  onClick={() => handleSelect('')}
+                  className="dropdown-item-custom"
+                  style={{ padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: '700', border: '1px dashed rgba(255,255,255,0.15)' }}
+                >
+                  <X size={14} /> Quitar canción
+                </div>
+              )}
+
+              {filtered.map(s => {
+                const lp = getLastPlayed ? getLastPlayed(s.id) : null;
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => handleSelect(s.id)}
+                    className="dropdown-item-custom"
+                    style={{ padding: '10px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '4px', background: String(value) === String(s.id) ? 'rgba(59,130,246,0.2)' : 'transparent' }}
+                  >
+                    <span style={{ fontSize: '0.9rem', fontWeight: '600', color: String(value) === String(s.id) ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {s.title}
+                    </span>
+                    {lp && <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{lp}</span>}
+                  </div>
+                );
+              })}
+
+              {filtered.length === 0 && (
+                <div style={{ padding: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>No se encontraron canciones</div>
               )}
             </div>
           </div>
@@ -935,17 +1039,44 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     }
   };
 
-  const handleRemoveFromRoster = async (rosterId) => {
+  const handleRemoveFromRoster = async (rosterEntry, event) => {
     if (!(await confirmDialog({ message: '¿Seguro que quieres eliminar a este usuario del evento?', danger: true }))) return;
+
+    // Elección explícita en vez de forzar siempre un prompt de razón: a veces
+    // es un ajuste sin drama (typo, duplicado) y notificar solo genera ruido.
+    const shouldNotify = await confirmDialog({
+      title: 'Notificar a la persona',
+      message: '¿Quieres avisarle que fue eliminada del evento?',
+      confirmText: 'Sí, notificar',
+      cancelText: 'No, solo eliminar'
+    });
+
+    let reason = '';
+    if (shouldNotify) {
+      reason = (await promptDialog('¿Por qué la estás eliminando? (opcional)', '')) || '';
+    }
+
     try {
-      await supabase.from('event_roster').delete().eq('id', rosterId);
+      await supabase.from('event_roster').delete().eq('id', rosterEntry.id);
       if (refreshData) refreshData();
+
+      if (shouldNotify && rosterEntry.profile_id) {
+        const trimmedReason = reason.trim();
+        await sendNotification({
+          orgId,
+          targetProfileIds: [rosterEntry.profile_id],
+          actorId: currentUserId,
+          eventId: event?.id,
+          type: 'removed',
+          message: `Fuiste eliminado del rol de ${getBilingualName(rosterEntry.instrument)} en ${event?.name || 'un evento'}.${trimmedReason ? ` Razón: ${trimmedReason}` : ''}`
+        });
+      }
     } catch { alertDialog("Error al eliminar."); }
   };
 
   const handleAssignReplacement = async (newProfileId) => {
     if (!replacementPicker) return;
-    const { event, rosterEntry } = replacementPicker;
+    const { event, rosterEntry, reason } = replacementPicker;
     try {
       const { error } = await supabase.from('event_roster')
         .update({ profile_id: newProfileId, status: 'pending' })
@@ -961,6 +1092,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           id: rosterEntry.id, profile_id: newProfileId, email: newMember.email,
           name: newMember.full_name, instrument: rosterEntry.instrument
         }], 'delta', { eventName: event.name, eventDate: event.date, description: event.description });
+      }
+
+      // Avisar a quien se reemplazó — antes se quedaba enterándose solo si
+      // revisaba el evento manualmente.
+      if (rosterEntry.profile_id) {
+        const trimmedReason = (reason || '').trim();
+        await sendNotification({
+          orgId,
+          targetProfileIds: [rosterEntry.profile_id],
+          actorId: currentUserId,
+          eventId: event.id,
+          type: 'replaced',
+          message: `Fuiste reemplazado como ${getBilingualName(rosterEntry.instrument)} en ${event.name}.${trimmedReason ? ` Razón: ${trimmedReason}` : ''}`
+        });
       }
     } catch {
       alertDialog('Error al asignar el reemplazo.');
@@ -1205,7 +1350,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             return (
                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: isDeclined ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isDeclined ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.07)'}`, borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
-                                  <button onClick={() => handleRemoveFromRoster(s.id)}
+                                  <button onClick={() => handleRemoveFromRoster(s, ev)}
                                     style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', borderRadius: '50%', background: 'rgba(239,68,68,0.8)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <X size={8} />
                                   </button>
@@ -1948,19 +2093,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         <ChevronDown size={12} />
                       </button>
                     </div>
-                    <select
-                      className="input-field" 
-                      value={item.song_id} 
-                      onChange={e => { const n = [...setlist]; n[idx].song_id = e.target.value; setSetlist(n); }} 
-                      style={{ flex: 2, background: 'none' }}
-                    >
-                      <option value="">Seleccionar Canción</option>
-                      {songs.map(s => {
-                        const lp = getLastPlayed(s.id);
-                        const label = lp ? `${s.title} (${lp})` : s.title;
-                                                return <option key={s.id} value={s.id}>{label}</option>;
-                      })}
-                    </select>
+                    <div style={{ flex: 2, minWidth: 0 }}>
+                      <SongSelector
+                        value={item.song_id}
+                        onChange={v => { const n = [...setlist]; n[idx].song_id = v; setSetlist(n); }}
+                        songs={songs}
+                        getLastPlayed={getLastPlayed}
+                      />
+                    </div>
 
                     {/* NUEVO: Selector de Tono (Tonality) */}
                     <div style={{ flex: 1 }}>
@@ -2145,6 +2285,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               eventDate={replacementPicker.event.date ? replacementPicker.event.date.split('T')[0] : ''}
               allRoles={allRoles}
               placeholder="Elegir reemplazo"
+            />
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', margin: '1rem 0 0.4rem' }}>Razón del reemplazo (opcional — se le avisa a la persona reemplazada)</label>
+            <textarea
+              value={replacementPicker.reason || ''}
+              onChange={(e) => setReplacementPicker({ ...replacementPicker, reason: e.target.value })}
+              placeholder="Ej: Se le complicó el horario, cambio de última hora..."
+              rows={2}
+              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '0.6rem', fontSize: '0.85rem', resize: 'vertical', fontFamily: 'inherit' }}
             />
             <button onClick={() => setReplacementPicker(null)} className="btn-secondary" style={{ width: '100%', padding: '0.9rem', marginTop: '1.5rem' }}>
               Cancelar
