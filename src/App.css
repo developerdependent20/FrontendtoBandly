@@ -1558,6 +1558,20 @@ input[type="datetime-local"] {
   }
 }
 
+/* Fila del setlist (armar evento): en escritorio son 3 selectores + flechas +
+   papelera todo en una sola fila horizontal, y en celular/iPad no cabían —
+   quedaban aplastados y el desplegable de buscar canción se salía de la
+   tarjeta. Cada selector pasa a ocupar su propia línea completa. */
+@media (max-width: 768px) {
+  .setlist-row {
+    flex-wrap: wrap !important;
+  }
+  .setlist-row .setlist-selector {
+    flex: 1 1 100% !important;
+    min-width: 100% !important;
+  }
+}
+
 @media (max-width: 640px) {
   .modal-content {
     width: 100% !important;

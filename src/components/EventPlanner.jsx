@@ -322,7 +322,7 @@ const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) =>
         <>
           <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} />
           <div style={{
-            position: 'absolute', top: '115%', left: 0, minWidth: '260px',
+            position: 'absolute', top: '115%', left: 0, minWidth: '260px', maxWidth: 'calc(100vw - 40px)',
             background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px',
             zIndex: 101, maxHeight: '320px', display: 'flex', flexDirection: 'column',
             boxShadow: '0 20px 60px rgba(0,0,0,0.8)', padding: '8px', animation: 'dropdownFadeIn 0.2s ease-out'
@@ -2072,6 +2072,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       setDraggedSongIdx(null);
                     }}
                     onDragEnd={() => setDraggedSongIdx(null)}
+                    className="setlist-row"
                     style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, opacity: draggedSongIdx === idx ? 0.4 : 1, cursor: 'grab' }}>
                     <GripVertical size={16} className="hide-mobile" style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
                     {/* Flechas: alternativa táctil al drag-and-drop (iPad/celular no disparan dragstart nativo) */}
@@ -2093,7 +2094,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         <ChevronDown size={12} />
                       </button>
                     </div>
-                    <div style={{ flex: 2, minWidth: 0 }}>
+                    <div className="setlist-selector" style={{ flex: 2, minWidth: 0 }}>
                       <SongSelector
                         value={item.song_id}
                         onChange={v => { const n = [...setlist]; n[idx].song_id = v; setSetlist(n); }}
@@ -2103,7 +2104,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
 
                     {/* NUEVO: Selector de Tono (Tonality) */}
-                    <div style={{ flex: 1 }}>
+                    <div className="setlist-selector" style={{ flex: 1 }}>
                       <select 
                         className="input-field" 
                         value={item.selected_key || ''} 
@@ -2126,7 +2127,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       </select>
                     </div>
 
-                    <div style={{ flex: 1.5, minWidth: 0 }}>
+                    <div className="setlist-selector" style={{ flex: 1.5, minWidth: 0 }}>
                       <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Dirige" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>

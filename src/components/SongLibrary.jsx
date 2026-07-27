@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings, Mic2 } from 'lucide-react';
+import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings, Mic2, Search } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
 import SequenceUploader from './SequenceUploader';
@@ -29,6 +29,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
   const [bpm, setBpm] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [editingSongId, setEditingSongId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getLastPlayedText = (songId) => {
     if (!events || events.length === 0) return 'Nunca';
@@ -209,6 +210,8 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
     }
   };
 
+  const filteredSongs = (songs || []).filter(s => s.title?.toLowerCase().includes(searchQuery.toLowerCase()));
+
   return (
     <section>
       <div className="library-intro" style={{ marginBottom: '3rem', marginTop: '1rem' }}>
@@ -248,9 +251,30 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
           </button>
         )}
       </div>
+
+      <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+        <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <input
+          type="text"
+          placeholder="Filtrar canciones por título..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{ width: '100%', padding: '0.7rem 0.9rem 0.7rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: 'white', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {songs?.length === 0 ? <p style={{color:'var(--text-muted)'}}>No hay canciones en el registro. Donde hay unidad y preparación, allí hay bendición.</p> : 
-          songs?.map(s => (
+        {songs?.length === 0 ? <p style={{color:'var(--text-muted)'}}>No hay canciones en el registro. Donde hay unidad y preparación, allí hay bendición.</p> :
+          filteredSongs.length === 0 ? <p style={{color:'var(--text-muted)'}}>No se encontraron canciones con "{searchQuery}".</p> :
+          filteredSongs.map(s => (
             <div key={s.id} className="list-item song-library-item">
               <div className="song-identity">
                 <div className="song-header">
