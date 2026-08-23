@@ -326,7 +326,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 )}
               </div>
 
-              <div className="song-actions-grid" style={{ display: 'grid', gridTemplateColumns: (canEditSongs && !readOnly) ? '1fr 1fr 1.1fr 36px' : '1fr 1fr 1.1fr', gap: '8px', alignItems: 'center', minWidth: (canEditSongs && !readOnly) ? '340px' : '296px', justifyContent: 'flex-end' }}>
+              <div className="song-actions-grid" style={{ display: 'grid', gridTemplateColumns: (canEditSongs && !readOnly) ? '1fr 1fr 1.1fr 36px' : '1fr 1fr 1.1fr', gap: '8px', alignItems: 'center', minWidth: (canEditSongs && !readOnly) ? 'min(340px, 100%)' : 'min(296px, 100%)', justifyContent: 'flex-end' }}>
                 <button onClick={() => setChartSong(s)} className="song-action-btn chart-btn" style={{ width: '100%', whiteSpace: 'nowrap', padding: '10px', height: '38px' }}>
                   <FileText size={14} /> {s.chart_data ? 'Cifrado' : '+ Chart'}
                 </button>
@@ -351,9 +351,9 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 
                 {canEditSongs && !readOnly && (
                   (s.sequences?.length > 0 || (s.stems && s.stems.length > 0)) ? (
-                    <button 
-                      onClick={() => handleDeleteSequence(s.id)} 
-                      className="song-action-btn sequence-btn hover-scale"
+                    <button
+                      onClick={() => handleDeleteSequence(s.id)}
+                      className="song-action-btn song-action-btn-icon hover-scale"
                       style={{ width: '36px', height: '38px', padding: '0', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       title="Eliminar secuencia para subir una nueva"
                     >

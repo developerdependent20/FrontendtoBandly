@@ -582,8 +582,12 @@
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .cs-body { flex-direction: column; }
-  .cs-editor-pane { width: 100%; height: 50%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .cs-preview-pane { height: 50%; }
+  /* La paleta de acordes + el textarea de letra fácilmente pasan de la mitad
+     de la pantalla; con overflow:hidden (heredado de escritorio) ese exceso
+     quedaba invisible o montado sobre el panel de abajo. Ahora hace scroll
+     propio dentro de su mitad en vez de desbordarse. */
+  .cs-editor-pane { width: 100%; height: 50%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .cs-preview-pane { height: 50%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .cs-header { 
     display: flex;
     justify-content: space-between;
@@ -608,11 +612,18 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
-  
+
   .cs-chord-row::-webkit-scrollbar { display: none; }
-  
+
+  /* Sin flex-shrink:0 aquí, el flexbox comprimía este contenedor para que
+     cupiera en la fila, y sus botones (que sí tienen flex-shrink:0) se
+     desbordaban silenciosamente sin poder hacerse scroll — quedaban botones
+     de acordes/secciones inalcanzables, cortados por el overflow-x:hidden
+     global. min-width:max-content fuerza a que reporte su ancho real. */
   .cs-chord-buttons {
     flex-wrap: nowrap;
+    flex-shrink: 0;
+    min-width: max-content;
   }
   
   .cs-row-label { width: 40px; font-size: 0.55rem; }

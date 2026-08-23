@@ -1556,6 +1556,16 @@ input[type="datetime-local"] {
     background: #10b981 !important;
     box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3) !important;
   }
+
+  /* El botón de borrar secuencia (ícono solo) compartía la clase .sequence-btn
+     con el botón grande de "Reprod." — heredaba sin querer el ancho completo
+     y el fondo azul, quedando un botón gigante con un tachito flotando en
+     medio. Ahora tiene su propia clase, chica y fija, sin importar el grid. */
+  .song-action-btn-icon {
+    width: 40px !important;
+    flex: 0 0 40px !important;
+    padding: 0 !important;
+  }
 }
 
 /* Fila del setlist (armar evento): en escritorio son 3 selectores + flechas +
