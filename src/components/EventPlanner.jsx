@@ -1076,8 +1076,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const handleAssignReplacement = async (newProfileId) => {
     if (!replacementPicker) return;
-    const { event, rosterEntry, reason } = replacementPicker;
+    const { event, rosterEntry, reason, notify } = replacementPicker;
     try {
+      const wasPending = rosterEntry.status === 'pending';
       const { error } = await supabase.from('event_roster')
         .update({ profile_id: newProfileId, status: 'pending' })
         .eq('id', rosterEntry.id);
@@ -1094,18 +1095,36 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         }], 'delta', { eventName: event.name, eventDate: event.date, description: event.description });
       }
 
-      // Avisar a quien se reemplazó — antes se quedaba enterándose solo si
-      // revisaba el evento manualmente.
-      if (rosterEntry.profile_id) {
+      // Avisar a quien se reemplazó — opcional, el director decide con el checkbox
+      // del modal. Antes se quedaba enterándose solo si revisaba el evento manualmente.
+      if (notify !== false && rosterEntry.profile_id) {
         const trimmedReason = (reason || '').trim();
+        const message = wasPending
+          ? `No confirmaste tu asistencia a tiempo, por lo cual has sido reemplazado en esta ocasión como ${getBilingualName(rosterEntry.instrument)} en ${event.name}. Recuerda estar pendiente de tu Bandly.${trimmedReason ? ` Razón: ${trimmedReason}` : ''}`
+          : `Fuiste reemplazado como ${getBilingualName(rosterEntry.instrument)} en ${event.name}.${trimmedReason ? ` Razón: ${trimmedReason}` : ''}`;
+
         await sendNotification({
           orgId,
           targetProfileIds: [rosterEntry.profile_id],
           actorId: currentUserId,
           eventId: event.id,
           type: 'replaced',
-          message: `Fuiste reemplazado como ${getBilingualName(rosterEntry.instrument)} en ${event.name}.${trimmedReason ? ` Razón: ${trimmedReason}` : ''}`
+          message
         });
+
+        const replacedMember = (members || []).find(m => String(m.id) === String(rosterEntry.profile_id));
+        fetch(`${API_URL}/api/events/notify-replaced`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({
+            eventName: event.name,
+            eventDate: formatEventDate(event.date),
+            instrument: getBilingualName(rosterEntry.instrument),
+            reason: trimmedReason,
+            wasPending,
+            member: { profile_id: rosterEntry.profile_id, email: replacedMember?.email, name: replacedMember?.full_name }
+          })
+        }).catch(err => console.error('No se pudo enviar el aviso de reemplazo:', err));
       }
     } catch {
       alertDialog('Error al asignar el reemplazo.');
@@ -1347,6 +1366,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || '--';
                             const roleName = getBilingualName(s.instrument);
                             const isDeclined = s.status === 'declined' || s.status === 'rejected';
+                            const isReplaceable = isDeclined || s.status === 'pending';
                             return (
                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: isDeclined ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isDeclined ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.07)'}`, borderRadius: '20px', position: 'relative' }}>
                                 {userRole === 'director' && (
@@ -1363,9 +1383,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                 {/* Member name */}
                                 <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
                                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
-                                {userRole === 'director' && isDeclined && (
+                                {userRole === 'director' && isReplaceable && (
                                   <button onClick={() => setReplacementPicker({ event: ev, rosterEntry: s })}
-                                    title="Buscar reemplazo"
+                                    title={isDeclined ? "Buscar reemplazo" : "No ha confirmado — buscar reemplazo"}
                                     style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '2px 6px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.6rem', fontWeight: '800' }}>
                                     <UserX size={10} /> Reemplazar
                                   </button>
@@ -1613,6 +1633,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || 'Sin Asignar';
                                const roleName = getBilingualName(s.instrument);
                                const isDeclined = s.status === 'declined' || s.status === 'rejected';
+                               const isReplaceable = isDeclined || s.status === 'pending';
                                const dot = s.status === 'confirmed' ? '#10b981' : isDeclined ? '#ef4444' : '#f59e0b';
 
                                return (
@@ -1627,9 +1648,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                       {userRole === 'director' && isDeclined && (
+                                       {userRole === 'director' && isReplaceable && (
                                          <button onClick={() => setReplacementPicker({ event: selectedEventDetails, rosterEntry: s })}
-                                           title="Buscar reemplazo"
+                                           title={isDeclined ? "Buscar reemplazo" : "No ha confirmado — buscar reemplazo"}
                                            style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '3px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', fontWeight: '800' }}>
                                            <UserX size={11} /> Reemplazar
                                          </button>
@@ -2276,7 +2297,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'white', margin: 0 }}>Buscar Reemplazo</h3>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
-              {(members.find(m => String(m.id) === String(replacementPicker.rosterEntry.profile_id))?.full_name?.split(' ')[0]) || 'Este integrante'} declinó su lugar de <strong style={{ color: 'white' }}>{getBilingualName(replacementPicker.rosterEntry.instrument)}</strong> en <strong style={{ color: 'white' }}>{replacementPicker.event.name}</strong>. Los miembros marcados con ✨ son los sugeridos para este rol; los que están "Ocupado" tienen esa fecha bloqueada.
+              {(members.find(m => String(m.id) === String(replacementPicker.rosterEntry.profile_id))?.full_name?.split(' ')[0]) || 'Este integrante'} {replacementPicker.rosterEntry.status === 'pending' ? 'no confirmó su asistencia a tiempo' : 'declinó su lugar'} de <strong style={{ color: 'white' }}>{getBilingualName(replacementPicker.rosterEntry.instrument)}</strong> en <strong style={{ color: 'white' }}>{replacementPicker.event.name}</strong>. Los miembros marcados con ✨ son los sugeridos para este rol; los que están "Ocupado" tienen esa fecha bloqueada.
             </p>
             <MemberSelector
               value={null}
@@ -2287,7 +2308,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               allRoles={allRoles}
               placeholder="Elegir reemplazo"
             />
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', margin: '1rem 0 0.4rem' }}>Razón del reemplazo (opcional — se le avisa a la persona reemplazada)</label>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', margin: '1rem 0 0.4rem' }}>Razón del reemplazo (opcional)</label>
             <textarea
               value={replacementPicker.reason || ''}
               onChange={(e) => setReplacementPicker({ ...replacementPicker, reason: e.target.value })}
@@ -2295,6 +2316,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               rows={2}
               style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '0.6rem', fontSize: '0.85rem', resize: 'vertical', fontFamily: 'inherit' }}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '1rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={replacementPicker.notify !== false}
+                onChange={(e) => setReplacementPicker({ ...replacementPicker, notify: e.target.checked })}
+                style={{ width: '15px', height: '15px', accentColor: '#fbbf24', cursor: 'pointer' }}
+              />
+              Notificar a la persona reemplazada (banner, push y correo)
+            </label>
             <button onClick={() => setReplacementPicker(null)} className="btn-secondary" style={{ width: '100%', padding: '0.9rem', marginTop: '1.5rem' }}>
               Cancelar
             </button>

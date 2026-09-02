@@ -485,8 +485,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                     return (
                       <div key={req.id} style={{ opacity: isUnread ? 1 : 0.6, background: isUnread ? (req.type === 'decline_request' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.05)') : 'rgba(255,255,255,0.02)', border: `1px solid ${isUnread ? (req.type === 'decline_request' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)') : 'rgba(255,255,255,0.05)'}`, padding: '1rem', borderRadius: '12px' }}>
                         <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>
-                          <strong>{memberName}</strong> 
-                          {req.type === 'decline_request' ? ' solicitó declinar:' : req.type === 'confirmation' ? ' confirmó asistencia:' : ' te dejó un mensaje:'}
+                          <strong>{memberName}</strong>
+                          {req.type === 'decline_request' ? ' solicitó declinar:' : req.type === 'confirmation' ? ' confirmó asistencia:' : req.type === 'replaced' ? ' te reemplazó:' : req.type === 'removed' ? ' te eliminó de un evento:' : ' te dejó un mensaje:'}
                         </div>
                         {eventData && <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{eventData.name} ({eventDate})</div>}
                         
@@ -537,6 +537,34 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             </div>
           </div>
         )}
+
+        {(() => {
+          const replacedBanner = notifications.find(n => n.type === 'replaced' && !n.is_read);
+          if (!replacedBanner) return null;
+          const dismissBanner = async () => {
+            await supabase.from('notifications').update({ is_read: true }).eq('id', replacedBanner.id);
+            setNotifications(prev => prev.map(n => n.id === replacedBanner.id ? { ...n, is_read: true } : n));
+          };
+          return (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              background: 'linear-gradient(90deg, rgba(239,68,68,0.15), rgba(251,191,36,0.1))',
+              border: '1px solid rgba(239,68,68,0.3)', borderRadius: '14px',
+              padding: '0.9rem 1.1rem', margin: '1rem 1rem 0'
+            }}>
+              <AlertTriangle size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1, fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.4 }}>
+                {replacedBanner.message}
+              </div>
+              <button
+                onClick={dismissBanner}
+                style={{ flexShrink: 0, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: '0.75rem', fontWeight: '700', padding: '6px 12px', borderRadius: '10px', cursor: 'pointer' }}
+              >
+                Entendido
+              </button>
+            </div>
+          );
+        })()}
 
         {showWelcome && (
           <WelcomeModal
