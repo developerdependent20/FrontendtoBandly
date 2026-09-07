@@ -531,6 +531,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               <li><Crown size={16} color="var(--accent)" /> {t.f_userUl}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_stor100}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_allPro}</li>
+              <li><Crown size={16} color="var(--accent)" /> {t.f_dmx}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_roles}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_support}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_early}</li>

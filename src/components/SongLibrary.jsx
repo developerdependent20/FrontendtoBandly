@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Music, Plus, Trash2, FileText, Headphones, X, Loader2, BookOpen, ShieldCheck, Settings, Mic2, Search } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import ChartStudio from './ChartStudio';
@@ -369,7 +370,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
         }
       </div>
       
-      {showModal && (
+      {showModal && createPortal(
         <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', zIndex: 1000 }}>
           <div className="glass-panel modal-content" style={{ padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15, 23, 42, 0.8)' }}>
             <button onClick={closeOverlay} className="modal-close-btn">
@@ -418,11 +419,12 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
               <button className="btn-primary" onClick={handleSave} style={{ flex: 1.5, padding: '1rem' }}>Guardar Canción</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {chartSong && (
-        <ChartStudio 
+      {chartSong && createPortal(
+        <ChartStudio
           song={chartSong}
           onClose={() => setChartSong(null)}
           onSave={async (chartData) => {
@@ -431,29 +433,33 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
             setChartSong(prev => ({ ...prev, ...chartData }));
             if (refreshData) refreshData();
           }}
-        />
+        />,
+        document.body
       )}
 
-      {lyricsSong && (
-        <LyricsEditor song={lyricsSong} onClose={() => setLyricsSong(null)} />
+      {lyricsSong && createPortal(
+        <LyricsEditor song={lyricsSong} onClose={() => setLyricsSong(null)} />,
+        document.body
       )}
 
-      {seqUploadSong && (
+      {seqUploadSong && createPortal(
         <SequenceUploader
           song={seqUploadSong} orgId={orgId} session={session} apiUrl={API_URL}
           orgStorageUsedMb={profile?.organizations?.storage_used_mb || 0}
           orgStorageLimitMb={profile?.organizations?.storage_limit_mb || null}
           onClose={() => setSeqUploadSong(null)} onComplete={() => { if (refreshData) refreshData(); }}
-        />
+        />,
+        document.body
       )}
 
-      {seqMixerData && (
+      {seqMixerData && createPortal(
         <WebStemPlayer
           song={songs.find(s => s.id === seqMixerData.song_id) || { id: seqMixerData.song_id, title: 'Canción' }}
           preloadedSequence={seqMixerData}
           session={session}
           onClose={() => setSeqMixerData(null)}
-        />
+        />,
+        document.body
       )}
 
       <footer className="identity-footer">

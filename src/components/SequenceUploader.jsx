@@ -71,9 +71,11 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validar tamaño (500MB máximo)
-    if (file.size > 500 * 1024 * 1024) {
-      setError('El archivo ZIP excede el límite de 500MB');
+    // Sanity ceiling puramente técnico (evitar que el navegador se quede sin memoria
+    // al descomprimir el ZIP en el cliente). El límite real de negocio es el espacio
+    // de almacenamiento del plan de la organización, validado en el servidor.
+    if (file.size > 2 * 1024 * 1024 * 1024) {
+      setError('El archivo ZIP excede el límite técnico de 2GB');
       return;
     }
 
@@ -186,6 +188,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
           key: seqKey,
           bpm: seqBpm,
           timeSignature: seqTimeSignature,
+          zipSizeBytes: zipFile.size,
           stems: stems.map(s => ({
             fileName: s.fileName,
             instrumentType: s.instrumentType,
@@ -195,7 +198,10 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
         })
       });
 
-      if (!createResponse.ok) throw new Error('Error al preparar la secuencia en el servidor');
+      if (!createResponse.ok) {
+        const body = await createResponse.json().catch(() => ({}));
+        throw new Error(body.details || body.error || 'Error al preparar la secuencia en el servidor');
+      }
       const { sequenceId, uploadUrl, stems: backendStems } = await createResponse.json();
 
       // 2. Subir el ZIP a R2
@@ -225,7 +231,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ sequenceId, stems: confirmedStems })
+        body: JSON.stringify({ sequenceId, stems: confirmedStems, zipSizeBytes: zipFile.size })
       });
 
       setStep('done');
@@ -310,7 +316,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
                 <>
                   <Upload size={48} />
                   <h3>Selecciona tu archivo ZIP</h3>
-                  <p>Arrastra o haz clic. Máximo 200MB, 24 stems.</p>
+                  <p>Arrastra o haz clic. Hasta 32 stems — el tamaño solo está limitado por el espacio de tu plan.</p>
                   <p className="su-formats">Formatos: .wav .mp3 .aif .ogg .flac</p>
                 </>
               )}
@@ -400,12 +406,12 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '0.8rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '1px' }} />
                   <div style={{ fontSize: '0.8rem', color: '#fca5a5', lineHeight: 1.5 }}>
-                    Este archivo ({(zipFile.size / (1024 * 1024)).toFixed(0)} MB) probablemente supera el almacenamiento disponible de tu organización ({Math.max(0, orgStorageLimitMb - orgStorageUsedMb).toFixed(0)} MB libres de {orgStorageLimitMb} MB). La subida puede fallar a mitad de camino — considera hacer upgrade de plan o liberar espacio antes de subir.
+                    Este archivo ({(zipFile.size / (1024 * 1024)).toFixed(0)} MB) supera el almacenamiento disponible de tu organización ({Math.max(0, orgStorageLimitMb - orgStorageUsedMb).toFixed(0)} MB libres de {orgStorageLimitMb} MB). Libera espacio o haz upgrade de plan para poder subirlo.
                   </div>
                 </div>
               )}
 
-              <button className="su-btn-upload" onClick={handleUpload}>
+              <button className="su-btn-upload" onClick={handleUpload} disabled={wouldExceedStorage} style={wouldExceedStorage ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
                 <Upload size={18} /> Subir Archivo ZIP
               </button>
             </div>
