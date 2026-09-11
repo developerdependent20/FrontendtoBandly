@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { landingDict } from './landingDict';
-import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor, Zap, Tv, Image as ImageIcon } from 'lucide-react';
+import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor, Zap, Tv, Image as ImageIcon, Lightbulb, Disc3 } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = useState('annual');
@@ -159,6 +159,29 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <p className="statement-support">
             {t.premiumSupport1} <span className="serif-accent">{t.premiumSupport2}</span> {t.premiumSupport3}
           </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', marginTop: '3.5rem' }}>
+            {[
+              { icon: <Music size={22} color="var(--primary)" />, title: t.syncBadge1, desc: t.syncBadge1Desc },
+              { icon: <Tv size={22} color="var(--primary)" />, title: t.syncBadge2, desc: t.syncBadge2Desc },
+              { icon: <Lightbulb size={22} color="var(--primary)" />, title: t.syncBadge3, desc: t.syncBadge3Desc },
+            ].map((item, i) => (
+              <React.Fragment key={i}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: 'rgba(37, 99, 235, 0.06)', border: '1px solid rgba(37, 99, 235, 0.2)', borderRadius: '16px', padding: '0.9rem 1.4rem', textAlign: 'left' }}>
+                  <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem' }}>{item.title}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.desc}</div>
+                  </div>
+                </div>
+                {i < 2 && (
+                  <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 900, opacity: 0.6 }}>=</div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -337,6 +360,11 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <h3>{t.feat5Title}</h3>
             <p>{t.feat5Desc}</p>
           </div>
+          <div className="feature-card">
+            <div className="feature-icon"><Disc3 size={32} /></div>
+            <h3>{t.feat6Title}</h3>
+            <p>{t.feat6Desc}</p>
+          </div>
         </div>
       </section>
 
@@ -461,13 +489,19 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {billingPeriod === 'monthly' ? t.starterSubMo : t.starterSubYr}
             </p>
             <ul className="pricing-features">
+              <li style={{ alignItems: 'flex-start', gap: '10px' }}>
+                <Crown size={16} color="var(--primary)" style={{ marginTop: '3px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 800, color: '#fff' }}>{t.f_daw}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_dawDesc}</div>
+                </div>
+              </li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_band3}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_user25}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_stor10}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_pdf}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_mgr}</li>
               <li><Crown size={16} color="var(--primary)" /> {t.f_res}</li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_player}</li>
             </ul>
             <button onClick={() => onGetStarted('signup')} className="btn-primary">{t.chooseStarter}</button>
           </div>
