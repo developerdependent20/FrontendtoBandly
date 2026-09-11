@@ -13,8 +13,9 @@ export default function TermsPage({ onBack }) {
       </nav>
 
       <main className="legal-content">
+        <div className="legal-doc glass-panel">
         <div className="legal-header">
-          <FileText size={48} className="icon" />
+          <div className="icon-badge"><FileText size={32} className="icon" /></div>
           <h1>Términos y Condiciones de Uso</h1>
           <p className="update-date">Última actualización: 13 de julio de 2026</p>
         </div>
@@ -116,53 +117,81 @@ export default function TermsPage({ onBack }) {
           <p>La interpretación y cumplimiento de estos Términos se regirán exclusivamente por las leyes vigentes de la República de Colombia. Cualquier controversia, disputa o reclamación que no pueda resolverse por mediación directa, será sometida a la jurisdicción de los jueces y tribunales ordinarios competentes de la ciudad de Bogotá, Colombia.</p>
         </section>
         
-        <div style={{ height: '100px' }}></div>
+        </div>
+        <div style={{ height: '60px' }}></div>
       </main>
 
       <style>{`
         .legal-page-container {
-          background: #080809;
-          color: #eee;
+          --legal-accent: #3b82f6;
+          background:
+            radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
+            radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.05), transparent 50%),
+            var(--bg-dark, #020617);
+          color: var(--text-main, #f8fafc);
           min-height: 100vh;
-          font-family: 'JetBrains Mono', monospace;
+          font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
         }
         .legal-nav {
           padding: 1rem 2rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: #000;
-          border-bottom: 1px solid #222;
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.08));
           position: sticky;
           top: 0;
           z-index: 10;
         }
+        .legal-nav .brand { font-weight: 700; letter-spacing: 0.3px; font-size: 0.85rem; color: var(--text-muted, #94a3b8); }
         .back-btn {
           background: transparent;
           border: none;
-          color: #888;
+          color: var(--text-muted, #94a3b8);
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           cursor: pointer;
+          font-size: 0.9rem;
+          font-weight: 600;
+          transition: color 0.2s;
         }
         .back-btn:hover { color: #fff; }
         .legal-content {
-          max-width: 800px;
+          max-width: 820px;
           margin: 0 auto;
-          padding: 4rem 2rem;
+          padding: 3rem 1.5rem 5rem;
         }
+        .legal-doc { position: relative; }
         .legal-header {
           text-align: center;
-          margin-bottom: 4rem;
+          margin-bottom: 2.5rem;
+          padding-bottom: 2.5rem;
+          border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.08));
         }
-        .legal-header .icon { color: #3b82f6; margin-bottom: 1.5rem; }
-        .legal-header h1 { font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 0.5rem; }
-        .update-date { color: #555; font-size: 0.8rem; }
-        .legal-section { margin-bottom: 3rem; }
-        .legal-section h2 { font-size: 1.1rem; color: #fff; margin-bottom: 1.2rem; border-left: 3px solid #3b82f6; padding-left: 1rem; }
-        .legal-section p { line-height: 1.6; color: #aaa; margin-bottom: 1rem; font-size: 0.9rem; }
-        .contact-box { background: #111; padding: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #3b82f6; }
+        .legal-header .icon-badge {
+          width: 72px; height: 72px; margin: 0 auto 1.5rem;
+          border-radius: 20px;
+          display: flex; align-items: center; justify-content: center;
+          background: linear-gradient(135deg, color-mix(in srgb, var(--legal-accent) 20%, transparent), color-mix(in srgb, var(--legal-accent) 5%, transparent));
+          border: 1px solid color-mix(in srgb, var(--legal-accent) 30%, transparent);
+        }
+        .legal-header .icon { color: var(--legal-accent); }
+        .legal-header h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 0.6rem; }
+        .update-date { color: var(--text-muted, #94a3b8); font-size: 0.8rem; }
+        .legal-section { padding: 1.75rem 0; border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.06)); }
+        .legal-section:last-of-type { border-bottom: none; padding-bottom: 0; }
+        .legal-section h2 { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 1rem; border-left: 3px solid var(--legal-accent); padding-left: 1rem; }
+        .legal-section p { line-height: 1.7; color: var(--text-muted, #94a3b8); margin-bottom: 1rem; font-size: 0.92rem; }
+        .contact-box {
+          background: color-mix(in srgb, var(--legal-accent) 10%, transparent);
+          border: 1px solid color-mix(in srgb, var(--legal-accent) 25%, transparent);
+          padding: 0.9rem 1.2rem; border-radius: 12px;
+          display: flex; align-items: center; gap: 10px;
+          font-size: 0.85rem; color: var(--legal-accent); font-weight: 600;
+        }
       `}</style>
     </div>
   );
