@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { User, Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut, Bell } from 'lucide-react';
+import { User, Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut, Bell, Mail, Building2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { alertDialog } from '../utils/dialogService';
 
-export default function ProfileSettings({ profile, onLogout }) {
+export default function ProfileSettings({ profile, session, onLogout }) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [blockedDates, setBlockedDates] = useState(profile?.blocked_dates || []);
   const [loading, setLoading] = useState(false);
   const [newDate, setNewDate] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [notifPermission, setNotifPermission] = useState(() => typeof window !== 'undefined' && window.Notification ? Notification.permission : 'default');
+
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState('');
+
+  const userEmail = session?.user?.email || profile?.email || '';
+  const orgName = profile?.organizations?.name || '';
 
   const checkNotifStatus = () => {
     if (typeof window !== 'undefined' && window.Notification) {
@@ -77,6 +86,31 @@ export default function ProfileSettings({ profile, onLogout }) {
     }
   };
 
+  const handleChangePassword = async () => {
+    setPasswordMsg('');
+    if (!newPassword || newPassword.length < 6) {
+      alertDialog('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alertDialog('Las contraseñas no coinciden.');
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setPasswordMsg('Contraseña actualizada correctamente.');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPasswordMsg(''), 3000);
+    } catch (e) {
+      alertDialog('Error al cambiar la contraseña: ' + e.message);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const formatDate = (dateStr) => {
     const d = new Date(dateStr + 'T12:00:00Z');
     return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -103,15 +137,86 @@ export default function ProfileSettings({ profile, onLogout }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', maxWidth: '500px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nombre Completo</label>
-            <input 
-              type="text" 
-              className="input-field" 
+            <input
+              type="text"
+              className="input-field"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Ej: Juan Pérez"
             />
           </div>
 
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+              <Mail size={14} /> Correo Registrado
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              value={userEmail}
+              disabled
+              style={{ opacity: 0.7, cursor: 'not-allowed' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+              <Building2 size={14} /> Organización
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              value={orgName || 'Sin organización'}
+              disabled
+              style={{ opacity: 0.7, cursor: 'not-allowed' }}
+            />
+          </div>
+
+        </div>
+      </div>
+
+      <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
+        <h3 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1' }}>
+          <KeyRound size={20} color="#6366f1" /> Cambiar Contraseña
+        </h3>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', maxWidth: '500px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nueva Contraseña</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                style={{ paddingRight: '2.5rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Confirmar Contraseña</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="input-field"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repite la nueva contraseña"
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {passwordMsg && <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{passwordMsg}</span>}
+            <button onClick={handleChangePassword} className="btn-secondary" disabled={passwordLoading} style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
+              {passwordLoading ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={16} /> Actualizar Contraseña</>}
+            </button>
+          </div>
         </div>
       </div>
 
