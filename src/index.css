@@ -9,23 +9,32 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* Color Palette - Premium Dark Theme with Blue Accents */
-  --bg-color: #0d0d12;
-  --surface-color: #1a1a24;
-  --surface-accent: #232333;
-  --primary-color: #3b82f6;
-  --accent-color: #06b6d4;
+  /* Color Palette — MISMA paleta que App.css (--bg-dark/--primary/etc.), solo
+     con los nombres de variable "v2" para no romper clases que ya las usan
+     (.glass, .nav-item.active, calendar-cell-hover). Antes vivían dos azules
+     distintos (#0d0d12/#3b82f6 aquí vs #020617/#2563eb en App.css) según qué
+     clase tocaras — ahora es un solo sistema. */
+  --bg-color: #020617;
+  --surface-color: rgba(15, 23, 42, 0.6);
+  --surface-accent: #1e293b;
+  --primary-color: #2563eb;
+  --accent-color: #2563eb;
   --primary: var(--primary-color);
   --accent: var(--accent-color);
-  --primary-glow: rgba(59, 130, 246, 0.4);
+  --primary-glow: rgba(37, 99, 235, 0.4);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border-color: rgba(255, 255, 255, 0.1);
-  
+  --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.08);
+
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Accento serif que faltaba (App.css lo referencia en .identity-footer p
+     pero nunca se había definido en ningún lado — caía en el serif por
+     defecto del navegador). Mismo tipo que .serif-accent en la landing. */
+  --font-serif: 'Playfair Display', serif;
 
   color-scheme: dark;
   color: var(--text-primary);

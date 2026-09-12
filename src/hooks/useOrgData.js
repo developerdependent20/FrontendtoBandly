@@ -45,21 +45,35 @@ export function useOrgData(orgId) {
         return;
       }
 
-      const resMem = await supabase.from('profiles').select('*').eq('org_id', orgId);
+      // Los miembros salen de la tabla de membresías, no de profiles.org_id:
+      // ese campo ahora significa "dónde está parado el usuario ahora mismo", y
+      // un músico que toca en dos iglesias desaparecería del roster de una
+      // mientras tuviera la otra abierta. El rol y las funciones también son
+      // por organización (director en la tuya, guitarrista invitado en la otra).
+      const resMem = await supabase
+        .from('org_members')
+        .select('role, functions, profiles(*)')
+        .eq('org_id', orgId);
       const resSongs = await supabase.from('songs').select('*, sequences(id)').eq('org_id', orgId).order('title', { ascending: true });
       const resEv = await supabase.from('events').select('*, event_roster(*), event_songs(*, songs(*, sequences(id)))').eq('org_id', orgId).order('date', { ascending: true });
       const resOrg = await supabase.from('organizations').select('settings').eq('id', orgId).single();
 
       if (resMem.error || resSongs.error || resEv.error) throw new Error("Supabase fetch failed");
 
-      setMembers(resMem.data);
+      // Se aplana a la misma forma que tenía antes (los campos del perfil, con
+      // rol y funciones encima) para que TeamList y el resto no cambien.
+      const members = (resMem.data || [])
+        .filter(m => m.profiles)
+        .map(m => ({ ...m.profiles, role: m.role, functions: m.functions }));
+
+      setMembers(members);
       setSongs(resSongs.data);
       setEvents(resEv.data);
       if (resOrg.data) setOrgSettings(migrateSettings(resOrg.data.settings));
 
       // 2. Guardar en Caché Local para la próxima vez (o para cuando se vaya el internet)
       localStorage.setItem(`bandly_offline_org_${orgId}`, JSON.stringify({
-        members: resMem.data,
+        members,
         songs: resSongs.data,
         events: resEv.data,
         orgSettings: resOrg.data?.settings ? migrateSettings(resOrg.data.settings) : null,

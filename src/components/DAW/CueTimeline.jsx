@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { safeInvoke } from '../../utils/tauri';
 import { Flag, ChevronRight, AlertCircle, Search, Plus, Trash2, Maximize2, Timer, Magnet } from 'lucide-react';
 import WaveformVisualizer from './WaveformVisualizer';
@@ -49,6 +49,13 @@ const CueTimeline = memo(({
   const [showModal, setShowModal] = useState(false);
   const [markerLabel, setMarkerLabel] = useState('');
   const [snapEnabled, setSnapEnabled] = useState(true);
+  // Compás donde va a caer el marker. Es el dato que manda: se precarga con el
+  // compás donde estabas, pero puedes escribirlo a mano y armar toda la canción
+  // desde el chart sin tener que cazar la posición exacta en la forma de onda.
+  const [markerBar, setMarkerBar] = useState('');
+  // Posición congelada al abrir el modal (para canciones sin tempo, donde no
+  // hay compases y el marker va al punto exacto en el que estabas).
+  const [capturedSample, setCapturedSample] = useState(0);
 
   // Cálculos de barras y compás actual — respeta la métrica real (4/4, 3/4, 6/8...)
   const beatsPerBar = beatsPerBarFromSignature(timeSignature);
@@ -87,22 +94,67 @@ const CueTimeline = memo(({
 
   const handleJump = async (marker) => {
     try {
-      await safeInvoke('play_with_preroll', { 
-        targetSample: marker.sample, 
-        bars: 2 
+      await safeInvoke('play_with_preroll', {
+        targetSample: marker.sample,
+        bars: 2
       });
     } catch (e) {
       console.error("[DAW] Error al iniciar pre-roll:", e);
     }
   };
 
-  const confirmMarker = () => {
-    if (markerLabel.trim() && onAddMarker) {
-      onAddMarker(currentBar, markerLabel.trim(), playbackSample);
-      setShowModal(false);
-      setMarkerLabel('');
-    }
+  // ── Marcadores por compás ──────────────────────────────────────────────
+  // Antes el marker caía en el sample crudo donde quedó el cursor: quedaba a
+  // mitad de compás y el número "B33" era solo una etiqueta calculada después.
+  // Ahora el compás es la entrada real y el sample se deriva de él.
+  const barToSample = (bar) => Math.max(0, Math.round((bar - 1) * samplesPerBar));
+  // Mismo criterio que el indicador "COMPÁS" de la barra: el compás en el que
+  // estás parado, no el más cercano — si difirieran, el modal abriría con un
+  // número distinto al que estás viendo en vivo y se sentiría un bug.
+  const sampleToBar = (sample) => Math.max(1, Math.floor(sample / samplesPerBar) + 1);
+
+  // Dónde va a caer el marker según lo que hay ahora en el modal.
+  const parsedBar = parseInt(markerBar, 10);
+  const hasValidBar = gridMode === 'bars' && Number.isFinite(parsedBar) && parsedBar >= 1;
+  const targetSample = hasValidBar ? barToSample(parsedBar) : capturedSample;
+  const targetBar = gridMode === 'bars' ? (hasValidBar ? parsedBar : sampleToBar(capturedSample)) : 0;
+
+  const openMarkerModal = (fromSample) => {
+    const s = fromSample ?? playbackSample;
+    setCapturedSample(s);
+    setMarkerBar(gridMode === 'bars' ? String(sampleToBar(s)) : '');
+    setMarkerLabel('');
+    setShowModal(true);
   };
+
+  const addMarkerAt = (label, color) => {
+    if (!onAddMarker || !label.trim()) return;
+    onAddMarker(targetBar, label.trim(), targetSample, color);
+    setShowModal(false);
+    setMarkerLabel('');
+  };
+
+  const confirmMarker = () => addMarkerAt(markerLabel, undefined);
+
+  // Atajo "M": congela la posición en el instante exacto en que lo presionas,
+  // sin tener que parar la canción ni atinarle al botón — el retraso entre
+  // escuchar el coro y hacer clic era justo lo que descuadraba el marker.
+  const liveRef = useRef({});
+  useEffect(() => {
+    liveRef.current = { playbackSample, showModal, openMarkerModal };
+  });
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.code !== 'KeyM' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)) return;
+      if (liveRef.current.showModal) return;
+      e.preventDefault();
+      liveRef.current.openMarkerModal(liveRef.current.playbackSample);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div style={{ background: 'var(--daw-panel)', borderBottom: '1px solid var(--daw-border)', padding: '6px 0', position: 'relative' }}>
@@ -121,16 +173,44 @@ const CueTimeline = memo(({
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
           }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '0.8rem', fontWeight: '900', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>NUEVO MARCADOR</h3>
+
+            {/* Compás destino: editable. Escribe el número y el marker cae
+                exacto en esa línea de compás, sin cazar la posición a mano. */}
+            {gridMode === 'bars' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>COMPÁS</span>
+                <button
+                  onClick={() => setMarkerBar(String(Math.max(1, (parseInt(markerBar, 10) || 1) - 1)))}
+                  style={{ width: '28px', height: '32px', borderRadius: '6px', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: '900' }}
+                >−</button>
+                <input
+                  type="number"
+                  min="1"
+                  value={markerBar}
+                  onChange={(e) => setMarkerBar(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') confirmMarker(); }}
+                  style={{
+                    width: '80px', textAlign: 'center', background: 'rgba(34,211,238,0.08)',
+                    border: '1px solid rgba(34,211,238,0.4)', padding: '8px', borderRadius: '6px',
+                    color: 'var(--daw-cyan)', fontSize: '1.1rem', fontWeight: '900', outline: 'none'
+                  }}
+                />
+                <button
+                  onClick={() => setMarkerBar(String((parseInt(markerBar, 10) || 0) + 1))}
+                  style={{ width: '28px', height: '32px', borderRadius: '6px', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: '900' }}
+                >+</button>
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', marginLeft: 'auto' }}>
+                  {fmtClock(targetSample / sampleRate)}
+                </span>
+              </div>
+            )}
+
             {/* Presets de sección: un clic agrega y cierra */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
               {SECTION_PRESETS.map(p => (
                 <button
                   key={p.label}
-                  onClick={() => {
-                    if (onAddMarker) onAddMarker(currentBar, p.label, playbackSample, p.color);
-                    setShowModal(false);
-                    setMarkerLabel('');
-                  }}
+                  onClick={() => addMarkerAt(p.label, p.color)}
                   style={{
                     padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
                     background: `${p.color}22`, border: `1px solid ${p.color}66`,
@@ -196,22 +276,36 @@ const CueTimeline = memo(({
       {/* Barra de Herramientas de Timeline */}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px', gap: '10px', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              onClick={() => {
-                setMarkerLabel(`Marker ${markers.length + 1}`);
-                setShowModal(true);
-              }}
+            <button
+              onClick={() => openMarkerModal()}
               className="tech-btn"
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 16px', 
-                background: 'rgba(34, 211, 238, 0.1)', color: 'var(--daw-cyan)', 
+              title="Añadir marcador — atajo: tecla M (captura la posición exacta sin parar la canción)"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 16px',
+                background: 'rgba(34, 211, 238, 0.1)', color: 'var(--daw-cyan)',
                 border: '1px solid rgba(34, 211, 238, 0.3)', borderRadius: '4px'
               }}
             >
               <Plus size={16} />
               <span style={{ fontSize: '0.75rem', fontWeight: '900', letterSpacing: '1px' }}>AÑADIR MARKER</span>
+              <span style={{
+                fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.45)',
+                border: '1px solid rgba(255,255,255,0.2)', borderRadius: '3px',
+                padding: '1px 5px', lineHeight: 1.4
+              }}>M</span>
             </button>
-            <button 
+            {/* Compás actual en vivo: saber dónde vas sin adivinar en la onda */}
+            {gridMode === 'bars' && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '6px', padding: '0 12px',
+                background: 'rgba(255,255,255,0.03)', borderRadius: '4px',
+                border: '1px solid rgba(255,255,255,0.06)'
+              }}>
+                <span style={{ fontSize: '0.55rem', fontWeight: '900', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>COMPÁS</span>
+                <span className="mono-data" style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--daw-cyan)', minWidth: '28px', textAlign: 'right' }}>{currentBar}</span>
+              </div>
+            )}
+            <button
               onClick={() => setSnapEnabled(!snapEnabled)}
               className="tech-btn"
               style={{ 

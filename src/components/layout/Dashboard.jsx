@@ -8,6 +8,7 @@ import { sendNotification } from '../../utils/notifications';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
 import GlobalSearch from './GlobalSearch';
+import OrgSwitcher from './OrgSwitcher';
 import '../DAW/DAW.css';
 
 export default function Dashboard({ profile, children, onLogout, activeTab, setActiveTab, handleJoinTeam, handleCopyLink, songs, events, members }) {
@@ -57,21 +58,27 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           />
         </div>
         
-        <div 
-          className={`nav-item ${activeTab === 'planner' ? 'active' : ''}`} 
+        <div className="hide-mobile" style={{ width: '100%' }}>
+          <OrgSwitcher currentOrgId={profile?.org_id} onCreateNew={handleJoinTeam} />
+        </div>
+
+        <div
+          className={`nav-item ${activeTab === 'planner' ? 'active' : ''}`}
           onClick={() => setActiveTab('planner')}
           title="Calendario & Planeación"
         >
-          <CalendarIcon size={22} />
+          <CalendarIcon size={20} />
+          <span className="nav-label">Calendario</span>
         </div>
 
         {canAccessLibrary && (
-          <div 
-            className={`nav-item ${activeTab === 'library' ? 'active' : ''}`} 
+          <div
+            className={`nav-item ${activeTab === 'library' ? 'active' : ''}`}
             onClick={() => setActiveTab('library')}
             title="Biblioteca de Repertorio"
           >
-            <Music size={22} />
+            <Music size={20} />
+            <span className="nav-label">Repertorio</span>
           </div>
         )}
 
@@ -80,7 +87,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           onClick={() => setActiveTab('live')}
           title="Modo En Vivo (control remoto del DAW)"
         >
-          <Radio size={22} />
+          <Radio size={20} />
+          <span className="nav-label">En Vivo</span>
         </div>
 
         <div
@@ -88,12 +96,13 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           onClick={() => setActiveTab('play')}
           title="Herramientas / Play en Vivo"
         >
-          <Headphones size={22} />
+          <Headphones size={20} />
+          <span className="nav-label">Play</span>
         </div>
 
         {canAccessLibrary && (
-          <div 
-            className={`nav-item ${activeTab === 'daw' ? 'active' : ''}`} 
+          <div
+            className={`nav-item ${activeTab === 'daw' ? 'active' : ''}`}
             onClick={() => {
               if (isTauri()) {
                 const plan = (profile?.organizations?.plan || 'free').toLowerCase();
@@ -106,7 +115,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             }}
             title="DAW / Multitracks"
           >
-            <Cloud size={22} />
+            <Cloud size={20} />
+            <span className="nav-label">DAW</span>
           </div>
         )}
 
@@ -115,7 +125,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           onClick={() => setActiveTab('team')}
           title="Gestión de Equipo"
         >
-          <Users size={22} />
+          <Users size={20} />
+          <span className="nav-label">Equipo</span>
         </div>
 
         <div
@@ -123,37 +134,41 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           onClick={() => setActiveTab('polls')}
           title="Encuestas"
         >
-          <BarChart3 size={22} />
+          <BarChart3 size={20} />
+          <span className="nav-label">Encuestas</span>
         </div>
 
         {userIsSuperAdmin && (
-          <div 
-            className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`} 
+          <div
+            className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`}
             onClick={() => setActiveTab('admin')}
             title="Panel de Superadmin"
             style={{ color: '#ef4444' }}
           >
-            <ShieldCheck size={22} />
+            <ShieldCheck size={20} />
+            <span className="nav-label">Admin</span>
           </div>
         )}
 
         {!isTauri() && (
-          <div 
-            className={`nav-item ${activeTab === 'downloads' ? 'active' : ''}`} 
+          <div
+            className={`nav-item ${activeTab === 'downloads' ? 'active' : ''}`}
             onClick={() => setActiveTab('downloads')}
             title="Descargar Apps"
           >
-            <Download size={22} />
+            <Download size={20} />
+            <span className="nav-label">Descargas</span>
           </div>
         )}
 
-        <div 
-          className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} 
+        <div
+          className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
           title="Mi Perfil / Disponibilidad"
           style={{ marginTop: 'auto', marginBottom: '10px' }}
         >
-          <UserCircle size={22} />
+          <UserCircle size={20} />
+          <span className="nav-label">Perfil</span>
         </div>
 
         <div
@@ -162,7 +177,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           onClick={() => setShowLogoutConfirm(true)}
           title="Cerrar Sesion"
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
+          <span className="nav-label">Salir</span>
         </div>
       </nav>
 

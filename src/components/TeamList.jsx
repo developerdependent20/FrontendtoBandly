@@ -49,15 +49,15 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     if (!confirmed) return;
 
     try {
-      const { error } = await supabase.from('profiles')
-        .update({
-          org_id: null,
-          functions: [],
-          role: 'member'
-        })
-        .eq('id', member.id);
-      
+      // Pasa por el servidor: antes era un UPDATE directo sobre profiles desde
+      // el navegador, así que cualquiera con la consola abierta podía sacar a
+      // quien quisiera, de cualquier organización.
+      const { data: res, error } = await supabase.rpc('remove_member', {
+        p_org_id: orgId,
+        p_profile: member.id,
+      });
       if (error) throw error;
+      if (!res?.ok) throw new Error(res?.error || 'No se pudo eliminar al miembro.');
       if (refreshData) refreshData();
     } catch (e) {
       alertDialog("Error al eliminar miembro: " + e.message);
@@ -73,12 +73,17 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       } else {
         newFunctions.push(functionId);
       }
-      
-      const { error } = await supabase.from('profiles')
-        .update({ functions: newFunctions })
-        .eq('id', userId);
-        
+
+      // Las funciones son por organización: el mismo músico puede ser baterista
+      // en una iglesia y sonidista en otra.
+      const { data: res, error } = await supabase.rpc('set_member_role', {
+        p_org_id: orgId,
+        p_profile: userId,
+        p_role: null,
+        p_functions: newFunctions,
+      });
       if (error) throw error;
+      if (!res?.ok) throw new Error(res?.error || 'No se pudieron actualizar las funciones.');
       if (refreshData) refreshData();
     } catch (e) {
       alertDialog("Error al actualizar funciones: " + e.message);
@@ -89,13 +94,21 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     if (!isDirector) return;
     const newRole = currentRole === 'director' ? 'member' : 'director';
     try {
-      const { error } = await supabase.from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
+      // El servidor verifica que quien llama sea director de ESTA organización
+      // y que no se esté cambiando el rol a sí mismo.
+      const { data: res, error } = await supabase.rpc('set_member_role', {
+        p_org_id: orgId,
+        p_profile: userId,
+        p_role: newRole,
+        p_functions: null,
+      });
       if (error) throw error;
+      if (!res?.ok) throw new Error(res?.error || 'No se pudo actualizar el rol.');
       if (refreshData) refreshData();
-    } catch {
-      alertDialog("Error al actualizar rol de director.");
+    } catch (e) {
+      // Mostrar el motivo real ("No puedes cambiar tu propio rol") en vez de un
+      // error genérico que no le dice nada al director.
+      alertDialog(e.message || "Error al actualizar rol de director.");
     }
   };
 

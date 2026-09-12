@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { landingDict } from './landingDict';
-import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor, Zap, Tv, Image as ImageIcon, Lightbulb, Disc3 } from 'lucide-react';
+import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor, Zap, Tv, Image as ImageIcon, Lightbulb, Disc3, Smartphone } from 'lucide-react';
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = useState('annual');
@@ -200,7 +200,10 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {[
                 { title: t.proFeat1, desc: t.proFeat1Desc },
                 { title: t.proFeat2, desc: t.proFeat2Desc },
-                { title: t.proFeat3, desc: t.proFeat3Desc }
+                { title: t.proFeat3, desc: t.proFeat3Desc },
+                { title: t.proFeat4, desc: t.proFeat4Desc },
+                { title: t.proFeat5, desc: t.proFeat5Desc },
+                { title: t.proFeat6, desc: t.proFeat6Desc }
               ].map((item, i) => (
                 <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</div>
@@ -364,6 +367,11 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <div className="feature-icon"><Disc3 size={32} /></div>
             <h3>{t.feat6Title}</h3>
             <p>{t.feat6Desc}</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon"><Smartphone size={32} /></div>
+            <h3>{t.feat7Title}</h3>
+            <p>{t.feat7Desc}</p>
           </div>
         </div>
       </section>

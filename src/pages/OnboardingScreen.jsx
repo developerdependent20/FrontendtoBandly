@@ -93,31 +93,28 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         onboarding_completed: true
       };
 
-      const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .insert([{ 
-           name: orgName, 
-           invite_code: code,
-           settings: settingsObj
-        }])
-        .select().single();
-      
-      if (orgError) {
-        if (orgError.code === '23505') throw new Error('Ese código de equipo ya está en uso. ¡Elige otro!');
-        throw orgError;
-      }
-
-      const { error: profError } = await supabase.from('profiles').insert([{ 
-        id: session.user.id, 
-        full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0], 
-        email: session.user.email, 
+      // La ficha va primero: crear la organización del lado del servidor ya
+      // registra la membresía, y esa membresía apunta a este perfil.
+      const { error: profError } = await supabase.from('profiles').upsert([{
+        id: session.user.id,
+        full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+        email: session.user.email,
         role: 'director',
         functions: ['director'],
-        org_id: org.id,
         accepted_terms: true
       }]);
       if (profError) throw profError;
-      
+
+      // El servidor valida cuántas organizaciones permite tu plan (1 / 3 / 10 /
+      // ilimitadas) antes de crearla, y te deja adentro como director.
+      const { data: res, error: orgError } = await supabase.rpc('create_organization', {
+        p_name: orgName,
+        p_invite_code: code,
+        p_settings: settingsObj,
+      });
+      if (orgError) throw orgError;
+      if (!res?.ok) throw new Error(res?.error || 'No se pudo crear la organización.');
+
       await fetchProfile(session.user.id);
     } catch (e) {
       alertDialog(e.message);
@@ -132,11 +129,16 @@ export default function OnboardingScreen({ session, fetchProfile }) {
     
     setLoading(true);
     try {
-      const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .select('id').eq('invite_code', inviteCodeInput.toUpperCase()).single();
-      
-      if (orgError || !org) throw new Error('Código de acceso inválido.');
+      // Ya no se consulta la tabla de organizaciones directamente: eso permitía
+      // recorrer los códigos de invitación de todos los equipos. La función del
+      // servidor responde solo por el código exacto, y además valida el cupo
+      // del plan — cosa que esta ruta de registro nunca hacía.
+      const { data: resolved, error: orgError } = await supabase
+        .rpc('resolve_invite_code', { p_code: inviteCodeInput });
+
+      if (orgError) throw new Error(orgError.message);
+      if (!resolved?.ok) throw new Error(resolved?.error || 'Código de acceso inválido.');
+      const org = { id: resolved.org_id };
 
       const { error: profError } = await supabase.from('profiles').insert([{ 
         id: session.user.id, 

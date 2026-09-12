@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { isTauri, safeInvoke, safeListen } from '../../utils/tauri';
 
 
 import HardwarePicker from './HardwarePicker';
 import CueTimeline from './CueTimeline';
+import ArrangementPanel from './ArrangementPanel';
 import ProMixerConsole from './ProMixerConsole';
 import PadBoard from './PadBoard'; 
 import CloudRepertoire from './CloudRepertoire';
@@ -611,6 +612,18 @@ export default function ProMixer({ session, orgId }) {
   
   const [totalSamples, setTotalSamples] = useState(0);
   const [playbackSample, setPlaybackSample] = useState(0);
+  // Picos reales del audio para dibujar la onda. Se piden una sola vez por
+  // canción, cuando el motor terminó de cargar los stems: antes de eso las
+  // pistas están vacías y devolvería una onda plana.
+  const [masterWaveform, setMasterWaveform] = useState([]);
+  const waveformPendingRef = useRef(false);
+  // Largo del audio sin importar el arreglo (mismas unidades que los markers).
+  // `totalSamples` pasa a ser el largo del arreglo cuando hay uno activo.
+  const [songSamples, setSongSamples] = useState(0);
+  // null = canción completa. Array = arreglo personalizado, en unidades pitch-0
+  // igual que los markers; la conversión a unidades de reproducción se hace en
+  // un único punto, al mandárselo al motor.
+  const [arrangementBlocks, setArrangementBlocks] = useState(null);
   const [playbackSR, setPlaybackSR] = useState(44100);
 
   const [engineReady, setEngineReady] = useState(false);
@@ -622,6 +635,10 @@ export default function ProMixer({ session, orgId }) {
   // un reporte del motor que todavía refleja la posición de ANTES del seek —
   // ese race hacía que el playhead "rebotara" a la posición vieja tras un stop.
   const pinnedPlaybackSample = useRef(null); // { value, until }
+  // Último marker que le avisamos a Bandly Presenter/Lights (presenter_state.active_marker).
+  // Se resetea en stop/restart para que un replay desde el inicio vuelva a disparar
+  // el mismo marker en vez de quedarse callado porque "ya lo habíamos mandado".
+  const lastSentMarkerRef = useRef(null);
 
   // RADAR DE RESILIENCIA (Detección de Hardware Live)
   useEffect(() => {
@@ -801,6 +818,16 @@ export default function ProMixer({ session, orgId }) {
       setIsPrerollActive(report.preroll_active);
       setPrerollBars(report.preroll_bars);
       setTotalSamples(report.total_samples);
+      if (typeof report.song_samples === 'number') setSongSamples(report.song_samples);
+
+      // Onda real: en cuanto los stems están dentro del motor, se piden los
+      // picos una vez y quedan cacheados hasta que cambie la canción.
+      if (waveformPendingRef.current && report.tracks_loading === 0 && report.total_samples > 0) {
+        waveformPendingRef.current = false;
+        safeInvoke('get_master_waveform', { buckets: 1200 })
+          .then(peaks => { if (Array.isArray(peaks) && peaks.length) setMasterWaveform(peaks); })
+          .catch(() => {});
+      }
 
       if (Date.now() - lastActionTime.current > 1000) {
         // Lógica de Auto-Avance: Si estaba reproduciendo y se detuvo naturalmente al llegar al final
@@ -842,6 +869,7 @@ export default function ProMixer({ session, orgId }) {
     }
     pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
     setPlaybackSample(0);
+    lastSentMarkerRef.current = null;
   }, []);
 
   const handleRestart = useCallback(async () => {
@@ -849,6 +877,7 @@ export default function ProMixer({ session, orgId }) {
     if (isTauri()) {
       await safeInvoke('seek_to_sample', { sample: 0 });
     }
+    lastSentMarkerRef.current = null;
     pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
     setPlaybackSample(0);
   }, []);
@@ -994,8 +1023,18 @@ export default function ProMixer({ session, orgId }) {
       }
       if (!sequence) {
         setTracks([]); setMarkers([]); setActiveSequenceId(null); setActiveSequenceMeta(null);
+        setMasterWaveform([]); waveformPendingRef.current = false;
+        setArrangementBlocks(null);
+        if (isTauri()) safeInvoke('clear_arrangement').catch(() => {});
         return;
       }
+      // Canción nueva: la onda anterior ya no aplica. Se vuelve a pedir cuando
+      // el motor reporte que terminó de cargar los stems.
+      setMasterWaveform([]);
+      waveformPendingRef.current = true;
+      // El arreglo es por secuencia: si la canción anterior tenía uno, arrastrarlo
+      // haría que esta sonara cortada en puntos que no significan nada.
+      setArrangementBlocks(Array.isArray(sequence.arrangement) && sequence.arrangement.length ? sequence.arrangement : null);
       const stems = sequence.sequence_stems || [];
       setActiveSequenceId(sequence.id);
       const loadedTimeSignature = sequence.time_signature || '4/4';
@@ -1264,6 +1303,103 @@ export default function ProMixer({ session, orgId }) {
     });
   }, [activeSong, isPlaying]);
 
+  // ── Arreglo no destructivo ────────────────────────────────────────────
+  // Las secciones salen de los markers: cada marker abre una sección que
+  // termina donde empieza el siguiente (el último llega hasta el final).
+  const sections = useMemo(() => {
+    if (!markers.length || !songSamples) return [];
+    const list = [];
+    if (markers[0].sample > 1000) {
+      list.push({ uid: 'sec-head', label: 'Inicio', color: '#64748b', start: 0, end: markers[0].sample });
+    }
+    markers.forEach((m, i) => {
+      const end = i + 1 < markers.length ? markers[i + 1].sample : songSamples;
+      if (end > m.sample) {
+        list.push({ uid: m.id || `sec-${i}`, label: m.label, color: m.color || '#38bdf8', start: m.sample, end });
+      }
+    });
+    return list;
+  }, [markers, songSamples]);
+
+  // El motor recibe el arreglo en unidades de reproducción (igual que los
+  // markers que se le pasan a la timeline), así que aquí se divide por el pitch.
+  useEffect(() => {
+    if (!isTauri()) return;
+    if (!arrangementBlocks || arrangementBlocks.length === 0) {
+      safeInvoke('clear_arrangement').catch(() => {});
+      return;
+    }
+    const segments = arrangementBlocks.map(b => [
+      Math.max(0, Math.round(b.start / pitchRatio)),
+      Math.max(0, Math.round(b.end / pitchRatio)),
+    ]);
+    safeInvoke('set_arrangement', { segments }).catch(() => {});
+  }, [arrangementBlocks, pitchRatio]);
+
+  const handleArrangementChange = useCallback(async (next) => {
+    setArrangementBlocks(next);
+    // Reiniciar el recorrido: la línea de tiempo virtual cambió de largo y
+    // seguir en la posición vieja caería en otro punto de la canción.
+    if (isTauri()) {
+      safeInvoke('seek_to_sample', { sample: 0 }).catch(() => {});
+      pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
+      setPlaybackSample(0);
+    }
+    lastSentMarkerRef.current = null;
+    if (activeSequenceId) {
+      await supabase.from('sequences').update({ arrangement: next }).eq('id', activeSequenceId);
+    }
+  }, [activeSequenceId]);
+
+  // La onda también sigue al arreglo: se recortan los picos de cada bloque y se
+  // pegan en orden. Así un coro repetido se ve dos veces y un verso saltado
+  // desaparece — lo que ves es literalmente lo que va a sonar.
+  const timelineWaveform = useMemo(() => {
+    if (!masterWaveform.length || !arrangementBlocks?.length || !songSamples) return masterWaveform;
+    const out = [];
+    for (const b of arrangementBlocks) {
+      const from = Math.max(0, Math.floor((b.start / songSamples) * masterWaveform.length));
+      const to = Math.min(masterWaveform.length, Math.ceil((b.end / songSamples) * masterWaveform.length));
+      for (let i = from; i < to; i++) out.push(masterWaveform[i]);
+    }
+    return out.length ? out : masterWaveform;
+  }, [masterWaveform, arrangementBlocks, songSamples]);
+
+  // La timeline debe mostrar el arreglo tal como va a sonar: cada bloque en su
+  // posición dentro de la línea de tiempo virtual, no donde vive en el archivo.
+  const timelineMarkers = useMemo(() => {
+    const scaled = pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }));
+    if (!arrangementBlocks || arrangementBlocks.length === 0) return scaled;
+    let acc = 0;
+    return arrangementBlocks.map((b, i) => {
+      const sample = acc;
+      acc += (b.end - b.start) / pitchRatio;
+      return { id: `${b.uid}-${i}`, label: b.label, color: b.color, bar: 0, sample };
+    });
+  }, [arrangementBlocks, markers, pitchRatio]);
+
+  // Puente en vivo con Bandly Presenter / Bandly Lights: al cruzar un marker de
+  // sección durante la reproducción, avisamos por la misma tabla que usa Presenter
+  // (presenter_state.active_marker) para que la diapositiva y la escena de luces
+  // cambien solas — sin que el operador tenga que hacer clic en Presenter.
+  useEffect(() => {
+    if (!isPlaying || markers.length === 0) return;
+    const adjustedMarkers = pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }));
+    let current = null;
+    for (const m of adjustedMarkers) {
+      if (m.sample <= playbackSample) current = m;
+      else break;
+    }
+    if (!current || current.label === lastSentMarkerRef.current) return;
+    if (!orgId) return;
+    lastSentMarkerRef.current = current.label;
+    // Una fila por organización: antes esto escribía en una fila global y el
+    // marcador viajaba a los proyectores y luces de todos los clientes.
+    supabase.from('presenter_state')
+      .upsert({ org_id: orgId, active_marker: current.label }, { onConflict: 'org_id' })
+      .then(({ error }) => { if (error) console.error('presenter_state sync error:', error); });
+  }, [playbackSample, isPlaying, markers, pitchRatio, orgId]);
+
   const onRemoveMarker = useCallback(async (index) => {
     if (!activeSequenceId) return;
     const nextMarkers = markers.filter((_, i) => i !== index);
@@ -1392,10 +1528,18 @@ export default function ProMixer({ session, orgId }) {
               playbackSample={playbackSample} bpm={metronome.bpm} sampleRate={playbackSR}
               hasTempo={!!parseFloat(activeSequenceMeta?.bpm ?? activeSong?.bpm)}
               timeSignature={activeSequenceMeta?.timeSignature || '4/4'}
-              markers={pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }))}
+              markers={timelineMarkers}
+              masterWaveform={timelineWaveform}
               onAddMarker={onAddMarker} onRemoveMarker={onRemoveMarker}
               isPrerollActive={isPrerollActive} prerollBars={prerollBars}
-              onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: Math.floor(p * totalSamples) })} 
+              onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: Math.floor(p * totalSamples) })}
+            />
+            <ArrangementPanel
+              sections={sections}
+              blocks={arrangementBlocks}
+              onChange={handleArrangementChange}
+              sampleRate={playbackSR}
+              pitchRatio={pitchRatio}
             />
           </div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

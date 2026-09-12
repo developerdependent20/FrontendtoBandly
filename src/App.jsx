@@ -220,24 +220,15 @@ export default function App() {
     if (!code) return;
     try {
       const cleanCode = code.includes('?join=') ? code.split('?join=')[1] : code;
-      const { data: org, error: orgError } = await supabase.from('organizations').select('id, plan').eq('invite_code', cleanCode.toUpperCase()).single();
-      if (orgError || !org) throw new Error('Código no encontrado. Asegúrate de escribirlo bien.');
-      
-      // Validar Límite de Usuarios según el Plan
-      const { count: memberCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('org_id', org.id);
-      
-      let userLimit = 10; // Gratis
-      if (org.plan === 'starter') userLimit = 25;
-      if (org.plan === 'pro') userLimit = 75;
-      if (org.plan === 'elite') userLimit = 999999; // Ilimitado
 
-      if (memberCount >= userLimit) {
-        throw new Error(`Esta organización ha alcanzado su límite máximo de miembros (${userLimit}). El director debe mejorar el plan para añadir más personas.`);
-      }
-      
-      const { error: updateErr } = await supabase.from('profiles').update({ org_id: org.id }).eq('id', profile.id);
-      if (updateErr) throw updateErr;
-      
+      // Buscar la organización, contar los miembros y escribirse el org_id eran
+      // tres pasos del lado del cliente — los tres falsificables desde la consola
+      // del navegador (cupo incluido). Ahora todo ocurre dentro de la base de
+      // datos, que es el único lugar donde el usuario no puede mentir.
+      const { data: result, error: rpcError } = await supabase.rpc('join_organization', { p_code: cleanCode });
+      if (rpcError) throw new Error(rpcError.message);
+      if (!result?.ok) throw new Error(result?.error || 'No se pudo unir al equipo.');
+
       alertDialog("¡Te has unido al equipo exitosamente!");
       window.location.reload();
     } catch(e) {

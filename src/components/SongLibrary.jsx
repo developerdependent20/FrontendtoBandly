@@ -383,34 +383,34 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div className="input-group">
                 <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Título</label>
-                <input type="text" className="input-field" placeholder="Nombre de la canción *" value={title} onChange={e=>setTitle(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                <input type="text" className="input-field" placeholder="Nombre de la canción *" value={title} onChange={e=>setTitle(e.target.value)} style={{ width: '100%' }} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
                 <div className="input-group">
                   <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Tono Original</label>
-                  <input type="text" className="input-field" placeholder="Ex: A" value={songKey} onChange={e=>setSongKey(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                  <input type="text" className="input-field" placeholder="Ex: A" value={songKey} onChange={e=>setSongKey(e.target.value)} style={{ width: '100%' }} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>BPM</label>
-                  <input type="number" className="input-field" placeholder="Ex: 120" value={bpm} onChange={e=>setBpm(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                  <input type="number" className="input-field" placeholder="Ex: 120" value={bpm} onChange={e=>setBpm(e.target.value)} style={{ width: '100%' }} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
                 <div className="input-group">
                   <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Voz Hombre</label>
-                  <input type="text" className="input-field" placeholder="Ej: G" value={keyMale} onChange={e=>setKeyMale(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                  <input type="text" className="input-field" placeholder="Ej: G" value={keyMale} onChange={e=>setKeyMale(e.target.value)} style={{ width: '100%' }} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Voz Mujer</label>
-                  <input type="text" className="input-field" placeholder="Ej: D" value={keyFemale} onChange={e=>setKeyFemale(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                  <input type="text" className="input-field" placeholder="Ej: D" value={keyFemale} onChange={e=>setKeyFemale(e.target.value)} style={{ width: '100%' }} />
                 </div>
               </div>
 
               <div className="input-group">
                 <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Enlace de YouTube</label>
-                <input type="url" className="input-field" placeholder="https://youtube.com/..." value={youtubeLink} onChange={e=>setYoutubeLink(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                <input type="url" className="input-field" placeholder="https://youtube.com/..." value={youtubeLink} onChange={e=>setYoutubeLink(e.target.value)} style={{ width: '100%' }} />
               </div>
             </div>
             
