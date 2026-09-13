@@ -1,4 +1,5 @@
 import React from 'react';
+import { reportError } from '../utils/errorReporter';
 
 // Red de seguridad para el servicio en vivo: si algo revienta a mitad de un
 // evento, la ventana quedaba en blanco y no había forma de volver sin matar la
@@ -17,6 +18,9 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error('[Bandly] Error no capturado:', error, errorInfo);
     this.setState({ errorInfo });
+    // Queda registrado: antes esto moría en la consola de alguien y nunca nos
+    // enterábamos de que a un equipo se le cayó la app en pleno servicio.
+    reportError(error, { app: 'web', context: 'pantalla caída' });
   }
 
   render() {

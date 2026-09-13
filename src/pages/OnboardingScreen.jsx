@@ -52,6 +52,50 @@ export default function OnboardingScreen({ session, fetchProfile }) {
 
   const [selectedFunctions, setSelectedFunctions] = useState([]);
   const [tourSlide, setTourSlide] = useState(0);
+  const [codeTouched, setCodeTouched] = useState(false);
+  const [checkingCode, setCheckingCode] = useState(false);
+
+  // Sugerir el código a partir del nombre del equipo.
+  // Antes había que inventárselo de la nada, y si ya estaba ocupado te
+  // enterabas DOS MINUTOS después, al terminar el tour. Ahora llega escrito y
+  // se comprueba antes de avanzar.
+  const suggestCode = (name) => {
+    const base = (name || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toUpperCase().replace(/[^A-Z0-9]/g, '')
+      .slice(0, 8);
+    if (!base) return '';
+    return `${base}${new Date().getFullYear().toString().slice(-2)}`;
+  };
+
+  const handleOrgNameChange = (value) => {
+    setOrgName(value);
+    if (!codeTouched) setInviteCodeInput(suggestCode(value));
+  };
+
+  // Comprobar disponibilidad antes de dejar avanzar: fallar aquí cuesta 3
+  // segundos, fallar al final cuesta volver a empezar.
+  const validateStep1 = async () => {
+    if (!orgName.trim()) return alertDialog('Ponle un nombre a tu equipo.');
+    if (!inviteCodeInput.trim()) return alertDialog('Necesitas un código para que tu equipo se una.');
+
+    setCheckingCode(true);
+    try {
+      const { data } = await supabase.rpc('resolve_invite_code', { p_code: inviteCodeInput });
+      // ok:true significa que ese código YA pertenece a otra organización.
+      if (data?.ok) {
+        alertDialog('Ese código ya está en uso por otro equipo. Prueba con otro.');
+        return;
+      }
+      setCurrentStep(2);
+    } catch {
+      // Si la comprobación falla (sin red, por ejemplo) se deja continuar:
+      // el servidor la vuelve a hacer al crear, así que no se pierde nada.
+      setCurrentStep(2);
+    } finally {
+      setCheckingCode(false);
+    }
+  };
 
   const toggleFunction = (id) => {
     setSelectedFunctions(prev => 
@@ -184,21 +228,31 @@ export default function OnboardingScreen({ session, fetchProfile }) {
       
       <div className="input-group">
         <label style={{ textAlign: 'left', fontWeight: 'bold' }}>Nombre del Equipo/Organización</label>
-        <input type="text" placeholder="Ej: The Groove Collective" className="input-field" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-        
-        <label style={{ textAlign: 'left', fontWeight: 'bold', marginTop: '1rem' }}>Código Secreto de Invitación</label>
-        <input type="text" placeholder="Ej: CENTRAL24" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} style={{ textTransform: 'uppercase' }} />
-        
+        <input type="text" placeholder="Ej: The Groove Collective" className="input-field" value={orgName} onChange={(e) => handleOrgNameChange(e.target.value)} />
+
+        <label style={{ textAlign: 'left', fontWeight: 'bold', marginTop: '1rem' }}>Código de Invitación</label>
+        <input
+          type="text"
+          placeholder="Se llena solo con el nombre"
+          className="input-field"
+          value={inviteCodeInput}
+          onChange={(e) => { setCodeTouched(true); setInviteCodeInput(e.target.value.toUpperCase()); }}
+          style={{ textTransform: 'uppercase' }}
+        />
+        <p style={{ textAlign: 'left', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.5 }}>
+          Este es el código que le vas a pasar a tu equipo para que entre. Puedes cambiarlo.
+        </p>
+
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
           <button onClick={() => setCurrentStep(0)} className="btn-secondary-outline" style={{ flex: 1 }}>Volver</button>
-          <button 
-            onClick={() => {
-              if(!orgName || !inviteCodeInput) return alertDialog("Completa ambos campos.");
-              setCurrentStep(2);
-            }} 
-            className="btn-primary" 
+          <button
+            onClick={validateStep1}
+            disabled={checkingCode}
+            className="btn-primary"
             style={{ flex: 2 }}
-          >Siguiente <ChevronRight size={18} /></button>
+          >
+            {checkingCode ? 'Comprobando…' : <>Siguiente <ChevronRight size={18} /></>}
+          </button>
         </div>
       </div>
     </div>
@@ -239,6 +293,20 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         <button onClick={() => setCurrentStep(1)} className="btn-secondary-outline" style={{ flex: 1 }}><ChevronLeft size={18} /> Atrás</button>
         <button onClick={() => setCurrentStep(3)} className="btn-primary" style={{ flex: 2 }}>Continuar <ChevronRight size={18} /></button>
       </div>
+
+      {/* Salida rápida: nadie que acaba de registrarse sabe todavía si necesita
+          "Metales" o "Streaming". Obligarlo a decidirlo antes de ver el producto
+          era la fricción más grande del registro — y estas dos pantallas ya
+          existen dentro de la app, en Equipo → Configurar Departamentos. */}
+      <button
+        onClick={() => setCurrentStep(4)}
+        style={{
+          width: '100%', marginTop: '1rem', background: 'transparent', border: 'none',
+          color: 'var(--text-muted)', fontSize: '0.82rem', cursor: 'pointer', padding: '10px'
+        }}
+      >
+        Usar lo que viene por defecto — lo configuro después
+      </button>
     </div>
   );
 
@@ -276,6 +344,10 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         <button onClick={() => setCurrentStep(2)} className="btn-secondary-outline" style={{ flex: 1 }}><ChevronLeft size={18} /> Atrás</button>
         <button onClick={() => setCurrentStep(4)} className="btn-primary" style={{ flex: 2 }}>Continuar al Tour <ChevronRight size={18} /></button>
       </div>
+
+      <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '1rem', lineHeight: 1.5 }}>
+        Todo esto lo puedes cambiar cuando quieras desde <strong>Equipo → Configurar Departamentos</strong>.
+      </p>
     </div>
   );
 
@@ -398,8 +470,47 @@ export default function OnboardingScreen({ session, fetchProfile }) {
     );
   }
 
+  // Cuántos pasos faltan. Sin esto el registro se sentía sin fondo: no había
+  // forma de saber si quedaba un paso o siete.
+  const renderProgress = () => {
+    if (roleMode !== 'director' || currentStep < 1 || currentStep > 4) return null;
+    const labels = ['Tu equipo', 'Instrumentos', 'Departamentos', 'Listo'];
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.8rem' }}>
+        {labels.map((label, i) => {
+          const n = i + 1;
+          const done = currentStep > n;
+          const active = currentStep === n;
+          return (
+            <React.Fragment key={label}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <div style={{
+                  width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.68rem', fontWeight: 900,
+                  background: done || active ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
+                  color: done || active ? '#fff' : 'rgba(255,255,255,0.4)',
+                }}>
+                  {done ? '✓' : n}
+                </div>
+                <span className="hide-mobile" style={{
+                  fontSize: '0.72rem', fontWeight: 700,
+                  color: active ? '#fff' : 'rgba(255,255,255,0.35)'
+                }}>{label}</span>
+              </div>
+              {n < labels.length && (
+                <div style={{ flex: 1, height: '2px', background: done ? 'var(--primary)' : 'rgba(255,255,255,0.08)', borderRadius: '2px' }} />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="center-layout" style={{ minHeight: '100vh', padding: '4rem 2rem' }}>
+      <div style={{ width: '100%', maxWidth: '700px' }}>{renderProgress()}</div>
       {currentStep === 0 && renderRoleSelection()}
       {roleMode === 'director' && currentStep === 1 && renderDirectorStep1()}
       {roleMode === 'director' && currentStep === 2 && renderDirectorStep2()}

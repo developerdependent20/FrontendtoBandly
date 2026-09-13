@@ -536,13 +536,19 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {billingPeriod === 'monthly' ? t.proSubMo : t.proSubYr}
             </p>
             <ul className="pricing-features">
+              <li style={{ alignItems: 'flex-start', gap: '10px' }}>
+                <Crown size={16} color="var(--accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 800, color: '#fff' }}>{t.f_presenterHead}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_presenterHeadDesc}</div>
+                </div>
+              </li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_band10}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_user75}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_stor45}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_allStarter}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_preview}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_seqPlayer}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_presenter}</li>
             </ul>
             <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.choosePro}</button>
           </div>
@@ -569,11 +575,17 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {billingPeriod === 'monthly' ? t.eliteSubMo : t.eliteSubYr}
             </p>
             <ul className="pricing-features">
+              <li style={{ alignItems: 'flex-start', gap: '10px' }}>
+                <Crown size={16} color="var(--accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 800, color: '#fff' }}>{t.f_lightsHead}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_lightsHeadDesc}</div>
+                </div>
+              </li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_bandUl}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_userUl}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_stor100}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_allPro}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_dmx}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_roles}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_support}</li>
               <li><Crown size={16} color="var(--accent)" /> {t.f_early}</li>

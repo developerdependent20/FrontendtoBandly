@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Shield, CheckCircle2, Trash2, Crown, Star, MonitorPlay, ClipboardCheck, Music, Headphones } from 'lucide-react';
+import { Users, Shield, CheckCircle2, Trash2, Crown, Star, MonitorPlay, ClipboardCheck, Music, Headphones, Search, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { AvatarPicker } from './layout/AvatarPicker';
 import OrgSettingsModal from './OrgSettingsModal';
@@ -12,6 +12,9 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
   const [selectedMember, setSelectedMember] = useState(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [filterBlocked, setFilterBlocked] = useState(false);
+  // Buscar por nombre: asignarle funciones a alguien en un equipo de 30
+  // personas obligaba a bajar por 30 tarjetas grandes hasta encontrarlo.
+  const [search, setSearch] = useState('');
   
   React.useEffect(() => {
     if (localStorage.getItem('open_org_settings') === 'true') {
@@ -125,7 +128,15 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     if (filterBlocked) {
       activeMembers = activeMembers.filter(m => m.blocked_dates && m.blocked_dates.length > 0);
     }
-    
+
+    const q = search.trim().toLowerCase();
+    if (q) {
+      activeMembers = activeMembers.filter(m =>
+        (m.full_name || '').toLowerCase().includes(q) ||
+        (m.email || '').toLowerCase().includes(q)
+      );
+    }
+
     if (!activeMembers || activeMembers.length === 0) return { global: [], dynamic: [], unassigned: [] };
     
     const global = activeMembers.filter(m => m.role === 'director');
@@ -141,7 +152,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     const unassigned = remaining;
 
     return { global, dynamic, unassigned };
-  }, [members, filterBlocked, departments]);
+  }, [members, filterBlocked, departments, search]);
 
   const renderMemberCard = (m, level, categoryName, badgeLabel, colorClass) => {
     const mFunctions = m.functions || [];
@@ -270,25 +281,13 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
             {isDirector && (
-              <button 
-                type="button"
-                onClick={() => handleToggleDirector(m.id, m.role)}
-                className={`director-toggle-btn ${isUserDirector ? 'active' : ''}`}
-                title={isUserDirector ? 'Quitar rol de director global' : 'Hacer director global'}
-                style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '0.7rem' }}
-              >
-                {isUserDirector ? 'GLOBAL' : 'HACER GLOBAL'}
-              </button>
-            )}
-
-            {isDirector && (
-              <button 
+              <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteMember(m); }}
-                style={{ 
+                style={{
                   background: '#ef4444', border: 'none', color: 'white', width: '45px', height: '45px',
-                  borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', 
-                  justifyContent: 'center', transition: 'all 0.2s', position: 'relative', 
+                  borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', transition: 'all 0.2s', position: 'relative',
                   zIndex: 9999, boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
                 }}
                 className="hover-scale"
@@ -300,7 +299,41 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           </div>
         </div>
 
-        {/* Sections for Roles */}
+        {/* PERMISOS — separado de las funciones a propósito.
+            Antes el botón decía "HACER GLOBAL" y vivía junto a la papelera,
+            mezclado con las funciones musicales. Son dos cosas distintas: una
+            es QUÉ TOCA la persona, la otra es QUÉ PUEDE HACER en la app, y
+            confundirlas llevaba a darle permisos de administración a alguien
+            solo porque toca varios instrumentos. */}
+        {isDirector && (
+          <div style={{
+            margin: '0 10px 10px', padding: '0.9rem 1rem', borderRadius: '12px',
+            background: isUserDirector ? 'rgba(234,179,8,0.07)' : 'rgba(255,255,255,0.02)',
+            border: `1px solid ${isUserDirector ? 'rgba(234,179,8,0.25)' : 'rgba(255,255,255,0.06)'}`,
+            display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap'
+          }}>
+            <div style={{ flex: 1, minWidth: '190px' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 900, letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '3px' }}>
+                PERMISOS
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.45 }}>
+                {isUserDirector
+                  ? 'Puede administrar el equipo, los eventos y el repertorio.'
+                  : 'Solo ve y participa. No puede cambiar la configuración del equipo.'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggleDirector(m.id, m.role)}
+              className={`director-toggle-btn ${isUserDirector ? 'active' : ''}`}
+              style={{ padding: '9px 16px', borderRadius: '11px', fontSize: '0.72rem', whiteSpace: 'nowrap' }}
+            >
+              {isUserDirector ? 'Quitar dirección' : 'Hacer director'}
+            </button>
+          </div>
+        )}
+
+        {/* FUNCIONES — qué toca o de qué se encarga dentro del equipo. */}
         <div style={{ padding: '0 10px 10px 10px' }}>
           {departments.map(dept => renderRoleSection(`${dept.icon} ${dept.title}`, dept.roles, dept.colorClass))}
         </div>
@@ -357,8 +390,32 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       </div>
 
       <section className="glass-panel" style={{ padding: '2rem', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-        
-        <OrgSettingsModal 
+
+        {/* Buscar por nombre. Con un equipo de 30 personas, asignarle funciones
+            a alguien significaba bajar por 30 tarjetas grandes hasta dar con él. */}
+        {(members?.length || 0) > 5 && (
+          <div style={{ position: 'relative', marginBottom: '1.5rem', maxWidth: '420px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o correo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-field"
+              style={{ width: '100%', paddingLeft: '2.5rem', boxSizing: 'border-box' }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        )}
+
+        <OrgSettingsModal
           isOpen={showSettingsModal} 
           onClose={() => setShowSettingsModal(false)} 
           orgId={orgId || members?.[0]?.org_id} 

@@ -331,7 +331,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
     const lines = text.split('\n');
     return lines.map(line => {
       let escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      
+
       // 1. Manejar etiquetas de secciones (ChordPro)
       let isHeader = false;
       escaped = escaped.replace(/\{start_of_[a-z]+:\s*([^}]+)\}/i, (match, p1) => {
@@ -340,16 +340,43 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
       });
       // Eliminar etiquetas de cierre
       escaped = escaped.replace(/\{end_of_[a-z]+\}/i, '');
-      
-      // 2. Procesar acordes
+
+      // 2. Observaciones: {comment: ...} o {c: ...}, la directiva estándar de
+      // ChordPro. Antes se imprimía literal, con llaves y todo, así que la
+      // única forma de anotar algo era dibujarlo a mano con el lápiz.
+      const comment = escaped.match(/^\s*\{(?:comment|c):\s*([^}]*)\}\s*$/i);
+      if (comment) {
+        return `<div class="cs-comment">${comment[1].trim()}</div>`;
+      }
+
+      // 3. Compases con figuras: una línea que empieza con "|" se dibuja como
+      //    compases de verdad, no como texto suelto.
+      //      | [Do] / / / | [Lam] / / [Fa] / |
+      //    "/" es un golpe, ">" una anticipación y "◆" (o "o") un sostenido.
+      if (/^\s*\|/.test(escaped)) {
+        const bars = escaped.split('|').map(b => b.trim()).filter(b => b.length > 0);
+        if (bars.length > 0) {
+          const html = bars.map(bar => {
+            const inner = bar
+              .replace(/\[([^\]]+)\]/g, '<span class="cs-chord cs-chord-inline">$1</span>')
+              .replace(/(^|\s)\/(?=\s|$)/g, '$1<span class="cs-hit">/</span>')
+              .replace(/(^|\s)&gt;(?=\s|$)/g, '$1<span class="cs-push">&gt;</span>')
+              .replace(/(^|\s)(◆|o)(?=\s|$)/gi, '$1<span class="cs-hold">◆</span>');
+            return `<span class="cs-bar">${inner}</span>`;
+          }).join('');
+          return `<div class="cs-bars">${html}</div>`;
+        }
+      }
+
+      // 4. Procesar acordes
       const formatted = escaped.replace(
         /\[([^\]]+)\]/g,
         '<span class="cs-chord">$1</span>'
       );
-      
+
       if (isHeader) return formatted; // Retorna directo el <h2>
       if (!formatted.trim()) return `<div class="cs-line">&nbsp;</div>`;
-      
+
       return `<div class="cs-line">${formatted}</div>`;
     }).join('');
   }
@@ -673,6 +700,33 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                         {s.label}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Observaciones y compases: antes la única forma de anotar algo
+                    era dibujarlo a mano con el lápiz, y no había manera de
+                    escribir ritmo. Los botones evitan tener que recordar la
+                    sintaxis, igual que con los acordes. */}
+                <div className="cs-chord-row">
+                  <span className="cs-row-label">Anotaciones</span>
+                  <div className="cs-chord-buttons">
+                    <button
+                      className="cs-section-btn"
+                      title="Nota para la banda: 'solo guitarra', 'todos paran', 'sube medio tono'"
+                      onClick={() => insertAtCursor('\n{comment: }')}
+                    >
+                      Observación
+                    </button>
+                    <button
+                      className="cs-section-btn"
+                      title="Compases con figuras rítmicas"
+                      onClick={() => insertAtCursor('\n| [Do] / / / | [Sol] / / / |')}
+                    >
+                      Compases
+                    </button>
+                    <button className="cs-section-btn" title="Un golpe" onClick={() => insertAtCursor(' / ')}>/</button>
+                    <button className="cs-section-btn" title="Anticipación (empuje)" onClick={() => insertAtCursor(' > ')}>&gt;</button>
+                    <button className="cs-section-btn" title="Sostenido / redonda" onClick={() => insertAtCursor(' ◆ ')}>◆</button>
                   </div>
                 </div>
 

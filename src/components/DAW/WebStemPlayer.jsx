@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X, Play, Pause, RotateCcw, Volume2, Loader2, AlertCircle, Info,
-  Headphones, Music, Guitar, Mic2, Piano, Drum, Wand2, Zap, RefreshCw
+  Headphones, Music, Guitar, Mic2, Piano, Drum, Wand2, Zap, RefreshCw, Monitor
 } from 'lucide-react';
 import { OfflineManager } from '../../utils/offlineManager';
 import { supabase } from '../../supabaseClient';
@@ -165,7 +165,10 @@ function StemChannel({ stem, onVolumeChange, onMuteToggle, onSoloToggle, isMuted
 
 // ── Componente Principal ──────────────────────────────────────
 export default function WebStemPlayer({ song, session, onClose }) {
-  const [status, setStatus] = useState('idle'); // idle | loading | ready | playing | error
+  const [status, setStatus] = useState('idle'); // idle | mix | loading | ready | playing | error
+  // URL firmada de la mezcla estéreo, si esta secuencia la tiene. Las subidas
+  // anteriores a esta función no la tienen y ahí solo se ofrece el modo stems.
+  const [mixUrl, setMixUrl] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [loadProgress, setLoadProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
@@ -244,6 +247,30 @@ export default function WebStemPlayer({ song, session, onClose }) {
       source.start(0);
     } catch {}
   };
+
+  // Consulta ligera al abrir: solo para saber si hay mezcla y poder ofrecerla.
+  // No descarga audio — eso solo pasa cuando el usuario elige una opción.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { session: fresh } } = await supabase.auth.getSession();
+        const token = fresh?.access_token || session?.access_token;
+        if (!token) return;
+        const resp = await fetch(`${API_URL}/api/sequences/${song.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (!cancelled && data?.sequence?.mixDownloadUrl) setMixUrl(data.sequence.mixDownloadUrl);
+      } catch {
+        // Sin mezcla disponible: se ofrece solo el modo por stems.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [song.id, session?.access_token]);
+
+  const handleStartMix = () => setStatus('mix');
 
   // Carga iniciada por tap del usuario (requerido por iOS Safari)
   const handleStartLoad = async () => {
@@ -561,33 +588,129 @@ export default function WebStemPlayer({ song, session, onClose }) {
         {/* Body */}
         <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
 
-          {/* IDLE: tap para iniciar */}
+          {/* IDLE: elegir cómo escuchar.
+              · Mezcla completa: un MP3 de ~5 MB, carga en segundos, sirve para
+                repasar. Es lo único viable en celular.
+              · Por stems: descomprime y decodifica el multitrack entero en
+                memoria. En computador es la magia; en un iPhone son cientos de
+                MB y Safari mata la pestaña ("A problem repeatedly occurred"). */}
           {status === 'idle' && (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+            <div style={{ textAlign: 'center', padding: '2.5rem 1.5rem' }}>
               <div style={{
-                width: '64px', height: '64px', borderRadius: '50%',
-                background: 'rgba(37, 99, 235,0.15)', border: '1px solid rgba(37, 99, 235,0.3)',
+                width: '60px', height: '60px', borderRadius: '18px',
+                background: 'rgba(37, 99, 235,0.12)', border: '1px solid rgba(37, 99, 235,0.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 1.5rem',
+                margin: '0 auto 1.4rem',
               }}>
-                <Headphones size={28} color="#2563eb" />
+                <Headphones size={26} color="#2563eb" />
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                Toca el boton para cargar los stems desde la nube.
+
+              <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '1.6rem', fontSize: '0.9rem' }}>
+                ¿Cómo quieres escucharla?
               </p>
-              <button onClick={handleStartLoad} style={{
-                background: 'linear-gradient(135deg, #2563eb, #6366f1)',
-                border: 'none', color: 'white', padding: '14px 32px',
-                borderRadius: '14px', fontSize: '0.95rem', fontWeight: '800',
-                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '10px',
-                boxShadow: '0 8px 24px rgba(37, 99, 235,0.4)',
-              }}>
-                <Play size={18} /> Cargar Secuencia
-              </button>
-              {IS_MOBILE && (
-                <div style={{ marginTop: '1.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.03)', padding: '8px 14px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '7px', textAlign: 'left', maxWidth: '380px' }}>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '420px', margin: '0 auto' }}>
+                {mixUrl && (
+                  <button onClick={handleStartMix} style={{
+                    background: 'linear-gradient(135deg, #2563eb, #6366f1)', border: 'none', color: 'white',
+                    padding: '15px 20px', borderRadius: '14px', cursor: 'pointer', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: '13px',
+                    boxShadow: '0 8px 24px rgba(37, 99, 235,0.35)',
+                  }}>
+                    <Play size={20} style={{ flexShrink: 0 }} />
+                    <span>
+                      <span style={{ display: 'block', fontWeight: 800, fontSize: '0.93rem' }}>Mezcla completa</span>
+                      <span style={{ display: 'block', fontSize: '0.76rem', opacity: 0.85, marginTop: '2px' }}>
+                        Carga en segundos. Ideal para repasar la canción.
+                      </span>
+                    </span>
+                  </button>
+                )}
+
+                <button
+                  onClick={IS_MOBILE ? undefined : handleStartLoad}
+                  disabled={IS_MOBILE}
+                  style={{
+                    background: 'rgba(255,255,255,0.04)', color: IS_MOBILE ? 'rgba(255,255,255,0.35)' : '#fff',
+                    border: '1px solid rgba(255,255,255,0.1)', padding: '15px 20px', borderRadius: '14px',
+                    cursor: IS_MOBILE ? 'default' : 'pointer', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: '13px',
+                  }}
+                >
+                  {IS_MOBILE ? <Monitor size={20} style={{ flexShrink: 0 }} /> : <Wand2 size={20} style={{ flexShrink: 0 }} />}
+                  <span>
+                    <span style={{ display: 'block', fontWeight: 800, fontSize: '0.93rem' }}>Pista por pista</span>
+                    <span style={{ display: 'block', fontSize: '0.76rem', opacity: 0.75, marginTop: '2px' }}>
+                      {IS_MOBILE
+                        ? 'Necesita más memoria de la que un celular le da al navegador. Ábrelo desde una computadora.'
+                        : 'Volumen, mute y solo de cada instrumento por separado.'}
+                    </span>
+                  </span>
+                </button>
+              </div>
+
+              {!mixUrl && (
+                <div style={{
+                  marginTop: '1.4rem', fontSize: '0.73rem', color: 'rgba(255,255,255,0.4)',
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                  padding: '10px 14px', borderRadius: '11px', display: 'inline-flex',
+                  alignItems: 'center', gap: '8px', textAlign: 'left', maxWidth: '420px', lineHeight: 1.5
+                }}>
                   <Info size={13} style={{ flexShrink: 0 }} />
-                  <span>En celular puede tardar un poco más en cargar que en computadora.</span>
+                  <span>Esta secuencia se subió antes de que existiera la mezcla rápida. Vuelve a subirla para tenerla.</span>
+                </div>
+              )}
+
+              {IS_MOBILE && (
+                <div style={{
+                  marginTop: '1.2rem', fontSize: '0.73rem', color: 'rgba(255,255,255,0.4)',
+                  maxWidth: '420px', margin: '1.2rem auto 0', lineHeight: 1.5
+                }}>
+                  Durante el show tu celular sí sirve: desde <strong>Modo En Vivo</strong> controlas play, pausa y stop del DAW.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* MEZCLA COMPLETA
+              Se usa el reproductor nativo del navegador a propósito: maneja
+              buffering, seek y la pantalla de bloqueo del celular gratis, y en
+              iOS funciona sin pelear con Web Audio. */}
+          {status === 'mix' && (
+            <div style={{ padding: '2rem 1.5rem', textAlign: 'center' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '16px',
+                background: 'rgba(37, 99, 235,0.12)', border: '1px solid rgba(37, 99, 235,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 1.1rem',
+              }}>
+                <Music size={24} color="#2563eb" />
+              </div>
+              <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '0.3rem' }}>{song.title}</div>
+              <div style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1.5rem' }}>
+                Mezcla completa
+              </div>
+
+              <audio
+                src={mixUrl}
+                controls
+                autoPlay
+                style={{ width: '100%', maxWidth: '440px' }}
+              />
+
+              {!IS_MOBILE && (
+                <div style={{ marginTop: '1.6rem' }}>
+                  <button
+                    onClick={handleStartLoad}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.7)', padding: '10px 20px', borderRadius: '11px',
+                      fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: '8px'
+                    }}
+                  >
+                    <Wand2 size={15} /> Cambiar a pista por pista
+                  </button>
                 </div>
               )}
             </div>

@@ -202,7 +202,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
         const body = await createResponse.json().catch(() => ({}));
         throw new Error(body.details || body.error || 'Error al preparar la secuencia en el servidor');
       }
-      const { sequenceId, uploadUrl, stems: backendStems } = await createResponse.json();
+      const { sequenceId, uploadUrl, mixUploadUrl, mixKey, stems: backendStems } = await createResponse.json();
 
       // 2. Subir el ZIP a R2
       setGlobalStatus('Subiendo archivo ZIP...');
@@ -213,6 +213,69 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
       });
 
       if (!uploadResponse.ok) throw new Error(`Error al subir el archivo ZIP`);
+
+      // 2b. Mezcla estéreo para escucha rápida.
+      //
+      // Se genera aquí porque este navegador ya tiene todos los stems
+      // descomprimidos en memoria — hacerlo en el servidor costaría CPU y
+      // tiempo por cada subida. Es un extra: si falla, la secuencia queda
+      // perfectamente válida y el celular simplemente no ofrece esta opción.
+      let uploadedMixKey = null;
+      if (mixUploadUrl) {
+        try {
+          const { generateMixdown } = await import('../utils/mixdown');
+          const buffers = stems.map(s => s.data.buffer.slice(s.data.byteOffset, s.data.byteOffset + s.data.byteLength));
+          const mixBlob = await generateMixdown(buffers, (pct) => {
+            setGlobalStatus(`Generando mezcla para escuchar desde el celular... ${pct}%`);
+          });
+
+          if (mixBlob) {
+            setGlobalStatus('Subiendo mezcla...');
+            const mixResp = await fetch(mixUploadUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'audio/mpeg' },
+              body: mixBlob
+            });
+            if (mixResp.ok) uploadedMixKey = mixKey;
+          }
+        } catch (e) {
+          console.warn('[Uploader] No se pudo generar la mezcla:', e);
+        }
+      }
+
+      // 2c. Marcadores automáticos desde el stem de guía.
+      //
+      // Casi todo multitrack trae una pista de cues donde una voz dice "verso",
+      // "coro", "puente" antes de cada sección. Ese stem ya es el mapa de la
+      // canción; hasta ahora el director lo ignoraba y ponía los marcadores a
+      // mano, uno por uno. Aquí se leen solos.
+      let autoMarkers = [];
+      if (seqBpm) {
+        try {
+          const { findCueStem, markersFromCueStem } = await import('../utils/cueMarkers');
+          const cueIdx = findCueStem(stems);
+          if (cueIdx >= 0) {
+            setGlobalStatus('Leyendo la guía para ubicar las secciones...');
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            const ctx = new Ctx();
+            try {
+              const raw = stems[cueIdx].data;
+              const ab = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
+              const cueBuffer = await ctx.decodeAudioData(ab);
+              const beats = parseInt((seqTimeSignature || '4/4').split('/')[0], 10) || 4;
+              autoMarkers = markersFromCueStem(cueBuffer, {
+                bpm: parseFloat(seqBpm),
+                beatsPerBar: beats,
+                sampleRate: cueBuffer.sampleRate,
+              });
+            } finally {
+              ctx.close?.();
+            }
+          }
+        } catch (e) {
+          console.warn('[Uploader] No se pudieron leer los marcadores de la guía:', e);
+        }
+      }
 
       // 3. Confirmar subida en el backend con los IDs que nos dio
       setGlobalStatus('Finalizando...');
@@ -231,7 +294,13 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ sequenceId, stems: confirmedStems, zipSizeBytes: zipFile.size })
+        body: JSON.stringify({
+          sequenceId,
+          stems: confirmedStems,
+          zipSizeBytes: zipFile.size,
+          mixKey: uploadedMixKey,
+          markers: autoMarkers.length ? autoMarkers : undefined,
+        })
       });
 
       setStep('done');
