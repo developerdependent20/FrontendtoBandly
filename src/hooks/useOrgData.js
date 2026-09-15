@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { DEFAULT_DEPARTMENTS } from '../utils/defaultRoles';
 
-const migrateSettings = (settings) => {
+// Exportada: OnboardingScreen la reutiliza para mostrar los roles/instrumentos
+// REALES del equipo al que alguien se está uniendo por código, en vez de una
+// lista genérica aparte (ver commit que arregla el mismatch de ids en "Selecciona
+// tus funciones").
+export const migrateSettings = (settings) => {
   if (!settings) return null;
   if (settings.departments) return settings;
   
@@ -50,13 +54,15 @@ export function useOrgData(orgId) {
       // un músico que toca en dos iglesias desaparecería del roster de una
       // mientras tuviera la otra abierta. El rol y las funciones también son
       // por organización (director en la tuya, guitarrista invitado en la otra).
-      const resMem = await supabase
-        .from('org_members')
-        .select('role, functions, profiles(*)')
-        .eq('org_id', orgId);
-      const resSongs = await supabase.from('songs').select('*, sequences(id)').eq('org_id', orgId).order('title', { ascending: true });
-      const resEv = await supabase.from('events').select('*, event_roster(*), event_songs(*, songs(*, sequences(id)))').eq('org_id', orgId).order('date', { ascending: true });
-      const resOrg = await supabase.from('organizations').select('settings').eq('id', orgId).single();
+      // Las 4 consultas son independientes entre sí — antes se esperaban una
+      // por una en serie, sumando su latencia; en paralelo el tiempo total es
+      // el de la más lenta, no la suma de las cuatro.
+      const [resMem, resSongs, resEv, resOrg] = await Promise.all([
+        supabase.from('org_members').select('role, functions, profiles(*)').eq('org_id', orgId),
+        supabase.from('songs').select('*, sequences(id)').eq('org_id', orgId).order('title', { ascending: true }),
+        supabase.from('events').select('*, event_roster(*), event_songs(*, songs(*, sequences(id)))').eq('org_id', orgId).order('date', { ascending: true }),
+        supabase.from('organizations').select('settings').eq('id', orgId).single()
+      ]);
 
       if (resMem.error || resSongs.error || resEv.error) throw new Error("Supabase fetch failed");
 

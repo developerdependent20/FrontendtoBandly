@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Users, Shield, CheckCircle2, Plus, Info, Music, Calendar as CalendarIcon, X,
   Trash2, FileText, Headphones, Settings, Play, BookOpen, Loader2,
-  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, Edit2, Check,
+  Drum, Zap, Layout, Mic2, Video, User, ChevronDown, ChevronUp, ChevronRight, Edit2, Check,
   GripVertical, UserX, Sparkles, Guitar
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
@@ -25,6 +25,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 // [ESTABLE] MAPA DE VISUALIZACIÓN: Para etiquetas bilingües en el roster
 const INSTRUMENT_DISPLAY_MAP = {
   'instr:bateria': 'DRUMS / BATERÍA',
+  'instr:percusion': 'PERCUSSION / PERCUSIÓN',
   'instr:bajo': 'BASS / BAJO',
   'instr:piano': 'KEYS / TECLADO',
   'instr:guitarra': 'GTR / GUITARRA',
@@ -33,7 +34,8 @@ const INSTRUMENT_DISPLAY_MAP = {
   'instr:sonido_media': 'VISUALS / PANTALLAS'
 };
 const INSTRUMENT_MATCH_TAGS = {
-  'bateria': 'instr:bateria', 'drums': 'instr:bateria', 'percusion': 'instr:bateria', 'perc': 'instr:bateria',
+  'bateria': 'instr:bateria', 'drums': 'instr:bateria',
+  'percusion': 'instr:percusion', 'perc': 'instr:percusion',
   'bajo': 'instr:bajo', 'bass': 'instr:bajo',
   'teclado': 'instr:piano', 'piano': 'instr:piano', 'keys': 'instr:piano',
   'guitarra': 'instr:guitarra', 'gt': 'instr:guitarra', 'gtr': 'instr:guitarra', 'electric': 'instr:guitarra', 'acoustic': 'instr:guitarra',
@@ -554,7 +556,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     // 'gtr' cubre las etiquetas abreviadas de las plantillas ("E. GTR", "A. GTR") que
     // no contienen la palabra completa "guitar" — antes caían en OTROS sin razón.
     // Mismo caso para brass/metales, que tampoco estaban cubiertos.
-    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice') || i.includes('brass') || i.includes('metales')) return 'MÚSICOS';
+    if (i.includes('bateria') || i.includes('bajo') || i.includes('guitar') || i.includes('gtr') || i.includes('acustica') || i.includes('teclado') || i.includes('piano') || i.includes('voz') || i.includes('coro') || i.includes('percusion') || i.includes('perc') || i.includes('drums') || i.includes('bass') || i.includes('keys') || i.includes('voice') || i.includes('brass') || i.includes('metales')) return 'MÚSICOS';
     return 'OTROS';
   };
 
@@ -1133,31 +1135,78 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   const closeModal = () => { setShowModal(false); setEditingEventId(null); setSaving(false); };
 
-  if (!profile || !members) return <div style={{ padding: '4rem', textAlign: 'center' }}>Cargando equipo...</div>;
-
+  // Este bloque de useMemo va ANTES del "return" de carga de más abajo a
+  // propósito: los Hooks no pueden quedar después de un return condicional
+  // (Rules of Hooks — si `!profile || !members` cambia entre renders, el
+  // número de hooks llamados cambiaría). Todo acá es null-safe por eso mismo.
   const currentUserId = session?.user?.id || profile?.id;
   const userRole = (profile?.role || '').toLowerCase();
-  const eventsToShow = userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId) && !r.is_removed));
+  // Memoizados: antes se recalculaban en CADA render (cada tecla escrita en
+  // un buscador, cada toggle de fila) aunque solo dependen de `events` — con
+  // decenas/cientos de eventos eso se notaba como lag al escribir.
+  const eventsToShow = useMemo(
+    () => userRole === 'director' ? (events || []) : (events || []).filter(ev => ev.event_roster?.some(r => String(r.profile_id) === String(currentUserId) && !r.is_removed)),
+    [events, userRole, currentUserId]
+  );
 
   // Un evento es "pasado" solo cuando su fecha es ANTERIOR a hoy (el día completo del evento siempre se muestra en proximos)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  // `todayStart` es un Date nuevo en cada render (misma hora, objeto
+  // distinto) — meterlo tal cual en las deps invalidaría el memo siempre.
+  // Su valor en ms sí es estable dentro del mismo día, que es lo que importa.
+  const todayStartMs = todayStart.getTime();
 
-  const upcomingEvents = eventsToShow.filter(ev => {
+  const upcomingEvents = useMemo(() => eventsToShow.filter(ev => {
     if (!ev.date) return true; // Sin fecha -> siempre proximo
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00'); // Normalizar a medianoche local
     return evDate >= todayStart;
-  });
+  }), [eventsToShow, todayStartMs]); // eslint-disable-line react-hooks/exhaustive-deps -- todayStartMs ya representa a todayStart, ver comentario arriba
 
-  const pastEvents = eventsToShow.filter(ev => {
+  const pastEvents = useMemo(() => eventsToShow.filter(ev => {
     if (!ev.date) return false;
     const evDate = new Date(ev.date.split('T')[0] + 'T00:00:00');
     return evDate < todayStart; // Solo pasa a "pasados" cuando el día del evento ya terminó
-  });
+  }), [eventsToShow, todayStartMs]); // eslint-disable-line react-hooks/exhaustive-deps -- todayStartMs ya representa a todayStart, ver comentario arriba
+
+  // Sugerencia de "Evento Rápido": el evento pasado más reciente que cayó en
+  // el mismo día de la semana que la fecha que se está agendando (el domingo
+  // pasado si estoy creando otro domingo). Si no hay ninguno con ese mismo
+  // día, se usa el más reciente en general — mejor una sugerencia imperfecta
+  // que forzar a buscar en la lista manualmente.
+  const suggestedPastEvent = useMemo(() => {
+    if (!pendingEventDate || pastEvents.length === 0) return null;
+    const targetDay = new Date(pendingEventDate.split('T')[0] + 'T00:00:00').getDay();
+    const sameWeekday = pastEvents.filter(ev => ev.date && new Date(ev.date.split('T')[0] + 'T00:00:00').getDay() === targetDay);
+    const pool = sameWeekday.length > 0 ? sameWeekday : pastEvents;
+    return [...pool].sort((a, b) => new Date(b.date) - new Date(a.date))[0] || null;
+  }, [pastEvents, pendingEventDate]);
 
   // Eventos que son HOY exactamente — para el widget de estado en vivo del equipo.
   const todayStr = `${todayStart.getFullYear()}-${String(todayStart.getMonth() + 1).padStart(2, '0')}-${String(todayStart.getDate()).padStart(2, '0')}`;
-  const todaysEvents = eventsToShow.filter(ev => ev.date && ev.date.split('T')[0] === todayStr);
+  const todaysEvents = useMemo(() => eventsToShow.filter(ev => ev.date && ev.date.split('T')[0] === todayStr), [eventsToShow, todayStr]);
+
+  if (!profile || !members) return <div style={{ padding: '4rem', textAlign: 'center' }}>Cargando equipo...</div>;
+
+  // Carga un evento pasado como plantilla (equipo + setlist) para el que se
+  // está creando. La usan tanto la sugerencia rápida como la lista manual de
+  // "duplicar evento pasado", para no repetir la misma lógica dos veces.
+  const handleUseEventAsTemplate = (ev) => {
+    setShowNewEventPicker(false);
+    setEditingEventId(null);
+    setEventName(ev.name + ' (Copia)');
+    setEventDate(pendingEventDate);
+    setDescription(ev.description || '');
+    setFormat('copy');
+    const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
+    const merged = activeRosterFromDb.map(er => ({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: 'pending' }));
+    setRoster(merged);
+    setInitialRoster(JSON.parse(JSON.stringify(merged)));
+    setDbHistory([]);
+    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a, b) => a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
+    setModalTab('info');
+    setShowModal(true);
+  };
 
   // [ESTABLE] Temas Joya Premium
   const cardThemes = [
@@ -1814,42 +1863,54 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               );
             })()}
 
+            {suggestedPastEvent && (
+              <button
+                onClick={() => handleUseEventAsTemplate(suggestedPastEvent)}
+                style={{
+                  width: '100%', textAlign: 'left', marginBottom: '1.5rem', padding: '1rem 1.2rem',
+                  borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                  background: 'linear-gradient(135deg, rgba(34,197,94,0.14), rgba(34,197,94,0.04))',
+                  border: '1px solid rgba(34,197,94,0.35)'
+                }}
+              >
+                <div style={{ fontSize: '1.4rem', flexShrink: 0 }}>⚡</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: '#22c55e', fontWeight: '900', fontSize: '0.72rem', letterSpacing: '0.6px', marginBottom: '3px' }}>EVENTO RÁPIDO · EQUIPO Y SETLIST YA ARMADOS</div>
+                  <div style={{ color: 'white', fontWeight: '700', fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{suggestedPastEvent.name}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginTop: '2px' }}>Copiado de {formatEventDate(suggestedPastEvent.date)} — revisa y ajusta antes de guardar</div>
+                </div>
+                <ChevronRight size={20} color="#22c55e" />
+              </button>
+            )}
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 1rem 0' }}>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '1.5px' }}>O DUPLICAR UN EVENTO PASADO</span>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '1.5px' }}>O DUPLICAR OTRO EVENTO PASADO</span>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
-            <div style={{ maxHeight: '220px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }} className="custom-scrollbar">
-              {pastEvents.length === 0 ? (
-                <div style={{ padding: '1.5rem', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>No hay eventos pasados todavía</div>
-              ) : (
-                pastEvents.map(ev => (
-                  <button key={ev.id} onClick={() => {
-                    setShowNewEventPicker(false);
-                    setEditingEventId(null);
-                    setEventName(ev.name + ' (Copia)');
-                    setEventDate(pendingEventDate);
-                    setDescription(ev.description || '');
-                    setFormat('copy');
-                    const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
-                    const merged = activeRosterFromDb.map(er => ({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: 'pending' }));
-                    setRoster(merged);
-                    setInitialRoster(JSON.parse(JSON.stringify(merged)));
-                    setDbHistory([]);
-                    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
-                    setModalTab('info');
-                    setShowModal(true);
-                  }}
-                    className="dropdown-item-custom"
-                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
-                  >
-                    <span style={{ fontWeight: '700', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.name}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', flexShrink: 0, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: '20px' }}>{formatEventDate(ev.date)}</span>
-                  </button>
-                ))
-              )}
-            </div>
+            {(() => {
+              const otherPastEvents = [...pastEvents]
+                .filter(ev => ev.id !== suggestedPastEvent?.id)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+              return (
+                <div style={{ maxHeight: '220px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }} className="custom-scrollbar">
+                  {otherPastEvents.length === 0 ? (
+                    <div style={{ padding: '1.5rem', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>No hay más eventos pasados</div>
+                  ) : (
+                    otherPastEvents.map(ev => (
+                      <button key={ev.id} onClick={() => handleUseEventAsTemplate(ev)}
+                        className="dropdown-item-custom"
+                        style={{ width: '100%', padding: '0.8rem 1rem', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
+                      >
+                        <span style={{ fontWeight: '700', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.name}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', flexShrink: 0, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: '20px' }}>{formatEventDate(ev.date)}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       ), document.body)}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 import { supabase } from './supabaseClient';
 
@@ -15,7 +15,8 @@ import RefundPage from './pages/legal/RefundPage';
 import LoadingScreen from './components/LoadingScreen';
 import TermsModal from './components/TermsModal';
 import Dashboard from './components/layout/Dashboard';
-import AdminPanel from './components/layout/AdminPanel';
+// Solo lo abre un superadmin — no hay razón para que le llegue a todo el mundo.
+const AdminPanel = lazy(() => import('./components/layout/AdminPanel'));
 import { DirectorView, MemberView } from './components/layout/RoleViews';
 
 // Hooks
@@ -297,10 +298,16 @@ export default function App() {
 
   if (!profile) return <OnboardingScreen session={session} fetchProfile={fetchProfile} />;
 
+  // profiles.functions es JSONB: supabase-js ya lo entrega como array, nunca
+  // como string. JSON.parse(array) lo forzaba a string y tiraba, y el catch
+  // vacío lo escondía — admin_* quedaba permanentemente en false y nadie se
+  // enteraba. Solo hace falta parsear si por algo llega como string.
   const userFunctions = (() => {
-    try {
-      return profile?.functions ? JSON.parse(profile.functions) : [];
-    } catch { return []; }
+    if (Array.isArray(profile?.functions)) return profile.functions;
+    if (typeof profile?.functions === 'string') {
+      try { return JSON.parse(profile.functions); } catch { return []; }
+    }
+    return [];
   })();
   const isSectionalAdmin = userFunctions.some(f => f.startsWith('admin_') || f === 'admin');
   const isGlobalDirector = profile?.role === 'director';
@@ -344,7 +351,9 @@ export default function App() {
         members={members}
       >
         {activeTab === 'admin' && userIsSuperAdmin ? (
-          <AdminPanel onInspect={(org) => { setInspectedOrg(org); setActiveTab('planner'); }} />
+          <Suspense fallback={<div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando…</div>}>
+            <AdminPanel onInspect={(org) => { setInspectedOrg(org); setActiveTab('planner'); }} />
+          </Suspense>
         ) : hasAdminAccess ? (
           <DirectorView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         ) : (

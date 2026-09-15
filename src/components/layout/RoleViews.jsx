@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../supabaseClient';
+// EventPlanner (y sus dependencias, VisualCalendar/ChartStudio) se queda como
+// import estático: es la pestaña "planner", la que se ve al entrar — no hay
+// nada que ganar retrasándola, solo un parpadeo de carga garantizado.
+// Todo lo demás va con React.lazy: son pestañas a las que el usuario puede
+// no entrar nunca en una sesión (DAW, Encuestas, Descargas...), así que hoy
+// se descargan y parsean de una aunque no se usen. Esto era, con el warning
+// del build (bundle de 1.5MB sin code-splitting), el hallazgo #1 de la
+// auditoría de performance.
 import EventPlanner from '../EventPlanner';
-import SongLibrary from '../SongLibrary';
-import TeamList from '../TeamList';
-import ProMixer from '../DAW/ProMixer';
-import WebUploadStudio from '../DAW/WebUploadStudio';
-import MusicianTools from '../MusicianTools';
-import ProfileSettings from '../ProfileSettings';
-import DownloadsPage from '../DownloadsPage';
-import LiveRemote from '../LiveRemote';
-import Polls from '../Polls';
+const SongLibrary = lazy(() => import('../SongLibrary'));
+const TeamList = lazy(() => import('../TeamList'));
+const ProMixer = lazy(() => import('../DAW/ProMixer'));
+const WebUploadStudio = lazy(() => import('../DAW/WebUploadStudio'));
+const MusicianTools = lazy(() => import('../MusicianTools'));
+const ProfileSettings = lazy(() => import('../ProfileSettings'));
+const DownloadsPage = lazy(() => import('../DownloadsPage'));
+const LiveRemote = lazy(() => import('../LiveRemote'));
+const Polls = lazy(() => import('../Polls'));
 import { isTauri } from '../../utils/tauri';
 import { Calendar, LayoutList, Home, Music, ChevronRight, LogOut } from 'lucide-react';
 import { alertDialog } from '../../utils/dialogService';
 
 import { AvatarPicker } from './AvatarPicker';
+
+const TabFallback = () => (
+  <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando…</div>
+);
 
 const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -270,44 +282,61 @@ export function DirectorView({ profile, session, activeTab, setActiveTab, orgDat
       )}
       {activeTab === 'library' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <SongLibrary songs={songs} events={events} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} profile={profile} setActiveTab={setActiveTab} />
+          <Suspense fallback={<TabFallback />}>
+            <SongLibrary songs={songs} events={events} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} profile={profile} setActiveTab={setActiveTab} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
+          <Suspense fallback={<TabFallback />}>
+            <TeamList members={members} isDirector={true} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'polls' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <Polls profile={profile} orgId={profile.org_id} members={members} />
+          <Suspense fallback={<TabFallback />}>
+            <Polls profile={profile} orgId={profile.org_id} members={members} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'play' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <MusicianTools />
+          <Suspense fallback={<TabFallback />}>
+            <MusicianTools />
+          </Suspense>
         </div>
       )}
       {activeTab === 'live' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <LiveRemote orgId={profile.org_id} events={events} />
+          <Suspense fallback={<TabFallback />}>
+            <LiveRemote orgId={profile.org_id} events={events} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'daw' && (
-        isTauri()
-          // En la app de escritorio: DAW completo con ProMixer
-          ? <ProMixer songs={songs} session={session} profile={profile} orgId={profile?.org_id} />
-          // En la web: solo subida de secuencias, sin DAW
-          : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+        <Suspense fallback={<TabFallback />}>
+          {isTauri()
+            // En la app de escritorio: DAW completo con ProMixer
+            ? <ProMixer songs={songs} session={session} profile={profile} orgId={profile?.org_id} />
+            // En la web: solo subida de secuencias, sin DAW
+            : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+          }
+        </Suspense>
       )}
       {activeTab === 'downloads' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <DownloadsPage profile={profile} />
+          <Suspense fallback={<TabFallback />}>
+            <DownloadsPage profile={profile} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'profile' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
+          <Suspense fallback={<TabFallback />}>
+            <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
+          </Suspense>
         </div>
       )}
 
@@ -330,44 +359,61 @@ export function MemberView({ profile, session, activeTab, setActiveTab, orgData 
       )}
       {activeTab === 'library' && canAccessLibrary && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <SongLibrary songs={songs} events={events} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} profile={profile} setActiveTab={setActiveTab} />
+          <Suspense fallback={<TabFallback />}>
+            <SongLibrary songs={songs} events={events} orgId={profile.org_id} readOnly={false} refreshData={fetchData} session={session} profile={profile} setActiveTab={setActiveTab} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
+          <Suspense fallback={<TabFallback />}>
+            <TeamList members={members} isDirector={false} refreshData={fetchData} orgSettings={orgSettings || profile?.organizations?.settings || {}} orgId={profile.org_id} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'polls' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <Polls profile={profile} orgId={profile.org_id} members={members} />
+          <Suspense fallback={<TabFallback />}>
+            <Polls profile={profile} orgId={profile.org_id} members={members} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'play' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <MusicianTools />
+          <Suspense fallback={<TabFallback />}>
+            <MusicianTools />
+          </Suspense>
         </div>
       )}
       {activeTab === 'live' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <LiveRemote orgId={profile.org_id} events={events} />
+          <Suspense fallback={<TabFallback />}>
+            <LiveRemote orgId={profile.org_id} events={events} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'daw' && canAccessLibrary && (
-        isTauri()
-          // En la app de escritorio: DAW completo con ProMixer
-          ? <ProMixer songs={songs} session={session} profile={profile} orgId={profile?.org_id} />
-          // En la web: solo subida de secuencias, sin DAW
-          : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+        <Suspense fallback={<TabFallback />}>
+          {isTauri()
+            // En la app de escritorio: DAW completo con ProMixer
+            ? <ProMixer songs={songs} session={session} profile={profile} orgId={profile?.org_id} />
+            // En la web: solo subida de secuencias, sin DAW
+            : <WebUploadStudio songs={songs} orgId={profile.org_id} session={session} profile={profile} refreshData={fetchData} />
+          }
+        </Suspense>
       )}
       {activeTab === 'downloads' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <DownloadsPage profile={profile} />
+          <Suspense fallback={<TabFallback />}>
+            <DownloadsPage profile={profile} />
+          </Suspense>
         </div>
       )}
       {activeTab === 'profile' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
+          <Suspense fallback={<TabFallback />}>
+            <ProfileSettings profile={profile} session={session} onLogout={() => supabase.auth.signOut()} />
+          </Suspense>
         </div>
       )}
 

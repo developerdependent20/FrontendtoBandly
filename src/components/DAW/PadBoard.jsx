@@ -53,29 +53,31 @@ export default function PadBoard({ deviceChannels = 2 }) {
     const Tone = await getTone();
     webOutput.current = new Tone.Volume(Tone.gainToDb(getStoredPadVolume())).toDestination();
     let loaded = 0;
-    for (const note of NOTES) {
+    // Los 12 pads (~11MB en total) se cargan en paralelo en vez de uno por
+    // uno esperando a que termine el anterior — antes bloqueaba secuencialmente
+    // al abrir el DAW, ahora el tiempo total es el del pad más lento, no la suma.
+    await Promise.all(NOTES.map((note) => new Promise((resolve) => {
       try {
         const safeNote = note.replace('#', 'sharp');
         const url = new URL(`../../assets/audio/pads/${safeNote}.mp3`, import.meta.url).href;
-        await new Promise((resolve) => {
-          const player = new Tone.Player({
-            url, loop: true, fadeIn: 1.5, fadeOut: 1.5,
-            onload: () => {
-              setLoadedPads(prev => ({ ...prev, [note]: true }));
-              loaded++;
-              resolve();
-            },
-            onerror: () => {
-              setLoadedPads(prev => ({ ...prev, [note]: false }));
-              resolve();
-            }
-          }).connect(webOutput.current);
-          webPlayers.current[note] = player;
-        });
+        const player = new Tone.Player({
+          url, loop: true, fadeIn: 1.5, fadeOut: 1.5,
+          onload: () => {
+            setLoadedPads(prev => ({ ...prev, [note]: true }));
+            loaded++;
+            resolve();
+          },
+          onerror: () => {
+            setLoadedPads(prev => ({ ...prev, [note]: false }));
+            resolve();
+          }
+        }).connect(webOutput.current);
+        webPlayers.current[note] = player;
       } catch {
         setLoadedPads(prev => ({ ...prev, [note]: false }));
+        resolve();
       }
-    }
+    })));
     setStatusMsg(`WEB ENGINE · ${loaded}/12 pads`);
   }, []);
 

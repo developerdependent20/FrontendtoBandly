@@ -1,17 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Users, Loader2, ChevronRight, ChevronLeft, Plus, X, Star, Monitor, Calendar as CalendarIcon, FileText, Download } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import TermsModal from '../components/TermsModal';
 import { alertDialog } from '../utils/dialogService';
-
-const DEFAULT_INSTRUMENTS = [
-  { id: 'bateria', label: 'Batería', icon: '🥁' },
-  { id: 'bajo', label: 'Bajo', icon: '🎸' },
-  { id: 'guitarra', label: 'Guitarra', icon: '🎸' },
-  { id: 'piano', label: 'Teclado', icon: '🎹' },
-  { id: 'voz', label: 'Voz/Cantante', icon: '🎤' },
-  { id: 'percusion', label: 'Percusión', icon: '🪘' }
-];
+import { DEFAULT_INSTRUMENTS, DEFAULT_DEPARTMENTS } from '../utils/defaultRoles';
+import { migrateSettings } from '../hooks/useOrgData';
 
 const DEFAULT_ADMIN_ROLES = [
   { id: 'director_musical', label: 'Director Musical', icon: '🎼' },
@@ -19,16 +12,6 @@ const DEFAULT_ADMIN_ROLES = [
   { id: 'media', label: 'Media/Visuales', icon: '📽️' },
   { id: 'sonido', label: 'Audio/Sonido', icon: '🎛️' },
   { id: 'logistica', label: 'Staff/Logística', icon: '📋' }
-];
-
-const DEFAULT_FUNCTIONS = [
-  { id: 'musico', label: 'Músico', icon: '🎸' },
-  { id: 'audio', label: 'Audio', icon: '🎚️' },
-  { id: 'media', label: 'Media/Visuales', icon: '📽️' },
-  { id: 'staff', label: 'Staff/Logística', icon: '📋' },
-  { id: 'bienvenida', label: 'Bienvenida', icon: '🤝' },
-  { id: 'maestro', label: 'Maestro', icon: '🎓' },
-  { id: 'voluntario', label: 'Voluntario', icon: '🌟' }
 ];
 
 export default function OnboardingScreen({ session, fetchProfile }) {
@@ -54,6 +37,13 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   const [tourSlide, setTourSlide] = useState(0);
   const [codeTouched, setCodeTouched] = useState(false);
   const [checkingCode, setCheckingCode] = useState(false);
+
+  // Equipo al que se está uniendo alguien por código: se resuelve ANTES de
+  // pedirle sus funciones, para poder ofrecerle los roles REALES de ese
+  // equipo (bateria, guitarra, sonido...) en vez de una lista genérica aparte
+  // que no coincidía con los ids que usa "sugeridos" al agendar.
+  const [resolvedOrg, setResolvedOrg] = useState(null); // { org_id, org_name, roleOptions }
+  const [verifyingCode, setVerifyingCode] = useState(false);
 
   // Sugerir el código a partir del nombre del equipo.
   // Antes había que inventárselo de la nada, y si ya estaba ocupado te
@@ -98,10 +88,34 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   };
 
   const toggleFunction = (id) => {
-    setSelectedFunctions(prev => 
+    setSelectedFunctions(prev =>
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
+
+  const verifyMemberCode = async () => {
+    if (!inviteCodeInput.trim()) { alertDialog('Ingresa el código de tu equipo.'); return; }
+    setVerifyingCode(true);
+    try {
+      const { data: resolved, error } = await supabase.rpc('resolve_invite_code', { p_code: inviteCodeInput });
+      if (error) throw new Error(error.message);
+      if (!resolved?.ok) throw new Error(resolved?.error || 'Código de acceso inválido.');
+      const departments = migrateSettings(resolved.org_settings)?.departments || DEFAULT_DEPARTMENTS;
+      const roleOptions = departments.flatMap(d => d.roles || []);
+      setResolvedOrg({ org_id: resolved.org_id, org_name: resolved.org_name, roleOptions });
+    } catch (e) {
+      alertDialog(e.message);
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
+  // Enlace mágico (?join=CODIGO): el código ya viene fijo y deshabilitado,
+  // así que se verifica solo en vez de obligar a tocar un botón de más.
+  useEffect(() => {
+    if (magicCode) verifyMemberCode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addInstrument = () => {
     if(!newInstrumentLabel.trim()) return;
@@ -130,10 +144,19 @@ export default function OnboardingScreen({ session, fetchProfile }) {
     setLoading(true);
     try {
       const code = inviteCodeInput.toUpperCase().replace(/\s+/g, '');
-      
+
+      // Se guarda directo en "departments" (el formato que ya usa
+      // OrgSettingsModal) en vez de los campos sueltos "instruments"/"roles"
+      // de antes: esos dos migrateSettings (useOrgData.js) nunca los leía —
+      // solo mira settings.leadership/production/logistics/instruments — así
+      // que la personalización de roles del paso 3 del onboarding se guardaba
+      // pero jamás se aplicaba; el equipo terminaba siempre con los roles de
+      // liderazgo/producción/logística por defecto.
       const settingsObj = {
-        instruments: instruments,
-        roles: adminRoles,
+        departments: [
+          { id: 'admin', title: 'Roles de Administrador', icon: '⭐', colorClass: 'purple', roles: adminRoles },
+          { id: 'instruments', title: 'Instrumentos y Operación (Músicos)', icon: '🎵', colorClass: 'blue', roles: instruments }
+        ],
         onboarding_completed: true
       };
 
@@ -167,33 +190,33 @@ export default function OnboardingScreen({ session, fetchProfile }) {
   };
 
   const joinByCode = async () => {
-    if (!inviteCodeInput) { alertDialog("Ingresa un código"); return; }
+    if (!resolvedOrg) { alertDialog("Verifica el código de tu equipo primero."); return; }
     if (!termsAccepted) { alertDialog("Debes aceptar los términos de servicio."); return; }
     if (selectedFunctions.length === 0) { alertDialog("Por favor selecciona al menos una función."); return; }
-    
+
     setLoading(true);
     try {
-      // Ya no se consulta la tabla de organizaciones directamente: eso permitía
-      // recorrer los códigos de invitación de todos los equipos. La función del
-      // servidor responde solo por el código exacto, y además valida el cupo
-      // del plan — cosa que esta ruta de registro nunca hacía.
-      const { data: resolved, error: orgError } = await supabase
-        .rpc('resolve_invite_code', { p_code: inviteCodeInput });
-
-      if (orgError) throw new Error(orgError.message);
-      if (!resolved?.ok) throw new Error(resolved?.error || 'Código de acceso inválido.');
-      const org = { id: resolved.org_id };
-
-      const { error: profError } = await supabase.from('profiles').insert([{ 
-        id: session.user.id, 
-        full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0], 
-        email: session.user.email, 
+      // El perfil se crea "en blanco" — sin org_id ni role puestos por el
+      // cliente. Quien decide dónde y con qué rol queda es join_organization()
+      // del lado del servidor, que valida el código y el cupo del plan antes
+      // de escribir nada (la política de INSERT de profiles ahora exige
+      // exactamente esto: role='member' y org_id=NULL en el alta).
+      const { error: profError } = await supabase.from('profiles').upsert([{
+        id: session.user.id,
+        full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+        email: session.user.email,
         role: 'member',
-        functions: selectedFunctions,
-        org_id: org.id,
+        org_id: null,
         accepted_terms: true
       }]);
       if (profError) throw profError;
+
+      const { data: result, error: joinError } = await supabase.rpc('join_organization', {
+        p_code: inviteCodeInput,
+        p_functions: selectedFunctions
+      });
+      if (joinError) throw new Error(joinError.message);
+      if (!result?.ok) throw new Error(result?.error || 'No se pudo unir al equipo.');
 
       await fetchProfile(session.user.id);
     } catch (e) {
@@ -418,45 +441,71 @@ export default function OnboardingScreen({ session, fetchProfile }) {
     <div className="glass-panel" style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
       <h3 className="section-title">Ingreso al Equipo</h3>
       <div className="input-group">
-        <input type="text" placeholder="Código del Equipo (Ej: CENTRAL24)" className="input-field" value={inviteCodeInput} onChange={(e) => setInviteCodeInput(e.target.value)} disabled={!!magicCode}/>
-        
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem', marginTop: '1rem' }}>
-          Selecciona tus funciones principales (puedes elegir varias):
-        </p>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1.5rem' }}>
-          {DEFAULT_FUNCTIONS.map(func => (
-            <div 
-              key={func.id}
-              onClick={() => toggleFunction(func.id)}
-              style={{
-                padding: '0.8rem',
-                borderRadius: '10px',
-                background: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                border: '1px solid',
-                borderColor: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                transition: 'all 0.2s'
-              }}
-            >
-              <span>{func.icon}</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: selectedFunctions.includes(func.id) ? 'bold' : 'normal' }}>{func.label}</span>
+        {!resolvedOrg ? (
+          <>
+            <input
+              type="text"
+              placeholder="Código del Equipo (Ej: CENTRAL24)"
+              className="input-field"
+              value={inviteCodeInput}
+              onChange={(e) => setInviteCodeInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && verifyMemberCode()}
+              disabled={!!magicCode || verifyingCode}
+            />
+            <button onClick={verifyMemberCode} disabled={verifyingCode} className="btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+              {verifyingCode ? 'Verificando…' : <>Verificar Código <ChevronRight size={18} /></>}
+            </button>
+            {!magicCode && <button onClick={() => setCurrentStep(0)} className="btn-secondary-outline" style={{ width: '100%', marginTop: '1rem' }}>Volver</button>}
+          </>
+        ) : (
+          <>
+            <div style={{ padding: '0.8rem 1rem', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '10px', color: '#22c55e', fontWeight: '700', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              ✓ Te vas a unir a: {resolvedOrg.org_name}
             </div>
-          ))}
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem', textAlign: 'left' }}>
-           <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-             Acepto los <span onClick={() => setShowTerms(true)} style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}>Términos de Servicio</span>.
-           </span>
-        </div>
 
-        <button onClick={joinByCode} className="btn-primary" style={{ width: '100%' }}>Unirme con mis funciones</button>
-        {!magicCode && <button onClick={() => setCurrentStep(0)} className="btn-secondary-outline" style={{ width: '100%', marginTop: '1rem' }}>Volver</button>}
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              Selecciona tus funciones dentro de este equipo (puedes elegir varias):
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1.5rem' }}>
+              {resolvedOrg.roleOptions.map(func => (
+                <div
+                  key={func.id}
+                  onClick={() => toggleFunction(func.id)}
+                  style={{
+                    padding: '0.8rem',
+                    borderRadius: '10px',
+                    background: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                    border: '1px solid',
+                    borderColor: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span>{func.icon}</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: selectedFunctions.includes(func.id) ? 'bold' : 'normal' }}>{func.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem', textAlign: 'left' }}>
+              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Acepto los <span onClick={() => setShowTerms(true)} style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}>Términos de Servicio</span>.
+              </span>
+            </div>
+
+            <button onClick={joinByCode} className="btn-primary" style={{ width: '100%' }}>Unirme con mis funciones</button>
+            {!magicCode && (
+              <button onClick={() => setResolvedOrg(null)} className="btn-secondary-outline" style={{ width: '100%', marginTop: '1rem' }}>
+                <ChevronLeft size={18} /> Cambiar código
+              </button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

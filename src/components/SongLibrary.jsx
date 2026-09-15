@@ -53,10 +53,15 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
     return `Hace >1 año`;
   };
 
+  // profiles.functions es JSONB (ya viene como array desde supabase-js), no
+  // un string — JSON.parse(array) tiraba y el catch vacío lo escondía, así
+  // que admin_musica quedaba siempre en false. Ver App.jsx para el mismo fix.
   const userFunctions = (() => {
-    try {
-      return profile?.functions ? JSON.parse(profile.functions) : [];
-    } catch { return []; }
+    if (Array.isArray(profile?.functions)) return profile.functions;
+    if (typeof profile?.functions === 'string') {
+      try { return JSON.parse(profile.functions); } catch { return []; }
+    }
+    return [];
   })();
   const canEditSongs = profile?.role === 'director' || userFunctions.includes('admin_musica');
 

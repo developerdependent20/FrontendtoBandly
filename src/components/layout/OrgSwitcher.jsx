@@ -16,7 +16,8 @@ export default function OrgSwitcher({ currentOrgId, onCreateNew }) {
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.rpc('my_organizations');
-    if (!error && Array.isArray(data)) setOrgs(data);
+    if (error) { console.error('Error cargando organizaciones:', error); return; }
+    if (Array.isArray(data)) setOrgs(data);
   }, []);
 
   useEffect(() => { load(); }, [load]);
