@@ -70,6 +70,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Limpieza única de la vieja caché de perfil compartida entre cuentas
+    // (clave global sin usuario, causante de la mezcla de datos entre sesiones).
+    localStorage.removeItem('bandly_profile_cache');
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       // Si el hash de la URL contiene type=recovery, estamos en flujo de recuperación
@@ -131,13 +135,30 @@ export default function App() {
   }, [view]);
 
   const fetchProfile = async (userId) => {
+    // La caché es por usuario: una clave global compartida en el mismo
+    // navegador hacía que, si la consulta real fallaba (red, error de RLS,
+    // lo que sea) mientras había sesión, se mostrara en silencio el perfil
+    // de quien hubiera iniciado sesión antes en ese dispositivo.
+    const cacheKey = `bandly_profile_cache_${userId}`;
+    const readCache = () => {
+      const cached = localStorage.getItem(cacheKey);
+      if (!cached) return null;
+      try {
+        const parsed = JSON.parse(cached);
+        // Cinturón y tirantes: si por lo que sea la caché no corresponde a
+        // este usuario, no la usamos.
+        return parsed && parsed.id === userId ? parsed : null;
+      } catch {
+        return null;
+      }
+    };
+
     try {
       // 1. Intentar usar caché si no hay internet (Modo Offline)
       if (!navigator.onLine) {
         console.log('[Offline] Usando perfil en caché');
-        const cached = localStorage.getItem('bandly_profile_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
+        const parsed = readCache();
+        if (parsed) {
           setProfile(parsed);
           if (!parsed.accepted_terms) setShowLegalBlocking(true);
           setLoading(false);
@@ -145,14 +166,18 @@ export default function App() {
         }
       }
 
+      // El hint "!org_id" es obligatorio: desde que organizations.owner_id
+      // (multi_org.sql) referencia profiles.id, hay dos relaciones distintas
+      // entre profiles y organizations, y el embed sin hint queda ambiguo
+      // (PGRST201) — la consulta fallaba SIEMPRE y caía al catch de abajo.
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, organizations(*)')
+        .select('*, organizations!org_id(*)')
         .eq('id', userId)
         .single();
-      
-      if (error && error.code !== 'PGRST116') throw error; 
-      
+
+      if (error && error.code !== 'PGRST116') throw error;
+
       // Bloqueo de características si el plan expiró
       if (data && data.organizations && data.organizations.current_period_end) {
         const endDate = new Date(data.organizations.current_period_end);
@@ -162,25 +187,21 @@ export default function App() {
           data.organizations.subscription_status = 'expired';
         }
       }
-      
+
       setProfile(data || null);
-      
+
       // 2. Guardar en caché para el Modo Offline
       if (data) {
-        localStorage.setItem('bandly_profile_cache', JSON.stringify(data));
+        localStorage.setItem(cacheKey, JSON.stringify(data));
       }
-      
+
       if (data && !data.accepted_terms) {
         setShowLegalBlocking(true);
       }
     } catch (e) {
       console.error('Error fetching profile, falling back to cache:', e);
-      const cached = localStorage.getItem('bandly_profile_cache');
-      if (cached) {
-        setProfile(JSON.parse(cached));
-      } else {
-        setProfile(null);
-      }
+      const parsed = readCache();
+      setProfile(parsed);
     } finally {
       setLoading(false);
     }
