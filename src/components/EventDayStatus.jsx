@@ -50,13 +50,13 @@ export default function EventDayStatus({ event, members }) {
       `}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
         <Radio size={18} color="#10b981" className="event-day-pulse" />
-        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '900', color: '#fff' }}>Hoy: {event.name}</h3>
-        <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#10b981', letterSpacing: '1px', marginLeft: 'auto' }}>EN VIVO</span>
+        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '500', color: '#fff' }}>Hoy: {event.name}</h3>
+        <span style={{ fontSize: '0.65rem', fontWeight: '500', color: '#10b981', letterSpacing: '1px', marginLeft: 'auto' }}>EN VIVO</span>
       </div>
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: '0.75rem', fontWeight: '800', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: '0.75rem', fontWeight: '500', marginBottom: '6px' }}>
             <CheckCircle2 size={14} /> CONFIRMADOS ({stats.confirmed.length})
           </div>
           <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, wordBreak: 'break-word' }}>
@@ -64,7 +64,7 @@ export default function EventDayStatus({ event, members }) {
           </div>
         </div>
         <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontSize: '0.75rem', fontWeight: '800', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontSize: '0.75rem', fontWeight: '500', marginBottom: '6px' }}>
             <Clock size={14} /> PENDIENTES ({stats.pending.length})
           </div>
           <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, wordBreak: 'break-word' }}>
@@ -73,7 +73,7 @@ export default function EventDayStatus({ event, members }) {
         </div>
         {stats.declineRequested.length > 0 && (
           <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fb923c', fontSize: '0.75rem', fontWeight: '800', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fb923c', fontSize: '0.75rem', fontWeight: '500', marginBottom: '6px' }}>
               <AlertCircle size={14} /> ESPERANDO TU APROBACIÓN ({stats.declineRequested.length})
             </div>
             <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, wordBreak: 'break-word' }}>
@@ -83,7 +83,7 @@ export default function EventDayStatus({ event, members }) {
         )}
         {stats.declined.length > 0 && (
           <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '0.75rem', fontWeight: '800', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '0.75rem', fontWeight: '500', marginBottom: '6px' }}>
               <XCircle size={14} /> DECLINARON ({stats.declined.length})
             </div>
             <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, wordBreak: 'break-word' }}>

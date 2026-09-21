@@ -18,9 +18,9 @@ export default function FirstUseTip({ storageKey, title, items, accentColor = 'v
 
   return (
     <div style={{
-      background: 'rgba(59,130,246,0.06)',
+      background: 'rgba(247, 244, 239, 0.03)',
       border: `1px solid ${accentColor}33`,
-      borderRadius: '14px',
+      borderRadius: '12px',
       padding: '1rem 1.25rem',
       display: 'flex',
       alignItems: 'flex-start',
@@ -30,7 +30,7 @@ export default function FirstUseTip({ storageKey, title, items, accentColor = 'v
     }}>
       <Lightbulb size={20} color={accentColor} style={{ flexShrink: 0, marginTop: '2px' }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#fff', marginBottom: '6px' }}>{title}</div>
+        <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#fff', marginBottom: '6px' }}>{title}</div>
         <ul style={{ margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '3px' }}>
           {items.map((item, i) => (
             <li key={i} style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.4 }}>{item}</li>

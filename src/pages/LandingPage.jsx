@@ -44,13 +44,13 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
           <div className="landing-nav-links">
             {/* Selector: muestra ambos idiomas, el ACTIVO resaltado (antes mostraba el destino y confundía) */}
-            <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ color: lang === 'es' ? 'white' : 'rgba(255,255,255,0.35)' }}>ES</span>
               <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
               <span style={{ color: lang === 'en' ? 'white' : 'rgba(255,255,255,0.35)' }}>EN</span>
             </button>
             <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>{t.btnLogin}</button>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
+            <button onClick={() => onGetStarted('signup')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
           </div>
         </nav>
 
@@ -69,32 +69,32 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', marginTop: '3.5rem' }}>
             <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '800' }}>{t.btnStart}</button>
-              <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '800' }}>{t.btnViewPlans}</button>
+              <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '500' }}>{t.btnStart}</button>
+              <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '500' }}>{t.btnViewPlans}</button>
             </div>
           </div>
           
           <div className="compatibility-badges-centered" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
-            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '4px' }}>{t.availableOn}</span>
+            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.availableOn}</span>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/BadgeMacOS.png" 
                 alt="MacOS" 
-                style={{ height: '42px', width: 'auto', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
+                style={{ height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
                 onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
                 onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
               />
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/images.png" 
                 alt="Windows" 
-                style={{ height: '42px', width: 'auto', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
+                style={{ height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
                 onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
                 onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
               />
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/0w8ONb9ouWJ2GDFdyHnwlzOy90.avif" 
                 alt="Google Play" 
-                style={{ height: '42px', width: 'auto', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
+                style={{ height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
                 onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
                 onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
               />
@@ -118,7 +118,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               }}>
                 <div style={{ color: 'rgba(255,255,255,0.4)' }}><Cloud size={32} strokeWidth={1.5} /></div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.webTitle}</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '500', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.webTitle}</h3>
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', lineHeight: '1.6' }}>
                     {t.webDesc}
                   </p>
@@ -128,8 +128,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               {/* Desktop Card */}
               <div className="hover-scale" style={{ 
                 padding: '2rem', 
-                background: 'rgba(37, 99, 235, 0.05)', 
-                border: '1px solid rgba(37, 99, 235, 0.2)', 
+                background: 'rgba(247, 244, 239, 0.03)', 
+                border: '1px solid rgba(247, 244, 239, 0.18)', 
                 borderRadius: '24px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -137,7 +137,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               }}>
                 <div style={{ color: 'var(--primary)' }}><Monitor size={32} strokeWidth={1.5} /></div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.desktopTitle}</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '500', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.desktopTitle}</h3>
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', lineHeight: '1.6' }}>
                     {lang === 'es' ? <>{t.desktopDesc.split('reproducir')[0]}<strong>reproducir</strong>{t.desktopDesc.split('reproducir')[1]}</> : <>{t.desktopDesc.split('play')[0]}<strong>play</strong>{t.desktopDesc.split('play')[1]}</>}
                   </p>
@@ -167,17 +167,17 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               { icon: <Lightbulb size={22} color="var(--primary)" />, title: t.syncBadge3, desc: t.syncBadge3Desc },
             ].map((item, i) => (
               <React.Fragment key={i}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: 'rgba(37, 99, 235, 0.06)', border: '1px solid rgba(37, 99, 235, 0.2)', borderRadius: '16px', padding: '0.9rem 1.4rem', textAlign: 'left' }}>
-                  <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: 'rgba(247, 244, 239, 0.03)', border: '1px solid rgba(247, 244, 239, 0.18)', borderRadius: '12px', padding: '0.9rem 1.4rem', textAlign: 'left' }}>
+                  <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '12px', background: 'rgba(247, 244, 239, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {item.icon}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem' }}>{item.title}</div>
+                    <div style={{ fontWeight: 500, color: '#fff', fontSize: '0.95rem' }}>{item.title}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.desc}</div>
                   </div>
                 </div>
                 {i < 2 && (
-                  <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 900, opacity: 0.6 }}>=</div>
+                  <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 500, opacity: 0.6 }}>=</div>
                 )}
               </React.Fragment>
             ))}
@@ -206,7 +206,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                 { title: t.proFeat6, desc: t.proFeat6Desc }
               ].map((item, i) => (
                 <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                  <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</div>
+                  <div style={{ color: 'var(--primary)', fontWeight: '500' }}>✓</div>
                   <div>
                     <strong style={{ display: 'block', color: 'white' }}>{item.title}</strong>
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{item.desc}</span>
@@ -217,7 +217,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           </div>
           <div style={{ flex: '1.2', minWidth: '300px', order: 1 }}>
             <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, rgba(37, 99, 235,0.1), transparent)', zIndex: 2, pointerEvents: 'none' }}></div>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))', zIndex: 2, pointerEvents: 'none' }}></div>
               <img 
                 src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-04-29%20121603.png" 
                 alt="Pro Player Interface" 
@@ -235,7 +235,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       </section>
 
       {/* Bandly Presenter Showcase */}
-      <section className="presenter-showcase" style={{ padding: '8rem 2rem', background: 'rgba(168,85,247,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <section className="presenter-showcase" style={{ padding: '8rem 2rem', background: 'rgba(247, 244, 239, 0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
           <p className="statement-mini">{t.presenterMini}</p>
           <h2 className="section-title-large">{t.presenterTitle1} <span className="serif-accent">{t.presenterTitle2}</span></h2>
@@ -244,13 +244,13 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
           {[
-            { icon: <Zap size={28} color="#a855f7" />, title: t.presenterFeat1, desc: t.presenterFeat1Desc },
-            { icon: <Tv size={28} color="#a855f7" />, title: t.presenterFeat2, desc: t.presenterFeat2Desc },
-            { icon: <ImageIcon size={28} color="#a855f7" />, title: t.presenterFeat3, desc: t.presenterFeat3Desc }
+            { icon: <Zap size={28} color="#f7f4ef" />, title: t.presenterFeat1, desc: t.presenterFeat1Desc },
+            { icon: <Tv size={28} color="#f7f4ef" />, title: t.presenterFeat2, desc: t.presenterFeat2Desc },
+            { icon: <ImageIcon size={28} color="#f7f4ef" />, title: t.presenterFeat3, desc: t.presenterFeat3Desc }
           ].map((item, i) => (
             <div key={i} className="hover-scale" style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#fff' }}>{item.title}</h3>
+              <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'rgba(247, 244, 239, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '500', margin: 0, color: '#fff' }}>{item.title}</h3>
               <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.88rem', lineHeight: '1.6' }}>{item.desc}</p>
             </div>
           ))}
@@ -258,7 +258,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       </section>
 
       {/* Mobile App Virtues Showcase */}
-      <section className="app-virtues-showcase" style={{ padding: '8rem 2rem', background: '#020617', overflow: 'hidden' }}>
+      <section className="app-virtues-showcase" style={{ padding: '8rem 2rem', background: '#101012', overflow: 'hidden' }}>
         <style>{`
           .virtues-gallery {
             display: flex;
@@ -275,7 +275,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             position: relative;
             box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
             overflow: hidden; /* Esto asegura que el recorte del zoom funcione */
-            background: #0f172a;
+            background: #17171a;
           }
           .virtue-img-wrapper img {
             width: 100%;
@@ -295,7 +295,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           .virtue-center {
             max-width: 320px;
             z-index: 10;
-            box-shadow: 0 30px 60px rgba(37, 99, 235,0.3), 0 0 0 2px rgba(37, 99, 235,0.5);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(0, 0, 0, 0.35);
           }
           .virtue-img-wrapper:hover {
             transform: translateY(-15px) scale(1.05);
@@ -388,7 +388,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <th style={{ textAlign: 'left', padding: '1.5rem', opacity: 0.5 }}>{t.tableFeat}</th>
-                <th style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--primary)', fontWeight: 800 }}>BANDLY</th>
+                <th style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(247, 244, 239, 0.06)', color: 'var(--primary)', fontWeight: 500 }}>BANDLY</th>
                 <th style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>{t.tableOthers}</th>
               </tr>
             </thead>
@@ -403,8 +403,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               ].map((item, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1.2rem', fontWeight: 500 }}>{item.feature}</td>
-                  <td style={{ padding: '1.2rem', textAlign: 'center', background: 'rgba(124, 58, 237, 0.05)' }}>
-                    {item.bandly === true ? <CheckCircle2 size={20} color="var(--primary)" style={{margin:'0 auto'}} /> : <span style={{color:'var(--primary)', fontWeight: 800}}>{item.bandly}</span>}
+                  <td style={{ padding: '1.2rem', textAlign: 'center', background: 'rgba(247, 244, 239, 0.03)' }}>
+                    {item.bandly === true ? <CheckCircle2 size={20} color="var(--primary)" style={{margin:'0 auto'}} /> : <span style={{color:'var(--primary)', fontWeight: 500}}>{item.bandly}</span>}
                   </td>
                   <td style={{ padding: '1.2rem', textAlign: 'center', opacity: 0.6 }}>
                     {item.others}
@@ -424,7 +424,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           
           {/* Billing Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '1rem', marginBottom: '1rem' }}>
-            <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem' }}>{t.monthly}</span>
+            <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem' }}>{t.monthly}</span>
             <div 
               onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
               style={{ 
@@ -449,9 +449,9 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
                 boxShadow: '0 0 10px var(--primary)'
               }} />
             </div>
-            <span style={{ color: billingPeriod === 'annual' ? '#fff' : '#666', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ color: billingPeriod === 'annual' ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               Anual
-              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>{t.save}</span>
+              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 500 }}>{t.save}</span>
             </span>
           </div>
         </div>
@@ -500,7 +500,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               <li style={{ alignItems: 'flex-start', gap: '10px' }}>
                 <Crown size={16} color="var(--primary)" style={{ marginTop: '3px', flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontWeight: 800, color: '#fff' }}>{t.f_daw}</div>
+                  <div style={{ fontWeight: 500, color: '#fff' }}>{t.f_daw}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_dawDesc}</div>
                 </div>
               </li>
@@ -539,7 +539,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               <li style={{ alignItems: 'flex-start', gap: '10px' }}>
                 <Crown size={16} color="var(--accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontWeight: 800, color: '#fff' }}>{t.f_presenterHead}</div>
+                  <div style={{ fontWeight: 500, color: '#fff' }}>{t.f_presenterHead}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_presenterHeadDesc}</div>
                 </div>
               </li>
@@ -578,7 +578,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
               <li style={{ alignItems: 'flex-start', gap: '10px' }}>
                 <Crown size={16} color="var(--accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontWeight: 800, color: '#fff' }}>{t.f_lightsHead}</div>
+                  <div style={{ fontWeight: 500, color: '#fff' }}>{t.f_lightsHead}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_lightsHeadDesc}</div>
                 </div>
               </li>

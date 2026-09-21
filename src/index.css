@@ -1,31 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
-
 :root {
   /* Premium Typography (Bandly v2) */
-  --font-display: 'Plus Jakarta Sans', sans-serif;
-  --font-ui: 'Plus Jakarta Sans', sans-serif;
+  --font-display: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-ui: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'DM Mono', monospace;
 
   line-height: 1.5;
   font-weight: 400;
+  letter-spacing: 0;
 
   /* Color Palette — MISMA paleta que App.css (--bg-dark/--primary/etc.), solo
      con los nombres de variable "v2" para no romper clases que ya las usan
      (.glass, .nav-item.active, calendar-cell-hover). Antes vivían dos azules
-     distintos (#0d0d12/#3b82f6 aquí vs #020617/#2563eb en App.css) según qué
+     distintos (#101012/#7891b9 aquí vs #101012/#627aae en App.css) según qué
      clase tocaras — ahora es un solo sistema. */
-  --bg-color: #020617;
-  --surface-color: rgba(15, 23, 42, 0.6);
-  --surface-accent: #1e293b;
-  --primary-color: #2563eb;
-  --accent-color: #2563eb;
+  --bg-color: #101012;                 /* lienzo */
+  --surface-color: #17171a;            /* tarjetas, campos */
+  --surface-accent: #1c1c20;           /* hover / nivel intermedio */
+  --surface-overlay: #000000;          /* modales, estados presionados */
+  /* Sin color de marca en la interfaz: lo activo se marca en crema. El único
+     color es el coral, y solo en la acción principal de cada pantalla. */
+  --primary-color: #f7f4ef;
+  --accent-color: #f7f4ef;
   --primary: var(--primary-color);
   --accent: var(--accent-color);
-  --primary-glow: rgba(37, 99, 235, 0.4);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #94a3b8;
+  --primary-glow: rgba(0, 0, 0, 0);
+  --cta: #fd429c;
+  --cta-warm: #ff6a4a;
+  --text-primary: #f7f4ef;             /* crema cálido: nunca blanco puro */
+  --text-secondary: #c2c2c1;
+  --text-muted: #a8a8a6;
   --border-color: rgba(255, 255, 255, 0.08);
+
+  /* Radios: solo 6 / 12 / 20 / 24 */
+  --radius-btn: 6px;
+  --radius-card: 12px;
+  --radius-img: 20px;
+  --radius-hero: 24px;
 
   /* Transitions */
   --transition-fast: 0.2s ease;
@@ -62,6 +72,8 @@ body {
 
 h1, h2, h3, h4, .font-display {
   font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 #root {
@@ -81,7 +93,7 @@ h1, h2, h3, h4, .font-display {
 
 ::-webkit-scrollbar-thumb {
   background: var(--surface-accent);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -104,8 +116,8 @@ h1, h2, h3, h4, .font-display {
   right: 0;
   bottom: 0;
   z-index: -1;
-  background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+  background: linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04)),
+              linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04));
 }
 
 .calendar-cell-hover {

@@ -23,7 +23,7 @@ export const AvatarPicker = ({ isOpen, onClose, onSelect, currentAvatar }) => {
         <button onClick={onClose} style={{ position: 'absolute', top: '1.2rem', right: '1.2rem', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>
           <X size={22} />
         </button>
-        <h3 style={{ marginBottom: '2.5rem', fontSize: '2rem', fontWeight: '900' }}>Elige tu Avatar</h3>
+        <h3 style={{ marginBottom: '2.5rem', fontSize: '2rem', fontWeight: '500' }}>Elige tu Avatar</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '25px', marginBottom: '3rem' }}>
           {AVATARS.map((url, i) => (
             <div 
@@ -44,7 +44,7 @@ export const AvatarPicker = ({ isOpen, onClose, onSelect, currentAvatar }) => {
             </div>
           ))}
         </div>
-        <button onClick={onClose} className="btn-secondary" style={{ width: '100%', padding: '1.2rem', fontSize: '1rem', fontWeight: 'bold' }}>Cancelar</button>
+        <button onClick={onClose} className="btn-secondary" style={{ width: '100%', padding: '1.2rem', fontSize: '1rem', fontWeight: '500' }}>Cancelar</button>
       </div>
     </div>
   );

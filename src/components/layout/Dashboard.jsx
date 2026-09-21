@@ -190,18 +190,18 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }} onClick={() => setShowTeamAction(false)}>
           <div style={{
-            background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))',
+            background: 'linear-gradient(145deg, rgba(23, 23, 26,0.98), rgba(28, 28, 32,0.98))',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '24px', padding: '2.5rem 2rem', width: '380px',
             boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem',
             animation: 'dropdownFadeIn 0.2s ease-out'
           }} onClick={e => e.stopPropagation()}>
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(247, 244, 239, 0.06)', border: '1px solid rgba(247, 244, 239, 0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Building2 size={28} color="var(--primary)" />
             </div>
             <div style={{ textAlign: 'center' }}>
-              <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>Gestión de Organización</h3>
+              <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: '500', color: 'white', letterSpacing: '-0.5px' }}>Gestión de Organización</h3>
               <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
                 Elige si deseas unirte a una organización existente o crear una nueva.
               </p>
@@ -210,13 +210,13 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
               <button
                 onClick={() => { setShowTeamAction(false); if (handleJoinTeam) handleJoinTeam(); }}
-                style={{ width: '100%', padding: '16px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'white', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left' }}
+                style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'white', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserPlus size={18} /></div>
+                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><UserPlus size={18} /></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '700', fontSize: '0.9rem', marginBottom: '2px' }}>Unirse con código</div>
+                  <div style={{ fontWeight: '500', fontSize: '0.9rem', marginBottom: '2px' }}>Unirse con código</div>
                   <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Ingresar a otra organización</div>
                 </div>
                 <ArrowRight size={16} color="rgba(255,255,255,0.2)" />
@@ -231,20 +231,20 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                     setShowUpgradeModal(true);
                   }
                 }}
-                style={{ width: '100%', padding: '16px', borderRadius: '14px', border: '1px solid rgba(37, 99, 235,0.3)', background: 'rgba(37, 99, 235,0.05)', color: 'white', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37, 99, 235,0.15)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37, 99, 235,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid rgba(247, 244, 239, 0.18)', background: 'rgba(247, 244, 239, 0.03)', color: 'white', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(247, 244, 239, 0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(247, 244, 239, 0.03)'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(37, 99, 235,0.2)', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Crown size={18} /></div>
+                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(247, 244, 239, 0.11)', color: '#f7f4ef', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Crown size={18} /></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '700', fontSize: '0.9rem', marginBottom: '2px', color: '#e2e8f0' }}>Crear nueva</div>
-                  <div style={{ fontSize: '0.7rem', color: '#a78bfa' }}>Requiere plan PRO o superior</div>
+                  <div style={{ fontWeight: '500', fontSize: '0.9rem', marginBottom: '2px', color: '#e8e5df' }}>Crear nueva</div>
+                  <div style={{ fontSize: '0.7rem', color: '#f7f4ef' }}>Requiere plan PRO o superior</div>
                 </div>
-                <ArrowRight size={16} color="rgba(37, 99, 235,0.4)" />
+                <ArrowRight size={16} color="rgba(247, 244, 239, 0.4)" />
               </button>
             </div>
             
-            <button onClick={() => setShowTeamAction(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '0.5rem', fontWeight: '600' }} onMouseEnter={e => e.currentTarget.style.color = 'white'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>Cancelar</button>
+            <button onClick={() => setShowTeamAction(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '0.5rem', fontWeight: '500' }} onMouseEnter={e => e.currentTarget.style.color = 'white'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>Cancelar</button>
           </div>
         </div>
       )}
@@ -256,7 +256,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }} onClick={() => setShowUpgradeModal(false)}>
           <div style={{
-            background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))',
+            background: 'linear-gradient(145deg, rgba(23, 23, 26,0.98), rgba(28, 28, 32,0.98))',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '24px', padding: '2.5rem', width: '400px',
             boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
@@ -267,7 +267,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               <Crown size={32} color="#fbbf24" />
             </div>
             <div style={{ textAlign: 'center' }}>
-              <h3 style={{ margin: '0 0 10px', fontSize: '1.4rem', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>Plan PRO Requerido</h3>
+              <h3 style={{ margin: '0 0 10px', fontSize: '1.4rem', fontWeight: '500', color: 'white', letterSpacing: '-0.5px' }}>Plan PRO Requerido</h3>
               <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
                 Para poder crear y administrar múltiples organizaciones necesitas actualizar tu plan a <strong>PRO</strong> o superior.
               </p>
@@ -280,7 +280,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '1rem' }}>
               <button
                 onClick={() => setShowUpgradeModal(false)}
-                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', fontWeight: '500', cursor: 'pointer', transition: 'all 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'white'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
               >
@@ -288,9 +288,9 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               </button>
               <button
                 onClick={() => { setShowUpgradeModal(false); setShowSubscription(true); }}
-                style={{ flex: 1.5, padding: '12px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #2563eb, #d946ef)', color: 'white', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s', boxShadow: '0 4px 15px rgba(37, 99, 235,0.3)' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(37, 99, 235,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(37, 99, 235,0.3)'; }}
+                style={{ flex: 1.5, padding: '12px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #fd429c, #ff6a4a)', color: 'white', fontSize: '0.85rem', fontWeight: '500', cursor: 'pointer', transition: 'all 0.15s', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.35)' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.35)'; }}
               >
                 Actualizar Plan
               </button>
@@ -306,7 +306,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }} onClick={() => setShowLogoutConfirm(false)}>
           <div style={{
-            background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))',
+            background: 'linear-gradient(145deg, rgba(23, 23, 26,0.98), rgba(28, 28, 32,0.98))',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '20px', padding: '2rem', width: '320px',
             boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
@@ -317,7 +317,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               <LogOut size={22} color="#ef4444" />
             </div>
             <div style={{ textAlign: 'center' }}>
-              <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'white' }}>Cerrar sesion</h3>
+              <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '500', color: 'white' }}>Cerrar sesion</h3>
               <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
                 Tu sesion quedara guardada.<br />Puedes volver cuando quieras.
               </p>
@@ -325,7 +325,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '0.5rem' }}>
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}
+                style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', fontWeight: '500', cursor: 'pointer', transition: 'all 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
               >
@@ -333,7 +333,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               </button>
               <button
                 onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
-                style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s' }}
+                style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: '0.82rem', fontWeight: '500', cursor: 'pointer', transition: 'all 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
               >
@@ -344,9 +344,9 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         </div>
       )}
 
-      <main className="main-content">
+      <main className={`main-content${activeTab === 'daw' && isTauri() ? ' is-daw' : ''}`}>
         <header style={{ 
-          minHeight: '60px', background: 'rgba(15, 23, 42, 0.2)', 
+          minHeight: '60px', background: 'rgba(23, 23, 26, 0.2)', 
           borderBottom: '1px solid rgba(255,255,255,0.05)',
           display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', 
           padding: '8px 1rem', gap: '8px'
@@ -361,15 +361,15 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               onClick={handleCopyLink}
               style={{ 
                 display: 'flex', alignItems: 'center', gap: '6px', 
-                background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
+                background: 'rgba(247, 244, 239, 0.06)', border: '1px solid rgba(247, 244, 239, 0.18)',
                 padding: '6px 10px', borderRadius: '20px', cursor: 'pointer',
                 transition: 'all 0.2s'
               }}
               className="hover-scale hide-on-tiny"
               title="Copiar link mágico para invitar"
             >
-              <Users size={14} color="#3b82f6" />
-              <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#3b82f6', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+              <Users size={14} color="#f7f4ef" />
+              <span style={{ fontSize: '0.65rem', fontWeight: '500', color: '#f7f4ef', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
                 CÓDIGO: {profile.organizations.invite_code}
               </span>
             </div>
@@ -379,12 +379,12 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             <div className="storage-meter" style={{
               display: 'flex', flexDirection: 'column', gap: '4px',
               padding: '6px 10px', borderRadius: '12px',
-              background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6))', 
+              background: 'linear-gradient(to right, rgba(23, 23, 26, 0.6), rgba(28, 28, 32, 0.6))', 
               border: '1px solid rgba(255,255,255,0.05)',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
               minWidth: '120px', maxWidth: '180px', flex: '0 1 auto'
             }} title="Almacenamiento Usado">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', fontWeight: '800', letterSpacing: '0.5px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', fontWeight: '500', letterSpacing: '0.5px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                   <Cloud size={9} color="var(--primary)" /> STORAGE
                 </span>
@@ -397,14 +397,14 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                   })()}
                 </span>
               </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', overflow: 'hidden' }}>
                 <div style={{ 
                   height: '100%', 
                   width: `${Math.min(100, ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) * 100)}%`, 
                   background: ((profile.organizations.storage_used_mb || 0) / (profile.organizations.storage_limit_mb || 300)) > 0.85 
                     ? 'linear-gradient(90deg, #ef4444, #f87171)' 
                     : 'linear-gradient(90deg, var(--primary), var(--accent))',
-                  boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
+                  boxShadow: '0 0 10px rgba(0, 0, 0, 0.35)',
                   transition: 'width 0.5s ease-out'
                 }} />
               </div>
@@ -429,7 +429,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             title={profile?.role === 'director' ? "Opciones de Equipo" : "Unirse a un equipo"}
           >
             <Plus size={14} color="#fff" />
-            <span className="hide-on-tiny" style={{ fontSize: '0.65rem', fontWeight: '900', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+            <span className="hide-on-tiny" style={{ fontSize: '0.65rem', fontWeight: '500', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
               {profile?.role === 'director' ? 'ORG' : 'UNIRSE'}
             </span>
           </div>
@@ -443,7 +443,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
           >
             <Bell size={16} color="white" />
             {unreadCount > 0 && (
-              <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.6rem', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-dark)' }}>
+              <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.6rem', fontWeight: '500', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-dark)' }}>
                 {unreadCount}
               </span>
             )}
@@ -453,19 +453,19 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             onClick={() => setShowSubscription(true)}
             style={{ 
               display: 'flex', alignItems: 'center', gap: '5px', 
-              background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)',
+              background: 'rgba(247, 244, 239, 0.06)', border: '1px solid rgba(247, 244, 239, 0.18)',
               padding: '6px 10px', borderRadius: '20px', cursor: 'pointer',
               transition: 'all 0.2s'
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)'}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(247, 244, 239, 0.11)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(247, 244, 239, 0.06)'}
           >
-            <Crown size={14} color="#a855f7" />
-            <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#a855f7', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+            <Crown size={14} color="#f7f4ef" />
+            <span style={{ fontSize: '0.65rem', fontWeight: '500', color: '#f7f4ef', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
               {(profile?.organizations?.plan || profile?.plan_id || 'STARTER').toUpperCase()}
             </span>
             {(!profile?.organizations?.plan || profile.organizations.plan === 'free' || profile.organizations.plan === 'starter') && (
-              <span className="hide-on-tiny" style={{ fontSize: '0.55rem', background: '#a855f7', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' }}>
+              <span className="hide-on-tiny" style={{ fontSize: '0.55rem', background: '#fd429c', color: '#fff', padding: '2px 6px', borderRadius: '6px', fontWeight: '500' }}>
                 UP
               </span>
             )}
@@ -478,8 +478,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
 
         {showNotifications && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '20px' }} onClick={() => setShowNotifications(false)}>
-            <div style={{ background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', width: '100%', maxWidth: '380px', maxHeight: '80vh', overflowY: 'auto', padding: '1.5rem', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', animation: 'dropdownFadeIn 0.2s ease-out' }} onClick={e => e.stopPropagation()}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ background: 'linear-gradient(145deg, rgba(23, 23, 26,0.98), rgba(28, 28, 32,0.98))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', width: '100%', maxWidth: '380px', maxHeight: '80vh', overflowY: 'auto', padding: '1.5rem', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', animation: 'dropdownFadeIn 0.2s ease-out' }} onClick={e => e.stopPropagation()}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '500', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Bell size={20} color="var(--primary)" /> Notificaciones
               </h3>
               
@@ -504,10 +504,10 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                           <strong>{memberName}</strong>
                           {req.type === 'decline_request' ? ' solicitó declinar:' : req.type === 'confirmation' ? ' confirmó asistencia:' : req.type === 'replaced' ? ' te reemplazó:' : req.type === 'removed' ? ' te eliminó de un evento:' : ' te dejó un mensaje:'}
                         </div>
-                        {eventData && <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '700' }}>{eventData.name} ({eventDate})</div>}
+                        {eventData && <div style={{ fontSize: '0.9rem', color: 'white', fontWeight: '500' }}>{eventData.name} ({eventDate})</div>}
                         
                         {req.message && (
-                          <div style={{ fontSize: '0.8rem', color: req.type === 'decline_request' ? '#fbbf24' : '#6ee7b7', marginTop: '8px', background: req.type === 'decline_request' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(110, 231, 183, 0.1)', padding: '8px', borderRadius: '8px', fontStyle: 'italic' }}>
+                          <div style={{ fontSize: '0.8rem', color: req.type === 'decline_request' ? '#fbbf24' : '#6ee7b7', marginTop: '8px', background: req.type === 'decline_request' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(110, 231, 183, 0.1)', padding: '8px', borderRadius: '12px', fontStyle: 'italic' }}>
                             "{req.message}"
                           </div>
                         )}
@@ -519,28 +519,28 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
                                 await markAsRead();
                                 await supabase.from('event_roster').update({ status: 'declined' }).eq('event_id', req.event_id).eq('profile_id', req.actor_id);
                                 await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Tu declinación fue aceptada. Has sido excusado del evento.' });
-                              }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Aceptar (Excusionar)</button>
+                              }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: '500', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer' }}>Aceptar (Excusionar)</button>
                               
                               <button onClick={async () => {
                                 await markAsRead();
                                 await supabase.from('event_roster').delete().eq('event_id', req.event_id).eq('profile_id', req.actor_id);
                                 await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Fuiste removido del evento por el director.' });
-                              }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Remover del evento</button>
+                              }} style={{ flex: 1, padding: '8px', fontSize: '0.75rem', fontWeight: '500', background: '#ef4444', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer' }}>Remover del evento</button>
                               
                               <button onClick={async () => {
                                 await markAsRead();
                                 await supabase.from('event_roster').update({ status: 'confirmed' }).eq('event_id', req.event_id).eq('profile_id', req.actor_id);
                                 await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Tu excusa fue rechazada. Debes asistir al evento.' });
-                              }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>Rechazar excusa y Confirmar</button>
+                              }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: '500', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', cursor: 'pointer' }}>Rechazar excusa y Confirmar</button>
                               
                               <button onClick={async () => {
                                 await markAsRead();
                                 await supabase.from('event_roster').update({ status: 'pending' }).eq('event_id', req.event_id).eq('profile_id', req.actor_id);
                                 await sendNotification({ orgId: profile.org_id, targetProfileIds: [req.actor_id], actorId: profile.id, eventId: req.event_id, type: 'decline_resolved', message: 'Tu solicitud fue dejada en pendiente por el director. Por favor habla con él.' });
-                              }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer' }}>Rechazar y dejar Pendiente</button>
+                              }} style={{ flex: '1 1 45%', padding: '8px', fontSize: '0.75rem', fontWeight: '500', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', cursor: 'pointer' }}>Rechazar y dejar Pendiente</button>
                             </>
                           ) : isUnread ? (
-                            <button onClick={markAsRead} style={{ width: '100%', padding: '8px', fontSize: '0.75rem', fontWeight: 'bold', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                            <button onClick={markAsRead} style={{ width: '100%', padding: '8px', fontSize: '0.75rem', fontWeight: '500', background: '#fd429c', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer' }}>
                               Entendido
                             </button>
                           ) : null}
@@ -565,7 +565,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             <div style={{
               display: 'flex', alignItems: 'center', gap: '12px',
               background: 'linear-gradient(90deg, rgba(239,68,68,0.15), rgba(251,191,36,0.1))',
-              border: '1px solid rgba(239,68,68,0.3)', borderRadius: '14px',
+              border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px',
               padding: '0.9rem 1.1rem', margin: '1rem 1rem 0'
             }}>
               <AlertTriangle size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
@@ -574,7 +574,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               </div>
               <button
                 onClick={dismissBanner}
-                style={{ flexShrink: 0, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: '0.75rem', fontWeight: '700', padding: '6px 12px', borderRadius: '10px', cursor: 'pointer' }}
+                style={{ flexShrink: 0, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: '0.75rem', fontWeight: '500', padding: '6px 12px', borderRadius: '12px', cursor: 'pointer' }}
               >
                 Entendido
               </button>

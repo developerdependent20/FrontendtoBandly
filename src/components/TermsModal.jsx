@@ -6,13 +6,13 @@ export default function TermsModal({ isOpen, onClose, onDecline }) {
 
   return (
     <div className="modal-overlay" style={{ zIndex: 2000, position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-       <div className="glass-panel modal-content" style={{ maxWidth: '650px', maxHeight: '85vh', overflowY: 'auto', padding: '2.5rem', background: '#0a0a0b', border: '1px solid #333', borderRadius: '16px' }}>
+       <div className="glass-panel modal-content" style={{ maxWidth: '650px', maxHeight: '85vh', overflowY: 'auto', padding: '2.5rem', background: '#0a0a0b', border: '1px solid #333', borderRadius: '12px' }}>
           
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{ display: 'inline-flex', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', marginBottom: '1rem', color: '#3b82f6' }}>
+            <div style={{ display: 'inline-flex', padding: '1rem', background: 'rgba(247, 244, 239, 0.06)', borderRadius: '50%', marginBottom: '1rem', color: '#f7f4ef' }}>
                 <ShieldCheck size={40} />
             </div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'white', margin: 0 }}>Acuerdo Legal de Bandly</h2>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: '500', color: 'white', margin: 0 }}>Acuerdo Legal de Bandly</h2>
             <p style={{ color: '#555', fontSize: '0.85rem', marginTop: '0.5rem' }}>Actualización Obligatoria: 13 de Abril, 2026</p>
           </div>
 
@@ -26,13 +26,13 @@ export default function TermsModal({ isOpen, onClose, onDecline }) {
                <li><strong>Responsabilidad:</strong> Bandly es una herramienta tecnológica; no nos hacemos responsables por conflictos internos de equipos o infracciones de derechos cometidas por usuarios.</li>
             </ul>
 
-            <div style={{ background: '#111', padding: '1rem', borderRadius: '8px', borderLeft: '3px solid #3b82f6' }}>
+            <div style={{ background: '#111', padding: '1rem', borderRadius: '12px', borderLeft: '3px solid rgba(247, 244, 239, 0.3)' }}>
                <p style={{ margin: 0, fontSize: '0.75rem' }}>Puedes consultar los documentos completos en <strong>getbandly.com/terminos</strong> y <strong>getbandly.com/privacidad</strong>.</p>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2.5rem' }}>
-            <button onClick={onClose} className="btn-primary" style={{ width: '100%', padding: '1.1rem', fontSize: '0.9rem', fontWeight: '800' }}>
+            <button onClick={onClose} className="btn-primary" style={{ width: '100%', padding: '1.1rem', fontSize: '0.9rem', fontWeight: '500' }}>
               ACEPTO LOS NUEVOS TÉRMINOS
             </button>
             <button onClick={onDecline} style={{ background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: '0.75rem', textDecoration: 'underline' }}>

@@ -66,16 +66,16 @@ export default function LiveRemote({ orgId, events }) {
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', width: '100%', padding: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '2rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
           <Radio size={30} color="var(--primary)" /> Modo En Vivo
         </h2>
       </div>
 
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px', padding: '0.9rem 1.2rem', borderRadius: '12px',
-        marginBottom: '1.5rem', fontWeight: '700', fontSize: '0.85rem',
-        background: daw ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
-        border: `1px solid ${daw ? 'rgba(16,185,129,0.4)' : 'rgba(148,163,184,0.3)'}`,
+        marginBottom: '1.5rem', fontWeight: '500', fontSize: '0.85rem',
+        background: daw ? 'rgba(16,185,129,0.1)' : 'rgba(168, 168, 166,0.1)',
+        border: `1px solid ${daw ? 'rgba(16,185,129,0.4)' : 'rgba(168, 168, 166,0.3)'}`,
         color: daw ? '#10b981' : 'var(--text-muted)'
       }}>
         {daw ? <CheckCircle2 size={18} /> : <WifiOff size={18} />}
@@ -89,7 +89,7 @@ export default function LiveRemote({ orgId, events }) {
               key={ev.id}
               onClick={() => setExplicitEventId(ev.id)}
               style={{
-                padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer',
+                padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer',
                 background: selectedEventId === ev.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
                 color: selectedEventId === ev.id ? 'white' : 'var(--text-muted)',
                 border: '1px solid rgba(255,255,255,0.1)'
@@ -102,12 +102,12 @@ export default function LiveRemote({ orgId, events }) {
       )}
 
       {!activeEvent ? (
-        <div style={{ padding: '3rem 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)' }}>
           <Radio size={36} color="var(--text-muted)" style={{ opacity: 0.4, marginBottom: '1rem' }} />
           <p style={{ color: 'var(--text-muted)' }}>No hay ningún evento programado para hoy.</p>
         </div>
       ) : setlist.length === 0 ? (
-        <div style={{ padding: '3rem 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)' }}>
           <p style={{ color: 'var(--text-muted)' }}>Este evento todavía no tiene repertorio armado.</p>
         </div>
       ) : (
@@ -122,19 +122,19 @@ export default function LiveRemote({ orgId, events }) {
               <div
                 key={es.id || i}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '14px', padding: '1rem 1.2rem', borderRadius: '14px',
+                  display: 'flex', alignItems: 'center', gap: '14px', padding: '1rem 1.2rem', borderRadius: '12px',
                   background: isPlayingOnDaw ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isPlayingOnDaw ? '#10b981' : 'rgba(255,255,255,0.08)'}`,
                   opacity: daw ? 1 : 0.5, transition: 'all 0.2s'
                 }}
               >
-                <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', width: '20px', flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-muted)', width: '20px', flexShrink: 0 }}>{i + 1}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '1.05rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {song?.title || 'Canción'}
                   </div>
                   {isPlayingOnDaw ? (
-                    <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                       🔴 SONANDO AHORA
                     </div>
                   ) : isLoadedOnDaw ? (

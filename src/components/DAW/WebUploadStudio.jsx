@@ -59,7 +59,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: 'linear-gradient(160deg, #020617 0%, #0f172a 50%, #1e1432 100%)',
+      background: 'linear-gradient(160deg, #101012 0%, #17171a 50%, #17171a 100%)',
       minHeight: '100vh',
       padding: '0 2rem 2rem',
     }}>
@@ -75,7 +75,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
           <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
               <CloudUpload size={28} color="var(--primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Subir Secuencias</h3>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Subir Secuencias</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
               Selecciona una canción del repertorio y sube su <span style={{ color: 'white' }}>multitrack ZIP</span> a la nube para usarlo en vivo.
@@ -85,7 +85,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
           <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
               <ShieldCheck size={28} color="var(--accent)" />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Almacenamiento</h3>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Almacenamiento</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
               Todas las secuencias se almacenan de manera segura y estarán disponibles en el <span style={{ color: 'white' }}>ProMixer DAW</span> para tus ensayos.
@@ -115,7 +115,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
             boxSizing: 'border-box',
           }}
         />
-        <Music size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+        <Music size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#7d7d7c', pointerEvents: 'none' }} />
       </div>
 
       {/* Songs list */}
@@ -149,7 +149,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
                   padding: '1rem 1.25rem',
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '14px',
+                  borderRadius: '12px',
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all 0.18s ease',
@@ -158,8 +158,8 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
                   width: '100%',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(37, 99, 235,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(37, 99, 235,0.35)';
+                  e.currentTarget.style.background = 'rgba(247, 244, 239, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(247, 244, 239, 0.18)';
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
@@ -169,31 +169,31 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
                 {/* Color dot / status */}
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0,
-                  background: hasSeq ? 'rgba(34,197,94,0.15)' : 'rgba(37, 99, 235,0.12)',
+                  background: hasSeq ? 'rgba(34,197,94,0.15)' : 'rgba(247, 244, 239, 0.07)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${hasSeq ? 'rgba(34,197,94,0.3)' : 'rgba(37, 99, 235,0.2)'}`,
+                  border: `1px solid ${hasSeq ? 'rgba(34,197,94,0.3)' : 'rgba(247, 244, 239, 0.18)'}`,
                 }}>
                   {hasSeq
                     ? <ShieldCheck size={18} color="#22c55e" />
-                    : <CloudUpload size={18} color="#2563eb" />
+                    : <CloudUpload size={18} color="#f7f4ef" />
                   }
                 </div>
 
                 {/* Song info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '700', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontWeight: '500', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {song.title}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', gap: '10px' }}>
                     {song.key && <span>Orig: {song.key}</span>}
                     {song.bpm && <span>BPM: {song.bpm}</span>}
-                    <span style={{ color: hasSeq ? '#22c55e' : '#64748b', fontWeight: '700' }}>
+                    <span style={{ color: hasSeq ? '#22c55e' : '#7d7d7c', fontWeight: '500' }}>
                       {hasSeq ? '✓ Secuencia subida' : '+ Subir secuencia'}
                     </span>
                   </div>
                 </div>
 
-                <ChevronDown size={16} color="#475569" style={{ flexShrink: 0, transform: 'rotate(-90deg)' }} />
+                <ChevronDown size={16} color="#5f5f5e" style={{ flexShrink: 0, transform: 'rotate(-90deg)' }} />
               </button>
             );
           })

@@ -38,17 +38,17 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
         margin: '0 16px',
         maxHeight: '80vh',
         padding: '2rem',
-        background: 'rgba(15, 23, 42, 0.95)',
+        background: 'rgba(23, 23, 26, 0.95)',
         border: '1px solid var(--daw-border)',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: '16px',
+        borderRadius: '12px',
         boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <Music size={22} color="var(--daw-cyan)" />
-            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: 'white' }}>REPERTORIO CLOUD</h3>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500', color: 'white' }}>REPERTORIO CLOUD</h3>
           </div>
           <button onClick={onClose} className="icon-btn-subtle" style={{ color: 'var(--daw-text-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
         </div>
@@ -69,7 +69,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
               padding: '0.75rem 0.75rem 0.75rem 2.5rem',
               background: 'rgba(0,0,0,0.3)',
               border: '1px solid var(--daw-border)',
-              borderRadius: '8px',
+              borderRadius: '12px',
               color: 'white',
               fontSize: '0.9rem',
               outline: 'none'
@@ -93,7 +93,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
                   padding: '1rem',
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid transparent',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -102,13 +102,13 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
               >
                 <div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>{song.title}</div>
+                    <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>{song.title}</div>
                     {isSynced ? (
                        <CheckCircle2 size={14} color="var(--daw-green)" />
                     ) : song.sequences?.length > 0 ? (
-                      <span style={{ fontSize: '0.6rem', padding: '2px 6px', background: 'rgba(0, 251, 255, 0.2)', color: 'var(--daw-cyan)', borderRadius: '4px', fontWeight: '900' }}>CLOUD</span>
+                      <span style={{ fontSize: '0.6rem', padding: '2px 6px', background: 'rgba(0, 251, 255, 0.2)', color: 'var(--daw-cyan)', borderRadius: '6px', fontWeight: '500' }}>CLOUD</span>
                     ) : (
-                      <span style={{ fontSize: '0.6rem', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', color: 'var(--daw-text-muted)', borderRadius: '4px', fontWeight: '900' }}>VACÍO</span>
+                      <span style={{ fontSize: '0.6rem', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', color: 'var(--daw-text-muted)', borderRadius: '6px', fontWeight: '500' }}>VACÍO</span>
                     )}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--daw-text-muted)', marginTop: '4px' }}>
@@ -118,7 +118,7 @@ export default function CloudRepertoire({ songs, onSelect, onClose }) {
 
                 {isSynced && (
                   <div style={{ color: 'var(--daw-green)', opacity: 0.8 }}>
-                    <span style={{ fontSize: '0.6rem', fontWeight: '900', marginRight: '5px' }}>OFFLINE</span>
+                    <span style={{ fontSize: '0.6rem', fontWeight: '500', marginRight: '5px' }}>OFFLINE</span>
                     <CheckCircle2 size={16} />
                   </div>
                 )}

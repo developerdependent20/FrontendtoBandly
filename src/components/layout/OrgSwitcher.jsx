@@ -57,7 +57,7 @@ export default function OrgSwitcher({ currentOrgId, onCreateNew }) {
       >
         <Building2 size={14} style={{ flexShrink: 0, opacity: 0.6 }} />
         <span style={{
-          fontSize: '0.62rem', fontWeight: 700, overflow: 'hidden',
+          fontSize: '0.62rem', fontWeight: 500, overflow: 'hidden',
           textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', flex: 1
         }}>
           {current?.name || 'Organización'}
@@ -69,7 +69,7 @@ export default function OrgSwitcher({ currentOrgId, onCreateNew }) {
           <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 2000 }} />
           <div style={{
             position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: '220px', zIndex: 2001,
-            background: 'rgba(15,23,42,0.98)', border: '1px solid var(--border-light)',
+            background: 'rgba(23, 23, 26,0.98)', border: '1px solid var(--border-light)',
             borderRadius: '12px', padding: '6px', boxShadow: 'var(--shadow-premium)',
             backdropFilter: 'blur(20px)'
           }}>
@@ -80,8 +80,8 @@ export default function OrgSwitcher({ currentOrgId, onCreateNew }) {
                 disabled={switching !== null}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '9px 10px', borderRadius: '8px', cursor: 'pointer', border: 'none',
-                  background: o.org_id === currentOrgId ? 'rgba(37,99,235,0.15)' : 'transparent',
+                  padding: '9px 10px', borderRadius: '12px', cursor: 'pointer', border: 'none',
+                  background: o.org_id === currentOrgId ? 'rgba(247, 244, 239, 0.08)' : 'transparent',
                   color: 'var(--text-main)', textAlign: 'left'
                 }}
               >
@@ -90,8 +90,8 @@ export default function OrgSwitcher({ currentOrgId, onCreateNew }) {
                   : o.org_id === currentOrgId
                     ? <Check size={13} color="var(--primary)" />
                     : <span style={{ width: '13px' }} />}
-                <span style={{ flex: 1, fontSize: '0.8rem', fontWeight: 600 }}>{o.name}</span>
-                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>
+                <span style={{ flex: 1, fontSize: '0.8rem', fontWeight: 500 }}>{o.name}</span>
+                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 500 }}>
                   {o.role === 'director' ? 'Director' : 'Miembro'}
                 </span>
               </button>
@@ -102,9 +102,9 @@ export default function OrgSwitcher({ currentOrgId, onCreateNew }) {
                 onClick={() => { setOpen(false); onCreateNew(); }}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '9px 10px', borderRadius: '8px', cursor: 'pointer',
+                  padding: '9px 10px', borderRadius: '12px', cursor: 'pointer',
                   background: 'transparent', border: 'none', borderTop: '1px solid var(--border-light)',
-                  marginTop: '4px', color: 'var(--text-muted)', fontSize: '0.78rem', fontWeight: 600
+                  marginTop: '4px', color: 'var(--text-muted)', fontSize: '0.78rem', fontWeight: 500
                 }}
               >
                 <Plus size={13} /> Nueva organización

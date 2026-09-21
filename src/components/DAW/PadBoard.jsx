@@ -201,25 +201,25 @@ export default function PadBoard({ deviceChannels = 2 }) {
   const isRust = engineMode === 'rust';
 
   return (
-    <div style={{ background: 'linear-gradient(180deg, #080d1c 0%, #040810 100%)', borderTop: '1px solid rgba(34,211,238,0.10)', padding: '12px 20px 16px', userSelect: 'none', flexShrink: 0 }}>
+    <div style={{ background: 'linear-gradient(180deg, #101012 0%, #0b0b0d 100%)', borderTop: '1px solid rgba(247, 244, 239, 0.18)', padding: '12px 20px 16px', userSelect: 'none', flexShrink: 0 }}>
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: activeKey ? '#a855f7' : 'rgba(255,255,255,0.12)', boxShadow: activeKey ? '0 0 12px #a855f7' : 'none', transition: 'all 0.3s' }} />
-          <span style={{ fontSize: '0.62rem', fontWeight: '900', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>
+          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: activeKey ? '#fd429c' : 'rgba(255,255,255,0.12)', boxShadow: activeKey ? '0 0 12px rgba(0, 0, 0, 0.35)' : 'none', transition: 'all 0.3s' }} />
+          <span style={{ fontSize: '0.62rem', fontWeight: '500', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px' }}>
             BETHEL PADS
-            <span style={{ marginLeft: '10px', padding: '2px 6px', borderRadius: '4px', background: isRust ? 'rgba(34,211,238,0.08)' : 'rgba(251,191,36,0.08)', color: isRust ? 'var(--daw-cyan)' : '#fbbf24', fontSize: '0.5rem', border: `1px solid ${isRust ? 'rgba(34,211,238,0.2)' : 'rgba(251,191,36,0.2)'}` }}>
+            <span style={{ marginLeft: '10px', padding: '2px 6px', borderRadius: '6px', background: isRust ? 'rgba(247, 244, 239, 0.04)' : 'rgba(251,191,36,0.08)', color: isRust ? 'var(--daw-cyan)' : '#fbbf24', fontSize: '0.5rem', border: `1px solid ${isRust ? 'rgba(247, 244, 239, 0.18)' : 'rgba(251,191,36,0.2)'}` }}>
               {statusMsg}
             </span>
           </span>
         </div>
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <button onClick={() => setIsAmbient(!isAmbient)} style={{ padding: '4px 10px', fontSize: '0.6rem', fontWeight: '900', border: isAmbient ? '1px solid var(--daw-cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '4px', cursor: 'pointer', background: isAmbient ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.05)', color: isAmbient ? 'var(--daw-cyan)' : 'rgba(255,255,255,0.3)', marginRight: '8px', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: isAmbient ? '0 0 10px rgba(34,211,238,0.2)' : 'none' }}>
+          <button onClick={() => setIsAmbient(!isAmbient)} style={{ padding: '4px 10px', fontSize: '0.6rem', fontWeight: '500', border: isAmbient ? '1px solid var(--daw-cyan)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', cursor: 'pointer', background: isAmbient ? 'rgba(247, 244, 239, 0.06)' : 'rgba(255,255,255,0.05)', color: isAmbient ? 'var(--daw-cyan)' : 'rgba(255,255,255,0.3)', marginRight: '8px', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: isAmbient ? '0 0 10px rgba(0, 0, 0, 0.35)' : 'none' }}>
             {isAmbient ? 'AMBIENTAL: ON' : 'MODO DISPARO'}
           </button>
-          <div style={{ background: '#020617', padding: '2px 8px', borderRadius: '4px', border: '1px inset rgba(255,255,255,0.1)' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--daw-cyan)', fontWeight: '900', minWidth: '40px', textAlign: 'center', textShadow: '0 0 10px var(--daw-cyan)' }}>{activeKey || '---'}</span>
+          <div style={{ background: '#101012', padding: '2px 8px', borderRadius: '6px', border: '1px inset rgba(255,255,255,0.1)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--daw-cyan)', fontWeight: '500', minWidth: '40px', textAlign: 'center', textShadow: '0 0 10px var(--daw-cyan)' }}>{activeKey || '---'}</span>
           </div>
         </div>
       </div>
@@ -231,7 +231,7 @@ export default function PadBoard({ deviceChannels = 2 }) {
           const sharp = note.includes('#');
           const isLoaded = loadedPads[note];
           return (
-            <button key={note} onClick={() => handleKey(note)} style={{ touchAction: 'none', padding: '16px 0', border: '1px solid', borderColor: on ? 'var(--daw-cyan)' : sharp ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.09)', borderRadius: '8px', cursor: 'pointer', position: 'relative', fontFamily: 'var(--font-mono)', fontWeight: '900', fontSize: '0.8rem', transition: 'all 0.1s', background: on ? 'linear-gradient(180deg, rgba(34,211,238,0.4) 0%, rgba(34,211,238,0.1) 100%)' : sharp ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)', color: on ? '#ffffff' : sharp ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)', boxShadow: on ? '0 0 30px rgba(34,211,238,0.5), inset 0 0 10px rgba(255,255,255,0.5)' : 'inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 6px rgba(0,0,0,0.4)', transform: on ? 'scale(0.95)' : 'none', opacity: isLoaded === false ? 0.35 : 1 }}>
+            <button key={note} onClick={() => handleKey(note)} style={{ touchAction: 'none', padding: '16px 0', border: '1px solid', borderColor: on ? 'var(--daw-cyan)' : sharp ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.09)', borderRadius: '12px', cursor: 'pointer', position: 'relative', fontFamily: 'var(--font-mono)', fontWeight: '500', fontSize: '0.8rem', transition: 'all 0.1s', background: on ? 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))' : sharp ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)', color: on ? '#ffffff' : sharp ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)', boxShadow: on ? '0 0 30px rgba(0, 0, 0, 0.35), inset 0 0 10px rgba(255,255,255,0.5)' : 'inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 6px rgba(0,0,0,0.4)', transform: on ? 'scale(0.95)' : 'none', opacity: isLoaded === false ? 0.35 : 1 }}>
               {note}
               {isLoaded === false && <div style={{ position: 'absolute', top: '3px', right: '3px', width: '4px', height: '4px', background: '#ef4444', borderRadius: '50%' }} />}
               {isLoaded === undefined && <div style={{ position: 'absolute', top: '3px', right: '3px', width: '4px', height: '4px', background: '#fbbf24', borderRadius: '50%', animation: 'pulse 1s infinite' }} />}
@@ -249,23 +249,23 @@ export default function PadBoard({ deviceChannels = 2 }) {
         </div>
 
         {activeKey && (
-          <button onClick={releaseAll} style={{ padding: '4px 12px', fontSize: '0.62rem', fontWeight: '900', letterSpacing: '0.5px', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '5px', background: 'rgba(239,68,68,0.07)', color: 'rgba(239,68,68,0.65)', cursor: 'pointer' }}>
+          <button onClick={releaseAll} style={{ padding: '4px 12px', fontSize: '0.62rem', fontWeight: '500', letterSpacing: '0.5px', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '6px', background: 'rgba(239,68,68,0.07)', color: 'rgba(239,68,68,0.65)', cursor: 'pointer' }}>
             SOLTAR (ESC)
           </button>
         )}
 
         {/* Selector de salida: siempre visible, activo solo en RUST mode */}
         <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 'auto', minWidth: '80px' }}>
-          <span style={{ fontSize: '0.45rem', fontWeight: '900', color: isRust ? 'var(--daw-cyan)' : 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>OUT PADS</span>
+          <span style={{ fontSize: '0.45rem', fontWeight: '500', color: isRust ? 'var(--daw-cyan)' : 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>OUT PADS</span>
           <select
             title="Salida Física de Pads"
             value={padOutput}
             disabled={!isRust}
             onChange={e => setPadOutput(parseInt(e.target.value))}
-            style={{ background: 'transparent', border: 'none', color: isRust ? 'white' : 'rgba(255,255,255,0.25)', fontWeight: '900', fontSize: '0.7rem', outline: 'none', cursor: isRust ? 'pointer' : 'not-allowed', padding: 0 }}
+            style={{ background: 'transparent', border: 'none', color: isRust ? 'white' : 'rgba(255,255,255,0.25)', fontWeight: '500', fontSize: '0.7rem', outline: 'none', cursor: isRust ? 'pointer' : 'not-allowed', padding: 0 }}
           >
             {[...Array(Math.max(1, Math.floor(deviceChannels / 2)))].map((_, i) => (
-              <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>OUT {i * 2 + 1}/{i * 2 + 2}</option>
+              <option key={i} value={i} style={{ background: '#17171a', color: 'white' }}>OUT {i * 2 + 1}/{i * 2 + 2}</option>
             ))}
           </select>
         </div>

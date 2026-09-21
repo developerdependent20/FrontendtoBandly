@@ -64,10 +64,10 @@ export default function HardwarePicker({ onConfigured }) {
   return (
     <div className="glass-panel" style={{ maxWidth: '600px', margin: '4rem auto', padding: '2.5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <div style={{ background: 'var(--primary)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 0 20px rgba(37, 99, 235, 0.3)' }}>
+        <div style={{ background: 'var(--primary)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 0 20px rgba(0, 0, 0, 0.35)' }}>
           <Settings size={30} color="white" />
         </div>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-1px' }}>Configuración de Audio</h2>
+        <h2 style={{ fontSize: '1.8rem', fontWeight: '500', letterSpacing: '-1px' }}>Configuración de Audio</h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Selecciona tu interfaz de audio para comenzar.</p>
       </div>
 
@@ -80,7 +80,7 @@ export default function HardwarePicker({ onConfigured }) {
 
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px' }}>Controlador / Interfaz</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: '500', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px' }}>Controlador / Interfaz</label>
           <button onClick={scanDevices} className="icon-btn-subtle" disabled={loading}>
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -103,7 +103,7 @@ export default function HardwarePicker({ onConfigured }) {
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center',
-                  background: selectedDevice?.id === device.id ? 'rgba(37, 99, 235, 0.15)' : 'rgba(255,255,255,0.03)',
+                  background: selectedDevice?.id === device.id ? 'rgba(247, 244, 239, 0.08)' : 'rgba(255,255,255,0.03)',
                   borderColor: selectedDevice?.id === device.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
@@ -114,8 +114,8 @@ export default function HardwarePicker({ onConfigured }) {
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <Headphones size={20} color={selectedDevice?.id === device.id ? 'var(--primary)' : 'var(--text-muted)'} />
                   <div>
-                    <div style={{ fontWeight: '700', fontSize: '1rem' }}>{device.name}</div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>
+                    <div style={{ fontWeight: '500', fontSize: '1rem' }}>{device.name}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: '500', letterSpacing: '0.5px' }}>
                       Driver: {device.host}
                     </div>
                   </div>
@@ -134,7 +134,7 @@ export default function HardwarePicker({ onConfigured }) {
 
       <button 
         className="btn-primary" 
-        style={{ width: '100%', padding: '1.2rem', fontSize: '1rem', fontWeight: '800' }}
+        style={{ width: '100%', padding: '1.2rem', fontSize: '1rem', fontWeight: '500' }}
         disabled={!selectedDevice || loading}
         onClick={handleConfirm}
       >

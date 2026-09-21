@@ -54,16 +54,16 @@ export default function GlobalSearch({ songs, events, members, setActiveTab }) {
       </div>
 
       {isOpen && query.trim().length >= 2 && (
-        <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', boxShadow: '0 20px 60px rgba(0,0,0,0.8)', zIndex: 1000, maxHeight: '360px', overflowY: 'auto', padding: '8px' }} className="custom-scrollbar">
+        <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: '#1c1c20', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.8)', zIndex: 1000, maxHeight: '360px', overflowY: 'auto', padding: '8px' }} className="custom-scrollbar">
           {!hasResults && (
             <div style={{ padding: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin resultados</div>
           )}
 
           {results.songs.length > 0 && (
             <>
-              <div style={{ fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '6px 10px' }}>CANCIONES</div>
+              <div style={{ fontSize: '0.6rem', fontWeight: '500', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '6px 10px' }}>CANCIONES</div>
               {results.songs.map(s => (
-                <button key={s.id} onClick={() => goTo('library')} className="dropdown-item-custom" style={{ width: '100%', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem' }}>
+                <button key={s.id} onClick={() => goTo('library')} className="dropdown-item-custom" style={{ width: '100%', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: '12px', color: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem' }}>
                   <Music size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
                 </button>
@@ -73,9 +73,9 @@ export default function GlobalSearch({ songs, events, members, setActiveTab }) {
 
           {results.events.length > 0 && (
             <>
-              <div style={{ fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '6px 10px' }}>EVENTOS</div>
+              <div style={{ fontSize: '0.6rem', fontWeight: '500', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '6px 10px' }}>EVENTOS</div>
               {results.events.map(e => (
-                <button key={e.id} onClick={() => goTo('planner')} className="dropdown-item-custom" style={{ width: '100%', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem' }}>
+                <button key={e.id} onClick={() => goTo('planner')} className="dropdown-item-custom" style={{ width: '100%', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: '12px', color: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem' }}>
                   <Calendar size={14} color="#eab308" style={{ flexShrink: 0 }} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</span>
                 </button>
@@ -85,10 +85,10 @@ export default function GlobalSearch({ songs, events, members, setActiveTab }) {
 
           {results.members.length > 0 && (
             <>
-              <div style={{ fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '6px 10px' }}>PERSONAS</div>
+              <div style={{ fontSize: '0.6rem', fontWeight: '500', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '6px 10px' }}>PERSONAS</div>
               {results.members.map(m => (
-                <button key={m.id} onClick={() => goTo('team')} className="dropdown-item-custom" style={{ width: '100%', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem' }}>
-                  <User size={14} color="#a855f7" style={{ flexShrink: 0 }} />
+                <button key={m.id} onClick={() => goTo('team')} className="dropdown-item-custom" style={{ width: '100%', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: '12px', color: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem' }}>
+                  <User size={14} color="#f7f4ef" style={{ flexShrink: 0 }} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.full_name}</span>
                 </button>
               ))}

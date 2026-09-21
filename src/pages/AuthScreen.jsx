@@ -118,7 +118,7 @@ export default function AuthScreen({ onBack, initialMode }) {
         <span>← Volver</span>
       </div>
 
-      <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" alt="Bandly Isotipo" style={{ width: '140px', height: 'auto', marginBottom: '-1rem', filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.5))' }} />
+      <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" alt="Bandly Isotipo" style={{ width: '140px', height: 'auto', marginBottom: '-1rem', filter: 'drop-shadow(0 0 30px rgba(120, 145, 185, 0.5))' }} />
       <h1 className="hero-title" style={{ fontSize: '2.5rem' }}>Bandly</h1>
       <p className="hero-subtitle">Plan songs. Send sequences. Lead better.</p>
       
@@ -170,7 +170,7 @@ export default function AuthScreen({ onBack, initialMode }) {
           onClick={handleGoogleLogin}
           type="button"
           className="btn-secondary" 
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'white', color: '#1a1a1a', border: 'none', padding: '0.8rem', borderRadius: '12px', fontWeight: '800', transition: 'all 0.2s', cursor: 'pointer' }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'white', color: '#1a1a1a', border: 'none', padding: '0.8rem', borderRadius: '12px', fontWeight: '500', transition: 'all 0.2s', cursor: 'pointer' }}
           onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
           onMouseLeave={e => e.currentTarget.style.transform = 'none'}
         >

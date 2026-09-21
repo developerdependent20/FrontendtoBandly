@@ -116,15 +116,15 @@ export default function LyricsEditor({ song, onClose }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
     }}>
       <div style={{
-        width: '95%', maxWidth: '720px', maxHeight: '90vh', background: '#0f172a', borderRadius: '16px',
+        width: '95%', maxWidth: '720px', maxHeight: '90vh', background: '#17171a', borderRadius: '12px',
         border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden',
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column'
       }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Mic2 size={20} color="#a855f7" />
+            <Mic2 size={20} color="#f7f4ef" />
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>LETRAS PARA PRESENTER</h2>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>LETRAS PARA PRESENTER</h2>
               <p style={{ margin: '2px 0 0', opacity: 0.5, fontSize: '0.75rem' }}>{song?.title}</p>
             </div>
           </div>
@@ -149,16 +149,16 @@ export default function LyricsEditor({ song, onClose }) {
                 <button
                   onClick={() => setShowPasteMode(true)}
                   style={{
-                    width: '100%', marginBottom: '16px', padding: '12px', background: 'rgba(168,85,247,0.08)',
-                    border: '1px solid rgba(168,85,247,0.25)', color: '#a855f7', borderRadius: '10px',
-                    cursor: 'pointer', fontWeight: '800', fontSize: '0.8rem',
+                    width: '100%', marginBottom: '16px', padding: '12px', background: 'rgba(247, 244, 239, 0.04)',
+                    border: '1px solid rgba(247, 244, 239, 0.18)', color: '#f7f4ef', borderRadius: '12px',
+                    cursor: 'pointer', fontWeight: '500', fontSize: '0.8rem',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                   }}
                 >
                   <ClipboardPaste size={16} /> PEGAR LETRA COMPLETA
                 </button>
               ) : (
-                <div style={{ marginBottom: '16px', background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '12px', padding: '14px' }}>
+                <div style={{ marginBottom: '16px', background: 'rgba(247, 244, 239, 0.03)', border: '1px solid rgba(247, 244, 239, 0.18)', borderRadius: '12px', padding: '14px' }}>
                   <p style={{ fontSize: '0.72rem', opacity: 0.6, margin: '0 0 8px' }}>
                     Pega la letra entera y deja una línea en blanco (Enter dos veces) entre cada diapositiva. Cada bloque separado se vuelve una diapositiva.
                   </p>
@@ -170,20 +170,20 @@ export default function LyricsEditor({ song, onClose }) {
                     autoFocus
                     style={{
                       width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '8px', padding: '10px', color: 'white', fontSize: '0.9rem',
+                      borderRadius: '12px', padding: '10px', color: 'white', fontSize: '0.9rem',
                       resize: 'vertical', outline: 'none', fontFamily: 'inherit', marginBottom: '10px'
                     }}
                   />
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={handleGenerateFromPaste}
-                      style={{ flex: 1, padding: '10px', background: '#a855f7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '0.78rem', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '10px', background: '#fd429c', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '500', fontSize: '0.78rem', cursor: 'pointer' }}
                     >
                       GENERAR DIAPOSITIVAS
                     </button>
                     <button
                       onClick={() => { setShowPasteMode(false); setPasteText(''); }}
-                      style={{ padding: '10px 16px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer' }}
+                      style={{ padding: '10px 16px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', fontWeight: '500', fontSize: '0.78rem', cursor: 'pointer' }}
                     >
                       Cancelar
                     </button>
@@ -201,11 +201,11 @@ export default function LyricsEditor({ song, onClose }) {
                 {slides.map((slide, i) => (
                   <div key={slide.id} style={{
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px'
+                    borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px'
                   }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.65rem', fontWeight: '900', opacity: 0.4 }}>#{i + 1}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: '500', opacity: 0.4 }}>#{i + 1}</span>
                         <select
                           value={slide.marker_sync || ''}
                           onChange={(e) => updateSlide(slide.id, 'marker_sync', e.target.value)}
@@ -218,8 +218,14 @@ export default function LyricsEditor({ song, onClose }) {
                           }}
                         >
                           <option value="">Sin auto-sync (avance manual)</option>
+                          {/* Nombre puesto desde la línea LETRAS del DAW ("LETRA 3", "CORO 2"):
+                              no es un marker de sección, pero hay que mostrarlo o el select
+                              aparentaría "sin auto-sync" cuando sí dispara. */}
+                          {slide.marker_sync && !markers.some(m => m.label === slide.marker_sync) && (
+                            <option value={slide.marker_sync} style={{ background: '#17171a' }}>{slide.marker_sync} (línea de letras del DAW)</option>
+                          )}
                           {markers.map((m) => (
-                            <option key={m.id} value={m.label} style={{ background: '#0f172a' }}>{m.label}</option>
+                            <option key={m.id} value={m.label} style={{ background: '#17171a' }}>{m.label}</option>
                           ))}
                         </select>
                       </div>
@@ -230,7 +236,7 @@ export default function LyricsEditor({ song, onClose }) {
                         rows={3}
                         style={{
                           background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)',
-                          borderRadius: '8px', padding: '10px', color: 'white', fontSize: '0.9rem',
+                          borderRadius: '12px', padding: '10px', color: 'white', fontSize: '0.9rem',
                           resize: 'vertical', outline: 'none', fontFamily: 'inherit'
                         }}
                       />
@@ -238,7 +244,7 @@ export default function LyricsEditor({ song, onClose }) {
                     <button
                       onClick={() => removeSlide(slide.id)}
                       title="Quitar diapositiva"
-                      style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', flexShrink: 0, alignSelf: 'flex-start' }}
+                      style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', borderRadius: '12px', width: '32px', height: '32px', cursor: 'pointer', flexShrink: 0, alignSelf: 'flex-start' }}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -250,8 +256,8 @@ export default function LyricsEditor({ song, onClose }) {
                 onClick={addSlide}
                 style={{
                   width: '100%', marginTop: '14px', padding: '12px', background: 'transparent',
-                  border: '2px dashed rgba(255,255,255,0.15)', color: '#a855f7', borderRadius: '10px',
-                  cursor: 'pointer', fontWeight: '800', fontSize: '0.8rem',
+                  border: '2px dashed rgba(255,255,255,0.15)', color: '#f7f4ef', borderRadius: '12px',
+                  cursor: 'pointer', fontWeight: '500', fontSize: '0.8rem',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                 }}
               >
@@ -266,8 +272,8 @@ export default function LyricsEditor({ song, onClose }) {
             onClick={handleSave}
             disabled={saving || loading}
             style={{
-              width: '100%', padding: '12px', borderRadius: '10px', border: 'none',
-              background: saved ? '#10b981' : '#a855f7', color: '#fff', fontWeight: '800', fontSize: '0.85rem',
+              width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
+              background: saved ? '#10b981' : '#fd429c', color: '#fff', fontWeight: '500', fontSize: '0.85rem',
               cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
             }}
           >

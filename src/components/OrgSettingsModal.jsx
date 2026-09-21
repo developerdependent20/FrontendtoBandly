@@ -37,12 +37,12 @@ function DepartmentEditor({ department, onUpdate, onDelete }) {
   };
 
   let headerColor = 'var(--primary)';
-  let borderColor = 'rgba(59, 130, 246, 0.2)';
-  let activeBg = 'rgba(59, 130, 246, 0.15)';
-  let activeBorder = 'rgba(59, 130, 246, 0.5)';
+  let borderColor = 'rgba(120, 145, 185, 0.2)';
+  let activeBg = 'rgba(120, 145, 185, 0.15)';
+  let activeBorder = 'rgba(120, 145, 185, 0.5)';
 
   if (department.colorClass === 'purple') {
-    headerColor = '#a855f7'; borderColor = 'rgba(168, 85, 247, 0.2)'; activeBg = 'rgba(168, 85, 247, 0.15)'; activeBorder = 'rgba(168, 85, 247, 0.5)';
+    headerColor = '#a78ac2'; borderColor = 'rgba(167, 138, 194, 0.2)'; activeBg = 'rgba(167, 138, 194, 0.15)'; activeBorder = 'rgba(167, 138, 194, 0.5)';
   } else if (department.colorClass === 'yellow') {
     headerColor = '#eab308'; borderColor = 'rgba(234, 179, 8, 0.2)'; activeBg = 'rgba(234, 179, 8, 0.15)'; activeBorder = 'rgba(234, 179, 8, 0.5)';
   } else if (department.colorClass === 'orange') {
@@ -54,21 +54,21 @@ function DepartmentEditor({ department, onUpdate, onDelete }) {
   }
 
   return (
-    <div style={{ marginBottom: '2rem', background: 'rgba(0,0,0,0.15)', padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}` }}>
+    <div style={{ marginBottom: '2rem', background: 'rgba(0,0,0,0.15)', padding: '1.5rem', borderRadius: '12px', border: `1px solid ${borderColor}` }}>
       
       {isEditingGlobal ? (
         <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <input
             type="text" value={editIcon} onChange={e => setEditIcon(e.target.value)} maxLength={2}
-            style={{ width: '45px', textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '8px' }}
+            style={{ width: '45px', textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', padding: '8px' }}
           />
           <input
             type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)}
-            style={{ flex: 1, minWidth: '150px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '8px 12px' }}
+            style={{ flex: 1, minWidth: '150px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', padding: '8px 12px' }}
           />
           <select 
             value={editColor} onChange={e => setEditColor(e.target.value)}
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '8px' }}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', padding: '8px' }}
           >
             <option value="blue">Azul</option>
             <option value="purple">Morado</option>
@@ -77,7 +77,7 @@ function DepartmentEditor({ department, onUpdate, onDelete }) {
             <option value="green">Verde</option>
             <option value="red">Rojo</option>
           </select>
-          <button onClick={handleSaveGlobal} style={{ padding: '8px 12px', background: headerColor, border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer' }}><Check size={18} /></button>
+          <button onClick={handleSaveGlobal} style={{ padding: '8px 12px', background: headerColor, border: 'none', borderRadius: '12px', color: 'white', cursor: 'pointer' }}><Check size={18} /></button>
         </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: `1px solid ${borderColor}`, paddingBottom: '0.5rem' }}>
@@ -117,18 +117,18 @@ function DepartmentEditor({ department, onUpdate, onDelete }) {
       <div style={{ display: 'flex', gap: '10px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
         <input
           type="text" value={newIcon} onChange={e => setNewIcon(e.target.value)}
-          style={{ width: '45px', textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px' }}
+          style={{ width: '45px', textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px' }}
           placeholder="✨" maxLength={2}
         />
         <input
           type="text" value={newLabel} onChange={e => setNewLabel(e.target.value)}
-          style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '0 10px' }}
+          style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', padding: '0 10px' }}
           placeholder="Añadir nuevo rol a este departamento..."
           onKeyDown={e => e.key === 'Enter' && handleAddCustom()}
         />
         <button
           onClick={handleAddCustom}
-          style={{ padding: '8px 12px', background: headerColor, border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          style={{ padding: '8px 12px', background: headerColor, border: 'none', borderRadius: '12px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
         >
           <Plus size={18} />
         </button>
@@ -196,13 +196,13 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
       display: 'flex', alignItems: 'center', justifyContent: 'center'
     }}>
       <div style={{
-        background: 'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))',
+        background: 'linear-gradient(145deg, rgba(23, 23, 26,0.98), rgba(28, 28, 32,0.98))',
         border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', width: '90%', maxWidth: '650px',
         maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.6)', padding: '2rem'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ background: 'rgba(59, 130, 246, 0.2)', padding: '8px', borderRadius: '12px' }}>🏢</span>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ background: 'rgba(120, 145, 185, 0.2)', padding: '8px', borderRadius: '12px' }}>🏢</span>
             Departamentos y Roles
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
@@ -238,7 +238,7 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
 
         <button 
           onClick={handleAddDepartment}
-          style={{ width: '100%', padding: '16px', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '16px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }}
+          style={{ width: '100%', padding: '16px', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '12px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }}
           onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
           onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
         >
@@ -249,7 +249,7 @@ export default function OrgSettingsModal({ isOpen, onClose, orgId, orgSettings, 
           <button onClick={onClose} style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'white', cursor: 'pointer' }}>
             Cancelar
           </button>
-          <button onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
+          <button onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '500', cursor: 'pointer' }}>
             {saving ? <Loader2 size={18} className="spin" /> : <Save size={18} />}
             Guardar Configuración
           </button>

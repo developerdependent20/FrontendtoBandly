@@ -162,10 +162,10 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
     let avatarStyle = { border: '1px solid rgba(255,255,255,0.1)' };
     let badge = null;
 
-    let accentHex = '#3b82f6';
+    let accentHex = '#7891b9';
     let rgbAccent = '59, 130, 246';
     
-    if (colorClass === 'purple') { accentHex = '#c084fc'; rgbAccent = '168, 85, 247'; }
+    if (colorClass === 'purple') { accentHex = '#a88dc4'; rgbAccent = '168, 85, 247'; }
     else if (colorClass === 'yellow') { accentHex = '#eab308'; rgbAccent = '234, 179, 8'; }
     else if (colorClass === 'orange') { accentHex = '#fb923c'; rgbAccent = '249, 115, 22'; }
     else if (colorClass === 'green') { accentHex = '#4ade80'; rgbAccent = '34, 197, 94'; }
@@ -185,10 +185,10 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
       const hasAnyRole = list.some(r => mFunctions.includes(r.id));
       if (!isDirector && !hasAnyRole) return null;
 
-      let aColor = '#3b82f6';
-      let bgActive = 'rgba(59, 130, 246, 0.15)';
+      let aColor = '#7891b9';
+      let bgActive = 'rgba(120, 145, 185, 0.15)';
       if (colClass === 'yellow') { aColor = '#eab308'; bgActive = 'rgba(234, 179, 8, 0.15)'; }
-      else if (colClass === 'purple') { aColor = '#a855f7'; bgActive = 'rgba(168, 85, 247, 0.15)'; }
+      else if (colClass === 'purple') { aColor = '#a78ac2'; bgActive = 'rgba(167, 138, 194, 0.15)'; }
       else if (colClass === 'orange') { aColor = '#f97316'; bgActive = 'rgba(249, 115, 22, 0.15)'; }
       else if (colClass === 'green') { aColor = '#22c55e'; bgActive = 'rgba(34, 197, 94, 0.15)'; }
       else if (colClass === 'red') { aColor = '#ef4444'; bgActive = 'rgba(239, 68, 68, 0.15)'; }
@@ -247,14 +247,14 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
             {m.avatar_url ? (
               <img src={m.avatar_url} alt={m.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ fontSize: '2.5rem', fontWeight: '900' }}>{m.full_name?.[0]?.toUpperCase()}</span>
+              <span style={{ fontSize: '2.5rem', fontWeight: '500' }}>{m.full_name?.[0]?.toUpperCase()}</span>
             )}
             {isUserDirector && <div className="director-shield" style={{ zIndex: 10, background: '#eab308' }}><Crown size={12} color="black" /></div>}
             {!isUserDirector && level === 2 && <div className="director-shield" style={{ zIndex: 10, background: accentHex }}><Star size={12} color="white" /></div>}
             {isDirector && (
               <div style={{ 
                 position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', 
-                fontSize: '0.55rem', padding: '3px 0', textAlign: 'center', fontWeight: 'bold',
+                fontSize: '0.55rem', padding: '3px 0', textAlign: 'center', fontWeight: '500',
                 backdropFilter: 'blur(4px)', color: 'white', pointerEvents: 'none'
               }}>
                 EDIT
@@ -271,7 +271,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
             {isDirector && m.blocked_dates && m.blocked_dates.length > 0 && (
               <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ opacity: 0.8 }}>🚫 Bloqueos:</span> 
-                <span style={{ fontWeight: '600' }}>{m.blocked_dates.map(d => {
+                <span style={{ fontWeight: '500' }}>{m.blocked_dates.map(d => {
                   const parts = d.split('-');
                   return parts.length === 3 ? `${parts[2]}/${parts[1]}` : d;
                 }).join(', ')}</span>
@@ -313,7 +313,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
             display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap'
           }}>
             <div style={{ flex: 1, minWidth: '190px' }}>
-              <div style={{ fontSize: '0.68rem', fontWeight: 900, letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '3px' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 500, letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '3px' }}>
                 PERMISOS
               </div>
               <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.45 }}>
@@ -326,7 +326,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
               type="button"
               onClick={() => handleToggleDirector(m.id, m.role)}
               className={`director-toggle-btn ${isUserDirector ? 'active' : ''}`}
-              style={{ padding: '9px 16px', borderRadius: '11px', fontSize: '0.72rem', whiteSpace: 'nowrap' }}
+              style={{ padding: '9px 16px', borderRadius: '12px', fontSize: '0.72rem', whiteSpace: 'nowrap' }}
             >
               {isUserDirector ? 'Quitar dirección' : 'Hacer director'}
             </button>
@@ -352,7 +352,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
               <Users size={28} color="var(--primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Roles y Departamentos</h3>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Roles y Departamentos</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
               Organiza a tu equipo asignando múltiples funciones. Los miembros aparecerán agrupados automáticamente bajo el <span style={{ color: 'white' }}>departamento</span> correspondiente a su rol más alto.
@@ -362,7 +362,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
           <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
               <Settings size={28} color="var(--accent)" />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Administración Global</h3>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Administración Global</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
               Solo los <span style={{ color: 'white' }}>directores</span> pueden reconfigurar departamentos, ajustar permisos o filtrar por disponibilidad de fechas de los músicos.
@@ -371,14 +371,14 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
               <div style={{ marginTop: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                 <button 
                   onClick={() => setShowSettingsModal(true)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1, padding: '10px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1, padding: '10px', background: 'var(--primary)', color: 'white', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '0.85rem' }}
                   className="hover-scale"
                 >
                   <Settings size={16} /> Configurar Departamentos
                 </button>
                 <button 
                   onClick={() => setFilterBlocked(!filterBlocked)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1, padding: '10px', background: filterBlocked ? '#ef4444' : 'rgba(239, 68, 68, 0.1)', color: filterBlocked ? 'white' : '#ef4444', borderRadius: '12px', border: filterBlocked ? 'none' : '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1, padding: '10px', background: filterBlocked ? '#ef4444' : 'rgba(239, 68, 68, 0.1)', color: filterBlocked ? 'white' : '#ef4444', borderRadius: '12px', border: filterBlocked ? 'none' : '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', fontWeight: '500', fontSize: '0.85rem' }}
                   className="hover-scale"
                 >
                   🚫 {filterBlocked ? 'Mostrando bloqueados' : 'Filtrar bloqueados'}
@@ -432,7 +432,7 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
         <FirstUseTip
           storageKey="bandly_tip_team"
           title="Cómo usar el equipo"
-          accentColor="#60a5fa"
+          accentColor="#8da5c4"
           items={isDirector ? [
             'Un miembro puede tener varias funciones a la vez (ej. Batería + Sonido) — aparece agrupado bajo la de mayor jerarquía.',
             'Configura tus propios departamentos e instrumentos en "Configurar Departamentos" para que coincidan con tu organización.',
@@ -464,10 +464,10 @@ export default function TeamList({ members, isDirector, refreshData, orgSettings
 
               {groupedMembers.dynamic.map((dept, idx) => {
                 if (dept.members.length === 0) return null;
-                let hColor = '#3b82f6';
-                let borderColor = 'rgba(59, 130, 246, 0.2)';
+                let hColor = '#7891b9';
+                let borderColor = 'rgba(120, 145, 185, 0.2)';
                 if (dept.colorClass === 'yellow') { hColor = '#fcd34d'; borderColor = 'rgba(252, 211, 77, 0.2)'; }
-                if (dept.colorClass === 'purple') { hColor = '#c084fc'; borderColor = 'rgba(168, 85, 247, 0.2)'; }
+                if (dept.colorClass === 'purple') { hColor = '#a88dc4'; borderColor = 'rgba(167, 138, 194, 0.2)'; }
                 if (dept.colorClass === 'orange') { hColor = '#fb923c'; borderColor = 'rgba(251, 146, 60, 0.2)'; }
                 if (dept.colorClass === 'green') { hColor = '#4ade80'; borderColor = 'rgba(74, 222, 128, 0.2)'; }
                 if (dept.colorClass === 'red') { hColor = '#f87171'; borderColor = 'rgba(248, 113, 113, 0.2)'; }

@@ -229,7 +229,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
           <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
               <FileText size={28} color="var(--primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Chart Studio</h3>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Chart Studio</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
               Crea cifrados profesionales en segundos. <span style={{ color: 'white' }}>Transpón tonos instantáneamente</span>, añade anotaciones de estructura y exporta para todo tu equipo.
@@ -239,7 +239,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
           <div className="glass-panel" style={{ padding: '2rem', borderLeft: '4px solid var(--accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
               <Headphones size={28} color="var(--accent)" />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Multitrack Player</h3>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Multitrack Player</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
               El corazón de tus ensayos. Sube tus <span style={{ color: 'white' }}>secuencias en multitrack</span>, ajusta la mezcla perfecta para cada músico y ensaya con la máxima fidelidad desde la nube.
@@ -265,7 +265,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
           placeholder="Filtrar canciones por título..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          style={{ width: '100%', padding: '0.7rem 0.9rem 0.7rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: 'white', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '0.7rem 0.9rem 0.7rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
         />
         {searchQuery && (
           <button
@@ -306,16 +306,16 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                 
                 <div className="song-metadata" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
                    <div className="meta-tag">Orig: <span>{s.key || '-'}</span></div>
-                   <div className="meta-tag male" style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.25)' }}>Voz H: <span>{s.key_male || '-'}</span></div>
+                   <div className="meta-tag male" style={{ background: 'rgba(247, 244, 239, 0.07)', color: '#f7f4ef', border: '1px solid rgba(247, 244, 239, 0.18)' }}>Voz H: <span>{s.key_male || '-'}</span></div>
                    <div className="meta-tag female" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.25)' }}>Voz M: <span>{s.key_female || '-'}</span></div>
                    <div className="meta-tag bpm">BPM: <span>{s.bpm || '-'}</span></div>
-                   <div className="meta-tag" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                     Tocado: <span style={{ fontWeight: '800' }}>{getLastPlayedText(s.id)}</span>
+                   <div className="meta-tag" style={{ background: 'rgba(247, 244, 239, 0.06)', color: 'var(--primary)', border: '1px solid rgba(247, 244, 239, 0.18)' }}>
+                     Tocado: <span style={{ fontWeight: '500' }}>{getLastPlayedText(s.id)}</span>
                    </div>
                 </div>
               </div>
 
-              <div className="song-visuals" style={{ width: '120px', height: '68px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="song-visuals" style={{ width: '120px', height: '68px', flexShrink: 0, borderRadius: '12px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {s.youtube_link ? (() => {
                    const match = s.youtube_link.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
                    const yId = match ? match[1] : null;
@@ -377,7 +377,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
       
       {showModal && createPortal(
         <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', zIndex: 1000 }}>
-          <div className="glass-panel modal-content" style={{ padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15, 23, 42, 0.8)' }}>
+          <div className="glass-panel modal-content" style={{ padding: '2.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(23, 23, 26, 0.8)' }}>
             <button onClick={closeOverlay} className="modal-close-btn">
               <X size={20} />
             </button>
@@ -387,7 +387,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div className="input-group">
-                <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Título</label>
+                <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '500', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Título</label>
                 <input type="text" className="input-field" placeholder="Nombre de la canción *" value={title} onChange={e=>setTitle(e.target.value)} style={{ width: '100%' }} />
               </div>
 
@@ -414,7 +414,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
               </div>
 
               <div className="input-group">
-                <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Enlace de YouTube</label>
+                <label style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '500', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block', letterSpacing: '1px' }}>Enlace de YouTube</label>
                 <input type="url" className="input-field" placeholder="https://youtube.com/..." value={youtubeLink} onChange={e=>setYoutubeLink(e.target.value)} style={{ width: '100%' }} />
               </div>
             </div>

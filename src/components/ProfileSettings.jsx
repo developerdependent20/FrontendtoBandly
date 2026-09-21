@@ -136,7 +136,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
           gap: '1.25rem',
           padding: '2rem',
           marginBottom: '2rem',
-          background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 23, 42, 0.6))',
+          background: 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', minWidth: 0 }}>
@@ -146,20 +146,20 @@ export default function ProfileSettings({ profile, session, onLogout }) {
               height: '64px',
               flexShrink: 0,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--primary), #7c3aed)',
+              background: 'linear-gradient(135deg, #fd429c, #ff6a4a)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '1.4rem',
-              fontWeight: '800',
+              fontWeight: '500',
               color: '#fff',
-              boxShadow: '0 8px 24px -6px rgba(37, 99, 235, 0.6)',
+              boxShadow: '0 8px 24px -6px rgba(0, 0, 0, 0.35)',
             }}
           >
             {initials}
           </div>
           <div style={{ minWidth: 0 }}>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: '800', margin: 0, lineHeight: 1.2 }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: '500', margin: 0, lineHeight: 1.2 }}>
               {fullName || 'Mi Perfil'}
             </h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.5rem' }}>
@@ -190,7 +190,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', maxWidth: '500px', marginBottom: '1.75rem' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600' }}>Nombre Completo</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '500' }}>Nombre Completo</label>
             <input
               type="text"
               className="input-field"
@@ -203,30 +203,30 @@ export default function ProfileSettings({ profile, session, onLogout }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', padding: '0.9rem 1.1rem' }}>
-            <div style={{ width: '38px', height: '38px', flexShrink: 0, borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '38px', height: '38px', flexShrink: 0, borderRadius: '12px', background: 'rgba(247, 244, 239, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Mail size={17} color="var(--primary)" />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Correo Registrado</div>
-              <div style={{ fontSize: '0.92rem', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || '—'}</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '500' }}>Correo Registrado</div>
+              <div style={{ fontSize: '0.92rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || '—'}</div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', padding: '0.9rem 1.1rem' }}>
-            <div style={{ width: '38px', height: '38px', flexShrink: 0, borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '38px', height: '38px', flexShrink: 0, borderRadius: '12px', background: 'rgba(247, 244, 239, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Building2 size={17} color="var(--primary)" />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>Organización</div>
-              <div style={{ fontSize: '0.92rem', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{orgName || 'Sin organización'}</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '500' }}>Organización</div>
+              <div style={{ fontSize: '0.92rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{orgName || 'Sin organización'}</div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
-        <h3 className="section-title" style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1' }}>
-          <KeyRound size={20} color="#6366f1" /> Cambiar Contraseña
+        <h3 className="section-title" style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#f7f4ef' }}>
+          <KeyRound size={20} color="#f7f4ef" /> Cambiar Contraseña
         </h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
           Elige una contraseña nueva para tu cuenta. Deberás usarla la próxima vez que inicies sesión.
@@ -234,7 +234,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', maxWidth: '600px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600' }}>Nueva Contraseña</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '500' }}>Nueva Contraseña</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -254,7 +254,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600' }}>Confirmar Contraseña</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '500' }}>Confirmar Contraseña</label>
             <input
               type={showPassword ? 'text' : 'password'}
               className="input-field"
@@ -266,7 +266,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
-          {passwordMsg && <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '0.9rem' }}>{passwordMsg}</span>}
+          {passwordMsg && <span style={{ color: '#22c55e', fontWeight: '500', fontSize: '0.9rem' }}>{passwordMsg}</span>}
           <button onClick={handleChangePassword} className="btn-secondary" disabled={passwordLoading} style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
             {passwordLoading ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={16} /> Actualizar Contraseña</>}
           </button>
@@ -282,14 +282,14 @@ export default function ProfileSettings({ profile, session, onLogout }) {
         </p>
 
         {notifPermission === 'granted' && (
-          <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} />
             <span>¡Notificaciones Push <strong>Activadas</strong> en este navegador!</span>
           </div>
         )}
 
         {notifPermission === 'denied' && (
-          <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '12px', color: '#ef4444', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Bell size={20} />
               <span>Notificaciones bloqueadas o no soportadas.</span>
@@ -355,7 +355,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
         {blockedDates.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {blockedDates.map(date => (
-              <div key={date} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.75rem 1rem', borderRadius: '8px' }}>
+              <div key={date} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.75rem 1rem', borderRadius: '12px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fecaca', fontWeight: '500' }}>
                   <Calendar size={16} color="#ef4444" /> {formatDate(date)}
                 </span>
@@ -374,7 +374,7 @@ export default function ProfileSettings({ profile, session, onLogout }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'flex-end' }}>
-        {successMsg && <span style={{ color: '#22c55e', fontWeight: 'bold', animation: 'modalFadeIn 0.3s ease-out' }}>{successMsg}</span>}
+        {successMsg && <span style={{ color: '#22c55e', fontWeight: '500', animation: 'modalFadeIn 0.3s ease-out' }}>{successMsg}</span>}
         <button onClick={handleSave} className="btn-primary" disabled={loading} style={{ width: 'auto', minWidth: '150px' }}>
           {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Guardar Cambios</>}
         </button>

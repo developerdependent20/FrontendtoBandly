@@ -30,13 +30,13 @@ const SubscriptionModal = ({ profile, onClose }) => {
       padding: '20px'
     }}>
       <div style={{
-        width: '95%', maxWidth: '1100px', maxHeight: '90vh', background: '#0f172a', borderRadius: '16px',
+        width: '95%', maxWidth: '1100px', maxHeight: '90vh', background: '#17171a', borderRadius: '12px',
         border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden',
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column'
       }}>
         <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px' }}>ELIGE TU PLAN</h2>
+            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '500', letterSpacing: '-1px' }}>ELIGE TU PLAN</h2>
             <p style={{ margin: '4px 0 0', opacity: 0.5, fontSize: '0.8rem' }}>Impulsa tu organización al siguiente nivel con Bandly.</p>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5 }}>
@@ -46,13 +46,13 @@ const SubscriptionModal = ({ profile, onClose }) => {
 
         <div style={{ padding: '24px', overflowY: 'auto', flex: 1, overflowX: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '10px', display: 'flex', gap: '4px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', display: 'flex', gap: '4px' }}>
               <button 
                 onClick={() => setBillingPeriod('monthly')}
                 style={{
-                  padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700',
-                  background: billingPeriod === 'monthly' ? 'var(--daw-cyan)' : 'transparent',
-                  color: billingPeriod === 'monthly' ? '#000' : 'rgba(255,255,255,0.5)'
+                  padding: '8px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '500',
+                  background: billingPeriod === 'monthly' ? '#f7f4ef' : 'transparent',
+                  color: billingPeriod === 'monthly' ? '#101012' : 'rgba(255,255,255,0.5)'
                 }}
               >
                 MENSUAL
@@ -60,9 +60,9 @@ const SubscriptionModal = ({ profile, onClose }) => {
               <button 
                 onClick={() => setBillingPeriod('yearly')}
                 style={{
-                  padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700',
-                  background: billingPeriod === 'yearly' ? 'var(--daw-cyan)' : 'transparent',
-                  color: billingPeriod === 'yearly' ? '#000' : 'rgba(255,255,255,0.5)'
+                  padding: '8px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '500',
+                  background: billingPeriod === 'yearly' ? '#f7f4ef' : 'transparent',
+                  color: billingPeriod === 'yearly' ? '#101012' : 'rgba(255,255,255,0.5)'
                 }}
               >
                 ANUAL (Ahorra 20%)
@@ -82,9 +82,9 @@ const SubscriptionModal = ({ profile, onClose }) => {
                 
                 return (
                   <div key={plan.id} style={{ 
-                    background: isCurrentPlan ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255,255,255,0.02)', 
-                    borderRadius: '16px', 
-                    border: plan.recommended ? '2px solid #a855f7' : (isCurrentPlan ? '1px solid rgba(168, 85, 247, 0.5)' : '1px solid rgba(255,255,255,0.05)'),
+                    background: isCurrentPlan ? 'rgba(247, 244, 239, 0.03)' : 'rgba(255,255,255,0.02)', 
+                    borderRadius: '12px', 
+                    border: plan.recommended ? '2px solid rgba(247, 244, 239, 0.3)' : (isCurrentPlan ? '1px solid rgba(247, 244, 239, 0.3)' : '1px solid rgba(255,255,255,0.05)'),
                     padding: '24px', display: 'flex', flexDirection: 'column',
                     position: 'relative',
                     transform: plan.recommended ? 'scale(1.05)' : 'none',
@@ -93,8 +93,8 @@ const SubscriptionModal = ({ profile, onClose }) => {
                   }}>
                     {plan.recommended && (
                       <div style={{ 
-                        position: 'absolute', top: '-12px', right: '12px', background: plan.promo ? '#ef4444' : '#a855f7', color: '#fff', 
-                        padding: '4px 12px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900',
+                        position: 'absolute', top: '-12px', right: '12px', background: plan.promo ? '#ef4444' : '#fd429c', color: '#fff', 
+                        padding: '4px 12px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '500',
                         boxShadow: plan.promo ? '0 0 15px rgba(239, 68, 68, 0.5)' : 'none',
                         animation: plan.promo ? 'pulse 2s infinite' : 'none'
                       }}>
@@ -102,7 +102,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                       <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', opacity: 0.8 }}>{plan.name.toUpperCase()}</h3>
+                       <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '500', opacity: 0.8 }}>{plan.name.toUpperCase()}</h3>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                       {plan.monthly > 0 && (
@@ -110,7 +110,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
                           ${billingPeriod === 'monthly' ? plan.originalMonthly : plan.originalYearly}
                         </span>
                       )}
-                      <div style={{ fontSize: '2.2rem', fontWeight: '950' }}>
+                      <div style={{ fontSize: '2.2rem', fontWeight: '500' }}>
                         {plan.monthly === 0 ? 'Gratis' : `$${billingPeriod === 'monthly' ? plan.monthly : plan.yearly}`}
                       </div>
                     </div>
@@ -123,7 +123,7 @@ const SubscriptionModal = ({ profile, onClose }) => {
                     <div style={{ flex: 1, marginBottom: '24px' }}>
                       {plan.features.map((f, i) => (
                         <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'start', marginBottom: '10px', fontSize: '0.75rem', opacity: 0.7 }}>
-                          <Crown size={12} color={plan.recommended ? '#a855f7' : 'var(--daw-cyan)'} style={{ marginTop: '2px' }} />
+                          <Crown size={12} color={plan.recommended ? '#f7f4ef' : 'var(--daw-cyan)'} style={{ marginTop: '2px' }} />
                           {f}
                         </div>
                       ))}
@@ -133,9 +133,9 @@ const SubscriptionModal = ({ profile, onClose }) => {
                       onClick={() => handleSubscribe(plan.id)}
                       style={{
                         width: '100%', padding: '12px', borderRadius: '12px', border: plan.id === 'free' ? '1px solid rgba(255,255,255,0.2)' : 'none', 
-                        background: plan.recommended ? '#a855f7' : (plan.id === 'free' ? 'transparent' : 'rgba(255,255,255,0.05)'), 
+                        background: plan.recommended ? '#fd429c' : (plan.id === 'free' ? 'transparent' : 'rgba(255,255,255,0.05)'), 
                         color: '#fff', 
-                        fontWeight: '700', fontSize: '0.8rem',
+                        fontWeight: '500', fontSize: '0.8rem',
                         cursor: (loading || isCurrentPlan || (plan.monthly === 0 && isCurrentPlan)) ? 'default' : 'pointer', 
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                         transition: 'all 0.2s'

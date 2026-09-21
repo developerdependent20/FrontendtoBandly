@@ -1,181 +1,139 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 
 // COLORES DE ALTO CONTRASTE (DAW STYLE)
-const CYAN = 'linear-gradient(135deg, #a855f7, #3b82f6)';
-const CYAN_SOLID = '#a855f7';
-const INACTIVE = 'rgba(255, 255, 255, 0.1)';
-const BG_COLOR = '#020617';
-const GRID_MINOR = 'rgba(255, 255, 255, 0.03)';
-const GRID_MAJOR = 'rgba(255, 255, 255, 0.08)';
+const PLAYED = 'rgba(247, 244, 239, 0.82)';
+const INACTIVE = 'rgba(255, 255, 255, 0.14)';
+const BG_COLOR = '#101012';
+const GRID_MINOR = 'rgba(255, 255, 255, 0.035)';
+const GRID_MAJOR = 'rgba(255, 255, 255, 0.09)';
 
-function fmtClock(s) {
-  if (!isFinite(s) || s < 0) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, '0')}`;
-}
-
+// La onda ya no dibuja el cursor ni los números de compás: el cursor lo pone
+// CueTimeline encima de TODAS las líneas (onda, secciones, letras, luces) y
+// los números viven en la regla. Aquí solo quedan grilla + forma de onda.
+//
+// El canvas se ajusta al tamaño real en pantalla × devicePixelRatio. Antes
+// era fijo de 1200px y el navegador lo estiraba: en pantallas grandes o de
+// alta densidad se veía borroso.
 export default function WaveformVisualizer({
   progress = 0,
   peaks = [],
   onSeek,
   zoom = 1,
   scrollOffset = 0,
-  setScrollOffset,
   vZoom = 1,
   totalBars = 64,
+  tickFraction = 0,      // largo de un tick de grilla (compás o N segundos) como fracción de la canción
   snapToGrid = false,
-  gridMode = 'bars',       // 'bars' (compases) | 'time' (grilla fija por segundos)
-  secondsPerTick = 0,      // solo en modo 'time'
+  snapFraction = 0,      // paso del snap (un tiempo, o un tick sin tempo) como fracción
   majorEvery = 4,
-  snapDivisions = 0,
-  onZoomWheel = null
+  height = 80,
 }) {
+  const wrapRef = useRef(null);
   const staticCanvasRef = useRef(null);
   const dynamicCanvasRef = useRef(null);
+  const [size, setSize] = useState({ w: 0, h: 0, dpr: 1 });
 
-  // DIBUJO ESTÁTICO: Grilla y Números (Solo se ejecuta al hacer Zoom o Scroll)
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      setSize(prev => (prev.w === r.width && prev.h === r.height && prev.dpr === dpr ? prev : { w: r.width, h: r.height, dpr }));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const W = Math.max(1, Math.round(size.w * size.dpr));
+  const H = Math.max(1, Math.round(size.h * size.dpr));
+
+  // Ventana visible — el mismo mapeo que usa CueTimeline para todo lo demás.
+  const viewStart = zoom > 1 ? scrollOffset * (1 - 1 / zoom) : 0;
+  const viewSpan = 1 / zoom;
+
+  // GRILLA (solo cambia con zoom/scroll/tamaño)
   const drawStatic = useCallback(() => {
     const canvas = staticCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const { width, height } = canvas;
-
     ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, width, height);
-
+    ctx.fillRect(0, 0, W, H);
     // Sin datos reales todavía: fondo neutro, sin líneas (evita grilla falsa al abrir)
-    if (totalBars < 1) return;
+    if (totalBars < 1 || tickFraction <= 0) return;
 
-    const pixPerBar = (width * zoom) / Math.max(1, totalBars);
-    const barOffset = zoom > 1 ? (scrollOffset * (totalBars * pixPerBar - width)) : 0;
-
-    for (let i = 0; i <= totalBars; i++) {
-      const x = Math.floor(i * pixPerBar - barOffset) + 0.5;
-      if (x < -10 || x > width + 10) continue;
-
+    const pxPerTick = (W / viewSpan) * tickFraction;
+    const first = Math.max(0, Math.floor(viewStart / tickFraction));
+    const last = Math.min(totalBars, Math.ceil((viewStart + viewSpan) / tickFraction));
+    // Con mucho zoom-out se salta ticks menores: si no, la grilla es una mancha.
+    const minorVisible = pxPerTick >= 6 * size.dpr;
+    ctx.lineWidth = Math.max(1, Math.round(size.dpr));
+    for (let i = first; i <= last; i++) {
       const isMajor = i % Math.max(1, majorEvery) === 0;
-      ctx.lineWidth = 1;
+      if (!isMajor && !minorVisible) continue;
+      const x = Math.round(((i * tickFraction) - viewStart) / viewSpan * W) + 0.5;
       ctx.strokeStyle = isMajor ? GRID_MAJOR : GRID_MINOR;
       ctx.beginPath();
-      ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
-
-      if (isMajor || pixPerBar > 100) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = '700 10px monospace';
-        const label = gridMode === 'time' ? fmtClock(i * secondsPerTick) : (i + 1);
-        ctx.fillText(label, x + 4, 14);
-      }
+      ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
     }
-  }, [zoom, scrollOffset, totalBars, gridMode, secondsPerTick, majorEvery]);
+  }, [W, H, size.dpr, viewStart, viewSpan, totalBars, tickFraction, majorEvery]);
 
-  // DIBUJO DINÁMICO: Forma de Onda y Playhead (Se ejecuta cuando cambia progress o peaks)
+  // FORMA DE ONDA (progress/peaks/vZoom + escala)
   const drawDynamic = useCallback(() => {
     const canvas = dynamicCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const { width, height } = canvas;
-    const centerY = height / 2;
-
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, W, H);
+    const centerY = H / 2;
 
     const totalCount = peaks.length || 200;
-    const displayCount = totalCount / zoom;
-    const scrollMax = Math.max(0, totalCount - displayCount);
-    const startIdx = zoom > 1 ? Math.floor(scrollOffset * scrollMax) : 0;
-
-    const visualBoost = 1.8; 
-    const ampBase = (height * 0.4) * vZoom * visualBoost;
-    const playheadIdx = progress * totalCount;
     const hasData = peaks.length > 0;
+    const ampBase = (H * 0.4) * vZoom * 1.8;
+    const playheadIdx = progress * totalCount;
 
-    for (let x = 0; x < width; x++) {
-      const globalIdx = startIdx + ((x / width) * displayCount);
+    for (let x = 0; x < W; x++) {
+      const globalIdx = (viewStart + (x / W) * viewSpan) * totalCount;
       if (hasData && globalIdx >= totalCount) break;
-
       const rawPeak = hasData ? (peaks[Math.floor(globalIdx)] || 0) : 0.03;
-      const h = Math.min(height * 0.48, Math.max(1.5, rawPeak * ampBase));
-
-      const isActive = globalIdx <= playheadIdx;
-      ctx.fillStyle = isActive ? '#a855f7' : INACTIVE;
+      const h = Math.min(H * 0.48, Math.max(1.5, rawPeak * ampBase));
+      ctx.fillStyle = globalIdx <= playheadIdx ? PLAYED : INACTIVE;
       ctx.fillRect(x, Math.floor(centerY - h), 1, Math.floor(h * 2));
     }
+  }, [W, H, progress, peaks, vZoom, viewStart, viewSpan]);
 
-    const playX = ((playheadIdx - startIdx) / displayCount) * width;
-    if (playX >= 0 && playX <= width) {
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = 15; ctx.shadowColor = CYAN;
-      ctx.fillRect(Math.floor(playX) - 1, 0, 2, height);
-      ctx.shadowBlur = 0;
-    }
-  }, [progress, peaks, vZoom, zoom, scrollOffset]);
-
-  // Efecto para redibujar la grilla (Solo zoom/scroll/bars)
-  useEffect(() => {
-    drawStatic();
-  }, [drawStatic]);
-
-  // Efecto para redibujar la onda (progress/peaks/vZoom + dependencias de escala)
-  useEffect(() => {
-    drawDynamic();
-  }, [drawDynamic]);
+  useEffect(() => { drawStatic(); }, [drawStatic]);
+  useEffect(() => { drawDynamic(); }, [drawDynamic]);
 
   const handleClick = (e) => {
     if (!onSeek) return;
-    const rect = dynamicCanvasRef.current.getBoundingClientRect();
+    const rect = wrapRef.current.getBoundingClientRect();
     const lPos = (e.clientX - rect.left) / rect.width;
-    
-    let rawPos = zoom > 1 
-      ? Math.max(0, Math.min(1, scrollOffset * (1 - 1/zoom) + lPos * (1/zoom)))
-      : Math.max(0, Math.min(1, lPos));
-      
-    // SNAP TO GRID LOGIC (Estabilidad perfecta, cálculos 100% frontend)
-    // Con tempo: beats en 4/4. Sin tempo: ticks de tiempo fijos.
-    const divisions = snapDivisions > 0 ? snapDivisions : totalBars * 4;
-    if (snapToGrid && divisions > 0) {
-      const step = 1 / divisions;
-      rawPos = Math.round(rawPos / step) * step;
+    let rawPos = Math.max(0, Math.min(1, viewStart + lPos * viewSpan));
+
+    // SNAP TO GRID: con tempo, a los tiempos del compás; sin tempo, a los ticks.
+    if (snapToGrid && snapFraction > 0) {
+      rawPos = Math.round(rawPos / snapFraction) * snapFraction;
     }
-    
     onSeek(Math.max(0, Math.min(1, rawPos)));
   };
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    if (e.ctrlKey && onZoomWheel) {
-      onZoomWheel(e.deltaY);
-    } else if (zoom > 1) {
-      const step = 0.05 / zoom;
-      setScrollOffset(prev => Math.max(0, Math.min(1, prev + (e.deltaY > 0 ? step : -step))));
-    }
-  };
+  const canvasStyle = { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'block', pointerEvents: 'none' };
 
   return (
     <div
+      ref={wrapRef}
       onClick={handleClick}
-      onWheel={handleWheel}
-      style={{ 
-        width: '100%', height: '80px', background: BG_COLOR, borderRadius: '8px', 
-        overflow: 'hidden', border: '1px solid rgba(34, 211, 238, 0.15)',
-        position: 'relative',
-        cursor: 'pointer', userSelect: 'none'
+      style={{
+        width: '100%', height: `${height}px`, background: BG_COLOR, borderRadius: '12px',
+        overflow: 'hidden', border: '1px solid rgba(247, 244, 239, 0.18)',
+        position: 'relative', cursor: 'pointer', userSelect: 'none'
       }}
     >
-      {/* Capa 1: Grilla Estática */}
-      <canvas 
-        ref={staticCanvasRef} 
-        width={1200} height={80} 
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'block', pointerEvents: 'none' }} 
-      />
-      
-      {/* Capa 2: Forma de Onda Dinámica */}
-      <canvas 
-        ref={dynamicCanvasRef} 
-        width={1200} height={80} 
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'block', pointerEvents: 'none' }} 
-      />
-
-      <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.85)', pointerEvents: 'none' }} />
+      <canvas ref={staticCanvasRef} width={W} height={H} style={canvasStyle} />
+      <canvas ref={dynamicCanvasRef} width={W} height={H} style={canvasStyle} />
+      <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 30px rgba(0,0,0,0.7)', pointerEvents: 'none' }} />
     </div>
   );
 }

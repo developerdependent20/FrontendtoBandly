@@ -158,7 +158,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
       style={{ 
         borderTop: `3px solid ${track.color || 'var(--daw-cyan)'}`, 
         filter: isSelected ? 'none' : 'saturate(0.4)',
-        background: isSelected ? 'rgba(34, 211, 238, 0.05)' : 'transparent',
+        background: isSelected ? 'rgba(247, 244, 239, 0.03)' : 'transparent',
         transition: 'all 0.2s'
       }}
     >
@@ -178,7 +178,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
           textAlign: 'center', 
           letterSpacing: '0.5px',
           cursor: 'pointer',
-          background: isSelected ? 'rgba(34, 211, 238, 0.1)' : 'transparent'
+          background: isSelected ? 'rgba(247, 244, 239, 0.06)' : 'transparent'
         }}
       >
         {track.name || 'Inst'}
@@ -195,7 +195,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
             height: `${FADER_HEIGHT}px`, 
             width: '36px',
             cursor: 'ns-resize',
-            borderRadius: '8px',
+            borderRadius: '12px',
             overflow: 'hidden',
             border: '1px solid rgba(255,255,255,0.08)',
             boxShadow: 'inset 0 0 14px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.4)'
@@ -207,7 +207,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: '#060a14',
+            background: '#0b0b0d',
             zIndex: 1
           }}>
             {/* Barra de Señal Viva */}
@@ -275,13 +275,13 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
               transition: 'box-shadow 0.1s ease',
               width: '40px', // Hacerlo sobresalir un poco a los lados
               background: 'linear-gradient(to bottom, #333, #111)',
-              borderRadius: '4px',
+              borderRadius: '6px',
               boxShadow: '0 4px 6px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.2), 0 0 0 1px rgba(0,0,0,0.8)'
             }}
           >
             {/* Línea horizontal en el medio del knob para precisión visual */}
             <div style={{ width: '100%', height: '2px', background: 'var(--daw-bg)', position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)' }}></div>
-            <div style={{ width: '80%', height: '1px', background: 'var(--daw-cyan)', opacity: 0.6, position: 'absolute', top: '50%', left: '10%', transform: 'translateY(-50%)' }}></div>
+            <div style={{ width: '80%', height: '1px', background: 'rgba(255,255,255,0.35)', opacity: 0.6, position: 'absolute', top: '50%', left: '10%', transform: 'translateY(-50%)' }}></div>
           </div>
         </div>
       </div>
@@ -314,10 +314,10 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
 
       <div style={{ padding: '8px 4px', borderTop: '1px solid var(--daw-border)', display: 'flex', justifyContent: 'space-around' }} title="Doble clic en un knob = Reset a 0dB">
         <div onDoubleClick={handleEqReset('low', setEqLow)}>
-          <AnalogKnob value={eqLow} min={-12} max={12} size={22} label="L" color="#38bdf8" onChange={handleEqChange('low', setEqLow)} />
+          <AnalogKnob value={eqLow} min={-12} max={12} size={22} label="L" color="#f7f4ef" onChange={handleEqChange('low', setEqLow)} />
         </div>
         <div onDoubleClick={handleEqReset('mid', setEqMid)}>
-          <AnalogKnob value={eqMid} min={-12} max={12} size={22} label="M" color="#a855f7" onChange={handleEqChange('mid', setEqMid)} />
+          <AnalogKnob value={eqMid} min={-12} max={12} size={22} label="M" color="#f7f4ef" onChange={handleEqChange('mid', setEqMid)} />
         </div>
         <div onDoubleClick={handleEqReset('high', setEqHigh)}>
           <AnalogKnob value={eqHigh} min={-12} max={12} size={22} label="H" color="#f97316" onChange={handleEqChange('high', setEqHigh)} />
@@ -343,7 +343,7 @@ const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSo
              cursor: 'pointer', 
              outline: 'none',
              width: '100%',
-             fontWeight: '700',
+             fontWeight: '500',
              textAlign: 'center',
              letterSpacing: '0.04em'
            }}

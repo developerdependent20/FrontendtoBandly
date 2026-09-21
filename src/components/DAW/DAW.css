@@ -1,43 +1,48 @@
-/* Plus Jakarta Sans and DM Mono are imported in index.css */
+/* Inter y DM Mono vienen empaquetadas con la app (ver main.jsx) */
 
 /* ══════════════════════════════════════════════
-   BANDLY DAW — Design System v4 (Geist Edition)
+   BANDLY DAW — negro mate, crema y un solo acento
+   Lienzo #101012 → tarjeta #17171a → overlay #000.
+   El coral solo marca la acción principal (Play).
+   Radios: 6 botones · 12 tarjetas · 20 imágenes · 24 hero.
    ══════════════════════════════════════════════ */
 :root {
-  /* ... colores ... */
-  --daw-bg:           #020617;
-  --daw-surface:      #13161e;
-  --daw-panel:        #080a10;
-  --daw-panel-hover:  #1f2330;
+  --daw-bg:           #101012;
+  --daw-surface:      #17171a;
+  --daw-panel:        #101012;
+  --daw-panel-hover:  #1c1c20;
   --daw-border:       rgba(255, 255, 255, 0.08);
-  --daw-border-strong:rgba(255,255,255,0.12);
+  --daw-border-strong:rgba(255, 255, 255, 0.14);
 
-  --daw-text:         #f8fafc;
-  --daw-text-muted:   #64748b;
-  --daw-text-soft:    #94a3b8;
+  --daw-text:         #f7f4ef;
+  --daw-text-muted:   #7d7d7c;
+  --daw-text-soft:    #a8a8a6;
 
-  --daw-cyan:         linear-gradient(135deg, #a855f7, #3b82f6);
-  --daw-cyan-solid:   #a855f7;
-  --daw-cyan-glow:    rgba(168,85,247,0.15);
-  --daw-accent:       #818cf8;
-  --daw-green:        #34d399;
-  --daw-amber:        #fbbf24;
-  --daw-red:          #ef4444;
+  /* Lo "activo" se marca en crema, no con un color. */
+  --daw-cyan:         #f7f4ef;
+  --daw-cyan-solid:   #f7f4ef;
+  --daw-cyan-glow:    rgba(247, 244, 239, 0.06);
+  --daw-accent:       #c2c2c1;
+  /* Coral: única cosa con color */
+  --daw-gradient:     linear-gradient(135deg, #fd429c, #ff6a4a);
+  /* Estados funcionales (niveles, errores): apagados */
+  --daw-green:        #5fb58f;
+  --daw-amber:        #d9b45a;
+  --daw-red:          #d06565;
 
-  --daw-fader-track:  #080a10;
-  --daw-fader-knob:   #e2e8f0;
+  --daw-fader-track:  #101012;
+  --daw-fader-knob:   #e8e5df;
 
-  /* Typography — Premium Overhaul */
-  --daw-font:         'Plus Jakarta Sans', system-ui, sans-serif;
-  --daw-font-mono:    'DM Mono', monospace;
+  --daw-font:         'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --daw-font-mono:    'DM Mono', ui-monospace, monospace;
 }
 
 /* ── Base ─────────────────────────────────── */
 .daw-console {
-  background: #020617; /* Base - darkest */
+  background: #101012; /* Base - darkest */
   color: var(--daw-text);
   font-family: var(--daw-font);
-  font-size: 13px;
+  font-size: 14px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -57,7 +62,7 @@
   display: flex;
   padding: 8px 6px 6px;
   gap: 0px; /* Gap handled by channel border */
-  background: #0f172a; /* Slightly lighter than base */
+  background: #17171a; /* Slightly lighter than base */
   overflow-x: auto;
   flex: 1;
   scrollbar-width: auto;
@@ -77,7 +82,7 @@
   min-width: 100px;
   display: flex;
   flex-direction: column;
-  border-radius: 4px;
+  border-radius: 6px;
   border-right: 1px solid rgba(255,255,255,0.04); 
   position: relative;
   transition: all 0.3s ease;
@@ -130,8 +135,8 @@
 .fader-track {
   width: 6px;
   height: 140px;
-  background: #04060a;
-  border-radius: 4px;
+  background: #0b0b0d;
+  border-radius: 6px;
   position: relative;
   margin: 2px 0;
   box-shadow: inset 0 0 5px rgba(0,0,0,0.9);
@@ -141,8 +146,8 @@
 .fader-knob {
   width: 24px;
   height: 14px;
-  background: linear-gradient(180deg, #f8fafc 0%, #94a3b8 100%);
-  border-radius: 2px;
+  background: linear-gradient(180deg, #f7f4ef 0%, #a8a8a6 100%);
+  border-radius: 6px;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -168,7 +173,7 @@
   filter: brightness(1.1);
   box-shadow:
     0 6px 12px rgba(0,0,0,0.8),
-    0 0 0 1px rgba(34,211,238,0.4);
+    0 0 0 1px rgba(98, 164, 174, 0.4);
 }
 
 /* ── Button Grid ──────────────────────────── */
@@ -185,7 +190,7 @@
   color: var(--daw-text-soft);
   font-family: var(--daw-font);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   padding: 6px 0;
   border-radius: 100px; /* Pill/Circular look */
   cursor: pointer;
@@ -219,7 +224,7 @@
 
 .tech-btn.active-stereo {
   background: transparent;
-  color: #94a3b8; /* Subtle gray */
+  color: #a8a8a6; /* Subtle gray */
   border: 1px solid rgba(255,255,255,0.05);
   font-size: 9px;
   opacity: 0.5;
@@ -240,7 +245,7 @@
 .daw-console h3 {
   font-family: var(--daw-font);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
@@ -270,7 +275,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .transport-btn:hover {
@@ -302,7 +307,7 @@
 
 .main-play-btn span {
   font-size: 12px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   text-transform: lowercase !important;
 }
 .main-play-btn span::first-letter {
@@ -314,9 +319,9 @@
   color: rgba(255, 255, 255, 0.45) !important;
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.62rem;
-  font-weight: 700;
+  font-weight: 500;
   width: 100%;
   cursor: pointer;
   outline: none;
@@ -329,7 +334,7 @@
   border: 1px solid var(--daw-border);
   color: var(--daw-text-muted);
   padding: 8px;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -347,7 +352,7 @@
 .daw-console span[style*="color: var(--daw-green)"],
 .daw-console span[style*="color: var(--daw-red)"] {
   font-size: 12px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   text-transform: lowercase !important;
 }
 .daw-console span[style*="color: var(--daw-green)"]::first-letter,
@@ -358,7 +363,7 @@
 /* ── Show Manager (Setlist Sidebar) ────────── */
 aside[style*="width: 300px"] {
   width: 320px !important;
-  background: #04060e !important; /* Slightly lighter than base */
+  background: #0b0b0d !important; /* Slightly lighter than base */
   border-left: 1px solid var(--daw-border) !important;
 }
 
@@ -372,7 +377,7 @@ aside[style*="width: 300px"] > div:first-child {
 aside[style*="width: 300px"] > div:first-child span {
   color: var(--daw-text-muted) !important;
   font-size: 11px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   letter-spacing: 0.5px !important;
   text-transform: uppercase !important;
 }
@@ -395,7 +400,7 @@ aside[style*="width: 300px"] > div:first-child span {
 }
 
 .setlist-item.active {
-  background: rgba(34, 211, 238, 0.05) !important;
+  background: rgba(247, 244, 239, 0.03) !important;
   border-left: 3px solid var(--daw-cyan) !important;
 }
 
@@ -511,24 +516,10 @@ aside[style*="width: 300px"] div[style*="padding: 2rem"]::before {
   margin-bottom: 10px !important;
 }
 
-/* Logo Premium Overhaul */
-.daw-console span[style*="letter-spacing: 2px"] {
-  font-size: 16px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.5px !important;
-  text-transform: uppercase !important;
-  white-space: nowrap !important;
-  background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
-}
-
 /* OUT Buttons Overrides */
 .daw-console header select,
 .daw-console select[title="Salida Física de Pads"] {
-  border: 1px solid #1e293b !important;
+  border: 1px solid #1c1c20 !important;
   color: rgba(255, 255, 255, 0.6) !important;
   background: rgba(0, 0, 0, 0.4) !important;
   appearance: none;
@@ -539,28 +530,6 @@ aside[style*="width: 300px"] div[style*="padding: 2rem"]::before {
   background-position: right 6px center !important;
   padding-left: 8px !important;
   padding-right: 20px !important;
-}
-
-/* Bethel Pads Label */
-.daw-console span[style*="letter-spacing: 2px"]:not([style*="font-size: 16px"]) {
-  color: #ffffff !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 1px !important;
-  text-transform: none !important;
-  opacity: 0.8 !important;
-}
-
-/* Add suttle dot for status style if possible via content */
-.daw-console span[style*="letter-spacing: 2px"]:not([style*="font-size: 16px"])::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--daw-cyan);
-  border-radius: 50%;
-  margin-right: 8px;
-  vertical-align: middle;
 }
 
 /* ── Responsive Studio Live Tools ─────────── */
@@ -608,3 +577,29 @@ aside[style*="width: 300px"] div[style*="padding: 2rem"]::before {
     align-items: stretch;
   }
 }
+
+/* ── Tipografía: pesos 300/400/500 ────────────────────────────────────────
+   Muchos textos piden peso 600-950 en línea. El sistema solo usa hasta 500;
+   se limita aquí, en un solo lugar, en vez de tocar cada componente. */
+.daw-console [style*="font-weight: 600"],
+.daw-console [style*="font-weight: 700"],
+.daw-console [style*="font-weight: 800"],
+.daw-console [style*="font-weight: 900"],
+.daw-console [style*="font-weight: 950"] {
+  font-weight: 500 !important;
+}
+.daw-console { font-feature-settings: 'tnum' 1, 'cv11' 1; }
+
+/* Panel de arreglo: los botones de cada bloque se apagan hasta que apuntas al bloque */
+.arr-block .arr-act { opacity: 0.4; transition: opacity 0.15s; }
+.arr-block:hover .arr-act, .arr-block.arr-active .arr-act { opacity: 0.9; }
+.arr-block .arr-act:hover:not(:disabled) { opacity: 1; background: rgba(255,255,255,0.08) !important; }
+
+/* Scroll de la zona central del DAW: discreto, como el resto de la app */
+.daw-center > * { flex-shrink: 0; }
+/* El mezclador no se encoge por debajo de lo que mide un canal (~390px): si la
+   ventana es baja, lo que sobra se desplaza en vez de recortarse. */
+.daw-center > .daw-mixer { flex: 1 0 auto; min-height: 430px; }
+.daw-center::-webkit-scrollbar { width: 8px; }
+.daw-center::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 6px; }
+.daw-center::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); }

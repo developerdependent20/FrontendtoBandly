@@ -71,9 +71,9 @@ export default function RefundPage({ onBack }) {
           --legal-accent: #f59e0b;
           background:
             radial-gradient(circle at top right, rgba(245, 158, 11, 0.08), transparent 45%),
-            radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.05), transparent 50%),
-            var(--bg-dark, #020617);
-          color: var(--text-main, #f8fafc);
+            linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04)),
+            var(--bg-dark, #101012);
+          color: var(--text-main, #f7f4ef);
           min-height: 100vh;
           font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
         }
@@ -82,7 +82,7 @@ export default function RefundPage({ onBack }) {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: rgba(15, 23, 42, 0.85);
+          background: rgba(23, 23, 26, 0.85);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.08));
@@ -90,17 +90,17 @@ export default function RefundPage({ onBack }) {
           top: 0;
           z-index: 10;
         }
-        .legal-nav .brand { font-weight: 700; letter-spacing: 0.3px; font-size: 0.85rem; color: var(--text-muted, #94a3b8); }
+        .legal-nav .brand { font-weight: 500; letter-spacing: 0.3px; font-size: 0.85rem; color: var(--text-muted, #a8a8a6); }
         .back-btn {
           background: transparent;
           border: none;
-          color: var(--text-muted, #94a3b8);
+          color: var(--text-muted, #a8a8a6);
           display: flex;
           align-items: center;
           gap: 8px;
           cursor: pointer;
           font-size: 0.9rem;
-          font-weight: 600;
+          font-weight: 500;
           transition: color 0.2s;
         }
         .back-btn:hover { color: #fff; }
@@ -124,18 +124,18 @@ export default function RefundPage({ onBack }) {
           border: 1px solid color-mix(in srgb, var(--legal-accent) 30%, transparent);
         }
         .legal-header .icon { color: var(--legal-accent); }
-        .legal-header h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 0.6rem; }
-        .update-date { color: var(--text-muted, #94a3b8); font-size: 0.8rem; }
+        .legal-header h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 500; letter-spacing: -1px; margin-bottom: 0.6rem; }
+        .update-date { color: var(--text-muted, #a8a8a6); font-size: 0.8rem; }
         .legal-section { padding: 1.75rem 0; border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.06)); }
         .legal-section:last-of-type { border-bottom: none; padding-bottom: 0; }
-        .legal-section h2 { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 1rem; border-left: 3px solid var(--legal-accent); padding-left: 1rem; }
-        .legal-section p { line-height: 1.7; color: var(--text-muted, #94a3b8); margin-bottom: 1rem; font-size: 0.92rem; }
+        .legal-section h2 { font-size: 1.05rem; font-weight: 500; color: #fff; margin-bottom: 1rem; border-left: 3px solid var(--legal-accent); padding-left: 1rem; }
+        .legal-section p { line-height: 1.7; color: var(--text-muted, #a8a8a6); margin-bottom: 1rem; font-size: 0.92rem; }
         .contact-box {
           background: color-mix(in srgb, var(--legal-accent) 10%, transparent);
           border: 1px solid color-mix(in srgb, var(--legal-accent) 25%, transparent);
           padding: 0.9rem 1.2rem; border-radius: 12px;
           display: flex; align-items: center; gap: 10px;
-          font-size: 0.85rem; color: var(--legal-accent); font-weight: 600;
+          font-size: 0.85rem; color: var(--legal-accent); font-weight: 500;
         }
       `}</style>
     </div>

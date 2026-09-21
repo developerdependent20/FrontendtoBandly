@@ -8,10 +8,10 @@ const DRUM_PADS = [
   { id: 'kick', label: 'Kick', color: '#ef4444', key: '1', file: 'kick.wav' },
   { id: 'snare', label: 'Snare', color: '#f59e0b', key: '2', file: 'snare.wav' },
   { id: 'hihat_c', label: 'Hi-Hat (C)', color: '#10b981', key: '3', file: 'hihat-closed.wav' },
-  { id: 'hihat_o', label: 'Hi-Hat (O)', color: '#3b82f6', key: '4', file: 'hihat-open.wav' },
-  { id: 'tom_l', label: 'Floor Tom', color: '#8b5cf6', key: 'q', file: 'tom-floor.wav' },
+  { id: 'hihat_o', label: 'Hi-Hat (O)', color: '#f7f4ef', key: '4', file: 'hihat-open.wav' },
+  { id: 'tom_l', label: 'Floor Tom', color: '#f7f4ef', key: 'q', file: 'tom-floor.wav' },
   { id: 'tom_h', label: 'Tom', color: '#d946ef', key: 'w', file: 'tom.wav' },
-  { id: 'drop', label: 'Drop', color: '#a855f7', key: 'e', file: 'drop.wav' },
+  { id: 'drop', label: 'Drop', color: '#f7f4ef', key: 'e', file: 'drop.wav' },
   { id: 'swell', label: 'Swell', color: '#ec4899', key: 'r', file: 'swell.wav' },
 ];
 
@@ -222,7 +222,7 @@ export default function PercussionPad() {
 
   return (
     <div style={{ 
-      background: 'linear-gradient(145deg, #1e293b, #0f172a)', 
+      background: 'linear-gradient(145deg, #1c1c20, #17171a)', 
       borderRadius: '24px', 
       padding: '2.5rem', 
       border: '1px solid rgba(255,255,255,0.05)',
@@ -254,10 +254,10 @@ export default function PercussionPad() {
             <Power size={20} color={powerOn ? '#ef4444' : '#555'} />
           </div>
           <div>
-            <h3 style={{ margin: 0, color: '#e2e8f0', fontSize: '1.4rem', fontWeight: '900', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
+            <h3 style={{ margin: 0, color: '#e8e5df', fontSize: '1.4rem', fontWeight: '500', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
               RHYTHM <span style={{ color: 'var(--primary)' }}>PRO</span>
             </h3>
-            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold', letterSpacing: '2px' }}>
+            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500', letterSpacing: '0.5px' }}>
               CUSTOM DRUM MACHINE
             </p>
           </div>
@@ -297,7 +297,7 @@ export default function PercussionPad() {
                   : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.2))',
                 border: '1px solid',
                 borderColor: isActive ? pad.color : 'rgba(255,255,255,0.1)',
-                borderRadius: '16px',
+                borderRadius: '12px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -321,7 +321,7 @@ export default function PercussionPad() {
                 borderBottomLeftRadius: '4px', borderBottomRightRadius: '4px'
               }} />
 
-              <span style={{ fontWeight: '900', fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <span style={{ fontWeight: '500', fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {pad.label}
               </span>
               <span style={{ 
@@ -367,10 +367,10 @@ export default function PercussionPad() {
       
       {!ready && (
         <div style={{ 
-          position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(4px)',
+          position: 'absolute', inset: 0, background: 'rgba(23, 23, 26,0.8)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', zIndex: 10 
         }}>
-          <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.2rem', animation: 'pulse 1s infinite' }}>
+          <div style={{ color: 'var(--primary)', fontWeight: '500', fontSize: '1.2rem', animation: 'pulse 1s infinite' }}>
             INICIALIZANDO MOTOR DE AUDIO...
           </div>
         </div>

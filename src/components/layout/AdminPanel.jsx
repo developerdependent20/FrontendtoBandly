@@ -85,18 +85,18 @@ const AdminPanel = ({ onInspect }) => {
   );
 
   const TAB_STYLE = (active) => ({
-    padding: '8px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-    fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.5px', transition: 'all 0.15s',
-    background: active ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)',
-    color: active ? '#a855f7' : 'rgba(255,255,255,0.4)',
-    borderBottom: active ? '2px solid #a855f7' : '2px solid transparent',
+    padding: '8px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+    fontSize: '0.78rem', fontWeight: '500', letterSpacing: '0.5px', transition: 'all 0.15s',
+    background: active ? 'rgba(247, 244, 239, 0.11)' : 'rgba(255,255,255,0.04)',
+    color: active ? '#f7f4ef' : 'rgba(255,255,255,0.4)',
+    borderBottom: active ? '2px solid rgba(247, 244, 239, 0.3)' : '2px solid transparent',
   });
 
   const planBadge = (plan) => {
-    const colors = { pro: '#a855f7', elite: '#ef4444', starter: '#3b82f6' };
+    const colors = { pro: '#a78ac2', elite: '#ef4444', starter: '#7891b9' };
     const c = colors[plan?.toLowerCase()] || 'rgba(255,255,255,0.15)';
     return (
-      <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '4px', background: c, color: '#fff', fontWeight: '800', letterSpacing: '0.5px' }}>
+      <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '6px', background: c, color: '#fff', fontWeight: '500', letterSpacing: '0.5px' }}>
         {(plan || 'FREE').toUpperCase()}
       </span>
     );
@@ -110,17 +110,17 @@ const AdminPanel = ({ onInspect }) => {
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>PANEL DE CONTROL</h1>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '500', margin: 0, letterSpacing: '-0.5px' }}>PANEL DE CONTROL</h1>
           <p style={{ opacity: 0.4, fontSize: '0.8rem', margin: '4px 0 0' }}>Gestion global de Bandly</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '10px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#a855f7' }}>{orgs.length}</div>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '10px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: '500', color: '#f7f4ef' }}>{orgs.length}</div>
               <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '1px' }}>Bandas</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '10px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#10b981' }}>{users.length || '—'}</div>
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '10px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: '500', color: '#10b981' }}>{users.length || '—'}</div>
               <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '1px' }}>Usuarios</div>
             </div>
           </div>
@@ -146,9 +146,9 @@ const AdminPanel = ({ onInspect }) => {
             <div style={{ position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
               <input type="text" placeholder="Buscar organización o código..." value={orgsSearch} onChange={e => setOrgsSearch(e.target.value)}
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 12px 9px 36px', borderRadius: '10px', color: '#fff', width: '260px', fontSize: '0.8rem' }} />
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 12px 9px 36px', borderRadius: '12px', color: '#fff', width: '260px', fontSize: '0.8rem' }} />
             </div>
-            <button onClick={handleSync} style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.3)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>
+            <button onClick={handleSync} style={{ background: 'rgba(247, 244, 239, 0.08)', color: '#f7f4ef', border: '1px solid rgba(247, 244, 239, 0.18)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '500', cursor: 'pointer' }}>
               SINCRONIZAR TODO
             </button>
           </div>
@@ -164,8 +164,8 @@ const AdminPanel = ({ onInspect }) => {
                  <div key={org.id} className="glass-panel" style={{ padding: '18px', position: 'relative' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                      <div>
-                       <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>{org.name}</h3>
-                       <code style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 'bold' }}>#{org.invite_code}</code>
+                       <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '500' }}>{org.name}</h3>
+                       <code style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: '500' }}>#{org.invite_code}</code>
                      </div>
                      {planBadge(org.plan)}
                    </div>
@@ -174,12 +174,12 @@ const AdminPanel = ({ onInspect }) => {
                        <span>Almacenamiento</span>
                        <span>{used.toFixed(1)} / {limit} MB</span>
                      </div>
-                     <div style={{ height: '5px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                       <div style={{ width: `${pct}%`, height: '100%', background: pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#a855f7', transition: 'width 0.5s' }} />
+                     <div style={{ height: '5px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden' }}>
+                       <div style={{ width: `${pct}%`, height: '100%', background: pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#fd429c', transition: 'width 0.5s' }} />
                      </div>
                    </div>
                    <button onClick={() => onInspect?.(org)}
-                     style={{ width: '100%', padding: '7px', borderRadius: '8px', border: '1px solid rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.08)', color: '#a855f7', fontSize: '0.72rem', cursor: 'pointer', fontWeight: '800' }}>
+                     style={{ width: '100%', padding: '7px', borderRadius: '12px', border: '1px solid rgba(247, 244, 239, 0.18)', background: 'rgba(247, 244, 239, 0.04)', color: '#f7f4ef', fontSize: '0.72rem', cursor: 'pointer', fontWeight: '500' }}>
                      Inspeccionar Equipo
                    </button>
                  </div>
@@ -196,9 +196,9 @@ const AdminPanel = ({ onInspect }) => {
             <div style={{ position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
               <input type="text" placeholder="Buscar por nombre, email o equipo..." value={usersSearch} onChange={e => setUsersSearch(e.target.value)}
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 12px 9px 36px', borderRadius: '10px', color: '#fff', width: '300px', fontSize: '0.8rem' }} />
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 12px 9px 36px', borderRadius: '12px', color: '#fff', width: '300px', fontSize: '0.8rem' }} />
             </div>
-            <button onClick={fetchUsers} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>
+            <button onClick={fetchUsers} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '500', cursor: 'pointer' }}>
               ACTUALIZAR
             </button>
           </div>
@@ -213,9 +213,9 @@ const AdminPanel = ({ onInspect }) => {
           ) : filteredUsers.length === 0 ? (
             <p style={{ opacity: 0.4 }}>No se encontraron usuarios.</p>
           ) : (
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', overflow: 'hidden' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', overflow: 'hidden' }}>
               {/* Table header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1.5fr 1fr', gap: '12px', padding: '10px 16px', background: 'rgba(0,0,0,0.2)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1.5fr 1fr', gap: '12px', padding: '10px 16px', background: 'rgba(0,0,0,0.2)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 <span>Usuario</span>
                 <span>Email</span>
                 <span>Rol</span>
@@ -229,15 +229,15 @@ const AdminPanel = ({ onInspect }) => {
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   {/* Name + avatar */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '800', color: '#a855f7', flexShrink: 0 }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(247, 244, 239, 0.11)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '500', color: '#f7f4ef', flexShrink: 0 }}>
                       {(u.full_name || u.email || '?')[0].toUpperCase()}
                     </div>
-                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.full_name || '—'}</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.full_name || '—'}</span>
                   </div>
                   {/* Email */}
                   <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</span>
                   {/* Role */}
-                  <span style={{ fontSize: '0.68rem', fontWeight: '800', color: roleColor(u.role), textTransform: 'uppercase' }}>{u.role || '—'}</span>
+                  <span style={{ fontSize: '0.68rem', fontWeight: '500', color: roleColor(u.role), textTransform: 'uppercase' }}>{u.role || '—'}</span>
                   {/* Plan */}
                   <div>{planBadge(u.plan)}</div>
                   {/* Band */}

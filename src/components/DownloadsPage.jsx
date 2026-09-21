@@ -24,14 +24,14 @@ export default function DownloadsPage({ profile }) {
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '24px', borderRadius: '50%', marginBottom: '24px' }}>
           <Lock size={48} color="#ef4444" />
         </div>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '1rem' }}>Herramientas Profesionales</h2>
+        <h2 style={{ fontSize: '2.5rem', fontWeight: '500', marginBottom: '1rem' }}>Herramientas Profesionales</h2>
         <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', maxWidth: '600px', marginBottom: '32px', lineHeight: 1.6 }}>
           Bandly DAW y Bandly Presenter son aplicaciones de escritorio nativas de alto rendimiento, disponibles desde el plan <strong>Starter</strong>.
         </p>
         <button
           className="btn-primary"
           onClick={handleUpgradePrompt}
-          style={{ padding: '16px 32px', fontSize: '1.1rem', background: 'linear-gradient(135deg, #a855f7, #6366f1)', border: 'none' }}
+          style={{ padding: '16px 32px', fontSize: '1.1rem', background: 'linear-gradient(135deg, #fd429c, #ff6a4a)', border: 'none' }}
         >
           Hacer Upgrade
         </button>
@@ -61,11 +61,11 @@ export default function DownloadsPage({ profile }) {
           display: 'flex',
           flexDirection: 'column'
         }}>
-          <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(168, 85, 247, 0.1))', padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <Sliders size={80} color="var(--daw-cyan)" style={{ filter: 'drop-shadow(0 0 20px rgba(56, 189, 248, 0.5))' }} />
+          <div style={{ background: 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))', padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Sliders size={80} color="var(--daw-cyan)" style={{ filter: 'drop-shadow(0 0 20px rgba(119, 165, 185, 0.5))' }} />
           </div>
           <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '12px' }}>Bandly DAW</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '500', marginBottom: '12px' }}>Bandly DAW</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', flex: 1 }}>
               La estación de trabajo de audio digital definitiva para tus directos. Reproduce multitracks con latencia cero, controla los volúmenes independientemente y sincroniza a todo tu equipo.
             </p>
@@ -111,7 +111,7 @@ export default function DownloadsPage({ profile }) {
             <MonitorPlay size={80} color="#ef4444" style={{ filter: 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.5))' }} />
           </div>
           <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '12px' }}>Bandly Presenter</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '500', marginBottom: '12px' }}>Bandly Presenter</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', flex: 1 }}>
               Toma el control visual de tus eventos. Proyecta letras, imágenes y videos en pantallas externas de forma instantánea y sincronizada desde el panel de control.
             </p>

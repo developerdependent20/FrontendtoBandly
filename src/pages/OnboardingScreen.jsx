@@ -250,10 +250,10 @@ export default function OnboardingScreen({ session, fetchProfile }) {
       <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Define el nombre de tu organización y un código secreto único que usarán tus miembros para unirse.</p>
       
       <div className="input-group">
-        <label style={{ textAlign: 'left', fontWeight: 'bold' }}>Nombre del Equipo/Organización</label>
+        <label style={{ textAlign: 'left', fontWeight: '500' }}>Nombre del Equipo/Organización</label>
         <input type="text" placeholder="Ej: The Groove Collective" className="input-field" value={orgName} onChange={(e) => handleOrgNameChange(e.target.value)} />
 
-        <label style={{ textAlign: 'left', fontWeight: 'bold', marginTop: '1rem' }}>Código de Invitación</label>
+        <label style={{ textAlign: 'left', fontWeight: '500', marginTop: '1rem' }}>Código de Invitación</label>
         <input
           type="text"
           placeholder="Se llena solo con el nombre"
@@ -291,9 +291,9 @@ export default function OnboardingScreen({ session, fetchProfile }) {
       
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '2rem' }}>
         {instruments.map(inst => (
-          <div key={inst.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(37, 99, 235, 0.2)', padding: '0.5rem 1rem', borderRadius: '50px', border: '1px solid var(--primary)' }}>
+          <div key={inst.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(247, 244, 239, 0.11)', padding: '0.5rem 1rem', borderRadius: '50px', border: '1px solid var(--primary)' }}>
             <span style={{ marginRight: '8px' }}>{inst.icon}</span>
-            <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{inst.label}</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{inst.label}</span>
             <button onClick={() => removeInstrument(inst.id)} style={{ background: 'transparent', border: 'none', color: 'white', marginLeft: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><X size={14} /></button>
           </div>
         ))}
@@ -342,9 +342,9 @@ export default function OnboardingScreen({ session, fetchProfile }) {
       
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '2rem' }}>
         {adminRoles.map(role => (
-          <div key={role.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(168, 85, 247, 0.2)', padding: '0.5rem 1rem', borderRadius: '50px', border: '1px solid rgba(168, 85, 247, 0.5)' }}>
+          <div key={role.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(247, 244, 239, 0.11)', padding: '0.5rem 1rem', borderRadius: '50px', border: '1px solid rgba(247, 244, 239, 0.3)' }}>
             <span style={{ marginRight: '8px' }}>{role.icon}</span>
-            <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{role.label}</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{role.label}</span>
             <button onClick={() => removeRole(role.id)} style={{ background: 'transparent', border: 'none', color: 'white', marginLeft: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><X size={14} /></button>
           </div>
         ))}
@@ -382,7 +382,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
         desc: "Dependiendo de tu plan (Básico, Starter, Pro o Elite), Bandly se adaptará para darte las herramientas exactas. Maneja desde un grupo pequeño hasta producciones masivas."
       },
       {
-        icon: <FileText size={40} color="#a855f7" />,
+        icon: <FileText size={40} color="#f7f4ef" />,
         title: "Chart Builder y Visor",
         desc: "Crea y edita acordes (charts) fácilmente. Tu equipo podrá verlos en tiempo real desde cualquier dispositivo, transponerlos al vuelo y ensayar sin distracciones."
       },
@@ -459,7 +459,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
           </>
         ) : (
           <>
-            <div style={{ padding: '0.8rem 1rem', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '10px', color: '#22c55e', fontWeight: '700', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            <div style={{ padding: '0.8rem 1rem', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '12px', color: '#22c55e', fontWeight: '500', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
               ✓ Te vas a unir a: {resolvedOrg.org_name}
             </div>
 
@@ -474,7 +474,7 @@ export default function OnboardingScreen({ session, fetchProfile }) {
                   onClick={() => toggleFunction(func.id)}
                   style={{
                     padding: '0.8rem',
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     background: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
                     border: '1px solid',
                     borderColor: selectedFunctions.includes(func.id) ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
@@ -536,19 +536,19 @@ export default function OnboardingScreen({ session, fetchProfile }) {
                 <div style={{
                   width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.68rem', fontWeight: 900,
+                  fontSize: '0.68rem', fontWeight: 500,
                   background: done || active ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
                   color: done || active ? '#fff' : 'rgba(255,255,255,0.4)',
                 }}>
                   {done ? '✓' : n}
                 </div>
                 <span className="hide-mobile" style={{
-                  fontSize: '0.72rem', fontWeight: 700,
+                  fontSize: '0.72rem', fontWeight: 500,
                   color: active ? '#fff' : 'rgba(255,255,255,0.35)'
                 }}>{label}</span>
               </div>
               {n < labels.length && (
-                <div style={{ flex: 1, height: '2px', background: done ? 'var(--primary)' : 'rgba(255,255,255,0.08)', borderRadius: '2px' }} />
+                <div style={{ flex: 1, height: '2px', background: done ? 'var(--primary)' : 'rgba(255,255,255,0.08)', borderRadius: '6px' }} />
               )}
             </React.Fragment>
           );

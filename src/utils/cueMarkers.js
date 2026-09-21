@@ -84,7 +84,7 @@ export function markersFromCueStem(cueBuffer, { bpm, beatsPerBar = 4, sampleRate
   if (onsets.length === 0) return [];
 
   const samplesPerBar = (sampleRate * 60 / bpm) * beatsPerBar;
-  const palette = ['#38bdf8', '#10b981', '#fbbf24', '#ef4444', '#a855f7', '#f97316', '#64748b'];
+  const palette = ['#77a5b9', '#10b981', '#fbbf24', '#ef4444', '#a78ac2', '#f97316', '#7d7d7c'];
 
   const seenBars = new Set();
   const markers = [];

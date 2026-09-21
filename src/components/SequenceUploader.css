@@ -5,7 +5,7 @@
 .su-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(2, 6, 23, 0.92);
+  background: rgba(16, 16, 18, 0.92);
   backdrop-filter: blur(12px);
   z-index: 2000;
   display: flex;
@@ -24,7 +24,7 @@
   width: 100%;
   max-width: 680px;
   max-height: 90vh;
-  background: #0f172a;
+  background: #17171a;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   display: flex;
@@ -52,14 +52,14 @@
 
 .su-header-left h2 {
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 500;
   margin: 0;
 }
 
 .su-song-name {
   font-size: 0.75rem;
-  color: #2563eb;
-  font-weight: 600;
+  color: #f7f4ef;
+  font-weight: 500;
   display: block;
   margin-top: 2px;
 }
@@ -67,10 +67,10 @@
 .su-close {
   background: transparent;
   border: none;
-  color: #64748b;
+  color: #7d7d7c;
   cursor: pointer;
   padding: 0.4rem;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.15s;
 }
 
@@ -92,12 +92,12 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #475569;
+  font-weight: 500;
+  color: #5f5f5e;
   transition: color 0.2s;
 }
 
-.su-step.active { color: #2563eb; }
+.su-step.active { color: #f7f4ef; }
 .su-step.completed { color: #22c55e; }
 
 .su-step-num {
@@ -109,13 +109,13 @@
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 500;
 }
 
-.su-step.active .su-step-num { background: rgba(37, 99, 235, 0.2); color: #2563eb; }
+.su-step.active .su-step-num { background: rgba(247, 244, 239, 0.11); color: #f7f4ef; }
 .su-step.completed .su-step-num { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
 
-.su-step-arrow { color: #334155; flex-shrink: 0; }
+.su-step-arrow { color: #2a2a2f; flex-shrink: 0; }
 
 /* Body */
 .su-body {
@@ -131,9 +131,9 @@
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: #f87171;
   padding: 0.75rem 1rem;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -142,18 +142,18 @@
 
 /* Select Zone (Step 1) */
 .su-select-zone {
-  border: 2px dashed rgba(37, 99, 235, 0.25);
-  border-radius: 16px;
+  border: 2px dashed rgba(247, 244, 239, 0.18);
+  border-radius: 12px;
   padding: 4rem 2rem;
   text-align: center;
   cursor: pointer;
-  color: #94a3b8;
+  color: #a8a8a6;
   transition: all 0.2s;
 }
 
 .su-select-zone:hover {
-  border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.04);
+  border-color: rgba(247, 244, 239, 0.3);
+  background: rgba(247, 244, 239, 0.02);
 }
 
 .su-select-zone h3 {
@@ -163,14 +163,14 @@
 }
 
 .su-select-zone p { font-size: 0.9rem; margin: 0.25rem 0; }
-.su-formats { font-size: 0.75rem !important; color: #475569 !important; margin-top: 1rem !important; }
+.su-formats { font-size: 0.75rem !important; color: #5f5f5e !important; margin-top: 1rem !important; }
 
 .su-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  color: #2563eb;
+  color: #f7f4ef;
 }
 
 /* Review (Step 2) */
@@ -184,8 +184,8 @@
 .su-field label {
   display: block;
   font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
+  font-weight: 500;
+  color: #7d7d7c;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 0.4rem;
@@ -197,14 +197,14 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   padding: 0.65rem 0.9rem;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
 }
 
-.su-input:focus { border-color: #2563eb; }
+.su-input:focus { border-color: rgba(247, 244, 239, 0.3); }
 
 /* Stem List */
 .su-stem-list { margin-bottom: 1.5rem; }
@@ -215,11 +215,11 @@
   align-items: center;
   margin-bottom: 0.75rem;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #94a3b8;
+  font-weight: 500;
+  color: #a8a8a6;
 }
 
-.su-size-total { color: #64748b; font-weight: 600; }
+.su-size-total { color: #7d7d7c; font-weight: 500; }
 
 .su-stem-row {
   display: flex;
@@ -228,7 +228,7 @@
   padding: 0.6rem 0.75rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
+  border-radius: 12px;
   margin-bottom: 0.4rem;
   transition: background 0.15s;
 }
@@ -238,7 +238,7 @@
 .su-stem-color {
   width: 4px;
   height: 28px;
-  border-radius: 4px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
@@ -250,8 +250,8 @@
 .su-stem-name {
   display: block;
   font-size: 0.8rem;
-  font-weight: 600;
-  color: #e2e8f0;
+  font-weight: 500;
+  color: #e8e5df;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -259,17 +259,17 @@
 
 .su-stem-size {
   font-size: 0.65rem;
-  color: #64748b;
+  color: #7d7d7c;
 }
 
 .su-stem-type-select {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  color: #a8a8a6;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   outline: none;
   font-family: inherit;
@@ -279,7 +279,7 @@
 .su-stem-remove {
   background: transparent;
   border: none;
-  color: #475569;
+  color: #5f5f5e;
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
@@ -293,12 +293,12 @@
 .su-btn-upload {
   width: 100%;
   padding: 0.9rem;
-  background: linear-gradient(135deg, #2563eb, #6366f1);
+  background: linear-gradient(135deg, #fd429c, #ff6a4a);
   border: none;
   border-radius: 12px;
   color: white;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -308,21 +308,21 @@
   font-family: inherit;
 }
 
-.su-btn-upload:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3); }
+.su-btn-upload:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); }
 
 /* Uploading Progress (Step 3) */
 .su-status-bar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #2563eb;
+  color: #f7f4ef;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 1.5rem;
   padding: 0.75rem 1rem;
-  background: rgba(37, 99, 235, 0.06);
-  border-radius: 10px;
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  background: rgba(247, 244, 239, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(247, 244, 239, 0.18);
 }
 
 .su-stem-progress-list {
@@ -337,13 +337,13 @@
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
   background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
+  border-radius: 12px;
   transition: background 0.3s;
 }
 
 .su-stem-progress.done { background: rgba(34, 197, 94, 0.05); }
-.su-stem-progress.encoding { background: rgba(37, 99, 235, 0.05); }
-.su-stem-progress.uploading { background: rgba(59, 130, 246, 0.05); }
+.su-stem-progress.encoding { background: rgba(247, 244, 239, 0.03); }
+.su-stem-progress.uploading { background: rgba(247, 244, 239, 0.03); }
 
 .su-stem-color-dot {
   width: 8px;
@@ -355,14 +355,14 @@
 .su-stem-label {
   flex: 1;
   font-size: 0.8rem;
-  font-weight: 600;
-  color: #e2e8f0;
+  font-weight: 500;
+  color: #e8e5df;
 }
 
 .su-stem-status-badge {
   font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
+  font-weight: 500;
+  color: #7d7d7c;
   white-space: nowrap;
 }
 
@@ -391,14 +391,14 @@
 }
 
 .su-done p {
-  color: #94a3b8;
+  color: #a8a8a6;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
 
 .su-done-savings {
   color: #22c55e !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   font-size: 0.85rem !important;
   margin-bottom: 2rem !important;
 }
@@ -414,4 +414,4 @@
 /* Scrollbar */
 .su-body::-webkit-scrollbar { width: 5px; }
 .su-body::-webkit-scrollbar-track { background: transparent; }
-.su-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+.su-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 6px; }

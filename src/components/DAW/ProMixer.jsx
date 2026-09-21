@@ -10,6 +10,13 @@ import PadBoard from './PadBoard';
 import CloudRepertoire from './CloudRepertoire';
 import { supabase } from '../../supabaseClient';
 import { OfflineManager } from '../../utils/offlineManager';
+import { alertDialog } from '../../utils/dialogService';
+import {
+  makeTimelineMapper, toTimelineEvents, detectCueSections, mergeDetectedMarkers, stripClip, SECTION_PRESETS,
+  beatsPerBarFromSignature as lanesBeatsPerBar,
+} from '../../utils/timelineLanes';
+import { nameVariants } from '../../utils/cueSpeech';
+import { useSectionMidi } from '../../hooks/useSectionMidi';
 import './DAW.css';
 import * as Icons from 'lucide-react';
 
@@ -18,6 +25,18 @@ const {
   Save, Activity, Cloud, X, Loader2, Square, SkipBack, Trash2,
   ChevronUp, ChevronDown, Grid, Crown, Pencil, Check
 } = Icons;
+
+// Líneas de Letras y Luces de la timeline (columna sequences.timeline_lanes).
+// Cada cue guarda su posición en unidades "pitch 0", igual que los markers.
+//   lyrics: [{ id, sample, slideId }]   → diapositiva de presenter_slides
+//   lights: [{ id, sample, scene }]     → nombre de escena en Bandly Lights
+const EMPTY_LANES = { lyrics: [], lights: [] };
+const bySample = (a, b) => a.sample - b.sample;
+
+async function fetchLyricSlides(songId) {
+  const { data } = await supabase.from('presenter_slides').select('id, slides').eq('song_id', songId).maybeSingle();
+  return { rowId: data?.id || null, slides: Array.isArray(data?.slides) ? data.slides : [] };
+}
 
 const sortTracks = (tracksList) => {
   const priority = (rawName) => {
@@ -79,14 +98,14 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, on
   return (
   <aside style={{ 
     position: 'absolute', right: 0, top: 0, bottom: 0,
-    width: '300px', background: 'rgba(15, 23, 42, 0.4)', 
+    width: '300px', background: 'rgba(23, 23, 26, 0.4)', 
     borderLeft: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', 
     overflow: 'hidden', backdropFilter: 'blur(30px)', zIndex: 10
   }}>
     <div style={{ padding: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: 'rgba(255,255,255,0.6)' }}>
         <Icons.Layout size={18} />
-        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '2px' }}>SETLIST MANAGER</span>
+        <span style={{ fontSize: '0.7rem', fontWeight: '500', letterSpacing: '0.5px' }}>SETLIST MANAGER</span>
       </div>
     </div>
 
@@ -94,12 +113,12 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, on
     <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       {downloadProgress?.active ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: '800', color: 'var(--daw-cyan)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: '500', color: 'var(--daw-cyan)' }}>
             <span>SINCRONIZANDO AUDIO PARA OFFLINE</span>
             <span>{downloadProgress.done} / {downloadProgress.total}</span>
           </div>
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ width: `${(downloadProgress.done / Math.max(1, downloadProgress.total)) * 100}%`, height: '100%', background: 'var(--daw-cyan)', transition: 'width 0.3s ease' }} />
+          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden' }}>
+            <div style={{ width: `${(downloadProgress.done / Math.max(1, downloadProgress.total)) * 100}%`, height: '100%', background: '#f7f4ef', transition: 'width 0.3s ease' }} />
           </div>
         </div>
       ) : (
@@ -107,7 +126,7 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, on
           onClick={handleSyncOffline}
           style={{ 
             width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
-            color: 'white', fontSize: '0.7rem', fontWeight: '800', borderRadius: '8px', cursor: 'pointer',
+            color: 'white', fontSize: '0.7rem', fontWeight: '500', borderRadius: '12px', cursor: 'pointer',
             display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -147,26 +166,26 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, on
             }}
             onDragEnd={() => setDraggedIdx(null)}
             style={{ 
-              padding: '16px', borderRadius: '10px', marginBottom: '8px',
-              background: isActive ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)' : 'rgba(255,255,255,0.02)',
+              padding: '16px', borderRadius: '12px', marginBottom: '8px',
+              background: isActive ? 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))' : 'rgba(255,255,255,0.02)',
               display: 'flex', alignItems: 'center', gap: '14px', cursor: 'grab',
               transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
               border: '1px solid',
-              borderColor: isActive ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255,255,255,0.03)',
+              borderColor: isActive ? 'rgba(247, 244, 239, 0.18)' : 'rgba(255,255,255,0.03)',
               boxShadow: isActive ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
               position: 'relative', overflow: 'hidden',
               opacity: draggedIdx === idx ? 0.5 : 1
             }}
           >
             {isActive && (
-              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#a855f7' }} />
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#fd429c' }} />
             )}
 
             <div style={{ 
               width: '28px', height: '28px', borderRadius: '6px', 
-              background: isActive ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255,255,255,0.05)',
+              background: isActive ? 'rgba(247, 244, 239, 0.11)' : 'rgba(255,255,255,0.05)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.65rem', fontWeight: '900', color: isActive ? '#fff' : 'rgba(255,255,255,0.2)'
+              fontSize: '0.65rem', fontWeight: '500', color: isActive ? '#fff' : 'rgba(255,255,255,0.2)'
             }}>
               {isActive ? <Icons.Play size={14} fill="currentColor" /> : (idx + 1).toString().padStart(2, '0')}
             </div>
@@ -183,11 +202,11 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, on
                 {/* Para la canción ACTIVA usamos los datos reales de la secuencia cargada
                     (puede diferir del tono/tempo base de la canción); para el resto del
                     setlist, solo tenemos el dato base de la canción como preview. */}
-                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '500' }}>
                   {(isActive ? activeSequenceMeta?.bpm : null) || song.bpm || '—'} BPM
                 </span>
                 <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)' }}>•</span>
-                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '700' }}>
+                <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', fontWeight: '500' }}>
                   {(isActive ? activeSequenceMeta?.key : null) || song.key || '—'}
                 </span>
               </div>
@@ -207,7 +226,7 @@ const SetlistSidebar = React.memo(({ setlist, activeSong, activeSequenceMeta, on
       })}
 
       {setlist.length === 0 && (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '0.7rem', fontWeight: '700', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '0.7rem', fontWeight: '500', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '12px' }}>
           Abre el repertorio para añadir canciones
         </div>
       )}
@@ -234,16 +253,16 @@ function SequenceMetaEditor({ initial, onCancel, onSave }) {
   return (
     <div style={{
       position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 300,
-      background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px',
+      background: '#17171a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px',
       padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px',
       boxShadow: '0 15px 30px rgba(0,0,0,0.5)', width: '220px'
     }}>
-      <span style={{ fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
+      <span style={{ fontSize: '0.6rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
         EDITAR SECUENCIA
       </span>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>TONO</label>
+        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>TONO</label>
         <input
           type="text" value={key} onChange={(e) => setKey(e.target.value)}
           placeholder="Ej: A, Bb, C#m"
@@ -252,7 +271,7 @@ function SequenceMetaEditor({ initial, onCancel, onSave }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>TEMPO (BPM)</label>
+        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>TEMPO (BPM)</label>
         <input
           type="number" value={bpm} onChange={(e) => setBpm(e.target.value)}
           placeholder="Ej: 120"
@@ -261,13 +280,13 @@ function SequenceMetaEditor({ initial, onCancel, onSave }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>MÉTRICA</label>
+        <label style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>MÉTRICA</label>
         <select
           value={timeSignature} onChange={(e) => setTimeSignature(e.target.value)}
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '6px 8px', color: 'white', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
         >
           {TIME_SIGNATURES.map((ts) => (
-            <option key={ts} value={ts} style={{ background: '#0f172a' }}>{ts}</option>
+            <option key={ts} value={ts} style={{ background: '#17171a' }}>{ts}</option>
           ))}
         </select>
       </div>
@@ -275,13 +294,13 @@ function SequenceMetaEditor({ initial, onCancel, onSave }) {
       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
         <button
           onClick={onCancel}
-          style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '900', cursor: 'pointer' }}
+          style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '500', cursor: 'pointer' }}
         >
           CANCELAR
         </button>
         <button
           onClick={() => onSave({ key, bpm, timeSignature })}
-          style={{ flex: 1, padding: '8px', background: 'var(--daw-cyan)', border: 'none', color: '#000', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '950', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+          style={{ flex: 1, padding: '8px', background: '#f7f4ef', border: 'none', color: '#101012', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
         >
           <Check size={13} /> GUARDAR
         </button>
@@ -322,7 +341,7 @@ const MemoizedTransportUI = React.memo(({
 
   return (
     <header style={{ 
-      minHeight: '64px', background: 'rgba(8, 10, 16, 0.8)', 
+      minHeight: '64px', background: 'rgba(16, 16, 18, 0.8)', 
       borderBottom: '1px solid rgba(255,255,255,0.04)',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
       padding: '0 16px', backdropFilter: 'blur(10px)', zIndex: 100,
@@ -331,20 +350,19 @@ const MemoizedTransportUI = React.memo(({
       <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
-            width: '32px', height: '32px', borderRadius: '8px', 
-            background: 'linear-gradient(135deg, #a855f7, #3b82f6)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' 
+            width: '32px', height: '32px', borderRadius: '6px', 
+            background: '#17171a', border: '1px solid rgba(255,255,255,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Icons.Activity size={18} color="white" strokeWidth={3} className={isPlaying ? "animate-pulse" : ""} />
+            <Icons.Activity size={16} color="#f7f4ef" strokeWidth={2} className={isPlaying ? "animate-pulse" : ""} />
           </div>
-          <span style={{ fontSize: '1.1rem', fontWeight: '950', color: '#fff', letterSpacing: '2px' }}>BANDLY</span>
+          <span style={{ fontSize: '1rem', fontWeight: '500', color: '#f7f4ef', letterSpacing: '0.16em' }}>BANDLY</span>
         </div>
 
         <div style={{ 
           display: 'flex', alignItems: 'center', gap: '20px', 
           background: 'rgba(255,255,255,0.03)', padding: '6px 20px', 
-          borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' 
+          borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' 
         }}>
           <button onClick={handleRestart} className="transport-btn" style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer' }}><Icons.SkipBack size={16} fill="currentColor" /></button>
           
@@ -352,17 +370,17 @@ const MemoizedTransportUI = React.memo(({
             onClick={togglePlay} 
             disabled={!engineReady} 
             style={{ 
-              background: isLoadingStems ? '#78350f' : (isPlaying ? 'rgba(239, 68, 68, 0.15)' : 'linear-gradient(135deg, #a855f7, #3b82f6)'),
-              padding: '6px 24px',
-              borderRadius: '20px',
-              border: isPlaying ? '1px solid #ef4444' : 'none',
+              background: isLoadingStems ? '#3a3a3e' : (isPlaying ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #fd429c, #ff6a4a)'),
+              padding: '8px 22px',
+              borderRadius: '9999px',
+              border: isPlaying ? '1px solid rgba(255,255,255,0.22)' : '1px solid transparent',
               display: 'flex', alignItems: 'center', gap: '10px',
               cursor: isLoadingStems ? 'wait' : 'pointer',
               transition: 'all 0.2s'
             }}
           >
-            {isPlaying ? <Icons.Pause size={16} fill="#ef4444" color="#ef4444" /> : <Icons.Play size={16} fill="white" color="white" />}
-            <span style={{ fontWeight: '900', fontSize: '0.75rem', color: isPlaying ? '#ef4444' : 'white' }}>
+            {isPlaying ? <Icons.Pause size={16} fill="#f7f4ef" color="#f7f4ef" /> : <Icons.Play size={16} fill="white" color="white" />}
+            <span style={{ fontWeight: '500', fontSize: '0.8rem', color: isPlaying ? '#f7f4ef' : 'white' }}>
               {isLoadingStems ? 'LOADING' : (isPlaying ? 'PAUSE' : 'PLAY')}
             </span>
           </button>
@@ -380,33 +398,33 @@ const MemoizedTransportUI = React.memo(({
         minWidth: '160px'
       }}>
         {/* Fila 1: Tiempo */}
-        <span className="mono-data" style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--daw-cyan)', lineHeight: 1 }}>
+        <span className="mono-data" style={{ fontSize: '1.3rem', fontWeight: '500', color: 'var(--daw-cyan)', lineHeight: 1 }}>
           {currentTime}
-          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginLeft: '4px' }}>/ {totalTime}</span>
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '500', marginLeft: '4px' }}>/ {totalTime}</span>
         </span>
         {/* Fila 2: Bar y Beat */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-            <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>BAR</span>
-            <span className="mono-data" style={{ fontSize: '0.9rem', fontWeight: '950', color: 'rgba(255,255,255,0.7)' }}>{bar}</span>
+            <span style={{ fontSize: '0.5rem', fontWeight: '500', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>BAR</span>
+            <span className="mono-data" style={{ fontSize: '0.9rem', fontWeight: '500', color: 'rgba(255,255,255,0.7)' }}>{bar}</span>
           </div>
           <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-            <span style={{ fontSize: '0.5rem', fontWeight: '900', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>BEAT</span>
-            <span className="mono-data" style={{ fontSize: '0.9rem', fontWeight: '950', color: 'rgba(255,255,255,0.7)' }}>{beat}</span>
+            <span style={{ fontSize: '0.5rem', fontWeight: '500', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>BEAT</span>
+            <span className="mono-data" style={{ fontSize: '0.9rem', fontWeight: '500', color: 'rgba(255,255,255,0.7)' }}>{beat}</span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '6px 15px', borderRadius: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '6px 15px', borderRadius: '12px' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.55rem', fontWeight: '800', color: 'var(--daw-cyan)', opacity: 0.7 }}>STATUS</span>
+          <span style={{ fontSize: '0.55rem', fontWeight: '500', color: 'var(--daw-cyan)', opacity: 0.7 }}>STATUS</span>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <span 
               onClick={!engineReady ? reconnectAudio : null}
               style={{ 
                 fontSize: '0.75rem', 
-                fontWeight: '900', 
+                fontWeight: '500', 
                 color: engineReady ? 'var(--daw-green)' : 'var(--daw-red)',
                 cursor: !engineReady ? 'pointer' : 'default',
                 textDecoration: !engineReady ? 'underline' : 'none'
@@ -418,7 +436,7 @@ const MemoizedTransportUI = React.memo(({
             {!engineReady && (
               <button 
                 onClick={() => setIsConfigured(false)}
-                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--daw-cyan)', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontWeight: '800' }}
+                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--daw-cyan)', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}
               >
                 CAMBIAR
               </button>
@@ -439,8 +457,8 @@ const MemoizedTransportUI = React.memo(({
 
         {/* TONO / TEMPO / MÉTRICA — datos reales de la secuencia cargada */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: '70px' }}>
-          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>TONO / MÉTRICA</span>
-          <span className="mono-data" style={{ color: 'white', fontWeight: '900', fontSize: '0.8rem' }}>
+          <span style={{ fontSize: '0.48rem', fontWeight: '500', color: 'var(--daw-cyan)', opacity: 0.6 }}>TONO / MÉTRICA</span>
+          <span className="mono-data" style={{ color: 'white', fontWeight: '500', fontSize: '0.8rem' }}>
             {activeSequenceMeta?.key || '—'} · {activeSequenceMeta?.timeSignature || '4/4'}
           </span>
         </div>
@@ -465,33 +483,33 @@ const MemoizedTransportUI = React.memo(({
 
         {/* TEMPO */}
         <div style={{ display: 'flex', flexDirection: 'column', width: '52px' }}>
-          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>TEMPO</span>
+          <span style={{ fontSize: '0.48rem', fontWeight: '500', color: 'var(--daw-cyan)', opacity: 0.6 }}>TEMPO</span>
           <input
             type="number"
             value={metronome.bpm}
             onChange={(e) => onMetronomeUpdate('bpm', parseFloat(e.target.value))}
             className="mono-data"
-            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '900', fontSize: '0.85rem', width: '100%', outline: 'none' }}
+            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '500', fontSize: '0.85rem', width: '100%', outline: 'none' }}
           />
         </div>
 
         {/* OUT CLICK */}
         <div style={{ display: 'flex', flexDirection: 'column', width: '78px' }}>
-          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'var(--daw-cyan)', opacity: 0.6 }}>OUT CLICK</span>
+          <span style={{ fontSize: '0.48rem', fontWeight: '500', color: 'var(--daw-cyan)', opacity: 0.6 }}>OUT CLICK</span>
           <select 
             value={metronome.outputCh}
             onChange={(e) => onMetronomeUpdate('outputCh', parseInt(e.target.value))}
-            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '900', fontSize: '0.72rem', outline: 'none', cursor: 'pointer' }}
+            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '500', fontSize: '0.72rem', outline: 'none', cursor: 'pointer' }}
           >
             {Array.from({ length: deviceChannels }).map((_, idx) => (
-              <option key={idx} value={idx} style={{ background: '#020617' }}>CH {idx + 1} (MONO)</option>
+              <option key={idx} value={idx} style={{ background: '#101012' }}>CH {idx + 1} (MONO)</option>
             ))}
           </select>
         </div>
 
         {/* METRONOME VOLUME */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>MET VOL</span>
+          <span style={{ fontSize: '0.48rem', fontWeight: '500', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>MET VOL</span>
           <input 
             type="range" min="0" max="1.5" step="0.01" 
             value={metronome.volume} 
@@ -502,7 +520,7 @@ const MemoizedTransportUI = React.memo(({
 
         {/* TAP TEMPO */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>TAP</span>
+          <span style={{ fontSize: '0.48rem', fontWeight: '500', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>TAP</span>
           <button 
             onClick={() => {
               const now = Date.now();
@@ -518,7 +536,7 @@ const MemoizedTransportUI = React.memo(({
               }
             }}
             className="tap-btn"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '950', fontSize: '0.65rem', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '500', fontSize: '0.65rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}
           >
             TAP
           </button>
@@ -529,25 +547,25 @@ const MemoizedTransportUI = React.memo(({
           style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'center' }}
           title={`Transposición varispeed: pitch y tempo cambian juntos (como cinta).\n±1 semitono ≈ ±6% de tempo. Cero costo de CPU, calidad intacta.`}
         >
-          <span style={{ fontSize: '0.48rem', fontWeight: '900', color: transpose !== 0 ? '#f59e0b' : 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>PITCH</span>
+          <span style={{ fontSize: '0.48rem', fontWeight: '500', color: transpose !== 0 ? '#f59e0b' : 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>PITCH</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button
               onClick={() => onTransposeChange && onTransposeChange(transpose - 1)}
               disabled={transpose <= -6}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '950', fontSize: '0.75rem', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', opacity: transpose <= -6 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '500', fontSize: '0.75rem', width: '22px', height: '22px', borderRadius: '6px', cursor: 'pointer', opacity: transpose <= -6 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >−</button>
             <span
               className="mono-data"
               onDoubleClick={() => onTransposeChange && onTransposeChange(0)}
               title="Doble clic = volver a 0"
-              style={{ minWidth: '30px', textAlign: 'center', fontWeight: '900', fontSize: '0.8rem', color: transpose !== 0 ? '#f59e0b' : 'white', cursor: 'pointer' }}
+              style={{ minWidth: '30px', textAlign: 'center', fontWeight: '500', fontSize: '0.8rem', color: transpose !== 0 ? '#f59e0b' : 'white', cursor: 'pointer' }}
             >
               {transpose > 0 ? `+${transpose}` : transpose}
             </span>
             <button
               onClick={() => onTransposeChange && onTransposeChange(transpose + 1)}
               disabled={transpose >= 6}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '950', fontSize: '0.75rem', width: '22px', height: '22px', borderRadius: '4px', cursor: 'pointer', opacity: transpose >= 6 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '500', fontSize: '0.75rem', width: '22px', height: '22px', borderRadius: '6px', cursor: 'pointer', opacity: transpose >= 6 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >+</button>
           </div>
         </div>
@@ -638,7 +656,40 @@ export default function ProMixer({ session, orgId }) {
   // Último marker que le avisamos a Bandly Presenter/Lights (presenter_state.active_marker).
   // Se resetea en stop/restart para que un replay desde el inicio vuelva a disparar
   // el mismo marker en vez de quedarse callado porque "ya lo habíamos mandado".
-  const lastSentMarkerRef = useRef(null);
+  // Uno por línea (section / lyric / light): cada una avisa su propio cambio.
+  const lastSentMarkerRef = useRef({});
+  // Cola de avisos: si sección, letra y luz cambian en el mismo compás, se
+  // mandan uno detrás de otro (no en paralelo) para que ninguno pise al otro.
+  const markerQueueRef = useRef({ items: [], running: false });
+
+  const [timelineLanes, setTimelineLanes] = useState(EMPTY_LANES);
+  const timelineLanesRef = useRef(EMPTY_LANES);
+  const [lyricSlides, setLyricSlides] = useState({ rowId: null, slides: [] });
+  const lyricSlidesRef = useRef({ rowId: null, slides: [] });
+  const lyricsSongRef = useRef(null);
+  const lanesErrorShownRef = useRef(false);
+  // true cuando el motor terminó de cargar los stems de la canción actual:
+  // recién ahí la pista de CUES tiene audio para leer.
+  const [stemsReady, setStemsReady] = useState(false);
+  const [isDetectingCues, setIsDetectingCues] = useState(false);
+  // Qué está haciendo la detección ahora ("Descargando modelo de voz 40%"...).
+  const [detectStatus, setDetectStatus] = useState(null);
+  // Nombres de escenas que Bandly Lights publica (tabla light_scenes).
+  const [lightScenes, setLightScenes] = useState([]);
+  const autoCueDoneRef = useRef(new Set());
+
+  // ── Deshacer / Rehacer (Ctrl+Z / Ctrl+Y) de secciones, letras y luces ──
+  // Se guarda una foto de {markers, lanes} ANTES de cada cambio. Se limpia al
+  // cambiar de canción: deshacer nunca debe tocar otra secuencia.
+  const markersRef = useRef(markers);
+  markersRef.current = markers;
+  const historyRef = useRef({ undo: [], redo: [] });
+  const recordHistory = useCallback(() => {
+    const h = historyRef.current;
+    h.undo.push({ markers: markersRef.current, lanes: timelineLanesRef.current });
+    if (h.undo.length > 50) h.undo.shift();
+    h.redo = [];
+  }, []);
 
   // RADAR DE RESILIENCIA (Detección de Hardware Live)
   useEffect(() => {
@@ -824,6 +875,7 @@ export default function ProMixer({ session, orgId }) {
       // picos una vez y quedan cacheados hasta que cambie la canción.
       if (waveformPendingRef.current && report.tracks_loading === 0 && report.total_samples > 0) {
         waveformPendingRef.current = false;
+        setStemsReady(true);
         safeInvoke('get_master_waveform', { buckets: 1200 })
           .then(peaks => { if (Array.isArray(peaks) && peaks.length) setMasterWaveform(peaks); })
           .catch(() => {});
@@ -869,7 +921,7 @@ export default function ProMixer({ session, orgId }) {
     }
     pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
     setPlaybackSample(0);
-    lastSentMarkerRef.current = null;
+    lastSentMarkerRef.current = {};
   }, []);
 
   const handleRestart = useCallback(async () => {
@@ -877,7 +929,7 @@ export default function ProMixer({ session, orgId }) {
     if (isTauri()) {
       await safeInvoke('seek_to_sample', { sample: 0 });
     }
-    lastSentMarkerRef.current = null;
+    lastSentMarkerRef.current = {};
     pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
     setPlaybackSample(0);
   }, []);
@@ -1007,6 +1059,7 @@ export default function ProMixer({ session, orgId }) {
     // Ya no bloqueamos toda la pantalla con setLoading(true).
     // Usaremos isLoadingStems para que sea transparente y rápido en el botón Play.
     setTranspose(0); // el motor ya resetea pitch_ratio en reset_audio_engine
+    setStemsReady(false);
     try {
       setIsPlaying(false);
       lastActionTime.current = Date.now();
@@ -1023,6 +1076,8 @@ export default function ProMixer({ session, orgId }) {
       }
       if (!sequence) {
         setTracks([]); setMarkers([]); setActiveSequenceId(null); setActiveSequenceMeta(null);
+        timelineLanesRef.current = EMPTY_LANES; setTimelineLanes(EMPTY_LANES);
+        lyricSlidesRef.current = { rowId: null, slides: [] }; setLyricSlides(lyricSlidesRef.current);
         setMasterWaveform([]); waveformPendingRef.current = false;
         setArrangementBlocks(null);
         if (isTauri()) safeInvoke('clear_arrangement').catch(() => {});
@@ -1041,6 +1096,19 @@ export default function ProMixer({ session, orgId }) {
       setActiveSequenceMeta({ key: sequence.key, bpm: sequence.bpm, timeSignature: loadedTimeSignature });
       if (isTauri()) safeInvoke('set_beats_per_bar', { beats: beatsPerBarFromSignature(loadedTimeSignature) });
       setMarkers(sequence.markers || []);
+      historyRef.current = { undo: [], redo: [] };
+      const loadedLanes = { ...EMPTY_LANES, ...(sequence.timeline_lanes || {}) };
+      timelineLanesRef.current = loadedLanes;
+      setTimelineLanes(loadedLanes);
+      // La letra vive en presenter_slides (la misma que usa Presenter).
+      lyricsSongRef.current = song.id;
+      lyricSlidesRef.current = { rowId: null, slides: [] };
+      setLyricSlides(lyricSlidesRef.current);
+      fetchLyricSlides(song.id).then(res => {
+        if (lyricsSongRef.current !== song.id) return; // ya cambiaste de canción
+        lyricSlidesRef.current = res;
+        setLyricSlides(res);
+      }).catch(() => {});
 
       // El tempo de LA SECUENCIA manda sobre el de la canción base — una canción
       // puede tener secuencias subidas en otro tono/tempo (ver bug reportado).
@@ -1089,7 +1157,7 @@ export default function ProMixer({ session, orgId }) {
           eqLow: savedSong.eqLow !== undefined ? savedSong.eqLow : 0,
           eqMid: savedSong.eqMid !== undefined ? savedSong.eqMid : 0,
           eqHigh: savedSong.eqHigh !== undefined ? savedSong.eqHigh : 0,
-          color: stem.color || '#8b5cf6', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
+          color: stem.color || '#f7f4ef', url: stem.r2_key ? `${import.meta.env.VITE_R2_PUBLIC_URL}/${stem.r2_key}` : (stem.playback_url || stem.url)
         };
       });
       setTracks(sortTracks(resTracks));
@@ -1213,9 +1281,10 @@ export default function ProMixer({ session, orgId }) {
 
   const onAddMarker = useCallback(async (bar, label, sample, color) => {
     if (!activeSequenceId) return;
-    const colors = ['#22d3ee', '#818cf8', '#fbbf24', '#f472b6', '#34d399'];
+    const colors = ['#62a4ae', '#8d92c4', '#fbbf24', '#f472b6', '#34d399'];
     // Normalizar a unidades "pitch 0" para que el marker sea válido en cualquier transposición
     const normalizedSample = Math.round(sample * pitchRatioRef.current);
+    recordHistory();
     const newMarker = { id: crypto.randomUUID(), bar, label, sample: normalizedSample, color: color || colors[markers.length % colors.length] };
     const nextMarkers = [...markers, newMarker].sort((a, b) => a.sample - b.sample);
     setMarkers(nextMarkers);
@@ -1228,7 +1297,7 @@ export default function ProMixer({ session, orgId }) {
     }));
 
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
-  }, [activeSequenceId, markers, activeSong]);
+  }, [activeSequenceId, markers, activeSong, recordHistory]);
 
   // ── Modo En Vivo (control remoto desde el celular) ──
   // El celular no toca el motor de audio directamente: manda un comando por
@@ -1310,12 +1379,12 @@ export default function ProMixer({ session, orgId }) {
     if (!markers.length || !songSamples) return [];
     const list = [];
     if (markers[0].sample > 1000) {
-      list.push({ uid: 'sec-head', label: 'Inicio', color: '#64748b', start: 0, end: markers[0].sample });
+      list.push({ uid: 'sec-head', label: 'Inicio', color: '#7d7d7c', start: 0, end: markers[0].sample });
     }
     markers.forEach((m, i) => {
       const end = i + 1 < markers.length ? markers[i + 1].sample : songSamples;
       if (end > m.sample) {
-        list.push({ uid: m.id || `sec-${i}`, label: m.label, color: m.color || '#38bdf8', start: m.sample, end });
+        list.push({ uid: m.id || `sec-${i}`, label: m.label, color: m.color || '#f7f4ef', autoLabel: m.autoLabel, cueGroup: m.cueGroup, start: m.sample, end });
       }
     });
     return list;
@@ -1345,7 +1414,7 @@ export default function ProMixer({ session, orgId }) {
       pinnedPlaybackSample.current = { value: 0, until: Date.now() + 500 };
       setPlaybackSample(0);
     }
-    lastSentMarkerRef.current = null;
+    lastSentMarkerRef.current = {};
     if (activeSequenceId) {
       await supabase.from('sequences').update({ arrangement: next }).eq('id', activeSequenceId);
     }
@@ -1365,43 +1434,433 @@ export default function ProMixer({ session, orgId }) {
     return out.length ? out : masterWaveform;
   }, [masterWaveform, arrangementBlocks, songSamples]);
 
+  // Los bloques del arreglo guardan una COPIA del nombre que tenía la sección al
+  // armarlo. Si luego la sección se renombra (a mano o porque se leyó la guía),
+  // el arreglo seguía mostrando el nombre viejo. Aquí cada bloque lee el nombre y
+  // el color VIGENTES de la sección de la que salió (su uid es el id del marker,
+  // o "<id>-r<n>" si es una repetición).
+  const resolvedBlocks = useMemo(() => {
+    if (!arrangementBlocks) return null;
+    return arrangementBlocks.map(b => {
+      const uid = String(b.uid ?? '');
+      const m = markers.find(mm => uid === mm.id || uid.startsWith(`${mm.id}-r`));
+      return m ? { ...b, label: m.label, color: m.color || b.color, autoLabel: m.autoLabel, cueGroup: m.cueGroup } : b;
+    });
+  }, [arrangementBlocks, markers]);
+
   // La timeline debe mostrar el arreglo tal como va a sonar: cada bloque en su
   // posición dentro de la línea de tiempo virtual, no donde vive en el archivo.
   const timelineMarkers = useMemo(() => {
     const scaled = pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }));
-    if (!arrangementBlocks || arrangementBlocks.length === 0) return scaled;
+    if (!resolvedBlocks || resolvedBlocks.length === 0) return scaled;
     let acc = 0;
-    return arrangementBlocks.map((b, i) => {
+    return resolvedBlocks.map((b, i) => {
       const sample = acc;
       acc += (b.end - b.start) / pitchRatio;
-      return { id: `${b.uid}-${i}`, label: b.label, color: b.color, bar: 0, sample };
+      return { id: `${b.uid}-${i}`, label: b.label, color: b.color, autoLabel: b.autoLabel, cueGroup: b.cueGroup, bar: 0, sample };
     });
-  }, [arrangementBlocks, markers, pitchRatio]);
+  }, [resolvedBlocks, markers, pitchRatio]);
 
-  // Puente en vivo con Bandly Presenter / Bandly Lights: al cruzar un marker de
-  // sección durante la reproducción, avisamos por la misma tabla que usa Presenter
-  // (presenter_state.active_marker) para que la diapositiva y la escena de luces
-  // cambien solas — sin que el operador tenga que hacer clic en Presenter.
-  useEffect(() => {
-    if (!isPlaying || markers.length === 0) return;
-    const adjustedMarkers = pitchRatio === 1 ? markers : markers.map(m => ({ ...m, sample: m.sample / pitchRatio }));
-    let current = null;
-    for (const m of adjustedMarkers) {
-      if (m.sample <= playbackSample) current = m;
-      else break;
+  // Saltar a una posición de la timeline (unidades de reproducción). Por defecto
+  // entra con 2 compases de conteo, como se toca en vivo; `immediate` (Shift) va
+  // directo, sin conteo.
+  const jumpToPosition = useCallback(async (pos, { immediate = false } = {}) => {
+    if (!isTauri()) return;
+    const target = Math.max(0, Math.round(pos));
+    lastActionTime.current = Date.now();
+    lastSentMarkerRef.current = {}; // que Presenter/Lights reciban esta sección aunque ya la hubieran recibido
+    if (!immediate) {
+      setIsPlaying(true);
+      await safeInvoke('play_with_preroll', { targetSample: target, bars: 2 });
+      return;
     }
-    if (!current || current.label === lastSentMarkerRef.current) return;
+    await safeInvoke('seek_to_sample', { sample: target });
+    pinnedPlaybackSample.current = { value: target, until: Date.now() + 500 };
+    setPlaybackSample(target);
+    if (!isPlaying) {
+      setIsPlaying(true);
+      await safeInvoke('toggle_playback', { playing: true });
+    }
+  }, [isPlaying]);
+
+  // Bloque del arreglo (o sección) por posición en la lista.
+  const handlePlayBlock = useCallback((idx, opts = {}) => {
+    const custom = !!(resolvedBlocks && resolvedBlocks.length);
+    const list = custom ? resolvedBlocks : sections;
+    if (!list[idx]) return;
+    // Con arreglo, la posición es la suma de lo que dura lo anterior (así suena);
+    // sin arreglo, el punto donde vive la sección en la canción.
+    let pos = 0;
+    if (custom) { for (let i = 0; i < idx; i++) pos += (list[i].end - list[i].start) / pitchRatio; }
+    else pos = list[idx].start / pitchRatio;
+    return jumpToPosition(pos, opts);
+  }, [resolvedBlocks, sections, pitchRatio, jumpToPosition]);
+
+  // MIDI: una tecla / pedal asignado salta a su sección (con conteo).
+  const arrangementActive = !!(resolvedBlocks && resolvedBlocks.length);
+  const sectionMidi = useSectionMidi({
+    sequenceId: activeSequenceId,
+    onTrigger: (uid) => {
+      const list = arrangementActive ? resolvedBlocks : sections;
+      const idx = list.findIndex(b => String(b.uid) === uid);
+      if (idx >= 0) handlePlayBlock(idx);
+    },
+  });
+
+  // Bloque que está sonando ahora (para resaltarlo en el panel de arreglo).
+  const activeBlockIdx = useMemo(() => {
+    const custom = !!(resolvedBlocks && resolvedBlocks.length);
+    const list = custom ? resolvedBlocks : sections;
+    if (!list.length) return -1;
+    if (custom) {
+      let acc = 0;
+      for (let i = 0; i < list.length; i++) {
+        const len = (list[i].end - list[i].start) / pitchRatio;
+        if (playbackSample >= acc && playbackSample < acc + len) return i;
+        acc += len;
+      }
+      return -1;
+    }
+    const songPos = playbackSample * pitchRatio;
+    return list.findIndex(b => songPos >= b.start && songPos < b.end);
+  }, [resolvedBlocks, sections, pitchRatio, playbackSample]);
+
+  // ── Líneas: Secciones / Letras / Luces ─────────────────────────────────
+  const timelineMapper = useMemo(() => makeTimelineMapper(arrangementBlocks, pitchRatio), [arrangementBlocks, pitchRatio]);
+  const lyricEvents = useMemo(() => toTimelineEvents(timelineLanes.lyrics, timelineMapper), [timelineLanes.lyrics, timelineMapper]);
+  const lightEvents = useMemo(() => toTimelineEvents(timelineLanes.lights, timelineMapper), [timelineLanes.lights, timelineMapper]);
+  const cueTrack = useMemo(() => tracks.find(t => t.name === 'CUES') || null, [tracks]);
+
+  // Puente en vivo con Bandly Presenter / Bandly Lights. Las tres líneas avisan
+  // por la misma columna que esas apps ya escuchan (presenter_state.active_marker):
+  //   - Sección → Presenter salta a la diapositiva con ese marker_sync y Lights
+  //     a la escena con ese nombre (lo de siempre).
+  //   - Letra   → el marker_sync de ESA diapositiva, así Presenter la muestra.
+  //   - Luz     → el nombre de la escena, así Lights la dispara.
+  // Orden dentro de un mismo instante: sección, luz, letra — la letra va al
+  // final para que sea lo último que Presenter recibe y no la pise la sección.
+  const sendActiveMarker = useCallback((label) => {
     if (!orgId) return;
-    lastSentMarkerRef.current = current.label;
-    // Una fila por organización: antes esto escribía en una fila global y el
-    // marcador viajaba a los proyectores y luces de todos los clientes.
-    supabase.from('presenter_state')
-      .upsert({ org_id: orgId, active_marker: current.label }, { onConflict: 'org_id' })
-      .then(({ error }) => { if (error) console.error('presenter_state sync error:', error); });
-  }, [playbackSample, isPlaying, markers, pitchRatio, orgId]);
+    const q = markerQueueRef.current;
+    q.items.push(label);
+    if (q.running) return;
+    q.running = true;
+    (async () => {
+      while (q.items.length) {
+        const next = q.items.shift();
+        // Una fila por organización: antes esto escribía en una fila global y el
+        // marcador viajaba a los proyectores y luces de todos los clientes.
+        const { error } = await supabase.from('presenter_state')
+          .upsert({ org_id: orgId, active_marker: next }, { onConflict: 'org_id' });
+        if (error) console.error('presenter_state sync error:', error);
+        if (q.items.length) await new Promise(r => setTimeout(r, 300));
+      }
+      q.running = false;
+    })();
+  }, [orgId]);
+
+  useEffect(() => {
+    if (!isPlaying || !orgId) return;
+    const slideById = new Map(lyricSlides.slides.map(sl => [sl.id, sl]));
+    const lanes = [
+      ['section', timelineMarkers.map(m => ({ key: m.id, t: m.sample, label: m.label }))],
+      ['light', lightEvents.map(ev => ({ key: ev.key, t: ev.t, label: ev.scene }))],
+      ['lyric', lyricEvents.map(ev => ({ key: ev.key, t: ev.t, label: slideById.get(ev.slideId)?.marker_sync }))],
+    ];
+    for (const [lane, events] of lanes) {
+      let current = null;
+      for (const ev of events) {
+        if (ev.t <= playbackSample) current = ev;
+        else break;
+      }
+      if (!current || current.key === lastSentMarkerRef.current[lane]) continue;
+      lastSentMarkerRef.current[lane] = current.key;
+      if (current.label) sendActiveMarker(current.label);
+    }
+  }, [playbackSample, isPlaying, orgId, timelineMarkers, lightEvents, lyricEvents, lyricSlides, sendActiveMarker]);
+
+  const persistMarkers = useCallback(async (nextMarkers) => {
+    setMarkers(nextMarkers);
+    setSongs(prev => prev.map(s => {
+      if (s.id === activeSong?.id && s.sequences && s.sequences.length > 0) {
+        return { ...s, sequences: [{ ...s.sequences[0], markers: nextMarkers }] };
+      }
+      return s;
+    }));
+    if (activeSequenceId) await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
+  }, [activeSequenceId, activeSong]);
+
+  // Se lee y escribe por ref: con la tecla L se pueden agregar varias letras
+  // seguidas antes de que React vuelva a renderizar, y ninguna se debe perder.
+  const updateLanes = useCallback(async (fn) => {
+    const next = fn(timelineLanesRef.current);
+    timelineLanesRef.current = next;
+    setTimelineLanes(next);
+    setSongs(prev => prev.map(s => {
+      if (s.id === activeSong?.id && s.sequences && s.sequences.length > 0) {
+        return { ...s, sequences: [{ ...s.sequences[0], timeline_lanes: next }] };
+      }
+      return s;
+    }));
+    if (!activeSequenceId) return;
+    const { error } = await supabase.from('sequences').update({ timeline_lanes: next }).eq('id', activeSequenceId);
+    if (error) {
+      console.error('timeline_lanes save error:', error);
+      if (!lanesErrorShownRef.current) {
+        lanesErrorShownRef.current = true;
+        alertDialog('No se pudieron guardar las líneas de Letras/Luces. Si es la primera vez, corre sql/sequences_timeline_lanes.sql en Supabase.');
+      }
+    }
+  }, [activeSequenceId, activeSong]);
+
+  // Presenter elige la diapositiva por su marker_sync (la primera que coincida).
+  // Para que una letra puesta en la línea dispare EXACTAMENTE esa diapositiva,
+  // necesita un marker_sync propio: si no tiene, o si otra anterior ya usa el
+  // mismo, se le pone uno único ("LETRA 3", "CORO 2"...). Si es la primera con
+  // ese nombre se deja igual — es la que ya disparaba la sección.
+  const ensureSlideTrigger = useCallback(async (slideId) => {
+    const { rowId, slides } = lyricSlidesRef.current;
+    const idx = slides.findIndex(sl => sl.id === slideId);
+    if (idx < 0 || !rowId) return;
+    const cur = (slides[idx].marker_sync || '').trim();
+    const norm = (v) => (v || '').trim().toLowerCase();
+    const firstWithName = cur ? slides.findIndex(sl => norm(sl.marker_sync) === norm(cur)) : -1;
+    if (cur && firstWithName === idx) return;
+    const base = cur || 'LETRA';
+    const taken = new Set(slides.map(sl => norm(sl.marker_sync)));
+    let n = idx + 1;
+    let name = `${base} ${n}`;
+    while (taken.has(name.toLowerCase())) name = `${base} ${++n}`;
+    const nextSlides = slides.map((sl, i) => (i === idx ? { ...sl, marker_sync: name } : sl));
+    lyricSlidesRef.current = { rowId, slides: nextSlides };
+    setLyricSlides(lyricSlidesRef.current);
+    const { error } = await supabase.from('presenter_slides').update({ slides: nextSlides, updated_at: new Date() }).eq('id', rowId);
+    if (error) console.error('presenter_slides marker_sync error:', error);
+  }, []);
+
+  // Lee la pista de CUES y arma las secciones solas (ver detectCueSections).
+  // Respeta lo que ya pusiste o renombraste; solo rehace lo auto-detectado.
+  const activeSequenceIdRef = useRef(activeSequenceId);
+  activeSequenceIdRef.current = activeSequenceId;
+
+  const runCueDetection = useCallback(async (auto) => {
+    if (!cueTrack || !isTauri() || !activeSequenceId) return;
+    const seqId = activeSequenceId;
+    setIsDetectingCues(true);
+    setDetectStatus('Leyendo la guía…');
+    try {
+      const sr = playbackSR || 44100;
+      const windowFrames = Math.max(64, Math.round(sr * 0.01));
+      const env = await safeInvoke('get_track_envelope', { trackId: String(cueTrack.id), windowFrames });
+      const bpm = parseFloat(activeSequenceMeta?.bpm ?? activeSong?.bpm) || 0;
+      const samplesPerBar = bpm > 0 ? (sr * 60 / bpm) * lanesBeatsPerBar(activeSequenceMeta?.timeSignature) : 0;
+      const detected = detectCueSections(Array.isArray(env) ? env : [], { windowFrames, sampleRate: sr, samplesPerBar });
+      if (!detected.length) {
+        if (!auto) alertDialog('No se encontró voz en la pista de guía.');
+        return;
+      }
+      const minGap = samplesPerBar > 0 ? samplesPerBar / 2 : sr * 2;
+      recordHistory();
+      // Paso 1: las secciones aparecen YA, numeradas (SECCIÓN 1, 2, 3…).
+      await persistMarkers(mergeDetectedMarkers(markers, detected.map(stripClip), minGap));
+
+      // Paso 2: escuchar qué dice la guía — un clip por VARIANTE (los "Coro"
+      // idénticos se oyen una sola vez; "Verso 1" y "Verso 2" por separado).
+      const firstOfGroup = [...new Map(detected.map(d => [d._key, d])).values()];
+      const clips = [];
+      for (const d of firstOfGroup) {
+        const audio = await safeInvoke('get_track_clip_16k', { trackId: String(cueTrack.id), startFrame: d._clip.start, endFrame: d._clip.end });
+        clips.push(Float32Array.from(Array.isArray(audio) ? audio : []));
+      }
+      // Los nombres se aplican a medida que Whisper los va resolviendo (no al
+      // final): así ves aparecer «Intro», «Coro»… en vez de esperar minutos con
+      // todo en «SECCIÓN n».
+      const detectedIds = new Set(detected.map(d => d.id));
+      const keyById = new Map(detected.map(d => [d.id, d._key]));
+      const applyResults = async (partial) => {
+        if (activeSequenceIdRef.current !== seqId) return; // cambiaste de canción
+        const byKey = new Map();
+        partial.forEach((res, i) => byKey.set(firstOfGroup[i]._key, res));
+        const next = [];
+        for (const m of markersRef.current) {
+          // Solo lo que sigue sin tocar: si ya lo renombraste a mano, se respeta.
+          const res = detectedIds.has(m.id) && m.autoLabel ? byKey.get(keyById.get(m.id)) : null;
+          if (!res) { next.push(m); continue; }
+          if (res.kind === 'count') continue;             // conteo de entrada ("1, 2, 3, 4"): no es una sección
+          if (res.kind === 'section') next.push({ ...m, label: res.label, color: res.color, heard: res.heard, autoLabel: false });
+          else next.push(m);
+        }
+        markersRef.current = next; // el siguiente lote parte de esto, sin esperar al render
+        await persistMarkers(next);
+      };
+      try {
+        await nameVariants(clips, {
+          onResults: applyResults,
+          onProgress: (p) => {
+            if (p.phase === 'download' && p.total) setDetectStatus(`Descargando modelo de voz ${Math.round((p.loaded / p.total) * 100)}%`);
+            else if (p.phase === 'fallback') setDetectStatus('Usando modelo básico…');
+            else if (p.phase === 'load') setDetectStatus('Preparando voz…');
+            else if (p.phase === 'listen') setDetectStatus(`Escuchando guía ${Math.min(p.done, p.total)}/${p.total}`);
+          },
+        });
+      } catch (e) {
+        console.warn('[DAW] Reconocimiento de voz no disponible:', e);
+        setDetectStatus('No se pudo leer la guía');
+        setTimeout(() => setDetectStatus(null), 6000);
+        return;
+      }
+      if (activeSequenceIdRef.current !== seqId) return;
+
+      const mine = markersRef.current.filter(m => detectedIds.has(m.id));
+      const namedCount = mine.filter(m => !m.autoLabel).length;
+      const left = mine.length - namedCount;
+      setDetectStatus(left === 0 ? `${namedCount} secciones nombradas` : `${namedCount} nombradas · ${left} sin nombre`);
+      setTimeout(() => setDetectStatus(null), 5000);
+    } catch (e) {
+      console.error('[DAW] Detección de CUES falló:', e);
+      setDetectStatus(null);
+    } finally {
+      setIsDetectingCues(false);
+    }
+  }, [cueTrack, activeSequenceId, playbackSR, activeSequenceMeta, activeSong, markers, persistMarkers, recordHistory]);
+
+  // "Se genera sola": la primera vez que abres una secuencia sin secciones y
+  // con pista de CUES, se leen apenas el motor termina de cargar el audio.
+  useEffect(() => {
+    if (!stemsReady || !activeSequenceId || !cueTrack) return;
+    if (markers.length > 0 || autoCueDoneRef.current.has(activeSequenceId)) return;
+    // Leer la guía consume bastante CPU: en vivo, con una canción sonando, no arranca sola.
+    // Espera a que pares (este efecto vuelve a correr cuando isPlaying cambia).
+    if (isPlaying) return;
+    autoCueDoneRef.current.add(activeSequenceId);
+    runCueDetection(true);
+  }, [stemsReady, activeSequenceId, cueTrack, markers.length, runCueDetection, isPlaying]);
+
+  // Envuelve cada acción que modifica algo para guardar la foto de "antes".
+  // Escenas reales de Bandly Lights: se leen una vez y se escuchan en vivo,
+  // así una escena creada en Lights aparece en la tecla K sin recargar.
+  useEffect(() => {
+    if (!orgId) return;
+    let cancelled = false;
+    const apply = (row) => { if (!cancelled) setLightScenes(Array.isArray(row?.names) ? row.names.filter(Boolean) : []); };
+    supabase.from('light_scenes').select('names').eq('org_id', orgId).maybeSingle()
+      .then(({ data }) => apply(data))
+      .catch(() => {});
+    const channel = supabase.channel(`daw_light_scenes_${orgId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'light_scenes', filter: `org_id=eq.${orgId}` }, (payload) => apply(payload.new))
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [orgId]);
+
+  // Renombrar un bloque desde el panel de arreglo. Cambia la SECCIÓN de la que
+  // salió (y con ella todos sus bloques, la timeline y lo que se manda a
+  // Presenter/Lights). Si el bloque quedó huérfano (su sección ya no existe), se
+  // renombra el bloque solo.
+  const handleRenameBlock = useCallback(async (uid, label) => {
+    const clean = String(label || '').trim().toUpperCase();
+    if (!clean) return;
+    const preset = SECTION_PRESETS.find(pr => pr.label === clean);
+    const u = String(uid);
+    const target = markers.find(m => u === m.id || u.startsWith(`${m.id}-r`));
+    recordHistory();
+    if (target) {
+      const sameWord = (m) => target.autoLabel && target.cueGroup && m.autoLabel && m.cueGroup === target.cueGroup;
+      await persistMarkers(markers.map(m => (m.id === target.id || sameWord(m)
+        ? { ...m, label: clean, color: preset?.color || m.color, autoLabel: false } : m)));
+    } else if (arrangementBlocks) {
+      const next = arrangementBlocks.map(b => (String(b.uid) === u ? { ...b, label: clean, color: preset?.color || b.color } : b));
+      setArrangementBlocks(next);
+      if (activeSequenceId) await supabase.from('sequences').update({ arrangement: next }).eq('id', activeSequenceId);
+    }
+  }, [markers, arrangementBlocks, activeSequenceId, persistMarkers, recordHistory]);
+
+  const laneActions = useMemo(() => {
+    const h = (fn) => (...args) => { recordHistory(); return fn(...args); };
+    return {
+      // onAddMarker ya registra su propio historial.
+      addSection: (t, bar, label, color) => onAddMarker(bar, label, t, color),
+      // Renombrar un grupo detectado en la guía renombra todos sus iguales.
+      updateSection: h((id, patch) => {
+        // Con un arreglo activo, el id que llega es el del bloque ("<id>-<n>"): se busca su sección.
+        const target = markers.find(m => id === m.id || String(id).startsWith(`${m.id}-`));
+        if (!target) return;
+        const sameWord = (m) => target.autoLabel && target.cueGroup && m.autoLabel && m.cueGroup === target.cueGroup;
+        persistMarkers(markers.map(m => (m.id === target.id || sameWord(m) ? { ...m, ...patch, autoLabel: false } : m)));
+      }),
+      removeSection: h((id) => persistMarkers(markers.filter(m => m.id !== id))),
+      addLyric: h((t, slideId) => {
+        updateLanes(l => ({ ...l, lyrics: [...l.lyrics, { id: crypto.randomUUID(), sample: timelineMapper.toSong(t), slideId }].sort(bySample) }));
+        ensureSlideTrigger(slideId);
+      }),
+      updateLyric: h((id, patch) => {
+        updateLanes(l => ({ ...l, lyrics: l.lyrics.map(x => (x.id === id ? { ...x, ...patch } : x)) }));
+        if (patch.slideId) ensureSlideTrigger(patch.slideId);
+      }),
+      removeLyric: h((id) => updateLanes(l => ({ ...l, lyrics: l.lyrics.filter(x => x.id !== id) }))),
+      addLight: h((t, scene) => updateLanes(l => ({ ...l, lights: [...l.lights, { id: crypto.randomUUID(), sample: timelineMapper.toSong(t), scene }].sort(bySample) }))),
+      updateLight: h((id, patch) => updateLanes(l => ({ ...l, lights: l.lights.map(x => (x.id === id ? { ...x, ...patch } : x)) }))),
+      removeLight: h((id) => updateLanes(l => ({ ...l, lights: l.lights.filter(x => x.id !== id) }))),
+      moveItem: h((lane, id, t, bar) => {
+        const sample = timelineMapper.toSong(t);
+        if (lane === 'section') {
+          persistMarkers(markers.map(m => (m.id === id ? { ...m, sample, bar } : m)).sort(bySample));
+          return;
+        }
+        const key = lane === 'lyric' ? 'lyrics' : 'lights';
+        updateLanes(l => ({ ...l, [key]: l[key].map(x => (x.id === id ? { ...x, sample } : x)).sort(bySample) }));
+      }),
+      detectCues: () => runCueDetection(false),
+    };
+  }, [markers, onAddMarker, persistMarkers, updateLanes, ensureSlideTrigger, timelineMapper, runCueDetection, recordHistory]);
+
+  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y. Restaura la foto completa (secciones +
+  // letras + luces) y la guarda, igual que cualquier otro cambio.
+  const applyHistory = useCallback((from, to) => {
+    const h = historyRef.current;
+    const snap = h[from].pop();
+    if (!snap) return;
+    h[to].push({ markers: markersRef.current, lanes: timelineLanesRef.current });
+    persistMarkers(snap.markers);
+    updateLanes(() => snap.lanes);
+  }, [persistMarkers, updateLanes]);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+      const k = (e.key || '').toLowerCase();
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); applyHistory('undo', 'redo'); }
+      else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); applyHistory('redo', 'undo'); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [applyHistory]);
+
+  // Diapositiva que está sonando ahora (para el panel AHORA / SIGUE).
+  let currentLyricText = null;
+  for (const ev of lyricEvents) {
+    if (ev.t <= playbackSample) currentLyricText = lyricSlides.slides.find(sl => sl.id === ev.slideId)?.text || null;
+    else break;
+  }
+
+  const lanesProp = useMemo(() => ({
+    sectionsEditable: !(arrangementBlocks && arrangementBlocks.length),
+    lyricEvents,
+    lightEvents,
+    slides: lyricSlides.slides,
+    hasCueTrack: !!cueTrack,
+    isDetecting: isDetectingCues,
+    detectStatus,
+    actions: laneActions,
+    lightScenes,
+    midi: sectionMidi,
+    // id de una sección de la timeline → id que usa el MIDI (con arreglo, "<uid>-<n>" → "<uid>")
+    midiUid: (id) => (arrangementActive ? String(id).replace(/-\d+$/, '') : String(id)),
+  }), [arrangementBlocks, lyricEvents, lightEvents, lyricSlides, cueTrack, isDetectingCues, detectStatus, laneActions, lightScenes, sectionMidi, arrangementActive]);
 
   const onRemoveMarker = useCallback(async (index) => {
     if (!activeSequenceId) return;
+    recordHistory();
     const nextMarkers = markers.filter((_, i) => i !== index);
     setMarkers(nextMarkers);
     
@@ -1413,7 +1872,7 @@ export default function ProMixer({ session, orgId }) {
     }));
 
     await supabase.from('sequences').update({ markers: nextMarkers }).eq('id', activeSequenceId);
-  }, [activeSequenceId, markers, activeSong]);
+  }, [activeSequenceId, markers, activeSong, recordHistory]);
 
   // Guarda tono/tempo/métrica de la secuencia ACTIVA (no de la canción base) —
   // corrige el bug donde la UI mostraba siempre el tono/tempo original de la
@@ -1476,13 +1935,13 @@ export default function ProMixer({ session, orgId }) {
   }} />;
 
   return (
-    <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', background: '#020617' }}>
+    <div className="daw-console" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', width: '100%', maxWidth: '100%', background: '#101012' }}>
       {/* BANNER DE PÁNICO (Resiliencia UX) */}
       {audioError && (
         <div style={{ 
             background: '#ef4444', color: 'white', padding: '10px 20px', 
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            fontWeight: '900', fontSize: '0.8rem', letterSpacing: '1px',
+            fontWeight: '500', fontSize: '0.8rem', letterSpacing: '1px',
             zIndex: 1000, boxShadow: '0 4px 20px rgba(239, 68, 68, 0.4)'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -1491,7 +1950,7 @@ export default function ProMixer({ session, orgId }) {
             </div>
             <button 
                 onClick={() => setIsConfigured(false)}
-                style={{ background: 'white', color: '#ef4444', border: 'none', padding: '6px 15px', borderRadius: '4px', fontWeight: '950', cursor: 'pointer', fontSize: '0.7rem' }}
+                style={{ background: 'white', color: '#ef4444', border: 'none', padding: '6px 15px', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '0.7rem' }}
             >
                 RE-CONECTAR AUDIO
             </button>
@@ -1518,8 +1977,10 @@ export default function ProMixer({ session, orgId }) {
         }}
       />
       <main style={{ flex: 1, display: 'flex', overflow: 'hidden', width: '100%', maxWidth: '100%', position: 'relative' }}>
-        <div style={{ 
-          flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', 
+        {/* Zona central (timeline, mezclador, pads): con scroll propio. La barra de arriba
+            y la de Setlist se quedan fijas; solo se desplaza esto. */}
+        <div className="daw-center" style={{ 
+          flex: 1, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto', minHeight: 0,
           paddingRight: '300px' 
         }}>
           <div style={{ padding: '0.5rem 0', background: 'rgba(0,0,0,0.1)', borderBottom: '1px solid var(--daw-border)' }}>
@@ -1531,26 +1992,33 @@ export default function ProMixer({ session, orgId }) {
               markers={timelineMarkers}
               masterWaveform={timelineWaveform}
               onAddMarker={onAddMarker} onRemoveMarker={onRemoveMarker}
+              lanes={lanesProp}
+              onJumpTo={jumpToPosition}
+              currentLyric={currentLyricText ? { text: currentLyricText } : null}
               isPrerollActive={isPrerollActive} prerollBars={prerollBars}
               onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: Math.floor(p * totalSamples) })}
             />
             <ArrangementPanel
               sections={sections}
-              blocks={arrangementBlocks}
+              blocks={resolvedBlocks}
               onChange={handleArrangementChange}
+              onPlayBlock={handlePlayBlock}
+              onRenameBlock={handleRenameBlock}
+              midi={sectionMidi}
+              activeIndex={activeBlockIdx}
               sampleRate={playbackSR}
               pitchRatio={pitchRatio}
             />
           </div>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <div className="daw-mixer" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <MemoizedMixerConsole tracks={tracks} peaks={peaks} onTrackUpdate={onTrackUpdate} deviceChannels={deviceChannels} />
           </div>
-             {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#020617' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
+             {showPads && <div style={{ borderTop: '1px solid var(--daw-border)', background: '#101012' }}><PadBoard deviceChannels={deviceChannels} sampleRate={playbackSR} /></div>}
           </div>
         <SetlistSidebar setlist={setlist} activeSong={activeSong} activeSequenceMeta={activeSequenceMeta} onSelect={handleSyncSong} onRemove={handleRemoveFromSetlist} onReorder={handleReorderSetlist} loading={loading} downloadProgress={downloadProgress} handleSyncOffline={handleSyncOffline} />
       </main>
       {showCloudBrowser && <CloudRepertoire songs={songs} onClose={() => setShowCloudBrowser(false)} onSelect={(s) => { setSetlist(prev => [...prev, s]); downloadSongForOffline(s); setShowCloudBrowser(false); }} />}
-      {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,16,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '900', fontSize: '0.9rem', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
+      {loading && <div style={{ position: 'fixed', inset: 0, background: 'rgba(16, 16, 18,0.92)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}><Loader2 size={48} className="animate-spin" color="#fff" /><p style={{ marginTop: '2rem', fontWeight: '500', fontSize: '0.9rem', color: '#fff', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Sincronizando Multitracks...</p></div>}
       
     </div>
   );

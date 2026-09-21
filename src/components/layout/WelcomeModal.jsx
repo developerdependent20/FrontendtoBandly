@@ -35,7 +35,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
       id: 2,
       title: "Configura tu equipo",
       desc: "Define los instrumentos, roles y departamentos que usarán tus integrantes.",
-      icon: <Settings size={24} color="#a855f7" />,
+      icon: <Settings size={24} color="#f7f4ef" />,
       status: "active",
       action: handleOpenSettings,
       btnText: "Configurar ahora"
@@ -44,7 +44,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
       id: 3,
       title: "Invita a tu banda",
       desc: "Comparte tu Link Mágico o Código de Invitación para que todos se unan.",
-      icon: <Users size={24} color="#3b82f6" />,
+      icon: <Users size={24} color="#f7f4ef" />,
       status: "pending"
     },
     {
@@ -68,7 +68,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
       id: 2,
       title: "Revisa el calendario",
       desc: "Ahí verás tus próximos ensayos, cultos o conciertos y a qué eventos fuiste asignado.",
-      icon: <CalendarCheck size={24} color="#3b82f6" />,
+      icon: <CalendarCheck size={24} color="#f7f4ef" />,
       status: "active"
     },
     {
@@ -82,7 +82,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
       id: 4,
       title: "Explora tus recursos",
       desc: "Letras, charts y pistas de las canciones que te asignen estarán disponibles aquí.",
-      icon: <Music2 size={24} color="#a855f7" />,
+      icon: <Music2 size={24} color="#f7f4ef" />,
       status: "pending"
     }
   ];
@@ -99,7 +99,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
         padding: '2.5rem',
         position: 'relative',
         animation: 'modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        background: 'linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
+        background: 'linear-gradient(180deg, rgba(28, 28, 32,0.9) 0%, rgba(23, 23, 26,0.95) 100%)',
         border: '1px solid rgba(255,255,255,0.1)',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05) inset'
       }}>
@@ -109,10 +109,10 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'inline-flex', background: 'rgba(168, 85, 247, 0.1)', padding: '1rem', borderRadius: '50%', marginBottom: '1rem', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
-            <Sparkles size={32} color="#a855f7" />
+          <div style={{ display: 'inline-flex', background: 'rgba(247, 244, 239, 0.06)', padding: '1rem', borderRadius: '50%', marginBottom: '1rem', border: '1px solid rgba(247, 244, 239, 0.18)' }}>
+            <Sparkles size={32} color="#f7f4ef" />
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: '500', color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
             {isDirector ? '¡Tu Banda está lista para despegar!' : '¡Bienvenido a Bandly!'}
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '0.75rem', fontSize: '1.05rem', lineHeight: 1.5 }}>
@@ -129,8 +129,8 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
               alignItems: 'flex-start',
               gap: '1.25rem',
               padding: '1.25rem',
-              background: step.status === 'active' ? 'rgba(168, 85, 247, 0.05)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${step.status === 'active' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255,255,255,0.05)'}`,
+              background: step.status === 'active' ? 'rgba(247, 244, 239, 0.03)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${step.status === 'active' ? 'rgba(247, 244, 239, 0.18)' : 'rgba(255,255,255,0.05)'}`,
               borderRadius: '12px',
               opacity: step.status === 'pending' ? 0.6 : 1,
               transition: 'all 0.3s ease'
@@ -143,7 +143,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                background: step.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : step.status === 'active' ? 'rgba(168, 85, 247, 0.1)' : 'rgba(255,255,255,0.05)',
+                background: step.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : step.status === 'active' ? 'rgba(247, 244, 239, 0.06)' : 'rgba(255,255,255,0.05)',
               }}>
                 {step.icon}
               </div>
@@ -152,7 +152,7 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
                 <h3 style={{
                   margin: '0 0 0.25rem 0',
                   fontSize: '1.05rem',
-                  fontWeight: '700',
+                  fontWeight: '500',
                   color: step.status === 'completed' ? '#10b981' : '#fff'
                 }}>
                   {step.id}. {step.title}
@@ -166,21 +166,21 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
                     onClick={step.action}
                     style={{
                       marginTop: '1rem',
-                      background: '#a855f7',
+                      background: '#fd429c',
                       color: '#fff',
                       border: 'none',
                       padding: '0.6rem 1.25rem',
-                      borderRadius: '8px',
+                      borderRadius: '12px',
                       fontSize: '0.9rem',
-                      fontWeight: '600',
+                      fontWeight: '500',
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.5rem',
                       transition: 'background 0.2s'
                     }}
-                    onMouseOver={e => e.currentTarget.style.background = '#9333ea'}
-                    onMouseOut={e => e.currentTarget.style.background = '#a855f7'}
+                    onMouseOver={e => e.currentTarget.style.background = '#fd429c'}
+                    onMouseOut={e => e.currentTarget.style.background = '#fd429c'}
                   >
                     {step.btnText} <ArrowRight size={16} />
                   </button>
@@ -192,21 +192,21 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
 
         <div style={{
           padding: '1.25rem',
-          background: 'rgba(168, 85, 247, 0.05)',
-          border: '1px solid rgba(168, 85, 247, 0.2)',
+          background: 'rgba(247, 244, 239, 0.03)',
+          border: '1px solid rgba(247, 244, 239, 0.18)',
           borderRadius: '12px',
           marginBottom: '1.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-            <Crown size={18} color="#a855f7" />
-            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#fff' }}>
+            <Crown size={18} color="#f7f4ef" />
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '500', color: '#fff' }}>
               Tu organización está en el plan {plan.name}
             </h3>
           </div>
           <ul style={{ margin: '0 0 1rem 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {plan.features.slice(0, 4).map((f, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
-                <CheckCircle2 size={14} color="#a855f7" />
+                <CheckCircle2 size={14} color="#f7f4ef" />
                 {f}
               </li>
             ))}
@@ -216,12 +216,12 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
               onClick={handleSeePlans}
               style={{
                 background: 'transparent',
-                border: '1px solid rgba(168, 85, 247, 0.4)',
-                color: '#a855f7',
+                border: '1px solid rgba(247, 244, 239, 0.3)',
+                color: '#f7f4ef',
                 padding: '0.5rem 1rem',
-                borderRadius: '8px',
+                borderRadius: '12px',
                 fontSize: '0.85rem',
-                fontWeight: '600',
+                fontWeight: '500',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -241,9 +241,9 @@ export default function WelcomeModal({ profile, onClose, onOpenSettings, onOpenS
             background: 'transparent',
             border: '1px solid rgba(255,255,255,0.1)',
             color: '#fff',
-            borderRadius: '8px',
+            borderRadius: '12px',
             fontSize: '1rem',
-            fontWeight: '600',
+            fontWeight: '500',
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}

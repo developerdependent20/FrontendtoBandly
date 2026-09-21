@@ -89,7 +89,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             style={{ 
               width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem',
-              fontWeight: '900', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
+              fontWeight: '500', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
               position: 'relative', cursor: 'pointer', overflow: 'hidden',
               boxShadow: '0 25px 60px rgba(0,0,0,0.6)', flexShrink: 0
             }}
@@ -102,7 +102,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             )}
             <div style={{ 
               position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', 
-              fontSize: '0.75rem', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold',
+              fontSize: '0.75rem', padding: '10px 4px', textAlign: 'center', fontWeight: '500',
               backdropFilter: 'blur(4px)', color: 'white',
               opacity: isHoveringAvatar ? 1 : 0,
               transition: 'all 0.3s ease',
@@ -112,7 +112,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             </div>
           </div>
           <div>
-            <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: '900', letterSpacing: '-2px' }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
+            <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: '500', letterSpacing: '-2px' }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
             <p style={{ margin: '5px 0 0', opacity: 0.6, fontSize: '1.2rem' }}>Bienvenido de nuevo a tu centro de control.</p>
           </div>
         </div>
@@ -121,9 +121,9 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
           <button 
             onClick={() => scrollTo('visual-calendar')}
             style={{ 
-              padding: '12px 24px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)',
+              padding: '12px 24px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', 
-              alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer'
+              alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: '500', cursor: 'pointer'
             }}
             className="hover-scale"
           >
@@ -133,9 +133,9 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
           <button 
             onClick={() => scrollTo('upcoming-events')}
             style={{ 
-              padding: '12px 24px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)',
+              padding: '12px 24px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', 
-              alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer'
+              alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: '500', cursor: 'pointer'
             }}
             className="hover-scale"
           >
@@ -146,10 +146,10 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             type="button"
             onClick={() => setShowLeaveConfirm(true)}
             style={{ 
-              padding: '8px 12px', borderRadius: '10px', background: 'transparent',
+              padding: '8px 12px', borderRadius: '12px', background: 'transparent',
               border: 'none', color: 'rgba(255, 255, 255, 0.35)', display: 'flex', 
               alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s',
-              position: 'relative', zIndex: 100, fontWeight: '600', gap: '6px'
+              position: 'relative', zIndex: 100, fontWeight: '500', gap: '6px'
             }}
             onMouseEnter={(e) => e.target.style.color = '#ef4444'}
             onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.35)'}
@@ -173,7 +173,7 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             animation: 'dropdownFadeIn 0.3s ease-out'
           }}>
             <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>👋</div>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.8rem', fontWeight: '900' }}>¿Abandonar Equipo?</h3>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.8rem', fontWeight: '500' }}>¿Abandonar Equipo?</h3>
             <p style={{ opacity: 0.7, marginBottom: '2.5rem', lineHeight: '1.6' }}>
               Estás a punto de salir de <strong>{profile?.organizations?.name || 'la banda'}</strong>. 
               No podrás volver a ver la información de este equipo hasta que te vuelvan a invitar.
@@ -203,15 +203,15 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
       <div className="unified-widgets-grid">
         {/* Widget 1: Team */}
         <div onClick={() => setActiveTab('team')} className="glass-panel hover-scale" style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <span style={{ fontSize: '0.7rem', fontWeight: '900', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Current Team</span>
+          <span style={{ fontSize: '0.7rem', fontWeight: '500', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Current Team</span>
           <h3 style={{ fontSize: '1.5rem', margin: '10px 0 5px' }}>{profile?.organizations?.name || 'Tu Banda'}</h3>
           <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '20px' }}>{members.length} Members</p>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {members.slice(0, 3).map((m, i) => (
               <div key={i} style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', 
-                marginLeft: i > 0 ? '-10px' : 0, border: '2px solid #0f172a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold',
+                marginLeft: i > 0 ? '-10px' : 0, border: '2px solid #17171a',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '500',
                 overflow: 'hidden'
               }}>
                 {m.avatar_url ? (
@@ -224,8 +224,8 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             {members.length > 3 && (
               <div style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', 
-                marginLeft: '-10px', border: '2px solid #0f172a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold', opacity: 0.6
+                marginLeft: '-10px', border: '2px solid #17171a',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '500', opacity: 0.6
               }}>
                 +{members.length - 3}
               </div>
@@ -240,10 +240,10 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
             <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
               {[dayNum, dayNum+1, dayNum+2, dayNum+3].map(d => (
                 <div key={d} style={{ textAlign: 'center', opacity: d === dayNum ? 1 : 0.4 }}>
-                  <div style={{ fontSize: '0.6rem', fontWeight: 'bold' }}>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '500' }}>
                     {new Date(today.getFullYear(), today.getMonth(), d).toLocaleDateString('en-US', { weekday: 'short' })}
                   </div>
-                  <div style={{ fontSize: '1rem', fontWeight: '900', marginTop: '4px' }}>{d}</div>
+                  <div style={{ fontSize: '1rem', fontWeight: '500', marginTop: '4px' }}>{d}</div>
                   {d === dayNum && <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#ef4444', margin: '4px auto' }} />}
                 </div>
               ))}
@@ -256,11 +256,11 @@ const UnifiedDashboardHeader = ({ profile, orgData, setActiveTab }) => {
         <div onClick={() => setActiveTab('library')} className="glass-panel hover-scale" style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444' }}>
             <Music size={16} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>Saved Songs</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: '500' }}>Saved Songs</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-            <span style={{ fontSize: '2.5rem', fontWeight: '900' }}>{songs.length}</span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '2.5rem', fontWeight: '500' }}>{songs.length}</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                <ChevronRight size={18} />
             </div>
           </div>

@@ -326,13 +326,13 @@ export default function App() {
       {inspectedOrg && (
         <div style={{ 
           background: '#ef4444', color: '#fff', padding: '10px', textAlign: 'center', 
-          fontWeight: 'bold', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          fontWeight: '500', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
           display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px'
         }}>
           <span>ESTÁS INSPECCIONANDO: {inspectedOrg.name.toUpperCase()}</span>
           <button 
             onClick={() => { setInspectedOrg(null); setActiveTab('admin'); }}
-            style={{ background: '#fff', color: '#ef4444', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ background: '#fff', color: '#ef4444', border: 'none', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}
           >
             SALIR DE INSPECCIÓN
           </button>

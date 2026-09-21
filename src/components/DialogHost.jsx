@@ -55,11 +55,11 @@ export default function DialogHost() {
           <X size={18} />
         </button>
 
-        <div style={{ width: '60px', height: '60px', background: isDanger ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+        <div style={{ width: '60px', height: '60px', background: isDanger ? 'rgba(239,68,68,0.1)' : 'rgba(247, 244, 239, 0.06)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
           <Icon size={30} color={accentColor} />
         </div>
 
-        <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#fff', fontWeight: '800' }}>{request.title}</h3>
+        <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#fff', fontWeight: '500' }}>{request.title}</h3>
         {request.message && (
           <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: isPrompt ? '1.2rem' : '2rem', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
             {request.message}

@@ -7,7 +7,7 @@ export default function AnalogKnob({
   max = 1,
   size = 40,
   label = '',
-  color = '#a855f7'
+  color = '#f7f4ef'
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const knobRef = useRef(null);
@@ -79,12 +79,12 @@ export default function AnalogKnob({
           width: size,
           height: size,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          background: 'linear-gradient(135deg, #1c1c20 0%, #17171a 100%)',
           boxShadow: `
             inset 0 2px 4px rgba(255,255,255,0.1),
             inset 0 -2px 4px rgba(0,0,0,0.5),
             0 5px 10px rgba(0,0,0,0.8),
-            0 0 0 2px #020617
+            0 0 0 2px #101012
           `,
           position: 'relative',
           cursor: isDragging ? 'grabbing' : 'grab',
@@ -101,7 +101,7 @@ export default function AnalogKnob({
           width: '12%',
           height: '25%',
           background: color,
-          borderRadius: '2px',
+          borderRadius: '6px',
           boxShadow: `0 0 5px ${color}, 0 0 10px ${color}`
         }} />
 
@@ -113,7 +113,7 @@ export default function AnalogKnob({
           width: '50%',
           height: '50%',
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          background: 'linear-gradient(135deg, #17171a 0%, #1c1c20 100%)',
           boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)'
         }} />
       </div>
@@ -121,7 +121,7 @@ export default function AnalogKnob({
       {label && (
         <span style={{ 
           fontSize: '0.65rem', 
-          fontWeight: '800', 
+          fontWeight: '500', 
           color: 'rgba(255,255,255,0.6)', 
           letterSpacing: '1px' 
         }}>

@@ -73,10 +73,10 @@ const getSuggestedMembers = (roleName, members, allRoles) => {
 const buildRoleBank = (orgSettings) => {
   const departments = orgSettings?.departments || DEFAULT_DEPARTMENTS;
   return departments.map(dept => {
-    let colorHex = '#3b82f6';
-    let bg = 'rgba(59,130,246,0.1)';
+    let colorHex = '#7891b9';
+    let bg = 'rgba(120, 145, 185, 0.1)';
     if (dept.colorClass === 'yellow') { colorHex = '#eab308'; bg = 'rgba(234,179,8,0.1)'; }
-    else if (dept.colorClass === 'purple') { colorHex = '#a855f7'; bg = 'rgba(168,85,247,0.1)'; }
+    else if (dept.colorClass === 'purple') { colorHex = '#a78ac2'; bg = 'rgba(167, 138, 194, 0.1)'; }
     else if (dept.colorClass === 'orange') { colorHex = '#f97316'; bg = 'rgba(249,115,22,0.1)'; }
     else if (dept.colorClass === 'green') { colorHex = '#22c55e'; bg = 'rgba(34,197,94,0.1)'; }
     else if (dept.colorClass === 'red') { colorHex = '#ef4444'; bg = 'rgba(239,68,68,0.1)'; }
@@ -126,17 +126,17 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          background: value === m.id ? 'rgba(59,130,246,0.2)' : 'transparent',
+          background: value === m.id ? 'rgba(120, 145, 185, 0.2)' : 'transparent',
           marginBottom: '4px',
           transition: 'all 0.2s ease',
           opacity: isBlocked ? 0.5 : 1
         }}
         className={isBlocked ? '' : "dropdown-item-custom"}
       >
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isBlocked ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', color: isBlocked ? '#ef4444' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900', border: isBlocked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isBlocked ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', color: isBlocked ? '#ef4444' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '500', border: isBlocked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           {m.full_name?.[0]}
         </div>
-        <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '600', color: isBlocked ? '#ef4444' : (value === m.id ? 'var(--primary)' : 'white'), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: '500', color: isBlocked ? '#ef4444' : (value === m.id ? 'var(--primary)' : 'white'), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {m.full_name} {isBlocked && <span style={{ fontSize: '0.75rem', fontWeight: 'normal', opacity: 0.8 }}>(Ocupado)</span>}
         </div>
         {isSuggested && !isBlocked && <span style={{ color: '#fbbf24', fontSize: '0.9rem', filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.4))' }} title="Sugerido para este rol">✨</span>}
@@ -166,14 +166,14 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', minWidth: 0, flex: 1 }}>
           {selectedMember && (
-            <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: '800', flexShrink: 0 }}>
+            <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: '500', flexShrink: 0 }}>
               {selectedMember.full_name?.[0]}
             </div>
           )}
           <span style={{ 
             color: selectedMember ? 'white' : 'rgba(255,255,255,0.4)', 
             fontSize: '0.85rem', 
-            fontWeight: '600', 
+            fontWeight: '500', 
             whiteSpace: 'nowrap', 
             overflow: 'hidden', 
             textOverflow: 'ellipsis',
@@ -195,9 +195,9 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
             top: '115%', 
             ...(alignRight ? { right: 0 } : { left: 0 }),
             minWidth: '240px', 
-            background: '#1a2133', 
+            background: '#1c1c20', 
             border: '1px solid rgba(255,255,255,0.1)', 
-            borderRadius: '16px', 
+            borderRadius: '12px', 
             zIndex: 101, 
             maxHeight: '320px', 
             display: 'flex',
@@ -212,7 +212,7 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
                 placeholder="Buscar miembro..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem', outline: 'none' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem', outline: 'none' }}
                 onClick={e => e.stopPropagation()}
               />
             </div>
@@ -222,21 +222,21 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
                 <div
                   onClick={() => handleSelect(null)}
                   className="dropdown-item-custom"
-                  style={{ padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: '700', border: '1px dashed rgba(255,255,255,0.15)' }}
+                  style={{ padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: '500', border: '1px dashed rgba(255,255,255,0.15)' }}
                 >
                   <X size={14} /> Quitar asignación
                 </div>
               )}
 
               {suggestedFiltered.length > 0 && (
-                <div style={{ fontSize: '0.62rem', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', padding: '4px 10px 6px' }}>
+                <div style={{ fontSize: '0.62rem', fontWeight: '500', color: '#fbbf24', letterSpacing: '1px', padding: '4px 10px 6px' }}>
                   ✨ SUGERIDOS PARA ESTE ROL
                 </div>
               )}
               {suggestedFiltered.map(m => renderMemberRow(m, true))}
 
               {!isCompact && othersFiltered.length > 0 && (
-                <div style={{ fontSize: '0.62rem', fontWeight: '900', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '10px 10px 6px' }}>
+                <div style={{ fontSize: '0.62rem', fontWeight: '500', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', padding: '10px 10px 6px' }}>
                   TODO EL EQUIPO
                 </div>
               )}
@@ -255,13 +255,13 @@ const MemberSelector = ({ value, onChange, members, roleName, placeholder, align
                     background: 'rgba(255,255,255,0.03)',
                     color: 'var(--primary)',
                     fontSize: '0.7rem', 
-                    fontWeight: '900', 
+                    fontWeight: '500', 
                     cursor: 'pointer', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '1.5px', 
+                    letterSpacing: '0.5px', 
                     borderRadius: '12px', 
                     marginTop: '6px',
-                    border: '1px dashed rgba(59,130,246,0.3)'
+                    border: '1px dashed rgba(120, 145, 185, 0.3)'
                   }}
                 >
                   + Mostrar resto del equipo
@@ -312,7 +312,7 @@ const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) =>
       >
         <span style={{
           color: selectedSong ? 'white' : 'rgba(255,255,255,0.4)',
-          fontSize: '0.85rem', fontWeight: '600', whiteSpace: 'nowrap',
+          fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap',
           overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0
         }}>
           {selectedSong ? selectedSong.title : (placeholder || 'Seleccionar Canción')}
@@ -325,7 +325,7 @@ const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) =>
           <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} />
           <div style={{
             position: 'absolute', top: '115%', left: 0, minWidth: '260px', maxWidth: 'calc(100vw - 40px)',
-            background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px',
+            background: '#1c1c20', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
             zIndex: 101, maxHeight: '320px', display: 'flex', flexDirection: 'column',
             boxShadow: '0 20px 60px rgba(0,0,0,0.8)', padding: '8px', animation: 'dropdownFadeIn 0.2s ease-out'
           }}>
@@ -335,7 +335,7 @@ const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) =>
                 placeholder="Buscar canción..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem', outline: 'none' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem', outline: 'none' }}
                 onClick={e => e.stopPropagation()}
               />
             </div>
@@ -345,7 +345,7 @@ const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) =>
                 <div
                   onClick={() => handleSelect('')}
                   className="dropdown-item-custom"
-                  style={{ padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: '700', border: '1px dashed rgba(255,255,255,0.15)' }}
+                  style={{ padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: '500', border: '1px dashed rgba(255,255,255,0.15)' }}
                 >
                   <X size={14} /> Quitar canción
                 </div>
@@ -358,9 +358,9 @@ const SongSelector = ({ value, onChange, songs, getLastPlayed, placeholder }) =>
                     key={s.id}
                     onClick={() => handleSelect(s.id)}
                     className="dropdown-item-custom"
-                    style={{ padding: '10px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '4px', background: String(value) === String(s.id) ? 'rgba(59,130,246,0.2)' : 'transparent' }}
+                    style={{ padding: '10px 14px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '4px', background: String(value) === String(s.id) ? 'rgba(120, 145, 185, 0.2)' : 'transparent' }}
                   >
-                    <span style={{ fontSize: '0.9rem', fontWeight: '600', color: String(value) === String(s.id) ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '500', color: String(value) === String(s.id) ? 'var(--primary)' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {s.title}
                     </span>
                     {lp && <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{lp}</span>}
@@ -417,16 +417,16 @@ const CustomDatePicker = ({ value, onChange }) => {
       </div>
 
       {isOpen && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: '#1a2133', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', zIndex: 10000, boxShadow: '0 10px 40px rgba(0,0,0,0.8)', animation: 'modalFadeIn 0.2s ease-out' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: '#1c1c20', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', zIndex: 10000, boxShadow: '0 10px 40px rgba(0,0,0,0.8)', animation: 'modalFadeIn 0.2s ease-out' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><ChevronDown size={18} style={{ transform: 'rotate(90deg)' }} /></button>
-            <div style={{ fontWeight: '800', fontSize: '0.9rem', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</div>
-            <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><ChevronDown size={18} style={{ transform: 'rotate(-90deg)' }} /></button>
+            <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><ChevronDown size={18} style={{ transform: 'rotate(90deg)' }} /></button>
+            <div style={{ fontWeight: '500', fontSize: '0.9rem', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</div>
+            <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><ChevronDown size={18} style={{ transform: 'rotate(-90deg)' }} /></button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
-            {dayNames.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800' }}>{d}</div>)}
+            {dayNames.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '500' }}>{d}</div>)}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
@@ -444,7 +444,7 @@ const CustomDatePicker = ({ value, onChange }) => {
                     padding: '8px 0', 
                     background: isSelected ? 'var(--primary)' : 'transparent', 
                     border: isToday && !isSelected ? '1px solid rgba(255,255,255,0.2)' : 'none', 
-                    borderRadius: '8px', 
+                    borderRadius: '12px', 
                     color: isSelected ? 'white' : 'rgba(255,255,255,0.8)', 
                     cursor: 'pointer',
                     fontSize: '0.85rem',
@@ -461,8 +461,8 @@ const CustomDatePicker = ({ value, onChange }) => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
-            <button onClick={(e) => { e.preventDefault(); onChange(''); setIsOpen(false); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}>Borrar</button>
-            <button onClick={(e) => { e.preventDefault(); setCurrentDate(new Date()); }} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}>Hoy</button>
+            <button onClick={(e) => { e.preventDefault(); onChange(''); setIsOpen(false); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '500' }}>Borrar</button>
+            <button onClick={(e) => { e.preventDefault(); setCurrentDate(new Date()); }} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '500' }}>Hoy</button>
           </div>
 
         </div>
@@ -611,7 +611,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         body { font-family: -apple-system, Segoe UI, Arial, sans-serif; color: #111; padding: 32px; max-width: 720px; margin: 0 auto; }
         h1 { font-size: 1.5rem; margin-bottom: 0; }
         .date { color: #555; font-size: 0.95rem; margin-top: 4px; text-transform: capitalize; }
-        .desc { white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 0.9rem; }
+        .desc { white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 12px; margin-top: 16px; font-size: 0.9rem; }
         h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: #333; margin-top: 28px; border-bottom: 2px solid #ddd; padding-bottom: 4px; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         td, th { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
@@ -619,7 +619,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         tr.declined td { color: #b91c1c; }
         .role { color: #666; width: 40%; }
         .status { text-align: right; color: #999; font-size: 0.8rem; }
-        .blocked-note { margin-top: 24px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 8px; font-size: 0.85rem; }
+        .blocked-note { margin-top: 24px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 12px; font-size: 0.85rem; }
         @media print { body { padding: 0; } }
       </style></head>
       <body>
@@ -1210,12 +1210,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
   // [ESTABLE] Temas Joya Premium
   const cardThemes = [
-    { main: '#3b82f6', glass: 'rgba(59, 130, 246, 0.1)', light: 'rgba(59, 130, 246, 0.3)' }, // 0: Royal Blue
-    { main: '#8b5cf6', glass: 'rgba(139, 92, 246, 0.1)', light: 'rgba(139, 92, 246, 0.3)' }, // 1: Neon Purple
+    { main: '#7891b9', glass: 'rgba(120, 145, 185, 0.1)', light: 'rgba(120, 145, 185, 0.3)' }, // 0: Royal Blue
+    { main: '#9d8dc4', glass: 'rgba(157, 141, 196, 0.1)', light: 'rgba(157, 141, 196, 0.3)' }, // 1: Neon Purple
     { main: '#ec4899', glass: 'rgba(236, 72, 153, 0.1)', light: 'rgba(236, 72, 153, 0.3)' }, // 2: Pink
     { main: '#f97316', glass: 'rgba(249, 115, 22, 0.1)', light: 'rgba(249, 115, 22, 0.3)' }, // 3: Sunset
     { main: '#be123c', glass: 'rgba(190, 18, 60, 0.1)', light: 'rgba(190, 18, 60, 0.3)' }, // 4: Rose
-    { main: '#94a3b8', glass: 'rgba(148, 163, 184, 0.1)', light: 'rgba(148, 163, 184, 0.3)' }, // 5: Silver Default
+    { main: '#a8a8a6', glass: 'rgba(168, 168, 166, 0.1)', light: 'rgba(168, 168, 166, 0.3)' }, // 5: Silver Default
   ];
 
   const getEventTheme = (name) => {
@@ -1249,9 +1249,9 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         <div key={ev.id} style={{
           position: 'relative',
           marginBottom: '1rem',
-          borderRadius: '16px',
+          borderRadius: '12px',
           overflow: 'hidden',
-          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.7)',
+          background: isPast ? 'rgba(255,255,255,0.02)' : 'rgba(23, 23, 26,0.7)',
           border: `1px solid ${isPast ? 'rgba(255,255,255,0.06)' : theme.light}`,
           boxShadow: isPast ? 'none' : `0 4px 24px -4px ${theme.main}22`,
           opacity: isPast ? 0.55 : 1,
@@ -1270,17 +1270,17 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 {/* Date chip + TODAY badge */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   {isToday && (
-                    <span style={{ fontSize: '0.58rem', fontWeight: '900', color: '#fff', background: theme.main, padding: '2px 8px', borderRadius: '20px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '0.58rem', fontWeight: '500', color: '#fff', background: theme.main, padding: '2px 8px', borderRadius: '20px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                       HOY
                     </span>
                   )}
-                  <span style={{ fontSize: '0.68rem', fontWeight: '700', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: '500', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {formatEventDate(ev.date)}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '500', color: 'white', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
                   {ev.name}
                 </h4>
 
@@ -1289,7 +1289,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   <div style={{ marginTop: '6px' }}>
                     <button
                       onClick={() => setDescModalEv(descModalEv === ev.id ? null : ev.id)}
-                      style={{ background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: descModalEv === ev.id ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.68rem', fontWeight: '700', transition: 'color 0.15s', letterSpacing: '0.3px' }}
+                      style={{ background: 'transparent', border: 'none', padding: '2px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: descModalEv === ev.id ? theme.main : 'rgba(255,255,255,0.3)', fontSize: '0.68rem', fontWeight: '500', transition: 'color 0.15s', letterSpacing: '0.3px' }}
                       onMouseEnter={e => e.currentTarget.style.color = theme.main}
                       onMouseLeave={e => e.currentTarget.style.color = descModalEv === ev.id ? theme.main : 'rgba(255,255,255,0.3)'}
                     >
@@ -1297,7 +1297,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       {descModalEv === ev.id ? 'Ocultar descripcion' : 'Ver descripcion'}
                     </button>
                     {descModalEv === ev.id && (
-                      <div style={{ marginTop: '8px', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: `1px solid ${theme.light}`, maxHeight: '160px', overflowY: 'auto', fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }} className="custom-scrollbar">
+                      <div style={{ marginTop: '8px', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: `1px solid ${theme.light}`, maxHeight: '160px', overflowY: 'auto', fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }} className="custom-scrollbar">
                         {ev.description}
                       </div>
                     )}
@@ -1310,14 +1310,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                   <button onClick={() => handleEditEvent(ev)}
                     title="Editar"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.15s' }}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '6px', borderRadius: '12px', display: 'flex', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.color='white'; e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.4)'; e.currentTarget.style.background='rgba(255,255,255,0.05)'; }}>
                     <Edit2 size={13} />
                   </button>
                   <button onClick={() => setEventToDelete(ev)}
                     title="Eliminar"
-                    style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.15s' }}
+                    style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.12)', color: 'rgba(239,68,68,0.5)', cursor: 'pointer', padding: '6px', borderRadius: '12px', display: 'flex', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.color='#ef4444'; e.currentTarget.style.background='rgba(239,68,68,0.15)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color='rgba(239,68,68,0.5)'; e.currentTarget.style.background='rgba(239,68,68,0.07)'; }}>
                     <Trash2 size={13} />
@@ -1334,7 +1334,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   {userSlots.map((slot, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.08)` }}>
                       <span style={{ fontSize: '0.9rem' }}>{getInstrumentIcon(slot.instrument)}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: '500', color: 'white' }}>{getBilingualName(slot.instrument)}</span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusDot(slot.status), flexShrink: 0 }} title={slot.status === 'decline_requested' ? 'Pendiente de Aprobación' : statusLabel(slot.status)} />
                     </div>
                   ))}
@@ -1345,13 +1345,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     {userSlots.some(s => s.status !== 'confirmed') && (
                       <button onClick={() => updateRosterStatus(ev, currentUserId, 'confirmed')}
-                        style={{ padding: '5px 12px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        style={{ padding: '5px 12px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Check size={11} /> Confirmar
                       </button>
                     )}
                     {ev.allow_declines !== false && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
                       <button onClick={() => setDeclineModal({ isOpen: true, event: ev, roleId: currentUserId, instrument: userSlots[0]?.instrument, reason: '' })}
-                        style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <X size={11} /> Declinar
                       </button>
                     )}
@@ -1362,7 +1362,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
             {/* â”€â”€ EXPAND BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <button onClick={() => setSelectedEventDetails(ev)}
-              style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: '10px', color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+              style={{ width: '100%', marginTop: '0.9rem', padding: '0.5rem', background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, borderRadius: '12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = theme.light; e.currentTarget.style.color = theme.main; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>
               <ChevronDown size={13} />
@@ -1408,7 +1408,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     });
                     return (
                       <div key={groupName} style={{ marginBottom: '1rem' }}>
-                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
+                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{groupName}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                           {sorted.map((s, i) => {
                             const dot = statusDot(s.status);
@@ -1426,16 +1426,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                 )}
                                 <span style={{ fontSize: '0.78rem' }}>{getInstrumentIcon(s.instrument)}</span>
                                 {/* Role label */}
-                                <span style={{ fontSize: '0.62rem', fontWeight: '800', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{roleName}</span>
+                                <span style={{ fontSize: '0.62rem', fontWeight: '500', color: theme.main, textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{roleName}</span>
                                 {/* Separator */}
                                 <span style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
                                 {/* Member name */}
-                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
+                                <span style={{ fontSize: '0.72rem', fontWeight: '500', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>{memberName}</span>
                                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dot, flexShrink: 0 }} title={statusLabel(s.status)} />
                                 {userRole === 'director' && isReplaceable && (
                                   <button onClick={() => setReplacementPicker({ event: ev, rosterEntry: s })}
                                     title={isDeclined ? "Buscar reemplazo" : "No ha confirmado — buscar reemplazo"}
-                                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '2px 6px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.6rem', fontWeight: '800' }}>
+                                    style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '2px 6px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.6rem', fontWeight: '500' }}>
                                     <UserX size={10} /> Reemplazar
                                   </button>
                                 )}
@@ -1452,24 +1452,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 {/* Setlist */}
                 {ev.event_songs && ev.event_songs.length > 0 && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>SETLIST</div>
+                    <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>SETLIST</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {[...ev.event_songs].sort((a,b) => a.order_index - b.order_index).map((es, i) => {
                         const song = songs?.find(s => s.id === es.song_id);
                         const leader = members?.find(m => m.id === es.lead_id);
                         return (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-                              <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.main, width: '16px', flexShrink: 0 }}>{i + 1}</span>
+                              <span style={{ fontSize: '0.65rem', fontWeight: '500', color: theme.main, width: '16px', flexShrink: 0 }}>{i + 1}</span>
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Cancion desconocida'}</div>
+                                <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Cancion desconocida'}</div>
                                 <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{leader?.full_name?.split(' ')[0] || '--'} &bull; <span style={{ color: theme.main }}>{es.selected_key || '--'}</span></div>
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
                                 <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alertDialog('Requiere plan PRO'); }}
-                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(139,92,246,0.12)', color: '#a78bfa', cursor: 'pointer', display: 'flex' }}>
+                                  style={{ padding: '4px', borderRadius: '6px', border: 'none', background: 'rgba(157, 141, 196, 0.12)', color: '#9b8dc4', cursor: 'pointer', display: 'flex' }}>
                                   <Headphones size={12} />
                                 </button>
                               )}
@@ -1501,7 +1501,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   return (
     <section id="planner-top">
       <div className="tutorial-banner">
-        <div style={{ background: 'var(--accent)', padding: '1rem', borderRadius: '15px' }}><CalendarIcon size={24} color="#0f172a" /></div>
+        <div style={{ background: 'var(--accent)', padding: '1rem', borderRadius: '12px' }}><CalendarIcon size={24} color="#17171a" /></div>
         <div style={{ marginLeft: '1rem' }}><h4>Calendario & Planeación</h4><p>Organiza tus servicios y eventos de forma profesional.</p></div>
       </div>
 
@@ -1538,7 +1538,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
            {pastEvents.length > 0 && (
              <div>
                <button onClick={() => setShowPastEvents(!showPastEvents)} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: 'none', borderRadius: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <span style={{ fontWeight: '800', fontSize: '0.8rem' }}>EVENTOS PASADOS ({pastEvents.length})</span>{showPastEvents ? <ChevronUp /> : <ChevronDown />}
+                 <span style={{ fontWeight: '500', fontSize: '0.8rem' }}>EVENTOS PASADOS ({pastEvents.length})</span>{showPastEvents ? <ChevronUp /> : <ChevronDown />}
                </button>
                {showPastEvents && <div style={{ marginTop: '1rem' }}>{renderEventList(pastEvents, true)}</div>}
              </div>
@@ -1551,7 +1551,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       </section>
 
       {selectedEventDetails && createPortal((
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: '#0f172a', zIndex: 9999999, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: '#17171a', zIndex: 9999999, display: 'flex', flexDirection: 'column' }}>
           
           {/* Header Bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1559,15 +1559,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                <ChevronDown style={{ transform: 'rotate(90deg)' }} size={20} /> Volver
              </button>
              <div style={{ display: 'flex', gap: '8px' }}>
-               <button onClick={() => handleExportPlan(selectedEventDetails)} title="Exportar plan completo (PDF / imprimir)" style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+               <button onClick={() => handleExportPlan(selectedEventDetails)} title="Exportar plan completo (PDF / imprimir)" style={{ padding: '6px 12px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                  <FileText size={14} /> Exportar
                </button>
                {!readOnly && (
                  <>
-                   <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                   <button onClick={() => { setSelectedEventDetails(null); handleEditEvent(selectedEventDetails); }} style={{ padding: '6px 12px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                      <Edit2 size={14} /> Editar
                    </button>
-                   <button onClick={() => setEventToDelete(selectedEventDetails)} style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                   <button onClick={() => setEventToDelete(selectedEventDetails)} style={{ padding: '6px 12px', borderRadius: '12px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                      <Trash2 size={14} />
                    </button>
                  </>
@@ -1579,13 +1579,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
              
              {/* Event Info */}
              <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-               <div style={{ fontSize: '0.8rem', color: getEventTheme(selectedEventDetails.name).main, fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+               <div style={{ fontSize: '0.8rem', color: getEventTheme(selectedEventDetails.name).main, fontWeight: '500', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
                  {formatEventDate(selectedEventDetails.date)}
                </div>
-               <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: '0 0 1rem 0', color: 'white', lineHeight: 1.1 }}>{selectedEventDetails.name}</h2>
+               <h2 style={{ fontSize: '2rem', fontWeight: '500', margin: '0 0 1rem 0', color: 'white', lineHeight: 1.1 }}>{selectedEventDetails.name}</h2>
                {selectedEventDetails.description && (
                   <details style={{ marginTop: '0.5rem', maxWidth: '600px', margin: '0 auto' }}>
-                    <summary style={{ fontSize: '0.75rem', color: getEventTheme(selectedEventDetails.name).main, cursor: 'pointer', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', userSelect: 'none', listStyle: 'none' }} className="custom-summary">
+                    <summary style={{ fontSize: '0.75rem', color: getEventTheme(selectedEventDetails.name).main, cursor: 'pointer', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px', userSelect: 'none', listStyle: 'none' }} className="custom-summary">
                       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
                         Ver descripción completa
                       </span>
@@ -1604,14 +1604,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 const isPast = selectedEventDetails.date && new Date(selectedEventDetails.date.split('T')[0] + 'T00:00:00') < new Date().setHours(0,0,0,0);
                 
                 return (
-                  <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
-                     <h3 style={{ fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem', marginBottom: '2rem' }}>
+                     <h3 style={{ fontSize: '0.9rem', fontWeight: '500', textTransform: 'uppercase', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                        <User size={16} color="var(--primary)" /> Mi Participación
                      </h3>
                      
                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '1rem' }}>
                        {userSlots.map((s, i) => (
-                         <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', color: 'white' }}>
+                         <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '500', color: 'white' }}>
                            {getBilingualName(s.instrument)}
                          </div>
                        ))}
@@ -1621,14 +1621,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         <button onClick={() => {
                             updateRosterStatus(selectedEventDetails, currentUserId, 'confirmed');
                             setSelectedEventDetails({...selectedEventDetails, event_roster: selectedEventDetails.event_roster.map(r => String(r.profile_id) === String(currentUserId) ? {...r, status: 'confirmed'} : r)});
-                        }} style={{ width: '100%', padding: '1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
+                        }} style={{ width: '100%', padding: '1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
                           <CheckCircle2 size={20} /> Confirmar Asistencia
                         </button>
                      )}
                      {selectedEventDetails.allow_declines !== false && !isPast && userSlots.some(s => s.status !== 'declined' && s.status !== 'rejected' && s.status !== 'decline_requested') && (
                         <button onClick={() => {
                             setDeclineModal({ isOpen: true, event: selectedEventDetails, roleId: currentUserId, instrument: userSlots[0]?.instrument, reason: '' });
-                        }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        }} style={{ width: '100%', padding: '0.8rem', background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                           <X size={16} /> Declinar
                         </button>
                      )}
@@ -1638,7 +1638,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
              {/* Equipo */}
              <div style={{ marginBottom: '2rem' }}>
-               <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+               <h3 style={{ fontSize: '1.2rem', fontWeight: '500', color: 'white', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                  <Users size={20} color="var(--primary)" /> Equipo ({(selectedEventDetails.event_roster?.filter(r => !r.is_removed).length || 0)})
                </h3>
                {(() => {
@@ -1676,7 +1676,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                      
                      return (
                        <div key={groupName} style={{ marginBottom: '1.5rem' }}>
-                         <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{groupName}</div>
+                         <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>{groupName}</div>
                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {sorted.map((s, i) => {
                                const memberName = members.find(m => m.id === s.profile_id)?.full_name?.split(' ')[0] || 'Sin Asignar';
@@ -1692,7 +1692,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                          {getInstrumentIcon(s.instrument)}
                                        </div>
                                        <div>
-                                          <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'white' }}>{memberName}</div>
+                                          <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'white' }}>{memberName}</div>
                                           <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{roleName}</div>
                                        </div>
                                     </div>
@@ -1700,7 +1700,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                        {userRole === 'director' && isReplaceable && (
                                          <button onClick={() => setReplacementPicker({ event: selectedEventDetails, rosterEntry: s })}
                                            title={isDeclined ? "Buscar reemplazo" : "No ha confirmado — buscar reemplazo"}
-                                           style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '3px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', fontWeight: '800' }}>
+                                           style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', padding: '3px 8px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', fontWeight: '500' }}>
                                            <UserX size={11} /> Reemplazar
                                          </button>
                                        )}
@@ -1719,7 +1719,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
              {/* Setlist */}
              {selectedEventDetails.event_songs && selectedEventDetails.event_songs.length > 0 && (
                <div>
-                 <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 <h3 style={{ fontSize: '1.2rem', fontWeight: '500', color: 'white', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                    <Music size={20} color="var(--primary)" /> Setlist
                  </h3>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1728,20 +1728,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                        const leader = members?.find(m => m.id === es.lead_id);
                        return (
                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                           <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', width: '24px' }}>{i+1}</div>
+                           <div style={{ fontSize: '0.8rem', fontWeight: '500', color: 'var(--text-muted)', width: '24px' }}>{i+1}</div>
                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: '1rem', fontWeight: '700', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Desconocida'}</div>
+                              <div style={{ fontSize: '1rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Desconocida'}</div>
                               <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                 <span>Dirige: {leader?.full_name?.split(' ')[0] || '--'}</span>
                                 <span style={{ opacity: 0.5 }}>|</span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                  {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '800' }}>{es.selected_key || '--'}</strong>
+                                  {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '500' }}>{es.selected_key || '--'}</strong>
                                 </span>
                               </div>
                            </div>
                            <div style={{ display: 'flex', gap: '6px' }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
-                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alertDialog('Requiere plan PRO'); }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(139,92,246,0.15)', color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <button onClick={() => { const p = (profile?.organizations?.plan||'free').toLowerCase(); p !== 'free' ? setSeqPlayerSong(song) : alertDialog('Requiere plan PRO'); }} style={{ width: '32px', height: '32px', borderRadius: '12px', border: 'none', background: 'rgba(157, 141, 196, 0.15)', color: '#9b8dc4', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <Headphones size={16} />
                                 </button>
                               )}
@@ -1762,20 +1762,20 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                        WebkitTransform: 'translateZ(0)'
                                      }}
                                    >
-                                     <img src={`https://img.youtube.com/vi/${yid}/hqdefault.jpg`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} alt="YouTube Thumbnail" />
-                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', borderRadius: '5px' }} 
+                                     <img src={`https://img.youtube.com/vi/${yid}/hqdefault.jpg`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} alt="YouTube Thumbnail" />
+                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', borderRadius: '6px' }} 
                                           onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'} 
                                           onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
                                        <Play size={16} fill="#ef4444" color="#ef4444" />
                                      </div>
                                    </div>
                                  ) : (
-                                   <button onClick={() => setActiveYoutubeUrl(song.youtube_link)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                   <button onClick={() => setActiveYoutubeUrl(song.youtube_link)} style={{ width: '32px', height: '32px', borderRadius: '12px', border: 'none', background: 'rgba(239,68,68,0.15)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                      <Play size={16} fill="#ef4444" />
                                    </button>
                                  );
                                })()}
-                              <button onClick={() => setChartSong(song)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'rgba(59,130,246,0.15)', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <button onClick={() => setChartSong(song)} style={{ width: '32px', height: '32px', borderRadius: '12px', border: 'none', background: 'rgba(120, 145, 185, 0.15)', color: '#7891b9', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <FileText size={16} />
                               </button>
                            </div>
@@ -1795,7 +1795,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           <div className="glass-panel" style={{
             padding: '2.5rem', width: '92%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto',
             animation: 'modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative',
-            background: 'linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
+            background: 'linear-gradient(180deg, rgba(28, 28, 32,0.9) 0%, rgba(23, 23, 26,0.95) 100%)',
             border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
           }} className="custom-scrollbar">
 
@@ -1804,10 +1804,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             </button>
 
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <div style={{ display: 'inline-flex', background: 'rgba(59,130,246,0.12)', padding: '0.9rem', borderRadius: '50%', marginBottom: '1rem', border: '1px solid rgba(59,130,246,0.25)' }}>
+              <div style={{ display: 'inline-flex', background: 'rgba(120, 145, 185, 0.12)', padding: '0.9rem', borderRadius: '50%', marginBottom: '1rem', border: '1px solid rgba(120, 145, 185, 0.25)' }}>
                 <CalendarIcon size={26} color="var(--primary)" />
               </div>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'white', letterSpacing: '-0.02em' }}>Crear Nuevo Evento</h3>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: '500', margin: 0, color: 'white', letterSpacing: '-0.02em' }}>Crear Nuevo Evento</h3>
               <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', fontSize: '0.9rem' }}>Elige cómo quieres empezar</p>
             </div>
 
@@ -1823,7 +1823,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 },
                 {
                   id: 'full', icon: <Music size={22} />, label: 'Banda Base', desc: 'Batería, bajo, guitarras, voces...',
-                  color: 'var(--primary)', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.3)',
+                  color: 'var(--primary)', bg: 'rgba(120, 145, 185, 0.1)', border: 'rgba(120, 145, 185, 0.3)',
                   onClick: () => {
                     setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setFormat('full');
                     const template = generateTemplate('full');
@@ -1847,7 +1847,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       key={opt.id}
                       onClick={() => { opt.onClick(); setShowNewEventPicker(false); setModalTab('info'); setShowModal(true); }}
                       style={{
-                        padding: '1.4rem 1rem', borderRadius: '16px', background: opt.bg, border: `1px solid ${opt.border}`,
+                        padding: '1.4rem 1rem', borderRadius: '12px', background: opt.bg, border: `1px solid ${opt.border}`,
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', cursor: 'pointer',
                         transition: 'transform 0.15s ease, box-shadow 0.15s ease'
                       }}
@@ -1855,7 +1855,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       <div style={{ color: opt.color }}>{opt.icon}</div>
-                      <div style={{ color: 'white', fontWeight: '800', fontSize: '0.9rem', textAlign: 'center' }}>{opt.label}</div>
+                      <div style={{ color: 'white', fontWeight: '500', fontSize: '0.9rem', textAlign: 'center' }}>{opt.label}</div>
                       <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.72rem', textAlign: 'center', lineHeight: 1.3 }}>{opt.desc}</div>
                     </button>
                   ))}
@@ -1868,15 +1868,15 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 onClick={() => handleUseEventAsTemplate(suggestedPastEvent)}
                 style={{
                   width: '100%', textAlign: 'left', marginBottom: '1.5rem', padding: '1rem 1.2rem',
-                  borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                  borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
                   background: 'linear-gradient(135deg, rgba(34,197,94,0.14), rgba(34,197,94,0.04))',
                   border: '1px solid rgba(34,197,94,0.35)'
                 }}
               >
                 <div style={{ fontSize: '1.4rem', flexShrink: 0 }}>⚡</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: '#22c55e', fontWeight: '900', fontSize: '0.72rem', letterSpacing: '0.6px', marginBottom: '3px' }}>EVENTO RÁPIDO · EQUIPO Y SETLIST YA ARMADOS</div>
-                  <div style={{ color: 'white', fontWeight: '700', fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{suggestedPastEvent.name}</div>
+                  <div style={{ color: '#22c55e', fontWeight: '500', fontSize: '0.72rem', letterSpacing: '0.6px', marginBottom: '3px' }}>EVENTO RÁPIDO · EQUIPO Y SETLIST YA ARMADOS</div>
+                  <div style={{ color: 'white', fontWeight: '500', fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{suggestedPastEvent.name}</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginTop: '2px' }}>Copiado de {formatEventDate(suggestedPastEvent.date)} — revisa y ajusta antes de guardar</div>
                 </div>
                 <ChevronRight size={20} color="#22c55e" />
@@ -1885,7 +1885,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 1rem 0' }}>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '1.5px' }}>O DUPLICAR OTRO EVENTO PASADO</span>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontWeight: '500', letterSpacing: '0.5px' }}>O DUPLICAR OTRO EVENTO PASADO</span>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
@@ -1894,16 +1894,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 .filter(ev => ev.id !== suggestedPastEvent?.id)
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
               return (
-                <div style={{ maxHeight: '220px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }} className="custom-scrollbar">
+                <div style={{ maxHeight: '220px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }} className="custom-scrollbar">
                   {otherPastEvents.length === 0 ? (
                     <div style={{ padding: '1.5rem', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>No hay más eventos pasados</div>
                   ) : (
                     otherPastEvents.map(ev => (
                       <button key={ev.id} onClick={() => handleUseEventAsTemplate(ev)}
                         className="dropdown-item-custom"
-                        style={{ width: '100%', padding: '0.8rem 1rem', background: 'transparent', border: 'none', borderRadius: '10px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
+                        style={{ width: '100%', padding: '0.8rem 1rem', background: 'transparent', border: 'none', borderRadius: '12px', color: 'white', textAlign: 'left', marginBottom: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
                       >
-                        <span style={{ fontWeight: '700', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.name}</span>
+                        <span style={{ fontWeight: '500', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.name}</span>
                         <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', flexShrink: 0, background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: '20px' }}>{formatEventDate(ev.date)}</span>
                       </button>
                     ))
@@ -1917,7 +1917,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
       {showModal && createPortal((
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="glass-panel" style={{ width: '95%', maxWidth: '1050px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: '#1a2133', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="glass-panel" style={{ width: '95%', maxWidth: '1050px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: '#1c1c20', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h3 style={{ marginBottom: '1.5rem' }}>{editingEventId ? 'Editar' : 'Nuevo'} Evento</h3>
             <div className="modal-tabs" style={{ marginBottom: '1.5rem' }}>
                 {['info', 'equipo', 'setlist'].map(t => <button key={t} className={`modal-tab-btn ${modalTab === t ? 'active' : ''}`} onClick={() => setModalTab(t)}>{t.toUpperCase()}</button>)}
@@ -1925,24 +1925,24 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             {modalTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input className="input-field" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Nombre del Evento" style={{ width: '100%' }} />
-                <div style={{ padding: '0.8rem', background: 'rgba(59,130,246,0.1)', borderRadius: '10px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '700' }}>Fecha: {formatEventDate(eventDate)}</div>
+                <div style={{ padding: '0.8rem', background: 'rgba(120, 145, 185, 0.1)', borderRadius: '12px', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: '500' }}>Fecha: {formatEventDate(eventDate)}</div>
                 <input type="date" className="input-field" value={eventDate ? eventDate.split('T')[0] : ''} onChange={e => setEventDate(e.target.value)} style={{ width: '100%', colorScheme: 'dark' }} />
                 <textarea className="input-field" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción o Notas..." style={{ width: '100%', minHeight: '100px', resize: 'vertical' }} />
 
                 <div style={{ padding: '1rem', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'white', marginBottom: '10px' }}>¿Se puede declinar este evento?</div>
-                  <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', borderRadius: '10px', padding: '4px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'white', marginBottom: '10px' }}>¿Se puede declinar este evento?</div>
+                  <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '4px' }}>
                     <button
                       type="button"
                       onClick={() => setEventAllowDeclines(false)}
-                      style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '800', background: !eventAllowDeclines ? '#ef4444' : 'transparent', color: !eventAllowDeclines ? 'white' : 'var(--text-muted)', transition: 'all 0.15s' }}
+                      style={{ flex: 1, padding: '0.6rem', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500', background: !eventAllowDeclines ? '#ef4444' : 'transparent', color: !eventAllowDeclines ? 'white' : 'var(--text-muted)', transition: 'all 0.15s' }}
                     >
                       🚫 No se puede declinar
                     </button>
                     <button
                       type="button"
                       onClick={() => setEventAllowDeclines(true)}
-                      style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '800', background: eventAllowDeclines ? 'var(--primary)' : 'transparent', color: eventAllowDeclines ? 'white' : 'var(--text-muted)', transition: 'all 0.15s' }}
+                      style={{ flex: 1, padding: '0.6rem', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500', background: eventAllowDeclines ? 'var(--primary)' : 'transparent', color: eventAllowDeclines ? 'white' : 'var(--text-muted)', transition: 'all 0.15s' }}
                     >
                       ✍️ Declinar con razón
                     </button>
@@ -1950,8 +1950,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 </div>
 
                 {!editingEventId && (
-                  <div style={{ padding: '1rem', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '12px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '700', color: 'white' }}>
+                  <div style={{ padding: '1rem', background: 'rgba(167, 138, 194, 0.06)', border: '1px solid rgba(167, 138, 194, 0.2)', borderRadius: '12px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', color: 'white' }}>
                       <input type="checkbox" checked={recurWeekly} onChange={e => setRecurWeekly(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }} />
                       🔁 Repetir cada semana
                     </label>
@@ -1984,10 +1984,10 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   const blockedMembers = dateKey ? (members || []).filter(m => m.blocked_dates?.includes(dateKey)) : [];
                   if (!dateKey || blockedMembers.length === 0) return null;
                   return (
-                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '12px', padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                       <UserX size={20} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#ef4444', marginBottom: '4px' }}>
                           {blockedMembers.length} {blockedMembers.length === 1 ? 'persona no está disponible' : 'personas no están disponibles'} el {formatEventDate(eventDate)}
                         </div>
                         <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, wordBreak: 'break-word' }}>
@@ -1999,7 +1999,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 })()}
 
                 {/* 1. BANCO DE ROLES (Tienda) - AHORA ARRIBA */}
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Plus size={18} color="var(--primary)" /> Añadir al Equipo
                   </h3>
@@ -2015,8 +2015,8 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             const role = roleObj.label;
                             const count = roster.filter(r => r.instrument === role || r.instrument.startsWith(role + ' ')).length;
                             return (
-                              <div key={roleObj.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div key={roleObj.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   {roleObj.icon && <span>{roleObj.icon}</span>} {role}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '20px' }}>
@@ -2037,7 +2037,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   >
                                     -
                                   </button>
-                                  <span style={{ fontSize: '0.9rem', fontWeight: '800', width: '16px', textAlign: 'center', color: count > 0 ? 'white' : 'var(--text-muted)' }}>{count}</span>
+                                  <span style={{ fontSize: '0.9rem', fontWeight: '500', width: '16px', textAlign: 'center', color: count > 0 ? 'white' : 'var(--text-muted)' }}>{count}</span>
                                   <button
                                     onClick={() => {
                                       const suffix = count > 0 ? ` ${count + 1}` : '';
@@ -2075,7 +2075,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     <button 
                       onClick={() => setRoster(roster.filter(r => r.profile_id))}
                       className="btn-secondary" 
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       <X size={14} /> Limpiar Vacíos
                     </button>
@@ -2102,13 +2102,13 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                             <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '1px' }}>{groupName}</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                               {items.map(r => (
-                                <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                                <div key={r.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                                   <div style={{ fontSize: '1.5rem', background: 'rgba(255,255,255,0.03)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{getInstrumentIcon(r.instrument)}</div>
                                   <div style={{ flex: 1, minWidth: 0, paddingRight: '20px' }}>
                                     <input 
                                       className="input-field"
                                       placeholder="Nombre del rol..."
-                                      style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
+                                      style={{ fontSize: '0.75rem', fontWeight: '500', textTransform: 'uppercase', padding: '4px 8px', height: 'auto', background: 'transparent', border: 'none', marginBottom: '5px', width: '100%', color: 'var(--text-primary)' }}
                                       value={r.instrument}
                                       onChange={e => setRoster(roster.map(x => x.id === r.id ? { ...x, instrument: e.target.value } : x))}
                                     />
@@ -2164,7 +2164,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         const n = [...setlist];
                         [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]];
                         setSetlist(n);
-                      }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '4px', color: idx === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px', display: 'flex' }}>
+                      }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '6px', color: idx === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px', display: 'flex' }}>
                         <ChevronUp size={12} />
                       </button>
                       <button type="button" disabled={idx === setlist.length - 1} onClick={() => {
@@ -2172,7 +2172,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         const n = [...setlist];
                         [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]];
                         setSetlist(n);
-                      }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '4px', color: idx === setlist.length - 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)', cursor: idx === setlist.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex' }}>
+                      }} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '6px', color: idx === setlist.length - 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)', cursor: idx === setlist.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex' }}>
                         <ChevronDown size={12} />
                       </button>
                     </div>
@@ -2191,7 +2191,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                         className="input-field" 
                         value={item.selected_key || ''} 
                         onChange={e => { const n = [...setlist]; n[idx].selected_key = e.target.value; setSetlist(n); }}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.75rem' }}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', fontWeight: '500', fontSize: '0.75rem' }}
                         disabled={!item.song_id}
                       >
                         <option value="">Tono</option>
@@ -2239,7 +2239,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                 <div style={{
                   padding: '1rem',
                   marginBottom: '1.5rem',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   background: notifyMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                   border: `1px solid ${notifyMessage.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                   color: notifyMessage.type === 'success' ? '#4ade80' : '#f87171',
@@ -2257,7 +2257,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   disabled={dispatching}
                   style={{ 
                     padding: '1.2rem', 
-                    background: dispatching ? 'rgba(139, 92, 246, 0.05)' : 'rgba(139, 92, 246, 0.1)', 
+                    background: dispatching ? 'rgba(157, 141, 196, 0.05)' : 'rgba(157, 141, 196, 0.1)', 
                     border: '1px solid var(--primary)', 
                     color: dispatching ? 'rgba(255,255,255,0.5)' : 'white',
                     cursor: dispatching ? 'wait' : 'pointer'
@@ -2307,7 +2307,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       {pendingTemplate && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--primary)', animation: 'modalFadeIn 0.3s ease-out' }}>
-            <div style={{ background: 'rgba(59, 130, 246, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+            <div style={{ background: 'rgba(120, 145, 185, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Zap size={30} color="var(--primary)" />
             </div>
             <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>¿Cambiar a {pendingTemplate.label}?</h3>
@@ -2355,7 +2355,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2rem', border: '1px solid rgba(251,191,36,0.25)', animation: 'modalFadeIn 0.3s ease-out' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
               <Sparkles size={20} color="#fbbf24" />
-              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'white', margin: 0 }}>Buscar Reemplazo</h3>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '500', color: 'white', margin: 0 }}>Buscar Reemplazo</h3>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
               {(members.find(m => String(m.id) === String(replacementPicker.rosterEntry.profile_id))?.full_name?.split(' ')[0]) || 'Este integrante'} {replacementPicker.rosterEntry.status === 'pending' ? 'no confirmó su asistencia a tiempo' : 'declinó su lugar'} de <strong style={{ color: 'white' }}>{getBilingualName(replacementPicker.rosterEntry.instrument)}</strong> en <strong style={{ color: 'white' }}>{replacementPicker.event.name}</strong>. Los miembros marcados con ✨ son los sugeridos para este rol; los que están "Ocupado" tienen esa fecha bloqueada.
@@ -2375,7 +2375,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               onChange={(e) => setReplacementPicker({ ...replacementPicker, reason: e.target.value })}
               placeholder="Ej: Se le complicó el horario, cambio de última hora..."
               rows={2}
-              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '0.6rem', fontSize: '0.85rem', resize: 'vertical', fontFamily: 'inherit' }}
+              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px', padding: '0.6rem', fontSize: '0.85rem', resize: 'vertical', fontFamily: 'inherit' }}
             />
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '1rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
               <input
@@ -2399,7 +2399,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '2rem', border: '1px solid rgba(239,68,68,0.25)', animation: 'modalFadeIn 0.3s ease-out' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
               <X size={24} color="#ef4444" />
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white', margin: 0 }}>Justificar Declinación</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '500', color: 'white', margin: 0 }}>Justificar Declinación</h3>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
               Estás a punto de declinar tu participación como <strong>{getBilingualName(declineModal.instrument)}</strong>. Por favor, indícale al director el motivo por el cual no puedes asistir. Esta solicitud quedará pendiente de aprobación.
@@ -2414,7 +2414,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
               <button onClick={() => setDeclineModal({ isOpen: false, event: null, roleId: null, instrument: null, reason: '' })} className="btn-secondary" style={{ flex: 1, padding: '0.9rem' }}>
                 Cancelar
               </button>
-              <button onClick={submitDeclineReason} style={{ flex: 1, padding: '0.9rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '800', cursor: 'pointer' }}>
+              <button onClick={submitDeclineReason} style={{ flex: 1, padding: '0.9rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer' }}>
                 Enviar Justificación
               </button>
             </div>

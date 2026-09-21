@@ -274,7 +274,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
       const sampleRate = 44100;
       const beatsPerBar = beatsPerBarFromSignature(sequence.time_signature);
       const samplesPerBar = (sampleRate * 60 / sequence.bpm) * beatsPerBar;
-      const palette = ['#38bdf8', '#10b981', '#fbbf24', '#ef4444', '#a855f7', '#f97316', '#64748b'];
+      const palette = ['#77a5b9', '#10b981', '#fbbf24', '#ef4444', '#a78ac2', '#f97316', '#7d7d7c'];
 
       let cumulativeBar = 1;
       const generatedMarkers = detectedSections.map((label, i) => {
@@ -600,7 +600,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
             {drawingActive && (
               <>
                 <div className="cs-color-picker">
-                  {['#facc15', '#ef4444', '#3b82f6', '#1a1a2e'].map(color => (
+                  {['#facc15', '#ef4444', '#7891b9', '#1a1a2e'].map(color => (
                     <button key={color} className={`cs-color-dot ${tool === 'pen' && penColor === color ? 'cs-color-active' : ''}`} style={{ background: color }} onClick={() => { setPenColor(color); setTool('pen'); }} />
                   ))}
                 </div>
@@ -732,7 +732,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
 
                 {detectedSections.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '8px', width: '100%', boxSizing: 'border-box', padding: '0.5rem 0' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compases por sección (para el DAW)</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '500', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compases por sección (para el DAW)</span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {detectedSections.map((label, i) => (
                         <div key={`${label}-${i}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontSize: '0.8rem' }}>

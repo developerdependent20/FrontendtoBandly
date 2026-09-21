@@ -9,15 +9,15 @@ const INSTRUMENT_MAP = [
   { keywords: ['click', 'metronome', 'metro'],         type: 'click',    label: '🥁 Click',      color: '#ef4444' },
   { keywords: ['cue', 'cues'],                          type: 'cue',      label: '🔔 Cues',       color: '#f59e0b' },
   { keywords: ['ac gtr', 'acoustic', 'acustic', 'acgtr'], type: 'ac_gtr', label: '🎸 AC GTR',     color: '#22c55e' },
-  { keywords: ['e gtr', 'electric', 'dist', 'egtr', 'lead gtr', 'rhythm gtr'], type: 'e_gtr', label: '🎸 E GTR', color: '#3b82f6' },
-  { keywords: ['bass', 'bajo'],                          type: 'bass',     label: '🎸 Bajo',       color: '#2563eb' },
+  { keywords: ['e gtr', 'electric', 'dist', 'egtr', 'lead gtr', 'rhythm gtr'], type: 'e_gtr', label: '🎸 E GTR', color: '#f7f4ef' },
+  { keywords: ['bass', 'bajo'],                          type: 'bass',     label: '🎸 Bajo',       color: '#f7f4ef' },
   { keywords: ['keys', 'piano', 'pno', 'kb', 'keyboard'], type: 'keys', label: '🎹 Teclado',     color: '#06b6d4' },
   { keywords: ['drums', 'bateria', 'drum'],              type: 'drums',    label: '🥁 Batería',    color: '#f97316' },
   { keywords: ['vox', 'vocal', 'voice', 'voz', 'choir'], type: 'vocal', label: '🎙️ Vocal',       color: '#ec4899' },
-  { keywords: ['pad', 'synth', 'ambient'],               type: 'pads',     label: '🎹 Pads/Synth', color: '#a855f7' },
+  { keywords: ['pad', 'synth', 'ambient'],               type: 'pads',     label: '🎹 Pads/Synth', color: '#f7f4ef' },
   { keywords: ['strings', 'cuerdas', 'str', 'violin', 'cello'], type: 'strings', label: '🎻 Strings', color: '#14b8a6' },
   { keywords: ['perc', 'percussion', 'shaker', 'tamb'],  type: 'perc',     label: '🥁 Perc',       color: '#d97706' },
-  { keywords: ['fx', 'sfx', 'effect', 'riser', 'sweep'], type: 'fx',      label: '✨ FX',          color: '#6366f1' },
+  { keywords: ['fx', 'sfx', 'effect', 'riser', 'sweep'], type: 'fx',      label: '✨ FX',          color: '#f7f4ef' },
 ];
 
 function detectInstrument(fileName) {
@@ -29,7 +29,7 @@ function detectInstrument(fileName) {
       }
     }
   }
-  return { type: 'unknown', label: '🎵 ' + fileName.replace(/\.[^.]+$/, ''), color: '#64748b' };
+  return { type: 'unknown', label: '🎵 ' + fileName.replace(/\.[^.]+$/, ''), color: '#7d7d7c' };
 }
 
 // ─────────────────────────────────────────────
@@ -365,7 +365,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
               onDrop={handleDrop}
               style={{
                 border: isDragging ? '2px dashed var(--primary)' : '2px dashed rgba(255,255,255,0.2)',
-                background: isDragging ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                background: isDragging ? 'rgba(247, 244, 239, 0.06)' : 'transparent',
                 transition: 'all 0.2s'
               }}
             >
@@ -472,7 +472,7 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
               </div>
 
               {wouldExceedStorage && (
-                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '0.8rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '0.8rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '1px' }} />
                   <div style={{ fontSize: '0.8rem', color: '#fca5a5', lineHeight: 1.5 }}>
                     Este archivo ({(zipFile.size / (1024 * 1024)).toFixed(0)} MB) supera el almacenamiento disponible de tu organización ({Math.max(0, orgStorageLimitMb - orgStorageUsedMb).toFixed(0)} MB libres de {orgStorageLimitMb} MB). Libera espacio o haz upgrade de plan para poder subirlo.
@@ -491,10 +491,10 @@ export default function SequenceUploader({ song, orgId, session, onClose, onComp
             <div className="su-uploading" style={{ textAlign: 'center', padding: '3rem 0' }}>
               <div className="su-status-bar">
                 <Loader2 size={40} className="spin-slow" color="var(--daw-cyan)" />
-                <p style={{ marginTop: '1.5rem', fontWeight: '800' }}>{globalStatus}</p>
+                <p style={{ marginTop: '1.5rem', fontWeight: '500' }}>{globalStatus}</p>
               </div>
-              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginTop: '2rem', overflow: 'hidden' }}>
-                 <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #2563eb, #d946ef)', borderRadius: '10px' }} className="su-upload-progress-bar" />
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginTop: '2rem', overflow: 'hidden' }}>
+                 <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #fd429c, #ff6a4a)', borderRadius: '12px' }} className="su-upload-progress-bar" />
               </div>
             </div>
           )}
