@@ -219,7 +219,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))', zIndex: 2, pointerEvents: 'none' }}></div>
               <img 
-                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-04-29%20121603.png" 
+                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-09-21%20093312.png" 
                 alt="Pro Player Interface" 
                 style={{ 
                    width: '100%', 
@@ -240,6 +240,15 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <p className="statement-mini">{t.presenterMini}</p>
           <h2 className="section-title-large">{t.presenterTitle1} <span className="serif-accent">{t.presenterTitle2}</span></h2>
           <p className="section-subtitle">{t.presenterDesc}</p>
+        </div>
+
+        <div style={{ maxWidth: '1100px', margin: '0 auto 4rem', position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
+          <img
+            src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-09-21%20093656.png"
+            alt="Bandly Presenter"
+            loading="lazy"
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
