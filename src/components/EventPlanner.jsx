@@ -502,7 +502,14 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   const [pendingTemplate, setPendingTemplate] = useState(null);
   const [seqPlayerSong, setSeqPlayerSong] = useState(null);
   const [descModalEv, setDescModalEv] = useState(null);
-  const [selectedEventDetails, setSelectedEventDetails] = useState(null);
+  const [selectedEventSnapshot, setSelectedEventDetails] = useState(null);
+  // El detalle abierto se re-deriva de `events` para reflejar confirmaciones/cambios
+  // que llegan tras refreshData(); el snapshot solo sirve de respaldo.
+  const selectedEventDetails = useMemo(() => {
+    if (!selectedEventSnapshot) return null;
+    const live = (events || []).find(e => String(e.id) === String(selectedEventSnapshot.id));
+    return live ? { ...live } : selectedEventSnapshot;
+  }, [selectedEventSnapshot, events]);
   const [showNewEventPicker, setShowNewEventPicker] = useState(false);
   const [pendingEventDate, setPendingEventDate] = useState('');
   const [draggedSongIdx, setDraggedSongIdx] = useState(null);

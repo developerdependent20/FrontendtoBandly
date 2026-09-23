@@ -198,6 +198,29 @@ export default function PadBoard({ deviceChannels = 2 }) {
     return () => window.removeEventListener('keydown', down);
   }, [releaseAll]);
 
+  // ─── Puente con el Modo En Vivo (control remoto) ───────────────────────
+  // ProMixer recibe las órdenes del celular y las reenvía como eventos de
+  // window; así los pads se controlan con la misma lógica que un clic (mismo
+  // toggle, mismo motor) sin subir todo su estado al DAW.
+  const handleKeyRef = useRef(handleKey);
+  const releaseAllRef = useRef(releaseAll);
+  useEffect(() => { handleKeyRef.current = handleKey; releaseAllRef.current = releaseAll; });
+
+  useEffect(() => {
+    const onRemote = (e) => {
+      const d = e.detail || {};
+      if (d.type === 'key' && NOTES.includes(d.note)) handleKeyRef.current(d.note);
+      else if (d.type === 'release') releaseAllRef.current();
+      else if (d.type === 'volume' && Number.isFinite(d.value)) setWarmLevel(Math.min(1, Math.max(0, d.value)));
+    };
+    window.addEventListener('bandly:pad-remote', onRemote);
+    return () => window.removeEventListener('bandly:pad-remote', onRemote);
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('bandly:pad-status', { detail: { activeKey, volume: warmLevel } }));
+  }, [activeKey, warmLevel]);
+
   const isRust = engineMode === 'rust';
 
   return (

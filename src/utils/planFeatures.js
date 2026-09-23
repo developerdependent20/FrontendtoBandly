@@ -17,7 +17,7 @@ export const PLANS = [
     originalMonthly: 19,
     yearly: 59,
     originalYearly: 190,
-    features: ['Hasta 3 organizaciones', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Charts en PDF', 'Gestión de repertorios', 'Recursos por canción', 'Reproductor en la app'],
+    features: ['Bandly DAW (Windows y Mac)', 'Hasta 3 organizaciones', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Reproductor multitrack en web y celular', 'Charts en PDF y recursos por canción'],
     promo: true,
     recommended: true
   },
@@ -28,7 +28,7 @@ export const PLANS = [
     originalMonthly: 39,
     yearly: 145,
     originalYearly: 390,
-    features: ['Hasta 10 organizaciones', 'Hasta 75 usuarios', '45 GB almacenamiento', 'Todo lo de Starter', 'Sala de previsualización', 'Player de secuencias']
+    features: ['Todo lo de Starter', 'Bandly Presenter (letras en pantalla)', 'Hasta 10 organizaciones', 'Hasta 75 usuarios', '45 GB almacenamiento', 'Sala de previsualización']
   },
   {
     id: 'elite',
@@ -37,7 +37,7 @@ export const PLANS = [
     originalMonthly: 79,
     yearly: 310,
     originalYearly: 790,
-    features: ['Organizaciones ilimitadas', 'Usuarios ilimitados', '100 GB almacenamiento', 'Todo lo de Pro', 'Roles y permisos', 'Prioridad en soporte', 'Acceso anticipado']
+    features: ['Todo lo de Pro', 'Bandly Lights (luces DMX/Art-Net)', 'Organizaciones y usuarios ilimitados', '100 GB almacenamiento', 'Roles y permisos', 'Soporte prioritario y acceso anticipado']
   }
 ];
 

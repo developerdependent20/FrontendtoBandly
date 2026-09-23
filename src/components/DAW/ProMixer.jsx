@@ -13,10 +13,11 @@ import { OfflineManager } from '../../utils/offlineManager';
 import { alertDialog } from '../../utils/dialogService';
 import {
   makeTimelineMapper, toTimelineEvents, detectCueSections, mergeDetectedMarkers, stripClip, SECTION_PRESETS,
-  beatsPerBarFromSignature as lanesBeatsPerBar,
+  beatsPerBarFromSignature as lanesBeatsPerBar, displayName,
 } from '../../utils/timelineLanes';
 import { nameVariants } from '../../utils/cueSpeech';
 import { useSectionMidi } from '../../hooks/useSectionMidi';
+import { useLocalLightCues } from '../../hooks/useLocalLightCues';
 import './DAW.css';
 import * as Icons from 'lucide-react';
 
@@ -1333,44 +1334,6 @@ export default function ProMixer({ session, orgId }) {
     await safeInvoke('toggle_playback', { playing });
   }, []);
 
-  useEffect(() => {
-    if (!orgId) return;
-    const channel = supabase.channel(`daw_remote_${orgId}`)
-      .on('broadcast', { event: 'play_song' }, ({ payload }) => {
-        if (payload?.songId) handleRemotePlaySong(payload.songId);
-      })
-      .on('broadcast', { event: 'pause_song' }, () => handleRemoteSetPlaying(false))
-      .on('broadcast', { event: 'resume_song' }, () => handleRemoteSetPlaying(true))
-      .on('broadcast', { event: 'stop_song' }, () => handleStop())
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          // Ping inicial: así el celular sabe de inmediato que esta computadora
-          // está conectada y escuchando, sin esperar al primer cambio de canción.
-          channel.send({
-            type: 'broadcast',
-            event: 'daw_status',
-            payload: { songId: activeSong?.id || null, songTitle: activeSong?.title || null, isPlaying }
-          });
-        }
-      });
-    remoteChannelRef.current = channel;
-    return () => {
-      remoteChannelRef.current = null;
-      supabase.removeChannel(channel);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId, handleRemotePlaySong, handleRemoteSetPlaying, handleStop]);
-
-  // Cada vez que cambia la canción activa o el estado de play, avisamos al
-  // celular para que muestre "sonando ahora" en el lugar correcto.
-  useEffect(() => {
-    if (!remoteChannelRef.current) return;
-    remoteChannelRef.current.send({
-      type: 'broadcast',
-      event: 'daw_status',
-      payload: { songId: activeSong?.id || null, songTitle: activeSong?.title || null, isPlaying }
-    });
-  }, [activeSong, isPlaying]);
 
   // ── Arreglo no destructivo ────────────────────────────────────────────
   // Las secciones salen de los markers: cada marker abre una sección que
@@ -1525,6 +1488,122 @@ export default function ProMixer({ session, orgId }) {
     return list.findIndex(b => songPos >= b.start && songPos < b.end);
   }, [resolvedBlocks, sections, pitchRatio, playbackSample]);
 
+  // ── Modo En Vivo v2: control remoto completo desde el celular ─────────────
+  // Órdenes (celular → esta computadora, broadcast efímero): reproducir /
+  // pausar / detener, saltar a una sección o al bloque anterior/siguiente del
+  // arreglo, canción anterior/siguiente del setlist, y pads (tecla, soltar,
+  // volumen). Estado (esta computadora → celular): canción, secciones con la
+  // activa, setlist y pad sonando, para que el celular muestre lo real.
+  // Las órdenes leen siempre lo último vía ref, así el canal se suscribe una
+  // sola vez por organización.
+  const [padStatus, setPadStatus] = useState(() => ({
+    activeKey: null,
+    volume: parseFloat(localStorage.getItem('bandly_pad_volume') || '0.7'),
+  }));
+  useEffect(() => {
+    const onStatus = (e) => { if (e.detail) setPadStatus(e.detail); };
+    window.addEventListener('bandly:pad-status', onStatus);
+    return () => window.removeEventListener('bandly:pad-status', onStatus);
+  }, []);
+
+  const remoteSections = useMemo(
+    () => (arrangementActive ? resolvedBlocks : sections).map(b => ({
+      label: displayName(b.label) || '—',
+      color: b.color || '#f7f4ef',
+    })),
+    [arrangementActive, resolvedBlocks, sections]
+  );
+
+  const remoteStatus = useMemo(() => ({
+    songId: activeSong?.id || null,
+    songTitle: activeSong?.title || null,
+    isPlaying,
+    sections: remoteSections,
+    activeBlock: activeBlockIdx,
+    setlist: setlist.map(s => ({ id: s.id, title: s.title })),
+    pad: padStatus,
+  }), [activeSong, isPlaying, remoteSections, activeBlockIdx, setlist, padStatus]);
+
+  const remoteApi = useRef({});
+  // Solo guarda referencias en el ref (no llama nada): por eso corre sin deps.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    remoteApi.current = {
+      status: remoteStatus,
+      playSong: handleRemotePlaySong,
+      setPlaying: handleRemoteSetPlaying,
+      stop: handleStop,
+      playBlock: handlePlayBlock,
+      activeBlock: activeBlockIdx,
+      setlist,
+      activeSongId: activeSong?.id ?? null,
+      loadSong: handleSyncSong,
+      showPads,
+      setShowPads,
+    };
+  });
+
+  useEffect(() => {
+    if (!orgId) return;
+    const sendStatus = () => channelRef.send({ type: 'broadcast', event: 'daw_status', payload: remoteApi.current.status });
+    const padCmd = (detail) => {
+      const api = remoteApi.current;
+      const fire = () => window.dispatchEvent(new CustomEvent('bandly:pad-remote', { detail }));
+      if (api.showPads) { fire(); return; }
+      // El panel de pads estaba oculto (no está montado): se muestra y se
+      // espera a que cargue antes de mandarle la orden.
+      api.setShowPads(true);
+      setTimeout(fire, 900);
+    };
+    const step = (list, currentId, delta) => {
+      const idx = list.findIndex(x => String(x.id) === String(currentId));
+      const next = idx < 0 ? (delta > 0 ? 0 : list.length - 1) : idx + delta;
+      return list[next] || null;
+    };
+
+    const channelRef = supabase.channel(`daw_remote_${orgId}`)
+      .on('broadcast', { event: 'play_song' }, ({ payload }) => { if (payload?.songId) remoteApi.current.playSong(payload.songId); })
+      .on('broadcast', { event: 'pause_song' }, () => remoteApi.current.setPlaying(false))
+      .on('broadcast', { event: 'resume_song' }, () => remoteApi.current.setPlaying(true))
+      .on('broadcast', { event: 'stop_song' }, () => remoteApi.current.stop())
+      .on('broadcast', { event: 'jump_section' }, ({ payload }) => {
+        if (Number.isInteger(payload?.idx)) remoteApi.current.playBlock(payload.idx);
+      })
+      .on('broadcast', { event: 'next_section' }, () => remoteApi.current.playBlock(Math.max(0, remoteApi.current.activeBlock + 1)))
+      .on('broadcast', { event: 'prev_section' }, () => remoteApi.current.playBlock(Math.max(0, remoteApi.current.activeBlock - 1)))
+      // Cambiar de canción CARGA (queda lista, en pausa): nunca arranca audio
+      // por sorpresa en medio del show. El play es una orden aparte.
+      .on('broadcast', { event: 'next_song' }, () => {
+        const s = step(remoteApi.current.setlist, remoteApi.current.activeSongId, +1);
+        if (s) remoteApi.current.loadSong(s);
+      })
+      .on('broadcast', { event: 'prev_song' }, () => {
+        const s = step(remoteApi.current.setlist, remoteApi.current.activeSongId, -1);
+        if (s) remoteApi.current.loadSong(s);
+      })
+      .on('broadcast', { event: 'pad_key' }, ({ payload }) => { if (payload?.note) padCmd({ type: 'key', note: payload.note }); })
+      .on('broadcast', { event: 'pad_release' }, () => padCmd({ type: 'release' }))
+      .on('broadcast', { event: 'pad_volume' }, ({ payload }) => { if (Number.isFinite(payload?.value)) padCmd({ type: 'volume', value: payload.value }); })
+      // Un celular que se conecta tarde pide el estado actual en vez de esperar
+      // a que algo cambie.
+      .on('broadcast', { event: 'request_status' }, sendStatus)
+      .subscribe((status) => { if (status === 'SUBSCRIBED') sendStatus(); });
+    remoteChannelRef.current = channelRef;
+    // Señal de vida: el celular la usa para saber que este DAW sigue abierto.
+    const heartbeat = setInterval(sendStatus, 5000);
+    return () => {
+      clearInterval(heartbeat);
+      remoteChannelRef.current = null;
+      supabase.removeChannel(channelRef);
+    };
+  }, [orgId]);
+
+  // Cada cambio de canción, sección, play, setlist o pad se avisa al celular.
+  useEffect(() => {
+    if (!remoteChannelRef.current) return;
+    remoteChannelRef.current.send({ type: 'broadcast', event: 'daw_status', payload: remoteStatus });
+  }, [remoteStatus]);
+
   // ── Líneas: Secciones / Letras / Luces ─────────────────────────────────
   const timelineMapper = useMemo(() => makeTimelineMapper(arrangementBlocks, pitchRatio), [arrangementBlocks, pitchRatio]);
   const lyricEvents = useMemo(() => toTimelineEvents(timelineLanes.lyrics, timelineMapper), [timelineLanes.lyrics, timelineMapper]);
@@ -1578,6 +1657,10 @@ export default function ProMixer({ session, orgId }) {
       if (current.label) sendActiveMarker(current.label);
     }
   }, [playbackSample, isPlaying, orgId, timelineMarkers, lightEvents, lyricEvents, lyricSlides, sendActiveMarker]);
+
+  // Misma PC que Bandly Lights: además de Supabase, los cues viajan por UDP local
+  // y se agendan al instante exacto (ver useLocalLightCues).
+  useLocalLightCues({ isPlaying, playbackSample, sampleRate: playbackSR, timelineMarkers, lightEvents, bpm: metronome.bpm });
 
   const persistMarkers = useCallback(async (nextMarkers) => {
     setMarkers(nextMarkers);

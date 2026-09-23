@@ -106,8 +106,8 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
             onClick={() => {
               if (isTauri()) {
                 const plan = (profile?.organizations?.plan || 'free').toLowerCase();
-                if (plan === 'free' || plan === 'starter') {
-                  alertDialog("La App de Escritorio (DAW) es una herramienta profesional exclusiva para planes Pro y Elite. Haz upgrade en la versión web para desbloquearla.");
+                if (plan === 'free') {
+                  alertDialog("La App de Escritorio (DAW) está incluida desde el plan Starter. Haz upgrade en la versión web para desbloquearla.");
                   return;
                 }
               }

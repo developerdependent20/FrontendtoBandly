@@ -1,6 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { landingDict } from './landingDict';
-import { Speaker, Activity, Cloud, Calendar as CalendarIcon, Music, ShieldCheck, Crown, CheckCircle2, Monitor, Zap, Tv, Image as ImageIcon, Lightbulb, Disc3, Smartphone } from 'lucide-react';
+import { PLANS } from '../utils/planFeatures';
+import { Music, ShieldCheck, Crown, Zap, Tv, Image as ImageIcon, Lightbulb, Smartphone, Piano, FileText, CalendarCheck } from 'lucide-react';
+
+const SUPABASE_IMG = 'https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/';
+const DAW_IMG = `${SUPABASE_IMG}Captura%20de%20pantalla%202026-09-21%20093312.png`;
+const PRESENTER_IMG = `${SUPABASE_IMG}Captura%20de%20pantalla%202026-09-21%20093656.png`;
+
+const FRAME_STYLE = {
+  position: 'relative',
+  overflow: 'hidden',
+  borderRadius: '20px',
+  boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)'
+};
+
+const badgeHover = {
+  onMouseOver: e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.opacity = '1'; },
+  onMouseOut: e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.opacity = '0.7'; }
+};
+const badgeStyle = { height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 };
+
+const PLAN_ORDER = ['free', 'starter', 'pro', 'elite'];
+const PLAN_ICON_COLOR = { starter: 'var(--primary)', pro: 'var(--accent)', elite: 'var(--accent)' };
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = useState('annual');
@@ -22,143 +43,75 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
     if (el) el.scrollIntoView({ behavior: 'instant' });
   }, []);
 
+  const isAnnual = billingPeriod === 'annual';
+  const chooseLabel = { starter: t.chooseStarter, pro: t.choosePro, elite: t.chooseElite };
+
   return (
     <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
-      <div className="hero-decorations">
-        {/* Eliminados elementos distractores para un look más limpio */}
-      </div>
-      
-        <nav className="landing-nav">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <img 
-              src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" 
-              alt="Bandly" 
-              style={{ height: '65px', width: 'auto' }}
-            />
-          </div>
+      <div className="hero-decorations" />
 
-          <div className="landing-nav-center hide-mobile">
-            <a href="#multitrack">{t.navFeatures}</a>
-            <a href="#pricing">{t.navPricing}</a>
-          </div>
+      <nav className="landing-nav">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <img
+            src={`${SUPABASE_IMG}Bandly%20nuevo.png`}
+            alt="Bandly"
+            style={{ height: '65px', width: 'auto' }}
+          />
+        </div>
 
-          <div className="landing-nav-links">
-            {/* Selector: muestra ambos idiomas, el ACTIVO resaltado (antes mostraba el destino y confundía) */}
-            <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: lang === 'es' ? 'white' : 'rgba(255,255,255,0.35)' }}>ES</span>
-              <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
-              <span style={{ color: lang === 'en' ? 'white' : 'rgba(255,255,255,0.35)' }}>EN</span>
-            </button>
-            <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>{t.btnLogin}</button>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
-          </div>
-        </nav>
+        <div className="landing-nav-center hide-mobile">
+          <a href="#multitrack">{t.navFeatures}</a>
+          <a href="#pricing">{t.navPricing}</a>
+        </div>
 
+        <div className="landing-nav-links">
+          {/* Selector: muestra ambos idiomas, el ACTIVO resaltado (antes mostraba el destino y confundía) */}
+          <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: lang === 'es' ? 'white' : 'rgba(255,255,255,0.35)' }}>ES</span>
+            <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
+            <span style={{ color: lang === 'en' ? 'white' : 'rgba(255,255,255,0.35)' }}>EN</span>
+          </button>
+          <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>{t.btnLogin}</button>
+          <button onClick={() => onGetStarted('signup')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
+        </div>
+      </nav>
+
+      {/* Hero */}
       <main className="landing-hero-centered">
         <div className="hero-content-full">
           <h1 className="hero-main-title-large" style={{ marginTop: '3rem' }}>
-            {t.heroMain} <br/>
+            {t.heroMain} <br />
             <span className="serif-accent">{t.heroSub}</span>
           </h1>
-          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-muted)', maxWidth: '700px', margin: '1.5rem auto 0 auto', lineHeight: '1.6', fontWeight: '500' }}>
+          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-muted)', maxWidth: '640px', margin: '1.5rem auto 0 auto', lineHeight: '1.6', fontWeight: '500' }}>
             {t.heroDesc}
           </p>
-          <p className="hero-clarifier" style={{ marginTop: '2rem', opacity: 0.6 }}>
-            <span>{t.heroTags.split(' • ')[0]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[1]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[2]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[3]}</span> <span className="dot">•</span> <span>{t.heroTags.split(' • ')[4]}</span>
-          </p>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', marginTop: '3.5rem' }}>
-            <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '500' }}>{t.btnStart}</button>
-              <button onClick={() => document.getElementById('pricing').scrollIntoView({behavior:'smooth'})} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '500' }}>{t.btnViewPlans}</button>
-            </div>
+
+          <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '3rem' }}>
+            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '500' }}>{t.btnStart}</button>
+            <button onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '500' }}>{t.btnViewPlans}</button>
           </div>
-          
-          <div className="compatibility-badges-centered" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
+
+          <div className="compatibility-badges-centered" style={{ marginTop: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
             <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.availableOn}</span>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-              <img 
-                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/BadgeMacOS.png" 
-                alt="MacOS" 
-                style={{ height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
-                onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
-                onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
-              />
-              <img 
-                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/images.png" 
-                alt="Windows" 
-                style={{ height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
-                onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
-                onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
-              />
-              <img 
-                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/0w8ONb9ouWJ2GDFdyHnwlzOy90.avif" 
-                alt="Google Play" 
-                style={{ height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 }} 
-                onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.3)'; e.currentTarget.style.opacity='1'; }}
-                onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.opacity='0.7'; }}
-              />
-            </div>
-            
-            <div className="purpose-grid" style={{ 
-              marginTop: '4rem', 
-              maxWidth: '900px', 
-              width: '100%',
-              textAlign: 'left'
-            }}>
-              {/* Web Card */}
-              <div className="hover-scale" style={{ 
-                padding: '2rem', 
-                background: 'rgba(255, 255, 255, 0.02)', 
-                border: '1px solid rgba(255, 255, 255, 0.05)', 
-                borderRadius: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)' }}><Cloud size={32} strokeWidth={1.5} /></div>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '500', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.webTitle}</h3>
-                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                    {t.webDesc}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Desktop Card */}
-              <div className="hover-scale" style={{ 
-                padding: '2rem', 
-                background: 'rgba(247, 244, 239, 0.03)', 
-                border: '1px solid rgba(247, 244, 239, 0.18)', 
-                borderRadius: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}>
-                <div style={{ color: 'var(--primary)' }}><Monitor size={32} strokeWidth={1.5} /></div>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '500', marginBottom: '0.5rem', color: '#fff', letterSpacing: '-0.5px' }}>{t.desktopTitle}</h3>
-                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                    {lang === 'es' ? <>{t.desktopDesc.split('reproducir')[0]}<strong>reproducir</strong>{t.desktopDesc.split('reproducir')[1]}</> : <>{t.desktopDesc.split('play')[0]}<strong>play</strong>{t.desktopDesc.split('play')[1]}</>}
-                  </p>
-                </div>
-              </div>
+              <img src={`${SUPABASE_IMG}BadgeMacOS.png`} alt="macOS" style={badgeStyle} {...badgeHover} />
+              <img src={`${SUPABASE_IMG}images.png`} alt="Windows" style={badgeStyle} {...badgeHover} />
+              <img src={`${SUPABASE_IMG}0w8ONb9ouWJ2GDFdyHnwlzOy90.avif`} alt="Google Play" style={badgeStyle} {...badgeHover} />
             </div>
           </div>
         </div>
       </main>
 
-      {/* Frase Heroica Expandida (Premium Statement) */}
+      {/* La diferencia de Bandly: un marcador = audio + letra + luces */}
       <section className="premium-statement">
         <div className="statement-content">
           <p className="statement-mini">{t.premiumMini}</p>
           <h2 className="statement-main">
-            {t.premiumMain1} <br/>
+            {t.premiumMain1} <br />
             {t.premiumMain2} <span className="serif-accent">{t.premiumMain3}</span>
           </h2>
-          <p className="statement-support">
-            {t.premiumSupport1} <span className="serif-accent">{t.premiumSupport2}</span> {t.premiumSupport3}
-          </p>
+          <p className="statement-support">{t.premiumSupport}</p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', marginTop: '3.5rem' }}>
             {[
@@ -185,26 +138,17 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         </div>
       </section>
 
-      {/* Pro Player Showcase Section */}
+      {/* Bandly DAW */}
       <section id="multitrack" className="pro-player-showcase">
         <div className="pro-player-flex">
           <div style={{ flex: '1', minWidth: '300px', order: 2 }}>
             <h2 className="showcase-title" style={{ textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
-              {t.proPlayerTitle1} <br className="hide-mobile" />
-              <span className="serif-accent" style={{ fontSize: '1.1em' }}>{t.proPlayerTitle2}</span>
+              {t.dawTitle1} <br className="hide-mobile" />
+              <span className="serif-accent" style={{ fontSize: '1.1em' }}>{t.dawTitle2}</span>
             </h2>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '2rem' }}>
-              {t.proPlayerDesc}
-            </p>
+            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.7', marginBottom: '2rem' }}>{t.dawDesc}</p>
             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {[
-                { title: t.proFeat1, desc: t.proFeat1Desc },
-                { title: t.proFeat2, desc: t.proFeat2Desc },
-                { title: t.proFeat3, desc: t.proFeat3Desc },
-                { title: t.proFeat4, desc: t.proFeat4Desc },
-                { title: t.proFeat5, desc: t.proFeat5Desc },
-                { title: t.proFeat6, desc: t.proFeat6Desc }
-              ].map((item, i) => (
+              {t.dawFeats.map((item, i) => (
                 <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <div style={{ color: 'var(--primary)', fontWeight: '500' }}>✓</div>
                   <div>
@@ -216,25 +160,20 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             </ul>
           </div>
           <div style={{ flex: '1.2', minWidth: '300px', order: 1 }}>
-            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
+            <div style={FRAME_STYLE}>
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))', zIndex: 2, pointerEvents: 'none' }}></div>
-              <img 
-                src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-09-21%20093312.png" 
-                alt="Pro Player Interface" 
-                style={{ 
-                   width: '100%', 
-                   height: 'auto', 
-                   display: 'block',
-                   borderRadius: '12px',
-                   border: '1px solid rgba(255,255,255,0.05)'
-                }} 
+              <img
+                src={DAW_IMG}
+                alt={t.dawAlt}
+                loading="lazy"
+                style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bandly Presenter Showcase */}
+      {/* Bandly Presenter */}
       <section className="presenter-showcase" style={{ padding: '8rem 2rem', background: 'rgba(247, 244, 239, 0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
           <p className="statement-mini">{t.presenterMini}</p>
@@ -242,31 +181,24 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <p className="section-subtitle">{t.presenterDesc}</p>
         </div>
 
-        <div style={{ maxWidth: '1100px', margin: '0 auto 4rem', position: 'relative', overflow: 'hidden', borderRadius: '20px', boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)' }}>
-          <img
-            src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura%20de%20pantalla%202026-09-21%20093656.png"
-            alt="Bandly Presenter"
-            loading="lazy"
-            style={{ width: '100%', height: 'auto', display: 'block' }}
-          />
+        <div style={{ ...FRAME_STYLE, maxWidth: '1100px', margin: '0 auto 4rem' }}>
+          <img src={PRESENTER_IMG} alt={t.presenterAlt} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
-          {[
-            { icon: <Zap size={28} color="#f7f4ef" />, title: t.presenterFeat1, desc: t.presenterFeat1Desc },
-            { icon: <Tv size={28} color="#f7f4ef" />, title: t.presenterFeat2, desc: t.presenterFeat2Desc },
-            { icon: <ImageIcon size={28} color="#f7f4ef" />, title: t.presenterFeat3, desc: t.presenterFeat3Desc }
-          ].map((item, i) => (
+          {[Zap, Tv, ImageIcon].map((Icon, i) => (
             <div key={i} className="hover-scale" style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'rgba(247, 244, 239, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '500', margin: 0, color: '#fff' }}>{item.title}</h3>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.88rem', lineHeight: '1.6' }}>{item.desc}</p>
+              <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'rgba(247, 244, 239, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={28} color="#f7f4ef" />
+              </div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '500', margin: 0, color: '#fff' }}>{t.presenterFeats[i].title}</h3>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.88rem', lineHeight: '1.6' }}>{t.presenterFeats[i].desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Mobile App Virtues Showcase */}
+      {/* Equipo / celular */}
       <section className="app-virtues-showcase" style={{ padding: '8rem 2rem', background: '#101012', overflow: 'hidden' }}>
         <style>{`
           .virtues-gallery {
@@ -299,7 +231,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           .virtue-right {
             max-width: 260px;
             opacity: 0.7;
-            transform: scale(0.85); /* Un poco más pequeña proporcional a la izquierda */
+            transform: scale(0.85);
           }
           .virtue-center {
             max-width: 320px;
@@ -326,285 +258,112 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
         `}</style>
 
         <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
-          <h2 className="section-title-large">{t.mobileTitle1} <span className="serif-accent">{t.mobileTitle2}</span></h2>
-          <p className="section-subtitle">{t.mobileDesc}</p>
+          <h2 className="section-title-large">{t.teamTitle1} <span className="serif-accent">{t.teamTitle2}</span></h2>
+          <p className="section-subtitle">{t.teamDesc}</p>
         </div>
 
         <div className="virtues-gallery">
           <div className="virtue-img-wrapper virtue-left">
-            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM%20(1).jpeg" alt="Dashboard Móvil" />
+            <img src={`${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM%20(1).jpeg`} alt={t.teamAlts[0]} loading="lazy" />
           </div>
-
           <div className="virtue-img-wrapper virtue-center">
-            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM.jpeg" alt="Player Móvil" />
+            <img src={`${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM.jpeg`} alt={t.teamAlts[1]} loading="lazy" />
           </div>
-
           <div className="virtue-img-wrapper virtue-right">
-            <img src="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/WhatsApp%20Image%202026-04-30%20at%2011.19.05%20PM.jpeg" alt="Repertorios Móviles" />
+            <img src={`${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.19.05%20PM.jpeg`} alt={t.teamAlts[2]} loading="lazy" />
           </div>
         </div>
-      </section>
-      {/* Features Grid */}
-      <section className="landing-features" style={{ padding: '8rem 2rem' }}>
-        <div className="features-flex-container">
-          <div className="feature-card">
-            <div className="feature-icon"><Speaker size={32} /></div>
-            <h3>{t.feat1Title}</h3>
-            <p>{t.feat1Desc}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon"><Activity size={32} /></div>
-            <h3>{t.feat2Title}</h3>
-            <p>{t.feat2Desc}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon"><Cloud size={32} /></div>
-            <h3>{t.feat3Title}</h3>
-            <p>{t.feat3Desc}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon"><CalendarIcon size={32} /></div>
-            <h3>{t.feat4Title}</h3>
-            <p>{t.feat4Desc}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon"><Music size={32} /></div>
-            <h3>{t.feat5Title}</h3>
-            <p>{t.feat5Desc}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon"><Disc3 size={32} /></div>
-            <h3>{t.feat6Title}</h3>
-            <p>{t.feat6Desc}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon"><Smartphone size={32} /></div>
-            <h3>{t.feat7Title}</h3>
-            <p>{t.feat7Desc}</p>
-          </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.8rem', maxWidth: '900px', margin: '4rem auto 0' }}>
+          {[Smartphone, Piano, FileText, CalendarCheck].map((Icon, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.1rem', borderRadius: '50px', background: 'rgba(247, 244, 239, 0.03)', border: '1px solid rgba(247, 244, 239, 0.14)', color: '#fff', fontSize: '0.88rem' }}>
+              <Icon size={16} color="var(--primary)" />
+              {t.teamChips[i]}
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Comparison Section (The "Why Bandly" Factor) */}
-      <section className="comparison-section" style={{ padding: '8rem 2rem', background: 'rgba(255,255,255,0.02)' }}>
-        <div className="section-header-centered">
-          <h2 className="section-title-large">{t.whyTitle} <span className="serif-accent" translate="no">Bandly</span>?</h2>
-          <p className="section-subtitle">{t.whyDesc}</p>
-        </div>
-
-        <div style={{ maxWidth: '1000px', margin: '4rem auto 0', overflowX: 'auto' }}>
-          <table className="comparison-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#fff', fontSize: '1rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <th style={{ textAlign: 'left', padding: '1.5rem', opacity: 0.5 }}>{t.tableFeat}</th>
-                <th style={{ textAlign: 'center', padding: '1.5rem', background: 'rgba(247, 244, 239, 0.06)', color: 'var(--primary)', fontWeight: 500 }}>BANDLY</th>
-                <th style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>{t.tableOthers}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { feature: t.f1, bandly: true, others: t.f1O },
-                { feature: t.f2, bandly: t.f2B, others: t.f2O },
-                { feature: t.f3, bandly: t.f3B, others: t.f3O },
-                { feature: t.f4, bandly: t.f4B, others: t.f4O },
-                { feature: t.f5, bandly: true, others: true },
-                { feature: t.f6, bandly: "$39/mes", others: "$135+/mes" }
-              ].map((item, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '1.2rem', fontWeight: 500 }}>{item.feature}</td>
-                  <td style={{ padding: '1.2rem', textAlign: 'center', background: 'rgba(247, 244, 239, 0.03)' }}>
-                    {item.bandly === true ? <CheckCircle2 size={20} color="var(--primary)" style={{margin:'0 auto'}} /> : <span style={{color:'var(--primary)', fontWeight: 500}}>{item.bandly}</span>}
-                  </td>
-                  <td style={{ padding: '1.2rem', textAlign: 'center', opacity: 0.6 }}>
-                    {item.others}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
+      {/* Planes */}
       <section id="pricing" className="landing-pricing-section">
         <div className="section-header-centered">
           <h2 className="section-title-large">{t.pricingTitle}</h2>
           <p className="section-subtitle">{t.pricingDesc}</p>
-          
-          {/* Billing Toggle */}
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '1rem', marginBottom: '1rem' }}>
-            <span style={{ color: billingPeriod === 'monthly' ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem' }}>{t.monthly}</span>
-            <div 
-              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
-              style={{ 
-                width: '50px', 
-                height: '26px', 
-                background: 'rgba(255,255,255,0.1)', 
-                borderRadius: '20px', 
-                position: 'relative', 
-                cursor: 'pointer',
-                border: '1px solid rgba(255,255,255,0.1)'
-              }}
+            <span style={{ color: !isAnnual ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem' }}>{t.monthly}</span>
+            <div
+              onClick={() => setBillingPeriod(isAnnual ? 'monthly' : 'annual')}
+              style={{ width: '50px', height: '26px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', position: 'relative', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              <div style={{ 
-                width: '20px', 
-                height: '20px', 
-                background: 'var(--primary)', 
-                borderRadius: '50%', 
-                position: 'absolute', 
-                top: '2px', 
-                left: billingPeriod === 'monthly' ? '3px' : '25px',
-                transition: '0.3s ease',
-                boxShadow: '0 0 10px var(--primary)'
-              }} />
+              <div style={{ width: '20px', height: '20px', background: 'var(--primary)', borderRadius: '50%', position: 'absolute', top: '2px', left: isAnnual ? '25px' : '3px', transition: '0.3s ease', boxShadow: '0 0 10px var(--primary)' }} />
             </div>
-            <span style={{ color: billingPeriod === 'annual' ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Anual
+            <span style={{ color: isAnnual ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {t.annual}
               <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 500 }}>{t.save}</span>
             </span>
           </div>
         </div>
 
         <div className="pricing-grid">
-          {/* Plan Básico */}
-          <div className="pricing-card">
-            <div className="pricing-badge">BÁSICO</div>
-            <h3>{t.freePlan}</h3>
-            <div className="price">0<span>{t.monthLabel}</span></div>
-            <p style={{fontSize:'0.75rem', opacity:0.6, marginTop:'-1rem', marginBottom:'1.5rem'}}>{t.freeSub}</p>
-            <ul className="pricing-features">
-              <li><ShieldCheck size={16} /> {t.f_band1}</li>
-              <li><ShieldCheck size={16} /> {t.f_user10}</li>
-              <li><ShieldCheck size={16} /> {t.f_stor300}</li>
-              <li><ShieldCheck size={16} /> {t.f_cal}</li>
-              <li><ShieldCheck size={16} /> {t.f_rep}</li>
-              <li><ShieldCheck size={16} /> Letras</li>
-              <li><ShieldCheck size={16} /> {t.f_yt}</li>
-            </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.ctaBtn}</button>
-          </div>
+          {PLAN_ORDER.map(id => {
+            const plan = PLANS.find(p => p.id === id);
+            const copy = t.plans[id];
+            const isFree = id === 'free';
+            const featured = id === 'starter';
+            const price = isAnnual ? plan.yearly : plan.monthly;
+            const original = isAnnual ? plan.originalYearly : plan.originalMonthly;
+            const iconColor = PLAN_ICON_COLOR[id];
+            const Icon = isFree ? ShieldCheck : Crown;
 
-          {/* Plan Starter */}
-          <div className="pricing-card featured">
-            <div className="pricing-badge-popular" style={{background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)', animation: 'pulse 2s infinite'}}>🔥 OFERTA DE LANZAMIENTO</div>
-            <h3>{t.starterPlan}</h3>
-            <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-              {billingPeriod === 'monthly' ? (
-                <>
-                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$19</span>
-                  $7
-                </>
-              ) : (
-                <>
-                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$190</span>
-                  $59
-                </>
-              )}
-              <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
-            </div>
-            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? t.starterSubMo : t.starterSubYr}
-            </p>
-            <ul className="pricing-features">
-              <li style={{ alignItems: 'flex-start', gap: '10px' }}>
-                <Crown size={16} color="var(--primary)" style={{ marginTop: '3px', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontWeight: 500, color: '#fff' }}>{t.f_daw}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_dawDesc}</div>
-                </div>
-              </li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_band3}</li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_user25}</li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_stor10}</li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_pdf}</li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_mgr}</li>
-              <li><Crown size={16} color="var(--primary)" /> {t.f_res}</li>
-            </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary">{t.chooseStarter}</button>
-          </div>
+            return (
+              <div key={id} className={`pricing-card${featured ? ' featured' : ''}`}>
+                {featured && (
+                  <div className="pricing-badge-popular" style={{ background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)', animation: 'pulse 2s infinite' }}>{t.launchOffer}</div>
+                )}
+                <h3>{copy.name}</h3>
+                <p style={{ margin: '0 0 1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', minHeight: '2.6em' }}>{copy.tag}</p>
 
-          {/* Plan Pro */}
-          <div className="pricing-card">
-            <div className="pricing-badge">PRO</div>
-            <h3>{t.proPlan}</h3>
-            <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-              {billingPeriod === 'monthly' ? (
-                <>
-                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$39</span>
-                  $17
-                </>
-              ) : (
-                <>
-                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$390</span>
-                  $145
-                </>
-              )}
-              <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
-            </div>
-            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? t.proSubMo : t.proSubYr}
-            </p>
-            <ul className="pricing-features">
-              <li style={{ alignItems: 'flex-start', gap: '10px' }}>
-                <Crown size={16} color="var(--accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontWeight: 500, color: '#fff' }}>{t.f_presenterHead}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_presenterHeadDesc}</div>
+                <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+                  {original && (
+                    <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>${original}</span>
+                  )}
+                  {isFree ? '$0' : `$${price}`}
+                  <span style={{ marginBottom: '6px' }}>{isFree || !isAnnual ? t.monthLabel : t.yearLabel}</span>
                 </div>
-              </li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_band10}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_user75}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_stor45}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_allStarter}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_preview}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_seqPlayer}</li>
-            </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.choosePro}</button>
-          </div>
+                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '-1rem', marginBottom: '1.5rem', minHeight: '1.2em' }}>
+                  {!isFree && (isAnnual ? t.equalsPerMonth((plan.yearly / 12).toFixed(1)) : t.billedMonthly)}
+                </p>
 
-          {/* Plan Elite */}
-          <div className="pricing-card">
-            <div className="pricing-badge">ELITE</div>
-            <h3>{t.elitePlan}</h3>
-            <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-              {billingPeriod === 'monthly' ? (
-                <>
-                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$79</span>
-                  $37
-                </>
-              ) : (
-                <>
-                  <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>$790</span>
-                  $310
-                </>
-              )}
-              <span style={{ marginBottom: '6px' }}>{billingPeriod === 'monthly' ? t.monthLabel : t.yearLabel}</span>
-            </div>
-            <p style={{fontSize:'0.75rem', opacity:0.8, marginTop:'-1rem', marginBottom:'1.5rem'}}>
-              {billingPeriod === 'monthly' ? t.eliteSubMo : t.eliteSubYr}
-            </p>
-            <ul className="pricing-features">
-              <li style={{ alignItems: 'flex-start', gap: '10px' }}>
-                <Crown size={16} color="var(--accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontWeight: 500, color: '#fff' }}>{t.f_lightsHead}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{t.f_lightsHeadDesc}</div>
-                </div>
-              </li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_bandUl}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_userUl}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_stor100}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_allPro}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_roles}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_support}</li>
-              <li><Crown size={16} color="var(--accent)" /> {t.f_early}</li>
-            </ul>
-            <button onClick={() => onGetStarted('signup')} className="btn-secondary-outline">{t.chooseElite}</button>
-          </div>
+                <ul className="pricing-features">
+                  {copy.star && (
+                    <li style={{ alignItems: 'flex-start', gap: '10px' }}>
+                      <Crown size={16} color={iconColor} style={{ marginTop: '3px', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 500, color: '#fff' }}>{copy.star.title}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{copy.star.desc}</div>
+                      </div>
+                    </li>
+                  )}
+                  {copy.features.map((f, i) => (
+                    <li key={i}><Icon size={16} color={iconColor} style={{ flexShrink: 0 }} /> {f}</li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => onGetStarted('signup')}
+                  className={featured ? 'btn-primary' : 'btn-secondary-outline'}
+                  style={{ marginTop: 'auto' }}
+                >
+                  {isFree ? t.ctaFree : chooseLabel[id]}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* CTA Final */}
+      {/* CTA final */}
       <section className="landing-cta-box" style={{ padding: '8rem 2rem' }}>
         <h2 style={{ fontSize: '3rem', letterSpacing: '-2px' }}>{t.ctaTitle}</h2>
         <p style={{ fontSize: '1.2rem', marginBottom: '2.5rem' }}>{t.ctaDesc}</p>
