@@ -12,6 +12,11 @@ import VisualCalendar from './VisualCalendar';
 import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import { DEFAULT_DEPARTMENTS, DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
+const BACKING_ROLES = { melodia: 'Apoya melodía', segunda: 'Segunda voz' };
+const backingText = (es, members) => (es.backing_vocals || [])
+  .map(v => { const m = members?.find(x => x.id === v.member_id); return m ? `${m.full_name?.split(' ')[0]} (${BACKING_ROLES[v.role] || 'Coro'})` : null; })
+  .filter(Boolean).join(', ');
+
 import EventDayStatus from './EventDayStatus';
 import { alertDialog, confirmDialog, promptDialog } from '../utils/dialogService';
 import FirstUseTip from './FirstUseTip';
@@ -596,12 +601,12 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     const setlistHtml = sortedSongs.length === 0 ? '' : `
       <h3>Setlist</h3>
       <table>
-        <thead><tr><th>#</th><th>Canción</th><th>Dirige</th><th>Tono</th></tr></thead>
+        <thead><tr><th>#</th><th>Canción</th><th>Dirige</th><th>Coros</th><th>Tono</th></tr></thead>
         <tbody>
           ${sortedSongs.map((es, i) => {
             const song = songs?.find(s => s.id === es.song_id);
             const leader = members?.find(m => m.id === es.lead_id);
-            return `<tr><td>${i + 1}</td><td>${escapeHtml(song?.title || 'Desconocida')}</td><td>${escapeHtml(leader?.full_name || '--')}</td><td>${escapeHtml(es.selected_key || '--')}</td></tr>`;
+            return `<tr><td>${i + 1}</td><td>${escapeHtml(song?.title || 'Desconocida')}</td><td>${escapeHtml(leader?.full_name || '--')}</td><td>${escapeHtml(backingText(es, members) || '--')}</td><td>${escapeHtml(es.selected_key || '--')}</td></tr>`;
           }).join('')}
         </tbody>
       </table>
@@ -688,7 +693,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setRoster(merged);
     setInitialRoster(JSON.parse(JSON.stringify(merged)));
     setDbHistory(ev.event_roster || []);
-    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
+    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a,b)=>a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '', backing_vocals: es.backing_vocals || [] })) : []);
     setModalTab('info');
     setShowModal(true);
   };
@@ -812,7 +817,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
       const { error: songDelErr } = await supabase.from('event_songs').delete().eq('event_id', evtId);
       if (songDelErr) throw songDelErr;
-      const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx }));
+      const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx, ...((i.backing_vocals || []).some(v => v.member_id) ? { backing_vocals: i.backing_vocals.filter(v => v.member_id) } : {}) }));
       if (validS.length > 0) {
         const { error } = await supabase.from('event_songs').insert(validS);
         if (error) throw error;
@@ -1210,7 +1215,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setRoster(merged);
     setInitialRoster(JSON.parse(JSON.stringify(merged)));
     setDbHistory([]);
-    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a, b) => a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '' })) : []);
+    setSetlist(ev.event_songs ? [...ev.event_songs].sort((a, b) => a.order_index - b.order_index).map(es => ({ song_id: es.song_id, lead_id: es.lead_id || '', selected_key: es.selected_key || '', backing_vocals: es.backing_vocals || [] })) : []);
     setModalTab('info');
     setShowModal(true);
   };
@@ -1471,6 +1476,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               <div style={{ minWidth: 0 }}>
                                 <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Cancion desconocida'}</div>
                                 <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{leader?.full_name?.split(' ')[0] || '--'} &bull; <span style={{ color: theme.main }}>{es.selected_key || '--'}</span></div>
+                                {backingText(es, members) && <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>🎤 {backingText(es, members)}</div>}
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -1745,6 +1751,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '500' }}>{es.selected_key || '--'}</strong>
                                 </span>
                               </div>
+                              {backingText(es, members) && <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>🎤 Coros: {backingText(es, members)}</div>}
                            </div>
                            <div style={{ display: 'flex', gap: '6px' }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
@@ -2162,7 +2169,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     }}
                     onDragEnd={() => setDraggedSongIdx(null)}
                     className="setlist-row"
-                    style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, opacity: draggedSongIdx === idx ? 0.4 : 1, cursor: 'grab' }}>
+                    style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', minWidth: 0, opacity: draggedSongIdx === idx ? 0.4 : 1, cursor: 'grab' }}>
                     <GripVertical size={16} className="hide-mobile" style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
                     {/* Flechas: alternativa táctil al drag-and-drop (iPad/celular no disparan dragstart nativo) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
@@ -2220,9 +2227,23 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Dirige" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
+                    <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }} onMouseDown={e => e.stopPropagation()}>
+                      {(item.backing_vocals || []).map((bv, bi) => (
+                        <div key={bi} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <div style={{ flex: 1.5, minWidth: 0 }}>
+                            <MemberSelector value={bv.member_id} members={members} roleName="Voz" placeholder="Corista" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, member_id: v } : x); setSetlist(n); }} />
+                          </div>
+                          <select className="input-field" value={bv.role} onChange={e => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, role: e.target.value } : x); setSetlist(n); }} style={{ flex: 1, fontSize: '0.75rem' }}>
+                            {Object.entries(BACKING_ROLES).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+                          </select>
+                          <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.filter((_, k) => k !== bi); setSetlist(n); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14}/></button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = [...(n[idx].backing_vocals || []), { member_id: '', role: 'melodia' }]; setSetlist(n); }} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.72rem', padding: 0 }}>+ Corista</button>
+                    </div>
                   </div>
                 ))}
-                <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '' }])} className="btn-secondary" style={{ padding: '1rem' }}>+ Añadir Canción</button>
+                <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '', backing_vocals: [] }])} className="btn-secondary" style={{ padding: '1rem' }}>+ Añadir Canción</button>
               </div>
             )}
             <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
