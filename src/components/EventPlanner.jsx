@@ -13,6 +13,27 @@ import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import { DEFAULT_DEPARTMENTS, DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
 const BACKING_ROLES = { melodia: 'Apoya melodía', segunda: 'Segunda voz' };
+const BACKING_COLORS = { melodia: '56,189,248', segunda: '192,132,252' };
+const BackingChips = ({ es, members, size = 'md' }) => {
+  const items = (es.backing_vocals || []).map(v => ({ ...v, m: members?.find(x => x.id === v.member_id) })).filter(v => v.m);
+  if (!items.length) return null;
+  const big = size === 'lg';
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: big ? '8px' : '6px', marginTop: big ? '8px' : '6px' }}>
+      {items.map((v, i) => {
+        const c = BACKING_COLORS[v.role] || '255,255,255';
+        return (
+          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: big ? '5px 12px' : '4px 10px', borderRadius: '999px', background: `rgba(${c},0.14)`, border: `1px solid rgba(${c},0.35)`, fontSize: big ? '0.85rem' : '0.75rem', color: 'white', fontWeight: 500 }}>
+            <span>🎤</span>
+            <span>{v.m.full_name?.split(' ')[0]}</span>
+            <span style={{ color: `rgb(${c})`, fontSize: big ? '0.78rem' : '0.68rem', fontWeight: 600 }}>{BACKING_ROLES[v.role] || 'Coro'}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
 const backingText = (es, members) => (es.backing_vocals || [])
   .map(v => { const m = members?.find(x => x.id === v.member_id); return m ? `${m.full_name?.split(' ')[0]} (${BACKING_ROLES[v.role] || 'Coro'})` : null; })
   .filter(Boolean).join(', ');
@@ -1476,7 +1497,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               <div style={{ minWidth: 0 }}>
                                 <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Cancion desconocida'}</div>
                                 <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{leader?.full_name?.split(' ')[0] || '--'} &bull; <span style={{ color: theme.main }}>{es.selected_key || '--'}</span></div>
-                                {backingText(es, members) && <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>🎤 {backingText(es, members)}</div>}
+                                <BackingChips es={es} members={members} />
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -1751,7 +1772,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '500' }}>{es.selected_key || '--'}</strong>
                                 </span>
                               </div>
-                              {backingText(es, members) && <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>🎤 Coros: {backingText(es, members)}</div>}
+                              <BackingChips es={es} members={members} size="lg" />
                            </div>
                            <div style={{ display: 'flex', gap: '6px' }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
@@ -2227,19 +2248,19 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Dirige" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
-                    <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }} onMouseDown={e => e.stopPropagation()}>
+                    <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(192,132,252,0.06)', border: '1px dashed rgba(192,132,252,0.3)' }} onMouseDown={e => e.stopPropagation()}>
                       {(item.backing_vocals || []).map((bv, bi) => (
                         <div key={bi} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                           <div style={{ flex: 1.5, minWidth: 0 }}>
                             <MemberSelector value={bv.member_id} members={members} roleName="Voz" placeholder="Corista" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, member_id: v } : x); setSetlist(n); }} />
                           </div>
-                          <select className="input-field" value={bv.role} onChange={e => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, role: e.target.value } : x); setSetlist(n); }} style={{ flex: 1, fontSize: '0.75rem' }}>
+                          <select className="input-field" value={bv.role} onChange={e => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, role: e.target.value } : x); setSetlist(n); }} style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500 }}>
                             {Object.entries(BACKING_ROLES).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                           </select>
                           <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.filter((_, k) => k !== bi); setSetlist(n); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14}/></button>
                         </div>
                       ))}
-                      <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = [...(n[idx].backing_vocals || []), { member_id: '', role: 'melodia' }]; setSetlist(n); }} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.72rem', padding: 0 }}>+ Corista</button>
+                      <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = [...(n[idx].backing_vocals || []), { member_id: '', role: 'melodia' }]; setSetlist(n); }} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, padding: '2px 0' }}>🎤 + Agregar corista</button>
                     </div>
                   </div>
                 ))}
