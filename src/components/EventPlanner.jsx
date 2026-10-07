@@ -15,7 +15,7 @@ import { DEFAULT_DEPARTMENTS, DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES
 const BACKING_ROLES = { melodia: 'Apoya melodía', segunda: 'Segunda voz' };
 const BACKING_COLORS = { melodia: '56,189,248', segunda: '192,132,252' };
 const BackingChips = ({ es, members, size = 'md' }) => {
-  const items = (es.backing_vocals || []).map(v => ({ ...v, m: members?.find(x => x.id === v.member_id) })).filter(v => v.m);
+  const items = (es.backing_vocals || []).filter(v => v.member_id !== es.lead_id).map(v => ({ ...v, m: members?.find(x => x.id === v.member_id) })).filter(v => v.m);
   if (!items.length) return null;
   const big = size === 'lg';
   return (
@@ -838,7 +838,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
       const { error: songDelErr } = await supabase.from('event_songs').delete().eq('event_id', evtId);
       if (songDelErr) throw songDelErr;
-      const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx, ...((i.backing_vocals || []).some(v => v.member_id) ? { backing_vocals: i.backing_vocals.filter(v => v.member_id) } : {}) }));
+      const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx, ...((i.backing_vocals || []).some(v => v.member_id && v.member_id !== i.lead_id) ? { backing_vocals: i.backing_vocals.filter(v => v.member_id && v.member_id !== i.lead_id) } : {}) }));
       if (validS.length > 0) {
         const { error } = await supabase.from('event_songs').insert(validS);
         if (error) throw error;
@@ -2248,20 +2248,38 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                       <MemberSelector alignRight={true} value={item.lead_id} members={members} roleName="Voz" placeholder="Dirige" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].lead_id = v; setSetlist(n); }} />
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
-                    <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(192,132,252,0.06)', border: '1px dashed rgba(192,132,252,0.3)' }} onMouseDown={e => e.stopPropagation()}>
-                      {(item.backing_vocals || []).map((bv, bi) => (
-                        <div key={bi} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <div style={{ flex: 1.5, minWidth: 0 }}>
-                            <MemberSelector value={bv.member_id} members={members} roleName="Voz" placeholder="Corista" eventDate={eventDate} allRoles={allRoles} onChange={v => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, member_id: v } : x); setSetlist(n); }} />
-                          </div>
-                          <select className="input-field" value={bv.role} onChange={e => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.map((x, k) => k === bi ? { ...x, role: e.target.value } : x); setSetlist(n); }} style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500 }}>
-                            {Object.entries(BACKING_ROLES).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-                          </select>
-                          <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = n[idx].backing_vocals.filter((_, k) => k !== bi); setSetlist(n); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14}/></button>
+                    {(() => {
+                      const singers = roster.filter(r => r.profile_id && /voz|vocal|coro|cantante/i.test(r.instrument) && String(r.profile_id) !== String(item.lead_id))
+                        .map(r => ({ id: r.profile_id, name: members.find(m => m.id === r.profile_id)?.full_name?.split(' ')[0] }))
+                        .filter((x, i, a) => x.name && a.findIndex(y => y.id === x.id) === i);
+                      if (!singers.length) return null;
+                      const setRole = (mid, role) => {
+                        const n = [...setlist];
+                        const rest = (n[idx].backing_vocals || []).filter(v => v.member_id !== mid);
+                        const cur = (n[idx].backing_vocals || []).find(v => v.member_id === mid)?.role;
+                        n[idx].backing_vocals = cur === role ? rest : [...rest, { member_id: mid, role }];
+                        setSetlist(n);
+                      };
+                      return (
+                        <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderRadius: '10px', background: 'rgba(192,132,252,0.06)', border: '1px dashed rgba(192,132,252,0.3)' }} onMouseDown={e => e.stopPropagation()}>
+                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>🎤 Coros — toca la voz que hace cada uno</div>
+                          {singers.map(sg => {
+                            const cur = (item.backing_vocals || []).find(v => v.member_id === sg.id)?.role;
+                            return (
+                              <div key={sg.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ flex: '1 1 90px', fontSize: '0.95rem', fontWeight: 500, color: 'white' }}>{sg.name}</span>
+                                {Object.entries(BACKING_ROLES).map(([val, label]) => {
+                                  const c = BACKING_COLORS[val]; const on = cur === val;
+                                  return (
+                                    <button key={val} type="button" onClick={() => setRole(sg.id, val)} style={{ padding: '7px 14px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, background: on ? `rgba(${c},0.25)` : 'rgba(255,255,255,0.04)', border: `1px solid ${on ? `rgb(${c})` : 'rgba(255,255,255,0.12)'}`, color: on ? `rgb(${c})` : 'rgba(255,255,255,0.55)' }}>{label}</button>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                      <button type="button" onClick={() => { const n = [...setlist]; n[idx].backing_vocals = [...(n[idx].backing_vocals || []), { member_id: '', role: 'melodia' }]; setSetlist(n); }} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, padding: '2px 0' }}>🎤 + Agregar corista</button>
-                    </div>
+                      );
+                    })()}
                   </div>
                 ))}
                 <button onClick={() => setSetlist([...setlist, { song_id: '', lead_id: '', selected_key: '', backing_vocals: [] }])} className="btn-secondary" style={{ padding: '1rem' }}>+ Añadir Canción</button>
