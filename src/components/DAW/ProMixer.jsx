@@ -644,6 +644,11 @@ export default function ProMixer({ session, orgId }) {
   // un único punto, al mandárselo al motor.
   const [arrangementBlocks, setArrangementBlocks] = useState(null);
   const [playbackSR, setPlaybackSR] = useState(44100);
+  // Archivo ÷ tarjeta: pasa posiciones del motor (cuadros de salida) a la unidad del archivo. 1 = iguales.
+  const [unitScale, setUnitScale] = useState(1);
+  const unitScaleRef = useRef(1);
+  const [srMismatch, setSrMismatch] = useState(null); // { hw, file } cuando la tarjeta y las pistas difieren
+  const toEngine = (uiSample) => Math.round(uiSample / unitScaleRef.current);
 
   const [engineReady, setEngineReady] = useState(false);
   const [isPrerollActive, setIsPrerollActive] = useState(false);
@@ -665,6 +670,7 @@ export default function ProMixer({ session, orgId }) {
 
   const [timelineLanes, setTimelineLanes] = useState(EMPTY_LANES);
   const timelineLanesRef = useRef(EMPTY_LANES);
+  const lanesRefreshRef = useRef(null); // secuencia cuyas líneas se están refrescando desde Supabase
   const [lyricSlides, setLyricSlides] = useState({ rowId: null, slides: [] });
   const lyricSlidesRef = useRef({ rowId: null, slides: [] });
   const lyricsSongRef = useRef(null);
@@ -855,13 +861,28 @@ export default function ProMixer({ session, orgId }) {
       const report = await safeInvoke('get_engine_report');
       if (!report) return;
 
+      // El motor cuenta en cuadros de SALIDA de la tarjeta; los marcadores y la onda están en
+      // cuadros del ARCHIVO. Si la tarjeta trabaja a otra frecuencia que las pistas (p. ej. 48 kHz
+      // contra 44,1 kHz) esas dos unidades difieren, y los marcadores creados en una computadora
+      // quedaban corridos en otra. Aquí todo se pasa a la unidad del archivo (igual en cualquier
+      // computadora); si las frecuencias coinciden, scale = 1 y nada cambia.
+      const hwSr = report.sample_rate;
+      const fileSr = report.file_sample_rate;
+      const scale = (fileSr > 1000 && hwSr > 1000 && fileSr !== hwSr) ? fileSr / hwSr : 1;
+      unitScaleRef.current = scale;
+      setUnitScale(prev => (prev === scale ? prev : scale));
+      setSrMismatch(prev => {
+        if (scale === 1) return prev === null ? prev : null;
+        return prev && prev.hw === hwSr && prev.file === fileSr ? prev : { hw: hwSr, file: fileSr };
+      });
+
       if (pinnedPlaybackSample.current && Date.now() < pinnedPlaybackSample.current.until) {
         setPlaybackSample(pinnedPlaybackSample.current.value);
       } else {
         pinnedPlaybackSample.current = null;
-        setPlaybackSample(report.sample_pos);
+        setPlaybackSample(scale === 1 ? report.sample_pos : Math.round(report.sample_pos * scale));
       }
-      setPlaybackSR(report.sample_rate);
+      setPlaybackSR(scale === 1 ? hwSr : fileSr);
       setEngineReady(report.is_ready);
       // Sincronización Real: La UI se ajusta exactamente a lo que el hardware reporta
       if (report.device_channels > 0 && report.device_channels !== deviceChannels) {
@@ -869,7 +890,7 @@ export default function ProMixer({ session, orgId }) {
       }
       setIsPrerollActive(report.preroll_active);
       setPrerollBars(report.preroll_bars);
-      setTotalSamples(report.total_samples);
+      setTotalSamples(scale === 1 ? report.total_samples : Math.round(report.total_samples * scale));
       if (typeof report.song_samples === 'number') setSongSamples(report.song_samples);
 
       // Onda real: en cuanto los stems están dentro del motor, se piden los
@@ -992,7 +1013,7 @@ export default function ProMixer({ session, orgId }) {
       const marker = markers[parseInt(m[1], 10) - 1]; // markers ya está ordenado por sample
       if (!marker || !isTauri()) return;
       e.preventDefault();
-      safeInvoke('play_with_preroll', { targetSample: Math.round(marker.sample / pitchRatioRef.current), bars: 2 });
+      safeInvoke('play_with_preroll', { targetSample: toEngine(Math.round(marker.sample / pitchRatioRef.current)), bars: 2 });
     };
     window.addEventListener('keydown', handleDigit);
     return () => window.removeEventListener('keydown', handleDigit);
@@ -1101,6 +1122,20 @@ export default function ProMixer({ session, orgId }) {
       const loadedLanes = { ...EMPTY_LANES, ...(sequence.timeline_lanes || {}) };
       timelineLanesRef.current = loadedLanes;
       setTimelineLanes(loadedLanes);
+      // La canción del setlist es una copia guardada en el equipo de cuando se agregó
+      // (bandly_setlist): sus líneas de Luces/Letras pueden estar viejas o vacías, y al
+      // salir y volver a entrar aparecían sin los cues. Se trae lo último de Supabase
+      // sin frenar la carga del audio; sin internet se queda con la copia.
+      lanesRefreshRef.current = sequence.id;
+      supabase.from('sequences').select('timeline_lanes').eq('id', sequence.id).maybeSingle()
+        .then(({ data }) => {
+          if (lanesRefreshRef.current !== sequence.id || !data) return;
+          const fresh = { ...EMPTY_LANES, ...(data.timeline_lanes || {}) };
+          if (JSON.stringify(fresh) === JSON.stringify(timelineLanesRef.current)) return;
+          timelineLanesRef.current = fresh;
+          setTimelineLanes(fresh);
+        })
+        .catch(() => {});
       // La letra vive en presenter_slides (la misma que usa Presenter).
       lyricsSongRef.current = song.id;
       lyricSlidesRef.current = { rowId: null, slides: [] };
@@ -1362,11 +1397,11 @@ export default function ProMixer({ session, orgId }) {
       return;
     }
     const segments = arrangementBlocks.map(b => [
-      Math.max(0, Math.round(b.start / pitchRatio)),
-      Math.max(0, Math.round(b.end / pitchRatio)),
+      Math.max(0, Math.round(b.start / pitchRatio / unitScale)),
+      Math.max(0, Math.round(b.end / pitchRatio / unitScale)),
     ]);
     safeInvoke('set_arrangement', { segments }).catch(() => {});
-  }, [arrangementBlocks, pitchRatio]);
+  }, [arrangementBlocks, pitchRatio, unitScale]);
 
   const handleArrangementChange = useCallback(async (next) => {
     setArrangementBlocks(next);
@@ -1434,10 +1469,10 @@ export default function ProMixer({ session, orgId }) {
     lastSentMarkerRef.current = {}; // que Presenter/Lights reciban esta sección aunque ya la hubieran recibido
     if (!immediate) {
       setIsPlaying(true);
-      await safeInvoke('play_with_preroll', { targetSample: target, bars: 2 });
+      await safeInvoke('play_with_preroll', { targetSample: toEngine(target), bars: 2 });
       return;
     }
-    await safeInvoke('seek_to_sample', { sample: target });
+    await safeInvoke('seek_to_sample', { sample: toEngine(target) });
     pinnedPlaybackSample.current = { value: target, until: Date.now() + 500 };
     setPlaybackSample(target);
     if (!isPlaying) {
@@ -1618,6 +1653,17 @@ export default function ProMixer({ session, orgId }) {
   //   - Luz     → el nombre de la escena, así Lights la dispara.
   // Orden dentro de un mismo instante: sección, luz, letra — la letra va al
   // final para que sea lo último que Presenter recibe y no la pise la sección.
+  // Presenter sigue al DAW: al cargar otra canción se publica cuál es, para que Presenter
+  // cambie solo a esa canción (y su letra) sin que alguien la elija a mano.
+  const activeSongIdRef = useRef(null);
+  useEffect(() => { activeSongIdRef.current = activeSong?.id ?? null; }, [activeSong]);
+  useEffect(() => {
+    if (!orgId || activeSong?.id == null) return;
+    supabase.from('presenter_state')
+      .upsert({ org_id: orgId, active_song_id: activeSong.id }, { onConflict: 'org_id' })
+      .then(({ error }) => { if (error) console.error('presenter_state song sync error:', error); });
+  }, [orgId, activeSong?.id]);
+
   const sendActiveMarker = useCallback((label) => {
     if (!orgId) return;
     const q = markerQueueRef.current;
@@ -1629,8 +1675,11 @@ export default function ProMixer({ session, orgId }) {
         const next = q.items.shift();
         // Una fila por organización: antes esto escribía en una fila global y el
         // marcador viajaba a los proyectores y luces de todos los clientes.
+        // Se manda también la canción cargada: si Presenter se perdió el aviso de cambio
+        // de canción, con el siguiente marcador se pone al día.
+        const songId = activeSongIdRef.current;
         const { error } = await supabase.from('presenter_state')
-          .upsert({ org_id: orgId, active_marker: next }, { onConflict: 'org_id' });
+          .upsert({ org_id: orgId, active_marker: next, ...(songId != null ? { active_song_id: songId } : {}) }, { onConflict: 'org_id' });
         if (error) console.error('presenter_state sync error:', error);
         if (q.items.length) await new Promise(r => setTimeout(r, 300));
       }
@@ -1892,6 +1941,55 @@ export default function ProMixer({ session, orgId }) {
         const key = lane === 'lyric' ? 'lyrics' : 'lights';
         updateLanes(l => ({ ...l, [key]: l[key].map(x => (x.id === id ? { ...x, sample } : x)).sort(bySample) }));
       }),
+      // ── Acciones en bloque (selección múltiple): un solo paso de deshacer y UN guardado ──
+      // Si se hicieran una por una, cada una leería la lista vieja y se pisarían.
+      moveItems: h((list) => {
+        const secs = new Map(list.filter(x => x.lane === 'section').map(x => [x.id, x]));
+        const lyr = new Map(list.filter(x => x.lane === 'lyric').map(x => [x.id, x]));
+        const lig = new Map(list.filter(x => x.lane === 'light').map(x => [x.id, x]));
+        if (secs.size) {
+          persistMarkers(markers.map(m => {
+            const x = secs.get(m.id);
+            return x ? { ...m, sample: timelineMapper.toSong(x.t), bar: x.bar ?? m.bar } : m;
+          }).sort(bySample));
+        }
+        if (lyr.size || lig.size) {
+          const apply = (arr, byId) => (byId.size
+            ? arr.map(it => (byId.has(it.id) ? { ...it, sample: timelineMapper.toSong(byId.get(it.id).t) } : it)).sort(bySample)
+            : arr);
+          updateLanes(l => ({ ...l, lyrics: apply(l.lyrics, lyr), lights: apply(l.lights, lig) }));
+        }
+      }),
+      removeItems: h((list) => {
+        const secs = new Set(list.filter(x => x.lane === 'section').map(x => x.id));
+        const lyr = new Set(list.filter(x => x.lane === 'lyric').map(x => x.id));
+        const lig = new Set(list.filter(x => x.lane === 'light').map(x => x.id));
+        if (secs.size) persistMarkers(markers.filter(m => !secs.has(m.id)));
+        if (lyr.size || lig.size) {
+          updateLanes(l => ({ ...l, lyrics: l.lyrics.filter(x => !lyr.has(x.id)), lights: l.lights.filter(x => !lig.has(x.id)) }));
+        }
+      }),
+      // list: [{ lane, t, bar?, payload }] — payload: { label, color } | { slideId } | { scene }
+      addItems: h((list) => {
+        const secs = list.filter(x => x.lane === 'section');
+        const lyr = list.filter(x => x.lane === 'lyric');
+        const lig = list.filter(x => x.lane === 'light');
+        if (secs.length) {
+          const fresh = secs.map(x => ({
+            id: crypto.randomUUID(), bar: x.bar, label: x.payload.label, color: x.payload.color,
+            sample: Math.round(x.t * pitchRatioRef.current),
+          }));
+          persistMarkers([...markers, ...fresh].sort(bySample));
+        }
+        if (lyr.length || lig.length) {
+          updateLanes(l => ({
+            ...l,
+            lyrics: lyr.length ? [...l.lyrics, ...lyr.map(x => ({ id: crypto.randomUUID(), sample: timelineMapper.toSong(x.t), slideId: x.payload.slideId }))].sort(bySample) : l.lyrics,
+            lights: lig.length ? [...l.lights, ...lig.map(x => ({ id: crypto.randomUUID(), sample: timelineMapper.toSong(x.t), scene: x.payload.scene }))].sort(bySample) : l.lights,
+          }));
+          [...new Set(lyr.map(x => x.payload.slideId))].forEach(ensureSlideTrigger);
+        }
+      }),
       detectCues: () => runCueDetection(false),
     };
   }, [markers, onAddMarker, persistMarkers, updateLanes, ensureSlideTrigger, timelineMapper, runCueDetection, recordHistory]);
@@ -2040,6 +2138,15 @@ export default function ProMixer({ session, orgId }) {
         </div>
       )}
 
+      {srMismatch && (
+        <div
+          style={{ background: 'rgba(251,191,36,0.12)', color: '#fcd34d', padding: '5px 20px', fontSize: '0.68rem', borderBottom: '1px solid rgba(251,191,36,0.25)' }}
+          title="Los marcadores y la onda se miden en la frecuencia de las pistas, igual en cualquier computadora; el DAW convierte la posición del motor."
+        >
+          Tu tarjeta de audio trabaja a {(srMismatch.hw / 1000).toLocaleString('es', { maximumFractionDigits: 1 })} kHz y las pistas están a {(srMismatch.file / 1000).toLocaleString('es', { maximumFractionDigits: 1 })} kHz: el DAW lo compensa, los marcadores siguen alineados.
+        </div>
+      )}
+
       <MemoizedTransportUI
           isPlaying={isPlaying} togglePlay={togglePlay} handleStop={handleStop}
           handleRestart={handleRestart} engineReady={engineReady}
@@ -2079,7 +2186,7 @@ export default function ProMixer({ session, orgId }) {
               onJumpTo={jumpToPosition}
               currentLyric={currentLyricText ? { text: currentLyricText } : null}
               isPrerollActive={isPrerollActive} prerollBars={prerollBars}
-              onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: Math.floor(p * totalSamples) })}
+              onSeek={(p) => isTauri() && safeInvoke('seek_to_sample', { sample: toEngine(Math.floor(p * totalSamples)) })}
             />
             <ArrangementPanel
               sections={sections}

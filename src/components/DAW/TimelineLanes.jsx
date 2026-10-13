@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { Flag, Mic2, Lightbulb, Wand2, Plus, Trash2, Play, X, Piano } from 'lucide-react';
 import { SECTION_PRESETS, LIGHT_COLOR, displayName, shortName, sectionTone, mutedColor } from '../../utils/timelineLanes';
+import { itemKey, clampDelta, keysInRange, uniqueById, makeClipboard, planPaste } from '../../utils/laneSelection';
 
 const LYRIC_TONE = '#a8a8a6';
 const LIGHT_TONE = mutedColor(LIGHT_COLOR);
@@ -15,7 +16,8 @@ const LIGHT_TONE = mutedColor(LIGHT_COLOR);
 //
 // Uso: clic en un bloque = entrar con 2 compases de conteo, Shift+clic = entrar directo,
 // doble clic = editar, arrastrar = mover, doble clic en vacío = agregar.
-// Atajos en vivo: L = siguiente letra aquí, K = cue de luz aquí.
+// Atajos en vivo: L = siguiente letra aquí, Shift+L = repetir la letra actual, K = cue de luz aquí.
+// Letras: clic derecho o Alt+clic en la línea = elegir cualquier diapositiva (repetidas incluidas).
 
 export const LANE_GUTTER = 104;
 const LANE_H = 30;
@@ -53,6 +55,22 @@ const TimelineLanes = memo(({
   const lyricsRowRef = useRef(null);
   const lightsRowRef = useRef(null);
 
+  // ── Selección múltiple ──
+  // Clic = elige uno · Ctrl+clic = suma/quita · arrastrar en el fondo de una línea = rectángulo ·
+  // Ctrl+A (con el mouse sobre las líneas) = todo · arrastrar uno elegido mueve TODOS ·
+  // Supr = borrar · Ctrl+C / X / V = copiar, cortar y pegar en el cursor de reproducción.
+  const [selected, setSelected] = useState(() => new Set());
+  const [marquee, setMarquee] = useState(null); // { lane, lo, hi }
+  const hoverRef = useRef(false);
+  const clipboardRef = useRef(null);
+
+  const sectionItems = sections.map(m => ({ ...m, t: m.sample }));
+  const entries = [
+    ...sectionItems.map(m => ({ lane: 'section', id: m.id, key: itemKey('section', m), t: m.t, payload: { label: m.label, color: m.color } })),
+    ...lyricEvents.map(ev => ({ lane: 'lyric', id: ev.id, key: itemKey('lyric', ev), t: ev.t, payload: { slideId: ev.slideId } })),
+    ...lightEvents.map(ev => ({ lane: 'light', id: ev.id, key: itemKey('light', ev), t: ev.t, payload: { scene: ev.scene } })),
+  ];
+
   const pToPct = (p) => ((p - view.start) / view.span) * 100;
   const tToPct = (t) => pToPct(totalSamples > 0 ? t / totalSamples : 0);
   const xToT = (clientX, el) => {
@@ -81,9 +99,68 @@ const TimelineLanes = memo(({
   // El listener se registra una sola vez y lee todo de este ref: así la
   // tecla siempre ve la posición actual, no la del render en que se armó.
   const live = useRef({});
+
+  const selectedEntries = () => entries.filter(e => selected.has(e.key));
+  const ops = {
+    selectAll: () => { setSelected(new Set(entries.map(e => e.key))); showFlash(`${entries.length} seleccionados`); },
+    clear: () => setSelected(new Set()),
+    remove: () => {
+      const list = uniqueById(selectedEntries().filter(e => e.lane !== 'section' || sectionsEditable));
+      if (!list.length) { showFlash('Las secciones no se pueden borrar con un arreglo activo'); return; }
+      actions.removeItems(list.map(e => ({ lane: e.lane, id: e.id })));
+      setSelected(new Set());
+      showFlash(`Eliminados ${list.length}`);
+    },
+    copy: (cut) => {
+      const list = uniqueById(selectedEntries());
+      if (!list.length) return;
+      clipboardRef.current = makeClipboard(list);
+      showFlash(`${cut ? 'Cortados' : 'Copiados'} ${list.length}`);
+      if (cut) ops.remove();
+    },
+    // Se pega con el primero en el cursor de reproducción y el resto a la misma distancia.
+    paste: () => {
+      const plan = planPaste(clipboardRef.current, snap.beat(playbackSample), totalSamples)
+        .filter(p => p.lane !== 'section' || sectionsEditable)
+        .map(p => (p.lane === 'section' ? { ...p, bar: snap.toBar(p.t) } : p));
+      if (!plan.length) { showFlash('No hay nada que pegar aquí'); return; }
+      actions.addItems(plan);
+      showFlash(`Pegados ${plan.length}`);
+    },
+  };
+
   useEffect(() => {
-    live.current = { playbackSample, lyricEvents, slides, snap, sampleRate, actions, openEditorAtT, showFlash, view, totalSamples, sectionsEditable, onSeek, onJump };
+    live.current = { playbackSample, lyricEvents, slides, snap, sampleRate, actions, openEditorAtT, showFlash, view, totalSamples, sectionsEditable, onSeek, onJump, selected, entries, ops, editorOpen: !!editor };
   });
+  useEffect(() => {
+    const onKey = (e) => {
+      if (isTyping()) return;
+      const s = live.current;
+      const mod = e.ctrlKey || e.metaKey;
+      const k = (e.key || '').toLowerCase();
+      if (mod && !e.shiftKey && !e.altKey && k === 'a') {
+        if (!hoverRef.current) return; // fuera de las líneas, Ctrl+A queda para lo demás
+        e.preventDefault();
+        s.ops?.selectAll();
+      } else if (mod && !e.altKey && (k === 'c' || k === 'x')) {
+        if (!s.selected?.size) return;
+        e.preventDefault();
+        s.ops.copy(k === 'x');
+      } else if (mod && !e.altKey && k === 'v') {
+        if (!clipboardRef.current) return;
+        e.preventDefault();
+        s.ops.paste();
+      } else if (!mod && !e.altKey && (e.key === 'Delete' || e.key === 'Backspace')) {
+        if (!s.selected?.size) return;
+        e.preventDefault();
+        s.ops.remove();
+      } else if (e.key === 'Escape' && s.selected?.size && !s.editorOpen) {
+        s.ops.clear();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   useEffect(() => {
     const onKey = (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat || isTyping()) return;
@@ -99,10 +176,17 @@ const TimelineLanes = memo(({
         // alinea al tiempo más cercano, que es donde cambia la frase.
         const t = s.snap.beat(Math.max(0, s.playbackSample - s.sampleRate * 0.15));
         const prev = [...s.lyricEvents].reverse().find(ev => ev.t <= t);
-        const prevIdx = prev ? s.slides.findIndex(sl => sl.id === prev.slideId) : -1;
-        const next = s.slides[Math.min(s.slides.length - 1, prevIdx + 1)];
-        s.actions.addLyric(t, next.id);
-        s.showFlash(`Letra ${s.slides.indexOf(next) + 1}: ${firstLine(next.text)}`);
+        // Shift+L: repite la diapositiva que está sonando (coros que se cantan dos veces).
+        if (e.shiftKey) {
+          const cur = prev && s.slides.find(sl => sl.id === prev.slideId);
+          if (!cur) { s.showFlash('No hay una letra anterior para repetir'); return; }
+          s.actions.addLyric(t, cur.id);
+          s.showFlash(`Repetida ${s.slides.indexOf(cur) + 1}: ${firstLine(cur.text)}`);
+          return;
+        }
+        // L pregunta cuál: el selector se abre en este punto, con la que suena y la
+        // siguiente marcadas (Enter elige la siguiente), para no adivinar.
+        s.openEditorAtT('lyric', null, t, lyricsRowRef.current);
       } else {
         s.openEditorAtT('light', null, s.snap.beat(s.playbackSample), lightsRowRef.current);
       }
@@ -121,7 +205,34 @@ const TimelineLanes = memo(({
     e.stopPropagation();
     if (e.button !== 0) return;
     const row = e.currentTarget.parentElement;
-    const d = { lane, id: item.id, startX: e.clientX, width: row.getBoundingClientRect().width, t0: item.t, t: item.t, moved: false, row };
+    // Alt+clic sobre una letra: agrega otra diapositiva en ese punto (permite repetir una).
+    if (lane === 'lyric' && e.altKey) {
+      e.preventDefault();
+      const s = live.current;
+      if (!s.slides.length) { s.showFlash('Sin letra en Presenter'); return; }
+      s.openEditorAtT('lyric', null, s.snap.beat(xToT(e.clientX, row)), row);
+      return;
+    }
+    // Selección: Ctrl+clic suma o quita (Shift+clic sigue siendo "entrar directo"); un clic
+    // en algo que no estaba elegido lo deja como lo único elegido.
+    const s0 = live.current;
+    const key = itemKey(lane, item);
+    if (e.ctrlKey || e.metaKey) {
+      const next = new Set(s0.selected);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      setSelected(next);
+      return;
+    }
+    const nextSel = s0.selected.has(key) ? s0.selected : new Set([key]);
+    if (nextSel !== s0.selected) setSelected(nextSel);
+    // Grupo que viaja con el arrastre: todo lo elegido (el que se agarró va primero).
+    const picked = s0.entries.filter(en => nextSel.has(en.key) && (en.lane !== 'section' || s0.sectionsEditable));
+    const grabbed = picked.find(en => en.key === key);
+    const group = grabbed ? [grabbed, ...picked.filter(en => en !== grabbed)] : picked;
+    const d = {
+      lane, id: item.id, key, startX: e.clientX, width: row.getBoundingClientRect().width,
+      t0: item.t, t: item.t, dt: 0, moved: false, row, group, groupKeys: new Set(group.map(g => g.key)),
+    };
     dragRef.current = d;
     setDrag(d);
 
@@ -132,10 +243,12 @@ const TimelineLanes = memo(({
       if (!cur.moved && Math.abs(dx) < 4) return;
       const s = live.current;
       if (cur.lane === 'section' && !s.sectionsEditable) return;
-      const dt = (dx / cur.width) * s.view.span * s.totalSamples;
-      const raw = Math.max(0, Math.min(s.totalSamples, cur.t0 + dt));
-      const t = cur.lane === 'section' ? s.snap.bar(raw) : s.snap.beat(raw);
-      dragRef.current = { ...cur, t, moved: true };
+      const dtRaw = (dx / cur.width) * s.view.span * s.totalSamples;
+      const raw = Math.max(0, Math.min(s.totalSamples, cur.t0 + dtRaw));
+      const tNew = cur.lane === 'section' ? s.snap.bar(raw) : s.snap.beat(raw);
+      // El que se agarró se alinea a su cuadrícula; los demás se mueven la misma distancia exacta.
+      const dt = clampDelta(cur.group, tNew - cur.t0, s.totalSamples);
+      dragRef.current = { ...cur, t: cur.t0 + dt, dt, moved: true };
       setDrag(dragRef.current);
     };
     const onUp = (ev) => {
@@ -149,9 +262,19 @@ const TimelineLanes = memo(({
       setTimeout(() => { suppressRowClick.current = false; }, 350);
       const s = live.current;
       if (cur.moved) {
-        if (cur.t !== cur.t0) s.actions.moveItem(cur.lane, cur.id, cur.t, s.snap.toBar(cur.t));
-      } else {
+        if (cur.dt !== 0) {
+          s.actions.moveItems(uniqueById(cur.group).map(g => {
+            const t = g.t + cur.dt;
+            return { lane: g.lane, id: g.id, t, bar: g.lane === 'section' ? s.snap.toBar(t) : undefined };
+          }));
+        }
+        return;
+      }
+      // Clic sin arrastrar sobre uno de varios elegidos: queda solo ese.
+      if (cur.group.length > 1) setSelected(new Set([cur.key]));
+      if (cur.lane !== 'lyric') {
         // Clic: entra con 2 compases de conteo. Shift+clic: directo.
+        // En Letras el clic no mueve la reproducción: para saltar está el carril de secciones.
         s.onJump(cur.t0, { immediate: ev.shiftKey });
       }
     };
@@ -163,7 +286,49 @@ const TimelineLanes = memo(({
     const row = e.currentTarget.parentElement;
     setEditor({ lane, id: item.id, t: item.t, x: e.clientX, y: row.getBoundingClientRect().bottom + 6 });
   };
-  const posOf = (lane, item) => (drag && drag.moved && drag.lane === lane && drag.id === item.id ? drag.t : item.t);
+  // Mientras se arrastra, todo el grupo elegido se ve desplazado la misma distancia.
+  const posOf = (lane, item) => (drag && drag.moved && drag.groupKeys.has(itemKey(lane, item)) ? item.t + drag.dt : item.t);
+
+  // Rectángulo: arrastrar sobre el fondo vacío de una línea elige lo que quede dentro
+  // (Ctrl suma a lo que ya estaba elegido). Un clic en el fondo sigue moviendo el cursor.
+  const onRowPointerDown = (e, lane) => {
+    if (e.target !== e.currentTarget || e.button !== 0) return;
+    const row = e.currentTarget;
+    const startX = e.clientX;
+    const additive = e.ctrlKey || e.metaKey;
+    const base = additive ? new Set(live.current.selected) : new Set();
+    let moved = false;
+    const onMove = (ev) => {
+      if (!moved && Math.abs(ev.clientX - startX) < 4) return;
+      moved = true;
+      const a = xToT(startX, row);
+      const b = xToT(ev.clientX, row);
+      const lo = Math.min(a, b);
+      const hi = Math.max(a, b);
+      setMarquee({ lane, lo, hi });
+      setSelected(new Set([...base, ...keysInRange(live.current.entries, lane, lo, hi)]));
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      setMarquee(null);
+      if (moved) {
+        suppressRowClick.current = true;
+        setTimeout(() => { suppressRowClick.current = false; }, 350);
+      } else if (!additive) {
+        setSelected(new Set());
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+  const renderMarquee = (lane) => (marquee && marquee.lane === lane ? (
+    <div style={{
+      position: 'absolute', top: 0, bottom: 0, pointerEvents: 'none', zIndex: 5,
+      left: `${tToPct(marquee.lo)}%`, width: `${Math.max(0, tToPct(marquee.hi) - tToPct(marquee.lo))}%`,
+      background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.6)', borderRadius: 3,
+    }} />
+  ) : null);
 
   const onRowClick = (e) => {
     if (e.target !== e.currentTarget || suppressRowClick.current) return;
@@ -186,6 +351,7 @@ const TimelineLanes = memo(({
 
   const rowProps = (lane) => ({
     onClick: onRowClick,
+    onPointerDown: (e) => onRowPointerDown(e, lane),
     onDoubleClick: (e) => onRowDoubleClick(e, lane),
     style: {
       position: 'relative', flex: 1, height: LANE_H, overflow: 'hidden',
@@ -207,16 +373,18 @@ const TimelineLanes = memo(({
       const color = getColor(it);
       const active = playbackSample >= it._t && playbackSample < end;
       const badge = getBadge ? getBadge(it, i) : null;
+      const isSel = selected.has(itemKey(lane, it));
       return (
         <div
           key={it.key || it.id}
           onPointerDown={(e) => onItemPointerDown(e, lane, { ...it, t: it._t })}
           onDoubleClick={(e) => openItemEditor(e, lane, { ...it, t: it._t })}
-          title={`${getFullLabel ? getFullLabel(it) : getLabel(it)} — clic: con conteo · Shift+clic: directo · doble clic: editar`}
+          title={`${getFullLabel ? getFullLabel(it) : getLabel(it)} — ${lane === 'lyric' ? 'doble clic: cambiar diapositiva · clic derecho: agregar otra aquí · arrastrar: mover' : 'clic: con conteo · Shift+clic: directo · doble clic: editar'} · Ctrl+clic: sumar a la selección`}
           style={{
             position: 'absolute', top: 2, bottom: 2,
             left: `${left}%`, width: `calc(${Math.max(0, right - left)}% - 2px)`,
-            background: active ? `${color}38` : `${color}1c`,
+            boxShadow: isSel ? 'inset 0 0 0 1.5px rgba(255,255,255,0.95)' : 'none',
+            background: isSel ? `${color}55` : active ? `${color}38` : `${color}1c`,
             borderLeft: clipped ? 'none' : `2px solid ${color}`, borderRadius: clipped ? '0 4px 4px 0' : 4,
             color: active ? '#fff' : 'rgba(255,255,255,0.82)',
             fontSize: '0.78rem', fontWeight: 500, letterSpacing: '0',
@@ -239,7 +407,6 @@ const TimelineLanes = memo(({
     });
   };
 
-  const sectionItems = sections.map(m => ({ ...m, t: m.sample }));
   const slideById = Object.fromEntries(slides.map((s, i) => [s.id, { ...s, idx: i }]));
 
   const addNextLyricHere = () => {
@@ -248,7 +415,11 @@ const TimelineLanes = memo(({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, position: 'relative' }}>
+    <div
+      onPointerEnter={() => { hoverRef.current = true; }}
+      onPointerLeave={() => { hoverRef.current = false; }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, position: 'relative' }}
+    >
       {/* SECCIONES */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Gutter icon={<Flag size={12} color="rgba(255,255,255,0.5)" />} label="SECCIONES">
@@ -262,17 +433,27 @@ const TimelineLanes = memo(({
         </Gutter>
         <div {...rowProps('section')}>
           {renderBlocks('section', sectionItems, m => shortName(m), m => sectionTone(m), (m, i) => (!m.autoLabel && i < 9 ? String(i + 1) : null), m => displayName(m.label))}
+          {renderMarquee('section')}
         </div>
       </div>
 
       {/* LETRAS */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Gutter icon={<Mic2 size={12} color="rgba(255,255,255,0.5)" />} label="LETRAS">
-          <MiniBtn onClick={addNextLyricHere} title="Diapositiva aquí (L)">
+          <MiniBtn onClick={addNextLyricHere} title="Diapositiva aquí (L = la siguiente · Shift+L = repetir la actual · clic derecho o Alt+clic en la línea = elegir cuál)">
             <Plus size={10} />L
           </MiniBtn>
         </Gutter>
-        <div ref={lyricsRowRef} {...rowProps('lyric')}>
+        <div
+          ref={lyricsRowRef}
+          {...rowProps('lyric')}
+          onContextMenu={(e) => {
+            // Clic derecho en cualquier punto (incluso sobre una letra): agregar una diapositiva ahí.
+            e.preventDefault();
+            if (!slides.length) { showFlash('Sin letra en Presenter'); return; }
+            openEditorAtT('lyric', null, snap.beat(xToT(e.clientX, e.currentTarget)), e.currentTarget);
+          }}
+        >
           {renderBlocks(
             'lyric', lyricEvents,
             ev => { const s = slideById[ev.slideId]; return s ? `${s.idx + 1} · ${firstLine(s.text)}` : '(diapositiva borrada)'; },
@@ -281,6 +462,7 @@ const TimelineLanes = memo(({
           {lyricEvents.length === 0 && !slides.length && (
             <span style={{ position: 'absolute', left: 8, top: 8, fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', pointerEvents: 'none' }}>Sin letra</span>
           )}
+          {renderMarquee('lyric')}
         </div>
       </div>
 
@@ -299,17 +481,20 @@ const TimelineLanes = memo(({
             const passed = playbackSample >= t;
             // Si Lights publicó sus escenas y esta no está, el cue no va a hacer nada.
             const missing = lightScenes.length > 0 && !lightScenes.some(n => n.trim().toLowerCase() === ev.scene.trim().toLowerCase());
+            const isSel = selected.has(itemKey('light', ev));
             return (
               <div
                 key={ev.key}
                 onPointerDown={(e) => onItemPointerDown(e, 'light', { ...ev, t })}
                 onDoubleClick={(e) => openItemEditor(e, 'light', { ...ev, t })}
-                title={(missing ? `${ev.scene} — no existe en Bandly Lights` : ev.scene) + ' — clic: con conteo · doble clic: editar'}
+                title={(missing ? `${ev.scene} — no existe en Bandly Lights` : ev.scene) + ' — clic: con conteo · doble clic: editar · Ctrl+clic: sumar a la selección'}
                 style={{
                   position: 'absolute', top: 3, bottom: 3, left: `${tToPct(t)}%`,
                   display: 'flex', alignItems: 'center', gap: 4, paddingRight: 4,
                   cursor: 'pointer', userSelect: 'none', touchAction: 'none',
                   transform: 'translateX(-6px)',
+                  borderRadius: 4, boxShadow: isSel ? '0 0 0 1.5px rgba(255,255,255,0.95)' : 'none',
+                  background: isSel ? 'rgba(255,255,255,0.14)' : 'transparent',
                 }}
               >
                 <div style={{
@@ -320,6 +505,7 @@ const TimelineLanes = memo(({
               </div>
             );
           })}
+          {renderMarquee('light')}
         </div>
       </div>
 
@@ -366,9 +552,22 @@ function LaneEditor({ editor, onClose, sections, sectionsEditable, lyricEvents, 
   const [text, setText] = useState(() => (lane === 'section' ? (item?.autoLabel ? '' : item?.label || '') : lane === 'light' ? item?.scene || '' : ''));
   const panelRef = useRef(null);
 
+  // Al agregar una letra: cuál suena en este punto y cuál sigue (la sugerida).
+  const suggestion = (() => {
+    if (lane !== 'lyric' || item) return null;
+    const prev = [...lyricEvents].reverse().find(ev => ev.t <= t);
+    const prevIdx = prev ? slides.findIndex(sl => sl.id === prev.slideId) : -1;
+    return { currentId: prev ? prev.slideId : null, nextId: slides[Math.min(slides.length - 1, prevIdx + 1)]?.id ?? null };
+  })();
+  const enterRef = useRef(null);
+
   useEffect(() => {
     const onDown = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) onClose(); };
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      // Enter elige la sugerida (salvo que el foco esté en un botón: ahí Enter ya lo pulsa).
+      else if (e.key === 'Enter' && !panelRef.current?.contains(document.activeElement)) enterRef.current?.();
+    };
     // En el próximo tick: el mismo clic que abrió el editor no debe cerrarlo.
     const tmr = setTimeout(() => window.addEventListener('pointerdown', onDown), 0);
     window.addEventListener('keydown', onKey);
@@ -402,6 +601,7 @@ function LaneEditor({ editor, onClose, sections, sectionsEditable, lyricEvents, 
     else actions.addLyric(t, slideId);
     onClose();
   };
+  useEffect(() => { enterRef.current = () => { if (suggestion?.nextId) pickSlide(suggestion.nextId); }; });
   const remove = () => {
     if (lane === 'section') actions.removeSection(item.id);
     else if (lane === 'lyric') actions.removeLyric(item.id);
@@ -493,20 +693,25 @@ function LaneEditor({ editor, onClose, sections, sectionsEditable, lyricEvents, 
 
       {lane === 'lyric' && (
         <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {suggestion && <p style={{ margin: '0 0 4px', fontSize: '0.66rem', color: 'rgba(255,255,255,0.45)' }}>¿Cuál va aquí? Enter = la siguiente</p>}
           {slides.map((s, i) => {
             const selected = item?.slideId === s.id;
+            const isCurrent = suggestion?.currentId === s.id;
+            const isNext = suggestion?.nextId === s.id;
             return (
               <button
                 key={s.id} onClick={() => pickSlide(s.id)}
                 style={{
                   textAlign: 'left', padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
-                  background: selected ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${selected ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.06)'}`,
-                  color: '#fff', fontSize: '0.68rem', display: 'flex', gap: 8,
+                  background: selected || isNext ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${selected || isNext ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.06)'}`,
+                  color: '#fff', fontSize: '0.68rem', display: 'flex', gap: 8, alignItems: 'center',
                 }}
               >
                 <span style={{ opacity: 0.4, fontWeight: 500, minWidth: 16 }}>{i + 1}</span>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstLine(s.text)}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{firstLine(s.text)}</span>
+                {isCurrent && <span style={{ flexShrink: 0, fontSize: '0.58rem', padding: '1px 5px', borderRadius: 5, background: 'rgba(52,211,153,0.18)', color: '#6ee7b7' }}>suena</span>}
+                {isNext && <span style={{ flexShrink: 0, fontSize: '0.58rem', padding: '1px 5px', borderRadius: 5, background: 'rgba(255,255,255,0.16)' }}>siguiente</span>}
               </button>
             );
           })}
