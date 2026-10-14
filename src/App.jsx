@@ -22,6 +22,7 @@ import { DirectorView, MemberView } from './components/layout/RoleViews';
 // Hooks
 import { useOrgData } from './hooks/useOrgData';
 import { isSuperAdmin } from './utils/permissions';
+import { startPresence, stopPresence } from './utils/presence';
 import { alertDialog, promptDialog } from './utils/dialogService';
 
 /**
@@ -118,6 +119,14 @@ export default function App() {
       }
     }
   }, [session, oneSignalInitialized]);
+
+  // Presencia para el panel de superadmin (último acceso, país, sesiones).
+  const userId = session?.user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    startPresence();
+    return () => stopPresence();
+  }, [userId]);
 
   // Persistence
   useEffect(() => {
