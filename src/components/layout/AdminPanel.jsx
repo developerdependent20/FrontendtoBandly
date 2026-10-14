@@ -6,6 +6,8 @@ import {
 import { supabase } from '../../supabaseClient';
 
 const REFRESH_MS = 30_000;
+// Fallos de red del usuario y cachés viejas tras un despliegue: no son bugs de Bandly.
+const NOISE = /failed to fetch|networkerror|load failed|is not a valid javascript mime type|importing a module script failed/i;
 
 // ── utilidades ─────────────────────────────────────────────────────────
 const flag = (cc) => {
@@ -164,6 +166,8 @@ const AdminPanel = ({ onInspect }) => {
   const [uSort, setUSort] = useState({ key: 'last_seen_at', dir: 'desc' });
   const [oSort, setOSort] = useState({ key: 'last_activity', dir: 'desc' });
   const [uFilter, setUFilter] = useState('all');
+  const [hideNoise, setHideNoise] = useState(true);
+  const [openErr, setOpenErr] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -171,7 +175,7 @@ const AdminPanel = ({ onInspect }) => {
         supabase.rpc('admin_overview'),
         supabase.rpc('admin_users'),
         supabase.rpc('admin_orgs'),
-        supabase.rpc('admin_errors', { p_limit: 100 }),
+        supabase.rpc('admin_errors', { p_limit: 500 }),
       ]);
       const failed = [ov, us, og, er].find(r => r.error);
       if (failed) throw new Error(failed.error.message);
@@ -208,6 +212,26 @@ const AdminPanel = ({ onInspect }) => {
     });
     return sortRows(rows, uSort);
   }, [users, uSearch, uSort, uFilter]);
+
+  // Un renglón por error distinto, con cuánta gente y organizaciones afecta.
+  const errorGroups = useMemo(() => {
+    const map = new Map();
+    for (const e of errors) {
+      if (hideNoise && NOISE.test(e.message || '')) continue;
+      const key = `${e.app}|${e.message}`;
+      const g = map.get(key) || { key, app: e.app, message: e.message, n: 0, people: new Set(), orgs: new Set(), last: e.created_at, rows: [] };
+      g.n++;
+      if (e.user_email) g.people.add(e.user_email);
+      if (e.org_name) g.orgs.add(e.org_name);
+      if (e.created_at > g.last) g.last = e.created_at;
+      g.rows.push(e);
+      map.set(key, g);
+    }
+    // Lo que afecta a más gente primero; luego por frecuencia.
+    return [...map.values()].sort((a, b) => b.people.size - a.people.size || b.n - a.n);
+  }, [errors, hideNoise]);
+
+  const noiseCount = useMemo(() => errors.filter(e => NOISE.test(e.message || '')).length, [errors]);
 
   const filteredOrgs = useMemo(() => {
     const q = oSearch.toLowerCase();
@@ -461,20 +485,48 @@ const AdminPanel = ({ onInspect }) => {
 
       {/* ── ERRORES ── */}
       {tab === 'errors' && (
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflowX: 'auto' }}>
-          <div style={{ minWidth: 800 }}>
-            {errors.length === 0 && <p style={{ padding: 20, opacity: 0.4 }}>Sin errores registrados. 🎉</p>}
-            {errors.map(e => (
-              <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '90px 70px 1fr 1.3fr 1fr', gap: 12, padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.04)', fontSize: '0.72rem', alignItems: 'center' }}>
-                <span style={{ opacity: 0.5 }}>{ago(e.created_at)}</span>
-                <span style={{ opacity: 0.6 }}>{e.app}</span>
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={e.message}>{e.message}</span>
-                <span style={{ opacity: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.user_email || '—'}</span>
-                <span style={{ opacity: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.org_name || '—'}</span>
-              </div>
-            ))}
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.74rem', opacity: 0.5 }}>
+              {errorGroups.length} tipos de error · últimos {errors.length} reportes
+            </span>
+            <button style={BTN} onClick={() => setHideNoise(h => !h)}>
+              {hideNoise ? `Mostrar ruido de red (${noiseCount} ocultos)` : 'Ocultar ruido de red'}
+            </button>
           </div>
-        </div>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflowX: 'auto' }}>
+            <div style={{ minWidth: 800 }}>
+              {errorGroups.length === 0 && <p style={{ padding: 20, opacity: 0.4 }}>Sin errores de código. 🎉</p>}
+              {errorGroups.map(g => (
+                <div key={g.key} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div onClick={() => setOpenErr(openErr === g.key ? null : g.key)}
+                    style={{ display: 'grid', gridTemplateColumns: '60px 1fr 120px 110px 90px', gap: 12, padding: '11px 16px', fontSize: '0.74rem', alignItems: 'center', cursor: 'pointer' }}>
+                    <span style={{ opacity: 0.5 }}>{g.app}</span>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={g.message}>{g.message}</span>
+                    <span style={{ color: g.people.size > 1 ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>
+                      {g.people.size > 1 ? `${g.people.size} personas` : '1 persona'}
+                    </span>
+                    <span style={{ opacity: 0.6 }}>{g.n}× · {g.orgs.size} org.</span>
+                    <span style={{ opacity: 0.45, textAlign: 'right' }}>{ago(g.last)}</span>
+                  </div>
+                  {openErr === g.key && (
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 16px 12px' }}>
+                      {g.rows.slice(0, 20).map(e => (
+                        <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '90px 1.3fr 1fr 1.6fr', gap: 12, padding: '4px 0', fontSize: '0.68rem', opacity: 0.65 }}>
+                          <span>{ago(e.created_at)}</span>
+                          <span>{e.user_email || '—'}</span>
+                          <span>{e.org_name || '—'}</span>
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={e.url}>{e.url || ''}</span>
+                        </div>
+                      ))}
+                      {g.rows.length > 20 && <div style={{ fontSize: '0.64rem', opacity: 0.35, paddingTop: 4 }}>… y {g.rows.length - 20} más</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

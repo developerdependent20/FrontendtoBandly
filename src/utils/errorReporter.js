@@ -17,6 +17,23 @@ import { supabase } from '../supabaseClient';
 const MAX_POR_SESION = 20;
 const VENTANA_REPETIDO_MS = 30_000;
 
+const VENTANA_DIARIA_MS = 24 * 60 * 60 * 1000;
+const CLAVE_DIARIA = 'bandly_err_seen';
+
+const yaReportadoHoy = (message, ahora) => {
+  try {
+    const seen = JSON.parse(localStorage.getItem(CLAVE_DIARIA) || '{}');
+    // Poda lo vencido para que el objeto no crezca sin límite.
+    for (const k of Object.keys(seen)) if (ahora - seen[k] > VENTANA_DIARIA_MS) delete seen[k];
+    const repetido = !!seen[message];
+    if (!repetido) seen[message] = ahora;
+    localStorage.setItem(CLAVE_DIARIA, JSON.stringify(seen));
+    return repetido;
+  } catch {
+    return false; // sin localStorage, el límite por sesión sigue protegiendo
+  }
+};
+
 let enviados = 0;
 const ultimoPorMensaje = new Map();
 
@@ -27,12 +44,20 @@ export async function reportError(error, { app = 'web', context = '' } = {}) {
     const message = [context, String(error?.message || error)].filter(Boolean).join(' — ').slice(0, 500);
     if (!message) return;
 
+    // Sin internet no hay nada que reportar (ni cómo): es la red del usuario,
+    // no un fallo de Bandly.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+
     // Un bucle de render puede lanzar el mismo error cientos de veces por
     // segundo; sin esto, una sola pestaña llenaría la tabla.
     const ahora = Date.now();
     const previo = ultimoPorMensaje.get(message);
     if (previo && ahora - previo < VENTANA_REPETIDO_MS) return;
     ultimoPorMensaje.set(message, ahora);
+
+    // Y una persona con wifi malo no debe llenar la lista durante días: el
+    // mismo mensaje se reporta una sola vez cada 24 h por navegador.
+    if (yaReportadoHoy(message, ahora)) return;
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return; // La policy exige profile_id = auth.uid()
