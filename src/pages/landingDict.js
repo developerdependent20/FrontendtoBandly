@@ -14,6 +14,19 @@ export const landingDict = {
     btnStart: "Empezar Ahora",
     btnViewPlans: "Ver planes",
     availableOn: "Disponible en",
+    navDownloads: "Descargas",
+    downloadsMini: "APPS DE ESCRITORIO",
+    downloadsTitle1: "Tres apps,",
+    downloadsTitle2: "un solo marcador.",
+    downloadsDesc: "Se instalan en tu computador y trabajan juntas. Cada plan incluye las del anterior.",
+    downloadApps: [
+      { name: "Bandly DAW", desc: "Multitracks en vivo, marcadores y secciones.", plan: "Desde Starter" },
+      { name: "Bandly Presenter", desc: "Letras y versículos en pantalla, sin operador extra.", plan: "Desde Pro" },
+      { name: "Bandly Lights", desc: "Escenas de luces DMX/Art-Net disparadas por el DAW.", plan: "Con Elite" }
+    ],
+    dlWindows: "Windows",
+    dlMac: "macOS",
+    dlSoon: "Próximamente",
 
     premiumMini: "NADA SE COMPARA",
     premiumMain1: "Un mismo marcador mueve tu audio, tus letras",
@@ -144,6 +157,19 @@ export const landingDict = {
     btnStart: "Start Now",
     btnViewPlans: "View Plans",
     availableOn: "Available on",
+    navDownloads: "Downloads",
+    downloadsMini: "DESKTOP APPS",
+    downloadsTitle1: "Three apps,",
+    downloadsTitle2: "one marker.",
+    downloadsDesc: "They install on your computer and work together. Each plan includes the one before it.",
+    downloadApps: [
+      { name: "Bandly DAW", desc: "Live multitracks, markers and sections.", plan: "From Starter" },
+      { name: "Bandly Presenter", desc: "Lyrics and verses on screen, no extra operator.", plan: "From Pro" },
+      { name: "Bandly Lights", desc: "DMX/Art-Net light scenes fired by the DAW.", plan: "With Elite" }
+    ],
+    dlWindows: "Windows",
+    dlMac: "macOS",
+    dlSoon: "Coming soon",
 
     premiumMini: "NOTHING COMPARES",
     premiumMain1: "One marker moves your audio, your lyrics",

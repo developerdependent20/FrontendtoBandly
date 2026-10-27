@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { landingDict } from './landingDict';
 import { PLANS } from '../utils/planFeatures';
+import { DOWNLOADS, APPS } from '../utils/downloadLinks';
 import { Music, ShieldCheck, Crown, Zap, Tv, Image as ImageIcon, Lightbulb, Smartphone, Piano, FileText, CalendarCheck } from 'lucide-react';
 
 const SUPABASE_IMG = 'https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/';
@@ -61,6 +62,7 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
         <div className="landing-nav-center hide-mobile">
           <a href="#multitrack">{t.navFeatures}</a>
+          <a href="#downloads">{t.navDownloads}</a>
           <a href="#pricing">{t.navPricing}</a>
         </div>
 
@@ -279,6 +281,36 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.1rem', borderRadius: '50px', background: 'rgba(247, 244, 239, 0.03)', border: '1px solid rgba(247, 244, 239, 0.14)', color: '#fff', fontSize: '0.88rem' }}>
               <Icon size={16} color="var(--primary)" />
               {t.teamChips[i]}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Descargas: las tres apps de escritorio */}
+      <section id="downloads" style={{ padding: '8rem 2rem', background: 'rgba(247, 244, 239, 0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
+          <p className="statement-mini">{t.downloadsMini}</p>
+          <h2 className="section-title-large">{t.downloadsTitle1} <span className="serif-accent">{t.downloadsTitle2}</span></h2>
+          <p className="section-subtitle">{t.downloadsDesc}</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
+          {['daw', 'presenter', 'lights'].map((app, i) => (
+            <div key={app} className="hover-scale" style={{ padding: '2.2rem 2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
+              <img src={APPS[app].logo} alt={APPS[app].name} width={96} height={96} loading="lazy" style={{ display: 'block' }} />
+              <h3 style={{ fontSize: '1.3rem', fontWeight: '500', margin: 0, color: '#fff' }}>{t.downloadApps[i].name}</h3>
+              <span style={{ fontSize: '0.7rem', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>{t.downloadApps[i].plan}</span>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>{t.downloadApps[i].desc}</p>
+              <div style={{ display: 'flex', gap: '0.6rem', width: '100%' }}>
+                {[['windows', t.dlWindows], ['mac', t.dlMac]].map(([os, label]) => {
+                  const url = DOWNLOADS[app][os];
+                  const base = { flex: 1, padding: '0.75rem 0.5rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 500, textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.12)' };
+                  return url ? (
+                    <a key={os} href={url} download style={{ ...base, background: 'rgba(255,255,255,0.08)', color: '#fff' }}>{label}</a>
+                  ) : (
+                    <span key={os} title={t.dlSoon} style={{ ...base, background: 'transparent', color: 'rgba(255,255,255,0.4)', cursor: 'default' }}>{label} · {t.dlSoon}</span>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>

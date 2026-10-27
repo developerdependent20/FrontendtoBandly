@@ -13,9 +13,15 @@ import ChartStudio from './ChartStudio';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import { DEFAULT_DEPARTMENTS, DEFAULT_LEADERSHIP_ROLES, DEFAULT_PRODUCTION_ROLES, DEFAULT_LOGISTICS_ROLES, DEFAULT_INSTRUMENTS } from '../utils/defaultRoles';
 const BACKING_ROLES = { melodia: 'Apoya melodía', segunda: 'Segunda voz' };
+const VOICE_RE = /voz|vocal|coro|cantante/i;
+// Solo cuentan los coros de quienes siguen siendo cantantes del evento (y no son el líder de esa canción)
+const cleanBacking = (bvs, leadId, rosterRows) => {
+  const ids = new Set((rosterRows || []).filter(r => r.profile_id && !r.is_removed && VOICE_RE.test(r.instrument || '')).map(r => String(r.profile_id)));
+  return (bvs || []).filter(v => v.member_id && String(v.member_id) !== String(leadId) && ids.has(String(v.member_id)));
+};
 const BACKING_COLORS = { melodia: '56,189,248', segunda: '192,132,252' };
-const BackingChips = ({ es, members, size = 'md' }) => {
-  const items = (es.backing_vocals || []).filter(v => v.member_id !== es.lead_id).map(v => ({ ...v, m: members?.find(x => x.id === v.member_id) })).filter(v => v.m);
+const BackingChips = ({ es, members, roster, size = 'md' }) => {
+  const items = cleanBacking(es.backing_vocals, es.lead_id, roster).map(v => ({ ...v, m: members?.find(x => x.id === v.member_id) })).filter(v => v.m);
   if (!items.length) return null;
   const big = size === 'lg';
   return (
@@ -838,7 +844,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
       }
       const { error: songDelErr } = await supabase.from('event_songs').delete().eq('event_id', evtId);
       if (songDelErr) throw songDelErr;
-      const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx, ...((i.backing_vocals || []).some(v => v.member_id && v.member_id !== i.lead_id) ? { backing_vocals: i.backing_vocals.filter(v => v.member_id && v.member_id !== i.lead_id) } : {}) }));
+      const validS = setlist.filter(i => i.song_id).map((i, idx) => ({ event_id: evtId, song_id: i.song_id, lead_id: i.lead_id || null, selected_key: i.selected_key || null, order_index: idx, ...(cleanBacking(i.backing_vocals, i.lead_id, roster).length ? { backing_vocals: cleanBacking(i.backing_vocals, i.lead_id, roster) } : {}) }));
       if (validS.length > 0) {
         const { error } = await supabase.from('event_songs').insert(validS);
         if (error) throw error;
@@ -1497,7 +1503,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                               <div style={{ minWidth: 0 }}>
                                 <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song?.title || 'Cancion desconocida'}</div>
                                 <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{leader?.full_name?.split(' ')[0] || '--'} &bull; <span style={{ color: theme.main }}>{es.selected_key || '--'}</span></div>
-                                <BackingChips es={es} members={members} />
+                                <BackingChips es={es} members={members} roster={ev.event_roster} />
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -1772,7 +1778,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                                   {es.selected_key === song?.key_male ? '👨' : (es.selected_key === song?.key_female ? '👩' : '🎵')} Tono: <strong style={{ color: 'white', fontWeight: '500' }}>{es.selected_key || '--'}</strong>
                                 </span>
                               </div>
-                              <BackingChips es={es} members={members} size="lg" />
+                              <BackingChips es={es} members={members} roster={selectedEventDetails.event_roster} size="lg" />
                            </div>
                            <div style={{ display: 'flex', gap: '6px' }}>
                               {(song?.has_sequence || song?.sequences?.length > 0) && (
@@ -2249,7 +2255,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
                     <button onClick={() => setSetlist(setlist.filter((_,i)=>i!==idx))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18}/></button>
                     {(() => {
-                      const singers = roster.filter(r => r.profile_id && /voz|vocal|coro|cantante/i.test(r.instrument) && String(r.profile_id) !== String(item.lead_id))
+                      const singers = roster.filter(r => r.profile_id && VOICE_RE.test(r.instrument) && String(r.profile_id) !== String(item.lead_id))
                         .map(r => ({ id: r.profile_id, name: members.find(m => m.id === r.profile_id)?.full_name?.split(' ')[0] }))
                         .filter((x, i, a) => x.name && a.findIndex(y => y.id === x.id) === i);
                       if (!singers.length) return null;
