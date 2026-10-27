@@ -70,8 +70,10 @@ async function mixStems(audioBuffers, onProgress) {
  * @returns {Promise<Blob|null>}
  */
 async function encodeMp3(audioBuffer, onProgress) {
-  const { default: lamejs } = await import('lamejs');
-  const Encoder = lamejs.Mp3Encoder || lamejs.default?.Mp3Encoder;
+  // Fork mantenido: el paquete `lamejs` 1.2.1 lanza "MPEGMode is not defined"
+  // al empaquetarse (usa globales implícitos), y como la mezcla es opcional
+  // ese error se tragaba en silencio y ninguna secuencia llegaba a tener mezcla.
+  const { Mp3Encoder: Encoder } = await import('@breezystack/lamejs');
   if (!Encoder) return null;
 
   const encoder = new Encoder(2, audioBuffer.sampleRate, MP3_BITRATE_KBPS);
