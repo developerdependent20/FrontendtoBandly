@@ -2,6 +2,8 @@ import React from 'react';
 import { Headphones, Disc3 } from 'lucide-react';
 import PadBoard from './DAW/PadBoard';
 import PercussionPad from './PercussionPad';
+import Metronome from './Metronome';
+import MiniPiano from './MiniPiano';
 
 export default function MusicianTools() {
   return (
@@ -43,8 +45,13 @@ export default function MusicianTools() {
           <PadBoard />
         </section>
 
-        <section style={{ borderRadius: '0 0 8px 8px', border: '1px solid #2a2a2f' }}>
+        <section style={{ border: '1px solid #2a2a2f' }}>
           <PercussionPad />
+        </section>
+
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2px', borderRadius: '0 0 8px 8px', overflow: 'hidden', border: '1px solid #2a2a2f' }}>
+          <Metronome />
+          <MiniPiano />
         </section>
       </div>
     </div>

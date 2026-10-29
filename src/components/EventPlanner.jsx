@@ -553,6 +553,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
   // cada evento puede tener su propia política. orgSettings.allowDeclines solo
   // se usa como default al crear un evento nuevo.
   const [eventAllowDeclines, setEventAllowDeclines] = useState(true);
+  const [serviceScript, setServiceScript] = useState([]);
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -702,6 +703,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setRecurWeekly(false);
     setRecurWeeks(4);
     setEventAllowDeclines(ev.allow_declines !== false);
+    setServiceScript(Array.isArray(ev.service_script) ? ev.service_script : []);
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
     const isFullBand = activeRosterFromDb.some(r => ['Drums', 'Bass', 'Batería', 'Bajo'].includes(r.instrument));
     const detectedFormat = isFullBand ? 'full' : 'acoustic';
@@ -766,6 +768,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setRecurWeekly(false);
     setRecurWeeks(4);
     setEventAllowDeclines(orgSettings?.allowDeclines !== false);
+    setServiceScript([]);
     setShowNewEventPicker(true);
   };
 
@@ -818,12 +821,16 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
 
     setSaving(true);
     try {
+      // Solo se manda la columna si hay guion (o se esta editando), asi guardar
+      // eventos sin guion sigue funcionando antes de correr la migracion.
+      const cleanScript = serviceScript.filter(b => b.title.trim());
+      const scriptPayload = (cleanScript.length || editingEventId) ? { service_script: cleanScript } : {};
       let evtId = editingEventId;
       if (editingEventId) {
-        const { error } = await supabase.from('events').update({ name: eventName, date: eventDate, description, allow_declines: eventAllowDeclines }).eq('id', editingEventId);
+        const { error } = await supabase.from('events').update({ name: eventName, date: eventDate, description, allow_declines: eventAllowDeclines, ...scriptPayload }).eq('id', editingEventId);
         if (error) throw error;
       } else {
-        const { data: evt, error } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description, allow_declines: eventAllowDeclines }]).select().single();
+        const { data: evt, error } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: eventDate, description, allow_declines: eventAllowDeclines, ...scriptPayload }]).select().single();
         if (error) throw error;
         evtId = evt.id;
       }
@@ -864,7 +871,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
             nextDateObj.setDate(nextDateObj.getDate() + 7 * i);
             const nextDate = nextDateObj.toISOString().split('T')[0];
 
-            const { data: nextEvt, error: nextErr } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: nextDate, description, allow_declines: eventAllowDeclines }]).select().single();
+            const { data: nextEvt, error: nextErr } = await supabase.from('events').insert([{ org_id: orgId, name: eventName, date: nextDate, description, allow_declines: eventAllowDeclines, ...scriptPayload }]).select().single();
             if (nextErr) throw nextErr;
 
             if (filledRoster.length > 0) {
@@ -1236,6 +1243,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
     setEventName(ev.name + ' (Copia)');
     setEventDate(pendingEventDate);
     setDescription(ev.description || '');
+    setServiceScript(Array.isArray(ev.service_script) ? ev.service_script : []);
     setFormat('copy');
     const activeRosterFromDb = (ev.event_roster || []).filter(r => !r.is_removed);
     const merged = activeRosterFromDb.map(er => ({ id: Math.random().toString(), instrument: er.instrument, profile_id: er.profile_id, category: 'extra', status: 'pending' }));
@@ -1635,6 +1643,21 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                     </div>
                   </details>
                 )}
+               {Array.isArray(selectedEventDetails.service_script) && selectedEventDetails.service_script.length > 0 && (
+                  <details style={{ marginTop: '0.8rem', maxWidth: '600px', margin: '0.8rem auto 0' }}>
+                    <summary style={{ fontSize: '0.75rem', color: getEventTheme(selectedEventDetails.name).main, cursor: 'pointer', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px', userSelect: 'none' }}>
+                      Ver guion del servicio
+                    </summary>
+                    <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, textAlign: 'left' }}>
+                      {selectedEventDetails.service_script.map((b, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '10px', padding: '4px 0' }}>
+                          <span style={{ width: '56px', color: 'var(--text-muted)' }}>{b.minutes ? `${b.minutes} min` : ''}</span>
+                          <span style={{ color: 'white' }}>{b.title}{b.notes ? <span style={{ color: 'var(--text-muted)' }}> — {b.notes}</span> : null}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
              </div>
 
              {/* Mi Participación */}
@@ -1858,7 +1881,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   id: 'blank', icon: <FileText size={22} />, label: 'Evento en Blanco', desc: 'Arma el equipo desde cero',
                   color: 'rgba(255,255,255,0.6)', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.15)',
                   onClick: () => {
-                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription('');
+                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setServiceScript([]);
                     setFormat('blank'); setRoster([]); setInitialRoster([]); setDbHistory([]); setSetlist([]);
                   }
                 },
@@ -1866,7 +1889,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   id: 'full', icon: <Music size={22} />, label: 'Banda Base', desc: 'Batería, bajo, guitarras, voces...',
                   color: 'var(--primary)', bg: 'rgba(120, 145, 185, 0.1)', border: 'rgba(120, 145, 185, 0.3)',
                   onClick: () => {
-                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setFormat('full');
+                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setServiceScript([]); setFormat('full');
                     const template = generateTemplate('full');
                     setRoster(template); setInitialRoster(JSON.parse(JSON.stringify(template))); setDbHistory([]); setSetlist([]);
                   }
@@ -1875,7 +1898,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   id: 'general', icon: <Users size={22} />, label: 'Reunión General', desc: 'Equipo reducido y staff',
                   color: '#eab308', bg: 'rgba(234,179,8,0.1)', border: 'rgba(234,179,8,0.3)',
                   onClick: () => {
-                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setFormat('general');
+                    setEditingEventId(null); setEventName(''); setEventDate(pendingEventDate); setDescription(''); setServiceScript([]); setFormat('general');
                     const template = generateTemplate('general');
                     setRoster(template); setInitialRoster(JSON.parse(JSON.stringify(template))); setDbHistory([]); setSetlist([]);
                   }
@@ -1961,7 +1984,7 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
           <div className="glass-panel" style={{ width: '95%', maxWidth: '1050px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: '#1c1c20', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h3 style={{ marginBottom: '1.5rem' }}>{editingEventId ? 'Editar' : 'Nuevo'} Evento</h3>
             <div className="modal-tabs" style={{ marginBottom: '1.5rem' }}>
-                {['info', 'equipo', 'setlist'].map(t => <button key={t} className={`modal-tab-btn ${modalTab === t ? 'active' : ''}`} onClick={() => setModalTab(t)}>{t.toUpperCase()}</button>)}
+                {['info', 'equipo', 'setlist', 'guion'].map(t => <button key={t} className={`modal-tab-btn ${modalTab === t ? 'active' : ''}`} onClick={() => setModalTab(t)}>{t.toUpperCase()}</button>)}
             </div>
             {modalTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -2173,6 +2196,34 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
                   })()}
                 </div>
 
+              </div>
+            )}
+            {modalTab === 'guion' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Opcional. Ordena los bloques del servicio (alabanza, anuncios, ofrenda, predicación...) con su duración.
+                </div>
+                {serviceScript.map((b, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input className="input-field" value={b.title} placeholder="Bloque (ej. Alabanza)" style={{ flex: '2 1 160px' }}
+                      onChange={e => setServiceScript(sc => sc.map((x, i) => i === idx ? { ...x, title: e.target.value } : x))} />
+                    <input className="input-field" type="number" min="0" value={b.minutes} placeholder="min" style={{ width: '80px' }}
+                      onChange={e => setServiceScript(sc => sc.map((x, i) => i === idx ? { ...x, minutes: e.target.value } : x))} />
+                    <input className="input-field" value={b.notes} placeholder="Notas" style={{ flex: '3 1 200px' }}
+                      onChange={e => setServiceScript(sc => sc.map((x, i) => i === idx ? { ...x, notes: e.target.value } : x))} />
+                    <button type="button" className="btn-secondary" disabled={idx === 0} onClick={() => setServiceScript(sc => { const n = [...sc]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; return n; })}>↑</button>
+                    <button type="button" className="btn-secondary" disabled={idx === serviceScript.length - 1} onClick={() => setServiceScript(sc => { const n = [...sc]; [n[idx + 1], n[idx]] = [n[idx], n[idx + 1]]; return n; })}>↓</button>
+                    <button type="button" className="btn-secondary" onClick={() => setServiceScript(sc => sc.filter((_, i) => i !== idx))}>✕</button>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-secondary" onClick={() => setServiceScript(sc => [...sc, { title: '', minutes: '', notes: '' }])}>+ Agregar bloque</button>
+                  {serviceScript.length > 0 && (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Total: {serviceScript.reduce((t, b) => t + (parseInt(b.minutes) || 0), 0)} min
+                    </span>
+                  )}
+                </div>
               </div>
             )}
             {modalTab === 'setlist' && (
