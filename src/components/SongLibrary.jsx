@@ -7,6 +7,7 @@ import SequenceUploader from './SequenceUploader';
 import WebStemPlayer from './DAW/WebStemPlayer';
 import ProMixer from './DAW/ProMixer';
 import LyricsEditor from './LyricsEditor';
+import SongAudios from './SongAudios';
 import { isTauri } from '../utils/tauri';
 import { alertDialog, confirmDialog } from '../utils/dialogService';
 
@@ -20,6 +21,7 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
   const [showModal, setShowModal] = useState(false);
   const [chartSong, setChartSong] = useState(null);
   const [lyricsSong, setLyricsSong] = useState(null);
+  const [audiosSong, setAudiosSong] = useState(null);
   const [seqUploadSong, setSeqUploadSong] = useState(null);
   const [seqMixerData, setSeqMixerData] = useState(null);
   const [loadingSeq, setLoadingSeq] = useState(null);
@@ -64,6 +66,15 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
     return [];
   })();
   const canEditSongs = profile?.role === 'director' || userFunctions.includes('admin_musica');
+
+  const openAudios = (song) => {
+    const plan = (profile?.organizations?.plan || 'free').toLowerCase();
+    if (plan === 'free') {
+      alertDialog("Los audios por canción (2das voces, guías) están incluidos desde el plan Starter. ¡Haz upgrade para usarlos!");
+      return;
+    }
+    setAudiosSong(song);
+  };
 
   const openEditModal = (song) => {
     setEditingSongId(song.id);
@@ -309,6 +320,10 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
                    <div className="meta-tag male" style={{ background: 'rgba(247, 244, 239, 0.07)', color: '#f7f4ef', border: '1px solid rgba(247, 244, 239, 0.18)' }}>Voz H: <span>{s.key_male || '-'}</span></div>
                    <div className="meta-tag female" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.25)' }}>Voz M: <span>{s.key_female || '-'}</span></div>
                    <div className="meta-tag bpm">BPM: <span>{s.bpm || '-'}</span></div>
+                   <button type="button" className="meta-tag" onClick={() => openAudios(s)} title="2das voces, guías y otros audios de esta canción"
+                     style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--primary)', border: '1px solid rgba(247, 244, 239, 0.18)', background: 'rgba(247, 244, 239, 0.06)' }}>
+                     <Mic2 size={12} /> Audios
+                   </button>
                    <div className="meta-tag" style={{ background: 'rgba(247, 244, 239, 0.06)', color: 'var(--primary)', border: '1px solid rgba(247, 244, 239, 0.18)' }}>
                      Tocado: <span style={{ fontWeight: '500' }}>{getLastPlayedText(s.id)}</span>
                    </div>
@@ -439,6 +454,11 @@ export default function SongLibrary({ songs, events, orgId, readOnly, refreshDat
             if (refreshData) refreshData();
           }}
         />,
+        document.body
+      )}
+
+      {audiosSong && createPortal(
+        <SongAudios song={audiosSong} orgId={orgId} session={session} apiUrl={API_URL} canEdit={canEditSongs && !readOnly} onClose={() => setAudiosSong(null)} />,
         document.body
       )}
 

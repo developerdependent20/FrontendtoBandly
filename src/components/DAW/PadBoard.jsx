@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { isTauri, safeInvoke } from '../../utils/tauri';
 import AnalogKnob from '../ui/AnalogKnob';
+import CrossfadePadPlayer from '../../utils/crossfadePadPlayer';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -60,7 +61,7 @@ export default function PadBoard({ deviceChannels = 2 }) {
       try {
         const safeNote = note.replace('#', 'sharp');
         const url = new URL(`../../assets/audio/pads/${safeNote}.mp3`, import.meta.url).href;
-        const player = new Tone.Player({
+        const player = new CrossfadePadPlayer(Tone, {
           url, loop: true, fadeIn: 1.5, fadeOut: 1.5,
           onload: () => {
             setLoadedPads(prev => ({ ...prev, [note]: true }));
