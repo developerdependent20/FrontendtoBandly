@@ -1,17 +1,113 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content="La plataforma todo-en-uno para bandas y músicos. Gestiona tus eventos, multitracks y charts desde una sola central profesional." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="google" content="notranslate" />
+    <link rel="icon" type="image/png" href="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura_de_pantalla_2026-06-04_101408-removebg-preview.png" />
+    <link rel="shortcut icon" href="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura_de_pantalla_2026-06-04_101408-removebg-preview.png" />
+    <link rel="apple-touch-icon" href="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Captura_de_pantalla_2026-06-04_101408-removebg-preview.png" />
+    <!-- SEO Básico -->
+    <title>Bandly | Software para Bandas, Eventos y Multitracks en Vivo</title>
+    <meta name="description" content="Bandly es la plataforma todo-en-uno para bandas y músicos en vivo. Organiza tu equipo, gestiona eventos, crea charts en PDF, reproduce multitracks y secuencias en tiempo real. Gratis para empezar." />
+    <meta name="keywords" content="bandly, software para bandas, app para músicos, organizar banda de música, reproductor multitracks en vivo, secuencias para iglesia, click track, pads para adoración, app para bandas de iglesia, gestionar equipo musical, agenda de ensayos banda, repertorio musical, charts en pdf para banda, tracker multitrack para músicos, stems en vivo, música en vivo software, banda de adoración, worship band app, getbandly" />
+    <meta name="author" content="Bandly" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://getbandly.com/" />
+    
+    <!-- PWA & iOS Support -->
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0f172a" />
-    <title>Bandly | Tu Show Bajo Control</title>
-    <script type="module" crossorigin src="/assets/index-B-02aCus.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/chunk-DECur_0Z.js">
-    <link rel="modulepreload" crossorigin href="/assets/typeof-DmQ5kzpc.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-DOYMxT5i.css">
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bandly" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://getbandly.com/" />
+    <meta property="og:title" content="Bandly | El Software Definitivo para Bandas y Músicos" />
+    <meta property="og:description" content="Gestiona eventos, ensayos, multitracks y secuencias con nuestro Tracker nativo para tocar en vivo con latencia cero." />
+    <meta property="og:image" content="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://getbandly.com/" />
+    <meta property="twitter:title" content="Bandly | Tu Show Bajo Control" />
+    <meta property="twitter:description" content="La plataforma todo-en-uno para gestionar tu banda, multitracks y secuencias." />
+    <meta property="twitter:image" content="https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/Bandly%20nuevo.png" />
+
+    <!-- AI & SEO Pricing Markup (Invisible to users, visible to AI/Google) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Bandly",
+      "operatingSystem": "Web, Windows, macOS",
+      "applicationCategory": "MultimediaApplication",
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "7.00",
+        "highPrice": "37.00",
+        "priceCurrency": "USD",
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Bandly Starter",
+            "price": "7.00",
+            "priceCurrency": "USD",
+            "billingIncrement": "P1M"
+          },
+          {
+            "@type": "Offer",
+            "name": "Bandly Pro",
+            "price": "17.00",
+            "priceCurrency": "USD",
+            "billingIncrement": "P1M"
+          },
+          {
+            "@type": "Offer",
+            "name": "Bandly Elite",
+            "price": "37.00",
+            "priceCurrency": "USD",
+            "billingIncrement": "P1M"
+          }
+        ]
+      }
+    }
+    </script>
+
+    <meta name="theme-color" content="#0f172a" />
+    <script type="module" crossorigin src="/assets/index-DwySX7Vm.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-COiEfhsA.js">
+    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-DaGEhFwB.js">
+    <link rel="modulepreload" crossorigin href="/assets/react-dom-yrDSQH_z.js">
+    <link rel="modulepreload" crossorigin href="/assets/tslib.es6-C_9wjkiS.js">
+    <link rel="modulepreload" crossorigin href="/assets/supabaseClient-iLrIlTd0.js">
+    <link rel="modulepreload" crossorigin href="/assets/music-Bf8Up9qK.js">
+    <link rel="modulepreload" crossorigin href="/assets/core-IUlRufS4.js">
+    <link rel="modulepreload" crossorigin href="/assets/tauri-BvQ59Obo.js">
+    <link rel="modulepreload" crossorigin href="/assets/preload-helper-BLdHbfdN.js">
+    <link rel="modulepreload" crossorigin href="/assets/offlineManager-BD39C2Dt.js">
+    <link rel="modulepreload" crossorigin href="/assets/lightbulb-CcoORcpN.js">
+    <link rel="modulepreload" crossorigin href="/assets/star-C14kHhdL.js">
+    <link rel="modulepreload" crossorigin href="/assets/shield-check-BiyrdWmc.js">
+    <link rel="modulepreload" crossorigin href="/assets/triangle-alert-w4RsK1Dm.js">
+    <link rel="modulepreload" crossorigin href="/assets/monitor-X7A1kZPI.js">
+    <link rel="modulepreload" crossorigin href="/assets/loader-circle-DVl2CO6w.js">
+    <link rel="modulepreload" crossorigin href="/assets/dialogService-DiGj0scP.js">
+    <link rel="modulepreload" crossorigin href="/assets/radio-CnzH_YUK.js">
+    <link rel="modulepreload" crossorigin href="/assets/x-DnQc77jn.js">
+    <link rel="modulepreload" crossorigin href="/assets/mail-cDUTopfP.js">
+    <link rel="modulepreload" crossorigin href="/assets/play-C0gFeSnO.js">
+    <link rel="modulepreload" crossorigin href="/assets/save-ImioOVLw.js">
+    <link rel="modulepreload" crossorigin href="/assets/FirstUseTip-CGB1DGRj.js">
+    <link rel="stylesheet" crossorigin href="/assets/offlineManager-IKA6Wnk3.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-DDVNd_p8.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>
