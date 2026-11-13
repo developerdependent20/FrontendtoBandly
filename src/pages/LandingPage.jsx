@@ -14,6 +14,19 @@ const PHONE_IMGS = [
   `${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.19.05%20PM.jpeg`,
 ];
 
+// Puntitos de luz del hero: posiciones fijas (semilla) para que no salten entre renders
+const DOT_COLORS = ['#ffffff', '#ff7aa8', '#ffb347', '#9d8cff'];
+const DOTS = (() => {
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  return Array.from({ length: 46 }, (_, i) => ({
+    x: rnd() * 100, y: rnd() * 100,
+    size: 2 + Math.round(rnd() * 2),
+    color: DOT_COLORS[i % DOT_COLORS.length],
+    dur: 3 + rnd() * 5, delay: -rnd() * 8,
+  }));
+})();
+
 const PLAN_ORDER = ['free', 'starter', 'pro', 'elite'];
 const PLAN_ICON_COLOR = { free: '#3ddc97', starter: '#fd429c', pro: '#7c6cff', elite: '#ffb347' };
 const LANE_META = [
@@ -89,6 +102,11 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Hero */}
       <header className="lp-hero">
         <div className="lp-aurora"><i /><i /><i /></div>
+        <div className="lp-dots" aria-hidden="true">
+          {DOTS.map((d, i) => (
+            <i key={i} style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.size, height: d.size, '--dc': d.color, '--dur': `${d.dur}s`, animationDelay: `${d.delay}s` }} />
+          ))}
+        </div>
         <div className="lp-wrap">
           <div className="lp-pill lp-reveal"><span />{t.heroPill}</div>
           <h1 className="lp-h1 lp-reveal" style={{ '--d': '.08s' }}>
