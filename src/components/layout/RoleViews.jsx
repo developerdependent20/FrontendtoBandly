@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../supabaseClient';
 // EventPlanner (y sus dependencias, VisualCalendar/ChartStudio) se queda como
@@ -10,6 +10,7 @@ import { supabase } from '../../supabaseClient';
 // del build (bundle de 1.5MB sin code-splitting), el hallazgo #1 de la
 // auditoría de performance.
 import EventPlanner from '../EventPlanner';
+import { lazyRetry as lazy } from '../../utils/lazyRetry';
 const SongLibrary = lazy(() => import('../SongLibrary'));
 const TeamList = lazy(() => import('../TeamList'));
 const ProMixer = lazy(() => import('../DAW/ProMixer'));

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { lazyRetry as lazy } from './utils/lazyRetry';
 import './App.css';
 import { supabase } from './supabaseClient';
 

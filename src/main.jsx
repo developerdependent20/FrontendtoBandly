@@ -10,10 +10,18 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import DialogHost from './components/DialogHost.jsx'
 import { installGlobalErrorReporting } from './utils/errorReporter'
+import { reloadOnceForNewDeploy } from './utils/lazyRetry'
 
 // Errores que nadie captura (excepciones sueltas, promesas sin catch). Son los
 // que hoy se perdían por completo.
 installGlobalErrorReporting('web')
+
+// Vite avisa cuando falla un import dinámico/preload (típico tras un deploy
+// nuevo con el index viejo en caché): recargamos una vez para traer el nuevo.
+window.addEventListener('vite:preloadError', (e) => {
+  e.preventDefault()
+  reloadOnceForNewDeploy()
+})
 
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
