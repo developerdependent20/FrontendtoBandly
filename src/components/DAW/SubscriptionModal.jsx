@@ -12,7 +12,11 @@ const SubscriptionModal = ({ profile, onClose }) => {
     if (planId === 'free') return; // El plan gratis no pasa por checkout
     setLoading(planId);
     try {
-      await paddleService.openCheckout(planId, billingPeriod, profile.id, profile.email);
+      const opened = await paddleService.openCheckout(planId, billingPeriod, profile.id, profile.email);
+      if (opened === 'browser') {
+        alertDialog('Abrimos el pago en tu navegador. Entra con esta misma cuenta y, al terminar, vuelve a abrir Bandly para activar tu plan.');
+        onClose();
+      }
     } catch (err) {
       alertDialog(`Error al iniciar el pago: ${err.message}`);
     } finally {

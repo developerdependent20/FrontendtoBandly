@@ -45,7 +45,6 @@ export function useOrgData(orgId) {
 
       // Si no hay internet, nos quedamos solo con la caché
       if (!navigator.onLine) {
-        console.log('[Offline] Usando datos cacheados de la agenda y setlist');
         return;
       }
 

@@ -1,0 +1,260 @@
+﻿BANDLY
+Plataforma profesional de audio en vivo
+
+CONTRATO DE LICENCIA DE USUARIO FINAL (CLUF / EULA)
+POLÍTICA DE PRIVACIDAD Y TRATAMIENTO DE DATOS
+POLÍTICA DE REEMBOLSOS
+Versión 2.0 — 19 de septiembre de 2026
+
+CONTENIDO
+Parte I — Contrato de Licencia de Usuario Final
+Parte II — Política de Privacidad y Tratamiento de Datos
+Parte III — Política de Reembolsos
+
+AVISO IMPORTANTE: AL MARCAR LA CASILLA «ACEPTO», O AL DESCARGAR, INSTALAR O UTILIZAR BANDLY, MANIFIESTAS QUE HAS LEÍDO, ENTENDIDO Y ACEPTADO EN SU TOTALIDAD LAS TRES PARTES DE ESTE DOCUMENTO. SI NO ESTÁS DE ACUERDO CON ALGUNA DE SUS DISPOSICIONES, NO INSTALES NI UTILICES LA APLICACIÓN.
+
+================================================================
+PARTE I — CONTRATO DE LICENCIA DE USUARIO FINAL
+================================================================
+
+1. IDENTIFICACIÓN DE LAS PARTES
+
+LICENCIANTE: Johan Sebastian Jimenez Calderon, desarrollador independiente y titular del proyecto Bandly, con domicilio en Bogotá, Colombia (en adelante, «Bandly», «nosotros» o el «Licenciante»). Contacto: dependent.mix@gmail.com.
+
+LICENCIATARIO: la persona natural o jurídica que descarga, instala o utiliza Bandly (en adelante, el «Usuario» o «tú»).
+
+Este Contrato regula el uso de Bandly (Bandly DAW), así como de los servicios en línea de Bandly a los que la aplicación se conecta (en conjunto con el sitio web y las demás aplicaciones del ecosistema, la «Plataforma»).
+
+2. OBJETO Y ALCANCE DEL SOFTWARE
+
+Bandly, también llamada «Bandly DAW», es una aplicación de escritorio de alto rendimiento (Estación de Trabajo de Audio Digital) diseñada para ejecutar y gestionar multitracks y secuencias de audio en presentaciones musicales en vivo, y para organizar eventos, repertorios y equipos de producción. Incluye, entre otras funciones: un motor de audio propio, mezclador por canales, metrónomo, pads, control de arreglos y de tonalidad, una línea de tiempo con secciones, letras y luces, y la lectura automática de la pista guía («CUES») para ubicar y nombrar las secciones de cada canción.
+
+Bandly funciona en conjunto con las aplicaciones complementarias Bandly Presenter (proyección de letras) y Bandly Lights (control de luces), que son opcionales y tienen su propio contrato de licencia.
+
+El presente Contrato tiene por objeto regular: (i) la licencia de uso del software; (ii) las condiciones de acceso al contenido y a los servicios de la Plataforma; (iii) el tratamiento de tus datos; y (iv) las obligaciones y limitaciones de responsabilidad de cada parte.
+
+3. LICENCIA DE USO DEL SOFTWARE
+
+3.1 Alcance. Sujeto al cumplimiento de este Contrato, Bandly te otorga una licencia limitada, personal, no exclusiva, no sublicenciable, intransferible y revocable para:
+
+•  Instalar y ejecutar Bandly en los dispositivos autorizados según el plan contratado.
+•  Acceder, descargar y reproducir el contenido de audio (multitracks y secuencias) habilitado para tu cuenta y tu organización.
+•  Utilizar la aplicación con fines profesionales o personales de interpretación musical en vivo y ensayo.
+
+3.2 Restricciones. No estás autorizado para:
+
+•  Copiar, distribuir, sublicenciar, vender, alquilar, prestar o transferir la aplicación o cualquier parte de ella.
+•  Realizar ingeniería inversa, descompilar, desensamblar o intentar obtener el código fuente, salvo en la medida en que la ley lo permita expresamente.
+•  Modificar, adaptar, traducir o crear obras derivadas del software.
+•  Eliminar, alterar u ocultar avisos de derechos de autor, marcas u otras indicaciones de propiedad intelectual.
+•  Eludir las medidas técnicas de la aplicación, sus límites de plan o sus mecanismos de autenticación.
+•  Utilizar la aplicación con fines ilícitos o que infrinjan derechos de terceros.
+•  Compartir tus credenciales de acceso con personas no autorizadas.
+
+4. CUENTA, EDAD Y SEGURIDAD
+
+Para acceder a las funciones que dependen de la Plataforma debes crear una cuenta con información veraz y actualizada. Declaras ser mayor de 18 años y tener plena capacidad legal para celebrar este Contrato. Eres responsable de mantener la confidencialidad de tus credenciales y de toda la actividad que ocurra bajo tu cuenta. Bandly puede suspender o cancelar cuentas que proporcionen información falsa o vulneren la integridad del sistema.
+
+5. PLANES, PAGOS Y SUSCRIPCIONES
+
+Bandly ofrece una modalidad gratuita limitada y planes de pago (suscripciones) que desbloquean mayor almacenamiento, más usuarios, más organizaciones y funciones avanzadas. Las características, cuotas y precios de cada plan son los publicados en getbandly.com y pueden cambiar.
+
+Procesador de pagos: los cobros de suscripciones se procesan a través de Paddle.com Market Limited («Paddle»), que actúa como nuestro Merchant of Record (comerciante registrado). Aunque contratas el servicio con Bandly, la venta se realiza formalmente a través de Paddle: es Paddle quien procesa el pago, emite la factura, calcula y remite los impuestos aplicables (IVA / VAT / sales tax según tu ubicación) y aparecerá como el comercio en el estado de cuenta de tu tarjeta. Bandly nunca recibe ni almacena los datos completos de tu método de pago.
+
+Renovación automática: las suscripciones de pago se renuevan automáticamente al final de cada periodo de facturación (mensual o anual) al precio vigente, salvo que canceles antes de la fecha de renovación. Puedes cancelar en cualquier momento desde tu panel de cuenta; la cancelación surte efecto al final del periodo ya pagado, sin cobros posteriores.
+
+Cambios de precio: si cambian los precios de un plan activo, te lo notificaremos con una antelación mínima de treinta (30) días.
+
+Reembolsos: se rigen por la Política de Reembolsos de la Parte III de este documento.
+
+6. PROPIEDAD INTELECTUAL Y CONTENIDO
+
+6.1 Titularidad del software. Bandly y todos sus componentes —incluidos código fuente y objeto, interfaces, diseño, gráficos, bases de datos, algoritmos, logotipos y marcas asociadas a «Bandly»— son propiedad exclusiva de Johan Sebastian Jimenez Calderon o de sus licenciantes. Este Contrato no te transfiere ningún derecho de propiedad; solo la licencia de uso descrita.
+
+6.2 Contenido y derechos de terceros.
+
+Los archivos de audio que subas o generes (multitracks, secuencias, pistas guía, mezclas) y las letras, cifrados, arreglos, marcadores y configuraciones de setlist que crees son de tu titularidad y de tu exclusiva responsabilidad. Declaras que eres su propietario o que cuentas con las licencias, permisos y autorizaciones necesarias para cargarlos, reproducirlos y usarlos en la Plataforma.
+
+Eres el único responsable de obtener las licencias necesarias (por ejemplo CCLI, SAYCO, ACINPRO u otras sociedades de gestión colectiva o titulares de derechos) para la ejecución pública de obras musicales y el uso de letras y cifrados de terceros en tus presentaciones. Bandly actúa únicamente como proveedor de software y de almacenamiento y no supervisa de manera proactiva el contenido privado de cada organización.
+
+Si Bandly te da acceso a contenido de audio propio o de sus licenciantes, ese acceso es solo durante la vigencia de tu suscripción activa y para uso en presentaciones en vivo, sin que se te transfiera titularidad alguna.
+
+6.3 Notificación de infracciones (DMCA). Respetamos los derechos de creadores, productoras y artistas. Si eres titular de derechos y crees de buena fe que un usuario ha alojado material tuyo sin autorización, envía una notificación formal de retiro con evidencia de titularidad a dependent.mix@gmail.com. Eliminaremos el acceso al material infractor de inmediato.
+
+7. CONDUCTA Y USO PROHIBIDO
+
+Al usar la Plataforma te comprometes a NO:
+
+•  Usarla con fines ilícitos, fraudulentos o malintencionados.
+•  Interferir con la seguridad o el código, ni intentar acceder sin autorización a servidores, bases de datos o cuentas de otros usuarios.
+•  Cargar software malicioso, virus o código dañino.
+•  Vender, revender, licenciar o explotar comercialmente el acceso a la Plataforma sin nuestro consentimiento expreso.
+
+8. VISIBILIDAD DENTRO DE TU ORGANIZACIÓN Y CONTENIDO COMPARTIDO ENTRE APLICACIONES
+
+Bandly es una herramienta colaborativa. Reconoces y aceptas que tu nombre, foto de perfil, rol(es), instrumento(s), fechas bloqueadas y estado de confirmación en cada evento son visibles para los directores y administradores de las organizaciones a las que perteneces, con el único fin de planear eventos. Esa información permanece privada frente a terceros ajenos a tu organización.
+
+Cierto contenido que prepares en una aplicación de Bandly (por ejemplo letras, marcadores de sección, escenas de luz y cifrados) puede sincronizarse automáticamente con las otras aplicaciones del ecosistema para su uso en vivo. Esa sincronización ocurre exclusivamente dentro de los datos de tu misma organización y no implica el envío de tu información a terceros ajenos a Bandly.
+
+9. COMPONENTES DE TERCEROS Y SOFTWARE LIBRE
+
+Bandly incluye componentes de software de código abierto (entre ellos Tauri, el lenguaje Rust y sus bibliotecas de audio, React y ONNX Runtime) y utiliza el modelo de reconocimiento de voz Whisper de OpenAI, distribuido bajo licencia MIT, para leer la pista guía en tu propio equipo. Cada componente se rige por su respectiva licencia, que este Contrato no modifica. Además, la Plataforma se apoya en servicios de terceros descritos en la Parte II (Supabase, Cloudflare, Paddle y Hugging Face).
+
+10. ADVERTENCIAS DE USO EN EVENTOS EN VIVO
+
+•  Un evento en vivo no admite repeticiones. Antes de cada presentación debes probar la canción, la interfaz de audio, el ruteo de salidas y el nivel de cada canal en las mismas condiciones del evento, y tener un plan de respaldo (por ejemplo un segundo equipo o una mezcla estéreo de emergencia).
+•  La aplicación te avisa si el dispositivo de audio se desconecta, pero no puede garantizar la continuidad del sonido ante fallas de hardware, controladores, energía, del sistema operativo o de la conexión a internet (necesaria para iniciar sesión, descargar contenido y sincronizar). Descarga con anticipación el contenido que vayas a usar sin conexión.
+•  El reconocimiento automático de la pista guía es una ayuda: puede omitir o nombrar de forma incorrecta una sección. Revisa siempre las secciones antes de tocar.
+•  Controlas tu propio volumen de salida. Ajusta los niveles con cuidado: un nivel excesivo puede dañar equipos de sonido y la audición de las personas.
+
+11. ACTUALIZACIONES Y DISPONIBILIDAD
+
+Bandly puede publicar actualizaciones, corregir errores, modificar o retirar funciones y suspender temporalmente el servicio por mantenimiento. Algunas funciones dependen de servicios de terceros y de tu conexión a internet, y no podemos garantizar su disponibilidad ininterrumpida.
+
+12. EXCLUSIÓN DE GARANTÍAS Y LIMITACIÓN DE RESPONSABILIDAD
+
+BANDLY SE SUMINISTRA «TAL CUAL» («AS IS») Y «SEGÚN DISPONIBILIDAD», SIN GARANTÍAS EXPRESAS O IMPLÍCITAS, INCLUIDA LA DE DISPONIBILIDAD ININTERRUMPIDA O AUSENCIA DE ERRORES.
+
+En la máxima medida permitida por la ley, Bandly no será responsable por la pérdida temporal o permanente de datos, por interrupciones o fallas ocurridas durante un evento en vivo, por fallas de red, de hardware o de servicios de terceros, por lucro cesante, daño reputacional ni por cualquier daño indirecto derivado del uso o de la imposibilidad de uso de la aplicación o de la Plataforma.
+
+Salvo dolo o culpa grave, la responsabilidad total y acumulada de Bandly frente a ti por cualquier causa se limita al valor efectivamente pagado por ti por el periodo de facturación en curso.
+
+13. TERMINACIÓN
+
+Este Contrato rige mientras uses la aplicación. Puedes terminarlo en cualquier momento desinstalándola y, si lo deseas, eliminando tu cuenta. Bandly puede suspender o terminar tu acceso ante incumplimientos de este Contrato, falta de pago o uso abusivo. Al terminar, cesa tu licencia de uso; las cláusulas que por su naturaleza deban subsistir (propiedad intelectual, limitación de responsabilidad, ley aplicable) seguirán vigentes.
+
+14. MODIFICACIONES
+
+Bandly puede modificar este documento para reflejar cambios legales o nuevas funciones. La versión vigente estará publicada en getbandly.com y, cuando el cambio sea sustancial, te lo notificaremos por correo o mediante un aviso dentro de la aplicación. El uso continuado tras la publicación implica la aceptación de la nueva versión.
+
+15. LEY APLICABLE Y JURISDICCIÓN
+
+Este Contrato se rige por las leyes de la República de Colombia. Las controversias que no puedan resolverse por mediación directa se someterán a los jueces y tribunales ordinarios competentes de la ciudad de Bogotá D.C., Colombia.
+
+16. DISPOSICIONES GENERALES
+
+Este documento constituye el acuerdo completo entre las partes sobre su objeto y reemplaza cualquier versión anterior del contrato de licencia de esta aplicación. Si alguna disposición se declara inválida, las demás continúan vigentes. La falta de ejercicio de un derecho no implica su renuncia. No puedes ceder tus derechos u obligaciones sin autorización escrita de Bandly. El idioma de este documento es el español.
+
+17. CONTACTO
+
+Soporte, privacidad, reembolsos y notificaciones legales: dependent.mix@gmail.com
+
+Sitio web: getbandly.com
+
+================================================================
+PARTE II — POLÍTICA DE PRIVACIDAD Y TRATAMIENTO DE DATOS
+================================================================
+
+1. Introducción
+
+En Bandly reconocemos la importancia de tu privacidad y nos comprometemos con el tratamiento ético, transparente y responsable de tus datos personales. Esta política describe cómo recolectamos, almacenamos, usamos, protegemos y eliminamos tu información al usar Bandly y los servicios de Bandly a los que se conecta. Se emite en cumplimiento de la Ley 1581 de 2012 de la República de Colombia y demás normas de protección de datos aplicables.
+
+2. Responsable del tratamiento
+
+Johan Sebastian Jimenez Calderon, desarrollador independiente y creador de Bandly. Domicilio principal: Bogotá, Colombia. Privacidad y reportes: dependent.mix@gmail.com.
+
+3. ¿Qué datos recolectamos?
+
+•  Información que proporcionas: nombre completo, correo electrónico, contraseña (almacenada cifrada) y foto de perfil opcional al crear tu cuenta.
+•  Disponibilidad y planeación: fechas que marcas como no disponibles, rol(es) e instrumento(s) asignados en tu organización y tu estado de confirmación en cada evento.
+•  Contenido que creas: letras, cifrados, anotaciones, marcadores de sección, escenas, repertorios y archivos de audio o imágenes que subas o generes en tu organización.
+•  Información de pago: tu tarjeta y datos de facturación son recolectados y procesados directamente por Paddle. Bandly nunca recibe ni almacena los datos completos de tu método de pago; solo recibe confirmaciones del estado de tu suscripción.
+•  Información técnica y de uso: direcciones IP temporales, sistema operativo, idioma, métricas de rendimiento e identificadores seguros de sesión provistos por nuestros proveedores de autenticación.
+•  Reportes de errores técnicos: si la aplicación falla y tienes sesión iniciada, envía a Bandly un reporte con el mensaje y la traza del error, la versión del navegador o sistema, tu identificador de usuario y de organización. Se limita a unos pocos reportes por sesión, no incluye tu contenido y se usa solo para corregir fallas.
+
+Qué guarda específicamente Bandly:
+
+•  Archivos en tu equipo: los multitracks y secuencias que descargas para uso sin conexión, tus ajustes de audio (dispositivo, tamaño de búfer, ruteo, volúmenes y ecualización por canción) y tu lista de canciones de trabajo se guardan localmente en tu computadora.
+•  Acceso al hardware: la aplicación usa las interfaces de audio instaladas en tu equipo. Ese acceso es estrictamente necesario para el funcionamiento del servicio.
+•  Reconocimiento de la pista guía: la lectura de la pista de CUES y su reconocimiento de voz ocurren íntegramente en tu equipo; el audio de tu pista guía NO se envía a ningún servidor. La primera vez que se usa, la aplicación descarga el modelo de reconocimiento de voz (aproximadamente 77 MB) desde Hugging Face y lo guarda en tu equipo; después funciona sin conexión.
+•  Sincronización en tiempo real: mientras reproduces una canción, la aplicación envía a los servidores de Bandly el nombre de la sección, letra o escena de luz que corresponde al momento actual, únicamente dentro de los datos de tu organización, para que Bandly Presenter y Bandly Lights reaccionen. Si usas el modo «En vivo» desde el celular, los comandos de reproducción viajan también por ese canal.
+
+4. Uso y finalidades
+
+Tus datos personales NUNCA se venden a terceros. Los usamos exclusivamente para: crear y gestionar tu cuenta; vincularte a las organizaciones que te inviten; sincronizar tu repertorio y eventos entre dispositivos y aplicaciones; brindarte soporte; prevenir fraude, abusos y actividad maliciosa; corregir fallas técnicas; y enviarte notificaciones operativas y, si lo autorizas, novedades de Bandly.
+
+5. Infraestructura y terceros (subencargados)
+
+•  Supabase: base de datos principal, autenticación segura de usuarios y almacenamiento de archivos.
+•  Cloudflare / Vercel: entrega de la aplicación y almacenamiento de archivos de audio mediante redes de distribución de contenido.
+•  Paddle: procesamiento de pagos como Merchant of Record; tiene su propia política de privacidad en paddle.com/legal/privacy.
+•  OneSignal: entrega de notificaciones push, únicamente si decides activarlas en la versión web o móvil.
+•  Hugging Face: aloja el modelo de reconocimiento de voz que la aplicación descarga una sola vez; en esa descarga se conocen tu dirección IP y los datos técnicos normales de cualquier descarga, pero no tu contenido.
+
+Compartimos con ellos solo la información mínima necesaria para que el servicio funcione.
+
+6. Visibilidad dentro de tu organización
+
+Tu nombre, foto y rol(es) son visibles para los demás miembros de tu organización. Tus fechas bloqueadas y estado de confirmación son visibles para los directores y administradores. El contenido que subas queda disponible únicamente para los miembros autorizados de tu misma organización, nunca para otras organizaciones.
+
+7. Archivos y contenido privados
+
+Cualquier archivo de audio, imagen, letra o lista que subas es contenido privado de tu organización. No lo indexamos públicamente ni lo compartimos con otras organizaciones, anunciantes o redes sociales.
+
+8. Retención de datos
+
+Conservamos tus datos personales mientras tu cuenta permanezca activa. Si eliminas tu cuenta, tus datos personales se borran de nuestras bases de datos en un plazo no mayor a 30 días, salvo la información técnica anonimizada y los datos que debamos conservar para cumplir obligaciones legales.
+
+9. Seguridad
+
+Adoptamos medidas técnicas y operativas para proteger tu información contra acceso no autorizado, alteración o pérdida. Todo el tráfico con nuestros servidores viaja cifrado (HTTPS/TLS) y las contraseñas se almacenan con hash, sin que el equipo de desarrollo pueda verlas. Ningún método de transmisión o almacenamiento es infalible; te recomendamos usar contraseñas fuertes y no compartirlas.
+
+10. Almacenamiento local y cookies
+
+La aplicación de escritorio guarda datos de configuración y de sesión en tu equipo para mantenerte identificado y recordar tus preferencias. No utilizamos rastreadores publicitarios ni píxeles de marketing de terceros.
+
+11. Tus derechos (habeas data / ARCO)
+
+Tienes derecho a acceder a tus datos, rectificarlos, suprimirlos y oponerte a comunicaciones que no sean estrictamente operativas. Puedes corregir tu información desde tu perfil o escribir a dependent.mix@gmail.com para ejercer cualquier derecho; atenderemos tu solicitud sin costo y en los plazos que marca la ley.
+
+12. Menores de edad
+
+Bandly no está diseñado ni dirigido a niños menores de 13 años. Si tienes menos de 13 años, no debes crear una cuenta sin la supervisión directa de tus padres o tutores. Si descubrimos que recopilamos datos de un menor de 13 años sin verificación parental, eliminaremos esa cuenta de inmediato. Recuerda que para celebrar el Contrato de la Parte I debes ser mayor de 18 años.
+
+13. Cambios a esta política
+
+Si actualizamos estas prácticas, modificaremos la versión y la fecha de este documento. Ante cambios sustanciales que afecten tus derechos te avisaremos por correo o mediante un aviso destacado en la aplicación.
+
+================================================================
+PARTE III — POLÍTICA DE REEMBOLSOS
+================================================================
+
+1. Alcance
+
+Esta política aplica a todas las suscripciones de pago de Bandly (planes Starter, Pro y superiores), procesadas a través de nuestro proveedor de pagos, que actúa como comerciante registrado (Merchant of Record) de la transacción.
+
+2. Garantía de 14 días
+
+Si no estás satisfecho con tu suscripción, puedes solicitar el reembolso de tu primer pago dentro de los 14 días calendario siguientes a la fecha de la transacción, indicando el motivo (por ejemplo: el producto no cumplió lo ofrecido, dificultades técnicas no resueltas por soporte o compra realizada por error).
+
+Evaluamos cada solicitud de buena fe. Nos reservamos el derecho de rechazar solicitudes que evidencien uso extensivo del servicio antes de la cancelación (por ejemplo, uso activo de la plataforma en múltiples eventos o sesiones) o el abuso reiterado de esta garantía por una misma cuenta u organización. Pasado el plazo de 14 días, los pagos realizados no son reembolsables, salvo lo indicado en la sección 4.
+
+3. Renovaciones automáticas
+
+Las suscripciones se renuevan automáticamente al finalizar cada periodo de facturación (mensual o anual), salvo que se cancelen antes de la fecha de renovación. La garantía de 14 días aplica únicamente al primer cobro de una nueva suscripción, no a las renovaciones posteriores.
+
+Puedes cancelar en cualquier momento desde tu panel de cuenta. La cancelación evita cobros futuros, pero no genera reembolso del periodo ya facturado: mantendrás el acceso hasta el final de ese ciclo.
+
+4. Excepciones: errores técnicos o de cobro
+
+Fuera del plazo de 14 días evaluaremos solicitudes caso por caso cuando exista:
+
+•  Un cobro duplicado o un error técnico de facturación comprobable.
+•  Un cobro realizado sin autorización del titular de la cuenta.
+•  Una falla del servicio, atribuible a Bandly, que haya impedido de forma continua el uso de las funciones principales del plan durante el periodo facturado.
+
+5. Cómo solicitar un reembolso
+
+Escríbenos a dependent.mix@gmail.com indicando el correo de tu cuenta, la fecha del cobro y el motivo. Responderemos en un plazo máximo de 5 días hábiles. Los reembolsos aprobados se procesan por el mismo proveedor y método de la compra original, y pueden tardar algunos días hábiles adicionales en reflejarse según tu banco o entidad emisora.
+
+6. Modificaciones
+
+Podemos actualizar esta política para reflejar cambios operativos o legales. Cada solicitud se evalúa según la versión vigente en la fecha de la compra original.
+
+================================================================
+
+Versión 2.0 — 19 de septiembre de 2026
+
+© 2026 Bandly — Johan Sebastian Jimenez Calderon. Todos los derechos reservados.
+
+Al marcar «Acepto» confirmas que has leído y aceptas las Partes I, II y III de este documento.

@@ -666,7 +666,7 @@ export default function WebStemPlayer({ song, session, onClose }) {
                   marginTop: '1.2rem', fontSize: '0.73rem', color: 'rgba(255,255,255,0.4)',
                   maxWidth: '420px', margin: '1.2rem auto 0', lineHeight: 1.5
                 }}>
-                  Durante el show tu celular sí sirve: desde <strong>Modo En Vivo</strong> controlas play, pausa y stop del DAW.
+                  Durante el show tu celular sí sirve: desde <strong>Modo En Vivo</strong> controlas play, pausa y stop del Tracker.
                 </div>
               )}
             </div>

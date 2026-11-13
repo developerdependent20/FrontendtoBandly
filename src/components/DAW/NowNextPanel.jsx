@@ -18,6 +18,7 @@ const NowNextPanel = memo(({
   beatsPerBar,
   hasTempo,
   currentLyric,       // { text, index } | null
+  songTitle, songBpm, songKey, // se muestran en AHORA mientras no hay sección activa
 }) => {
   let curIdx = -1;
   for (let i = 0; i < markers.length; i++) {
@@ -50,6 +51,8 @@ const NowNextPanel = memo(({
     }
   }
 
+  const idle = !current && !!songTitle;
+  const songMeta = [songBpm ? `${songBpm} BPM` : null, songKey || null].filter(Boolean).join(' · ');
   const curColor = current ? sectionTone(current) : '#7d7d7c';
   const nextColor = next ? sectionTone(next) : '#7d7d7c';
 
@@ -79,7 +82,10 @@ const NowNextPanel = memo(({
         <span style={kicker}>AHORA</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
           
-          <span style={{ ...bigName, color: current ? '#fff' : 'rgba(255,255,255,0.35)' }}>{current ? displayName(current.label) : '—'}</span>
+          <span style={{ ...bigName, color: current ? '#fff' : (idle ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)') }}>{current ? displayName(current.label) : (songTitle || '—')}</span>
+          {idle && songMeta && (
+            <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: '0.95rem', fontWeight: 500, color: 'rgba(255,255,255,0.65)' }}>{songMeta}</span>
+          )}
           {currentLyric?.text && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', minWidth: 0, color: 'rgba(233,213,255,0.85)', fontSize: '0.8rem', fontWeight: 500 }}>
               <Mic2 size={13} style={{ flexShrink: 0 }} />

@@ -1,16 +1,19 @@
-# React + Vite
+# Bandly Tracker (Live-Ready Engine)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este es el núcleo de reproducción profesional de Bandly, diseñado para latencia cero y estabilidad total en conciertos en vivo. 
 
-Currently, two official plugins are available:
+> [!IMPORTANT]
+> **Arquitectura de Estabilidad**: Para entender cómo mantener el transporte estable, libre de cortes y con respuesta instantánea, consulta el archivo [ENGINE_STABILITY_RECORD.md](file:///c:/Users/User/.gemini/antigravity/scratch/Bandly/ENGINE_STABILITY_RECORD.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Características Principales
+- **Hardened Engine 2.0**: Motor de audio en Rust desacoplado de la UI.
+- **Batch Decoding**: Procesamiento por lotes de 2 segundos para evitar contención de memoria.
+- **Instant Play**: Transporte atómico sin esperas de carga.
+- **Reloj Sagrado**: Sincronía visual independiente del procesamiento de audio.
 
-## React Compiler
+## Desarrollo
+1. `npm install`
+2. `npm run tauri dev`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Créditos
+- Muestras de piano: Salamander Grand Piano de Alexander Holm (CC-BY 3.0), en `public/audio/piano/`.

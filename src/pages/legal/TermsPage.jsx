@@ -23,7 +23,7 @@ export default function TermsPage({ onBack }) {
         <section className="legal-section">
           <h2>1. Identificación del servicio</h2>
           <p>Bienvenido a Bandly, una plataforma digital orientada a la gestión integral de organizaciones y equipos de producción de eventos — no solo bandas o equipos musicales, sino también sonido, producción audiovisual, logística, bienvenida y liderazgo — incluyendo eventos, repertorios, recursos, multitracks y secuencias, todo desde un solo lugar.</p>
-          <p>El ecosistema de Bandly incluye la aplicación web y de escritorio principal ("Bandly" o "Bandly DAW"), así como <strong>Bandly Presenter</strong>, una aplicación de escritorio complementaria y opcional para la proyección en vivo de letras y contenido visual durante eventos y presentaciones.</p>
+          <p>El ecosistema de Bandly incluye la aplicación web y de escritorio principal ("Bandly" o "Bandly Tracker"), así como <strong>Bandly Presenter</strong>, una aplicación de escritorio complementaria y opcional para la proyección en vivo de letras y contenido visual durante eventos y presentaciones.</p>
           <p>Estos Términos y Condiciones de Uso regulan el acceso, navegación, registro y uso de Bandly, Bandly Presenter, el sitio web y las apps asociadas (en adelante, conjuntamente, la "Plataforma").</p>
           <p>La Plataforma es operada desde Bogotá, Colombia, por <strong>Johan Sebastian Jimenez Calderon</strong>, desarrollador independiente y titular del proyecto Bandly (en adelante, "Bandly", "nosotros" o el "Operador").</p>
           <div className="contact-box">
@@ -43,7 +43,7 @@ export default function TermsPage({ onBack }) {
           <ul style={{ paddingLeft: '1.2rem', color: '#aaa', fontSize: '0.9rem', lineHeight: '1.6' }}>
             <li>Gestión de eventos, calendarios y equipos con roles multi-departamento (músicos, liderazgo, producción/media, logística/staff).</li>
             <li>Registro y consulta de disponibilidad y fechas bloqueadas de los integrantes de un equipo, para efectos de planeación de eventos.</li>
-            <li>Almacenamiento, sincronización y reproducción estrictamente privada de multitracks y secuencias de audio para ensayos y presentaciones en vivo (Bandly DAW).</li>
+            <li>Almacenamiento, sincronización y reproducción estrictamente privada de multitracks y secuencias de audio para ensayos y presentaciones en vivo (Bandly Tracker).</li>
             <li>Creación y edición de repertorios, cifrados/charts musicales, letras y anotaciones asociadas a cada canción.</li>
             <li>Proyección en vivo de letras y contenido visual a través de Bandly Presenter, cuando el usuario opta por instalar y utilizar dicha aplicación complementaria.</li>
           </ul>

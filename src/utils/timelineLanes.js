@@ -200,8 +200,17 @@ function shapeSimilarity(a, b) {
 
 // Mezcla lo detectado con lo que ya había: los markers puestos a mano (o
 // renombrados) se respetan; los detectados de una pasada anterior se reemplazan.
+// Marcador que salió de la guía pero nadie ha nombrado: o es de esta detección
+// (autoLabel), o lo dejó el subidor de secuencias, que solo ubicaba las secciones
+// y las numeraba ("Sección 3") sin marcarlas como pendientes de nombre. Si no se
+// tratara igual, esas secciones quedarían con número para siempre: ni se
+// renombrarían ni se reemplazarían al volver a leer la guía.
+export const isUnnamedAutoMarker = (m) => m?.source === 'cue'
+  && !m.heard
+  && (!!m.autoLabel || /^secci[oó]n\s+\d+$/i.test((m.label || '').trim()));
+
 export function mergeDetectedMarkers(existing, detected, minGap) {
-  const kept = existing.filter(m => m.source !== 'cue' || !m.autoLabel);
+  const kept = existing.filter(m => !isUnnamedAutoMarker(m) && !(m.source === 'cue' && m.autoLabel));
   const fresh = detected.filter(d => !kept.some(k => Math.abs(k.sample - d.sample) < minGap));
   return [...kept, ...fresh].sort((a, b) => a.sample - b.sample);
 }

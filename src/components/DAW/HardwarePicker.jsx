@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { isTauri, safeInvoke } from '../../utils/tauri';
 import { Settings, Headphones, Check, RefreshCw, AlertCircle } from 'lucide-react';
+import { getAudioPrefs, saveAudioPrefs, getLastFileRate, audioInitArgs, BUFFER_CHOICES } from '../../utils/audioPrefs';
+
+const selectStyle = { width: '100%', padding: '0.7rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: 'white', fontSize: '0.9rem', colorScheme: 'dark' };
+const labelStyle = { display: 'block', fontSize: '0.75rem', fontWeight: '500', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '0.5rem' };
+const khz = (hz) => `${(hz / 1000).toLocaleString('es', { maximumFractionDigits: 1 })} kHz`;
 
 export default function HardwarePicker({ onConfigured }) {
   const [devices, setDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [prefs, setPrefs] = useState(getAudioPrefs);
+  const [options, setOptions] = useState(null); // { sample_rates, buffer_min, buffer_max } del dispositivo elegido
 
   const scanDevices = async () => {
     setLoading(true);
@@ -20,10 +27,6 @@ export default function HardwarePicker({ onConfigured }) {
           { id: 'mock-2', name: 'Navegador Loopback', host: 'WebAudio' }
         ]);
       }
-      // Forzar buffer máximo (2048) siempre — solo playback, latencia no importa
-      safeInvoke('set_audio_buffer_size', { size: 2048 }).catch(() => {});
-      localStorage.setItem('bandly_buffer_size', '2048');
-
       const lastId = localStorage.getItem('bandly_last_audio_device');
       if (lastId && list) {
         const found = list.find(d => d.id === lastId);
@@ -41,15 +44,26 @@ export default function HardwarePicker({ onConfigured }) {
     scanDevices();
   }, []);
 
+  // Qué frecuencias y buffers admite el dispositivo elegido. Si el driver no lo informa
+  // (p. ej. ya está en uso), se ofrecen las opciones habituales.
+  useEffect(() => {
+    let alive = true;
+    setOptions(null);
+    if (!selectedDevice || !isTauri()) return () => { alive = false; };
+    safeInvoke('get_device_audio_options', { deviceId: selectedDevice.id })
+      .then(o => { if (alive) setOptions(o); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [selectedDevice]);
+
   const handleConfirm = async () => {
     if (!selectedDevice) return;
     setLoading(true);
     try {
       await safeInvoke('kill_audio_stream');
       await new Promise(r => setTimeout(r, 200)); // Pequeña pausa para que el driver respire
-      await safeInvoke('init_audio_stream', { 
-        deviceId: selectedDevice.id
-      });
+      saveAudioPrefs(prefs);
+      await safeInvoke('init_audio_stream', audioInitArgs(selectedDevice.id));
       localStorage.setItem('bandly_last_audio_device', selectedDevice.id);
       localStorage.setItem('bandly_last_audio_host', selectedDevice.host);
       onConfigured(selectedDevice);
@@ -60,6 +74,11 @@ export default function HardwarePicker({ onConfigured }) {
       setLoading(false);
     }
   };
+
+  const lastRate = getLastFileRate();
+  const rateChoices = options?.sample_rates?.length ? options.sample_rates : [44100, 48000];
+  const bufferChoices = BUFFER_CHOICES.filter(b => !options?.buffer_max || (b >= options.buffer_min && b <= options.buffer_max));
+  const latencyMs = (b) => (b / (prefs.sampleRate || lastRate || 48000) * 1000).toFixed(1);
 
   return (
     <div className="glass-panel" style={{ maxWidth: '600px', margin: '4rem auto', padding: '2.5rem' }}>
@@ -131,6 +150,28 @@ export default function HardwarePicker({ onConfigured }) {
         </div>
       </div>
 
+      {selectedDevice && isTauri() && (
+        <div style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Frecuencia de muestreo</label>
+            <select style={selectStyle} value={prefs.sampleRate} onChange={e => setPrefs(p => ({ ...p, sampleRate: parseInt(e.target.value, 10) }))}>
+              <option value={0}>Automática{lastRate ? ` (${khz(lastRate)} · igual a las pistas)` : ' (48 kHz)'}</option>
+              {rateChoices.map(r => <option key={r} value={r}>{khz(r)}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Buffer</label>
+            <select style={selectStyle} value={prefs.bufferSize} onChange={e => setPrefs(p => ({ ...p, bufferSize: parseInt(e.target.value, 10) }))}>
+              <option value={0}>Automático (el del driver)</option>
+              {bufferChoices.map(b => <option key={b} value={b}>{b} muestras · {latencyMs(b)} ms</option>)}
+            </select>
+          </div>
+          <p style={{ gridColumn: '1 / -1', margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            Un buffer más chico responde más rápido (pads y drum pad en vivo) pero exige más al procesador; si oyes cortes, súbelo.
+            Tus pistas suenan mejor cuando la tarjeta trabaja a su misma frecuencia{lastRate ? ` (las últimas estaban a ${khz(lastRate)})` : ''}.
+          </p>
+        </div>
+      )}
 
       <button 
         className="btn-primary" 

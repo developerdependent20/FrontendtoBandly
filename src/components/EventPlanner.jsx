@@ -979,7 +979,6 @@ export default function EventPlanner({ readOnly, events, members, orgId, refresh
         } else {
           // Si es automático, solo mostramos una notificación pequeña tipo toast o nada, 
           // pero NO cerramos el modal porque el usuario lo está viendo.
-          console.log("Auto-notificación enviada a nuevos.");
         }
       } else {
         setNotifyMessage({ type: 'error', text: `❌ Error del Servidor: ${result.error || result.details || 'No se pudo enviar la notificación.'}` });

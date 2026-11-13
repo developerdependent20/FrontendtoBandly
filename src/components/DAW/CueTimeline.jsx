@@ -38,7 +38,9 @@ const CueTimeline = memo(({
   // (posición, { immediate }) — con conteo por defecto; lo provee ProMixer
   onJumpTo = null,
   // Texto de la diapositiva que está sonando (para el panel AHORA)
-  currentLyric = null
+  currentLyric = null,
+  // Datos de la canción para el panel AHORA antes de que empiece a sonar
+  songTitle = null, songBpm = null, songKey = null
 }) => {
 
   const [zoom, setZoom] = useState(1);
@@ -50,11 +52,13 @@ const CueTimeline = memo(({
   // Con zoom, la vista sigue al cursor mientras suena (como en cualquier DAW).
   const [follow, setFollow] = useState(true);
   const [showLanes, setShowLanes] = useState(() => {
-    try { return localStorage.getItem('bandly_timeline_lanes') !== '0'; } catch { return true; }
+    // Plegadas por defecto: así el mezclador cabe en pantalla sin scroll. Quien las usa
+    // las abre una vez con LÍNEAS y queda guardado.
+    try { return localStorage.getItem('bandly_timeline_lanes_v2') === '1'; } catch { return false; }
   });
   const toggleLanes = () => {
     setShowLanes(v => {
-      try { localStorage.setItem('bandly_timeline_lanes', v ? '0' : '1'); } catch { /* sin storage */ }
+      try { localStorage.setItem('bandly_timeline_lanes_v2', v ? '0' : '1'); } catch { /* sin storage */ }
       return !v;
     });
   };
@@ -146,7 +150,19 @@ const CueTimeline = memo(({
   useEffect(() => {
     const el = areaRef.current;
     if (!el) return;
+    // ¿El puntero está sobre una lista con su propio scroll (p. ej. la lista de
+    // diapositivas del marker de letra)? Entonces la rueda es de esa lista: si
+    // la onda se la quedaba, la movía hacia adelante y la lista no se desplazaba.
+    const overScrollable = (node) => {
+      for (let n = node; n && n !== el; n = n.parentElement) {
+        if (n.scrollHeight <= n.clientHeight + 1) continue;
+        const oy = getComputedStyle(n).overflowY;
+        if (oy === 'auto' || oy === 'scroll') return true;
+      }
+      return false;
+    };
     const onWheel = (e) => {
+      if (!(e.ctrlKey || e.metaKey) && overScrollable(e.target)) return;
       const st = wheelState.current;
       const r = el.getBoundingClientRect();
       const trackW = Math.max(1, r.width - st.gutter);
@@ -310,7 +326,7 @@ const CueTimeline = memo(({
                   min="1"
                   value={markerBar}
                   onChange={(e) => setMarkerBar(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') confirmMarker(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); confirmMarker(); } }}
                   style={{
                     width: '80px', textAlign: 'center', background: 'rgba(247, 244, 239, 0.04)',
                     border: '1px solid rgba(247, 244, 239, 0.3)', padding: '8px', borderRadius: '6px',
@@ -348,7 +364,7 @@ const CueTimeline = memo(({
               value={markerLabel}
               onChange={(e) => setMarkerLabel(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') confirmMarker();
+                if (e.key === 'Enter') { e.stopPropagation(); confirmMarker(); }
                 if (e.key === 'Escape') setShowModal(false);
               }}
               placeholder={`Marker ${markers.length + 1}`}
@@ -513,6 +529,7 @@ const CueTimeline = memo(({
         beatsPerBar={beatsPerBar}
         hasTempo={gridMode === 'bars'}
         currentLyric={currentLyric}
+        songTitle={songTitle} songBpm={songBpm} songKey={songKey}
       />
 
       <div style={{ padding: '0 20px', marginBottom: '8px' }}>

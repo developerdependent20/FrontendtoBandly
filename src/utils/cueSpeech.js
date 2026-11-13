@@ -186,6 +186,16 @@ function call(msg, transfer) {
   });
 }
 
+// Apaga el worker de Whisper y con él el modelo cargado (cientos de MB de RAM). Los archivos del
+// modelo siguen en la caché del navegador, así que la próxima lectura solo tarda unos segundos más.
+export function releaseSpeechModel() {
+  if (!worker) return;
+  worker.terminate();
+  worker = null;
+  for (const p of pending.values()) p.reject(new Error('worker liberado'));
+  pending.clear();
+}
+
 // Transcribe UN audio (mono 16 kHz; puede traer varios clips pegados).
 export async function transcribeRaw(audio, { language = 'spanish', model, timestamps = false } = {}) {
   const copy = audio.slice(); // el worker se queda con su copia

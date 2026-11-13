@@ -1,0 +1,101 @@
+BANDLY
+Plataforma Profesional de Audio en Vivo
+
+TÉRMINOS Y CONDICIONES DE USO
+Contrato de Licencia de Usuario Final (CLUF / EULA)
+Versión 1.0  —  26 de abril de 2026
+
+
+AVISO IMPORTANTE: AL HACER CLIC EN «ACEPTO» O AL DESCARGAR, INSTALAR O UTILIZAR LA APLICACIÓN BANDLY, USTED MANIFIESTA SU PLENA ACEPTACIÓN DE ESTOS TÉRMINOS Y CONDICIONES. SI NO ESTÁ DE ACUERDO CON ALGUNA DE LAS DISPOSICIONES AQUÍ CONTENIDAS, NO DESCARGUE NI UTILICE LA APLICACIÓN.
+
+1. IDENTIFICACIÓN DE LAS PARTES
+El presente Contrato de Licencia de Usuario Final (en adelante, el "Contrato") regula la relación contractual entre:
+LICENCIANTE: Bandly S.A.S. (o la persona natural o jurídica titular de los derechos sobre la aplicación, en adelante "Bandly"), con domicilio en Colombia.
+LICENCIATARIO: La persona natural o jurídica que descarga, instala o utiliza la aplicación Bandly (en adelante, el "Usuario").
+
+2. OBJETO DEL CONTRATO
+Bandly es una aplicación de escritorio de alto rendimiento categorizada como Estación de Trabajo de Audio Digital (DAW) diseñada exclusivamente para la ejecución y gestión de audio en presentaciones musicales en vivo. El presente Contrato tiene por objeto regular:
+•	El otorgamiento de una licencia de uso personal, no exclusiva e intransferible sobre el software Bandly.
+•	Las condiciones de acceso al contenido de audio disponible en la plataforma (multitracks, stems y archivos relacionados).
+•	El tratamiento de los datos personales y técnicos del Usuario.
+•	Las obligaciones y limitaciones de responsabilidad de cada parte.
+
+3. LICENCIA DE USO DEL SOFTWARE
+3.1 Alcance de la licencia
+Sujeto al cumplimiento del presente Contrato y al pago oportuno de la suscripción correspondiente, Bandly otorga al Usuario una licencia limitada, personal, no exclusiva, no sublicenciable e intransferible para:
+•	Instalar y ejecutar la aplicación Bandly en los dispositivos autorizados según el plan de suscripción contratado.
+•	Acceder y descargar el contenido de audio habilitado para su cuenta en los servidores de Bandly.
+•	Utilizar la aplicación para fines profesionales o personales de interpretación musical en vivo.
+
+3.2 Restricciones de uso
+El Usuario NO está autorizado para:
+•	Copiar, reproducir, distribuir, sublicenciar, vender, alquilar o transferir la aplicación o cualquier parte de ella.
+•	Realizar ingeniería inversa, descompilar, desensamblar o intentar obtener el código fuente de la aplicación.
+•	Modificar, adaptar, traducir o crear obras derivadas del software.
+•	Eliminar, alterar u ocultar cualquier aviso de derechos de autor, marcas registradas u otras indicaciones de propiedad intelectual.
+•	Utilizar la aplicación para fines ilícitos o que infrinjan derechos de terceros.
+•	Compartir credenciales de acceso con terceros no autorizados.
+
+4. PROPIEDAD INTELECTUAL Y DERECHOS DE AUTOR
+4.1 Titularidad del software
+Bandly y todos sus componentes, incluyendo pero no limitado al código fuente, código objeto, interfaces, diseño, estructura, organización, documentación, algoritmos y tecnologías subyacentes (incluyendo el motor de audio desarrollado en lenguaje Rust), son propiedad exclusiva de Bandly o de sus licenciantes. El presente Contrato no transfiere al Usuario ningún derecho de propiedad sobre el software.
+
+4.2 Propiedad de los archivos de audio (Multitracks y Stems)
+Los archivos de audio disponibles en la plataforma (baterías, guitarras, coros, atmosféricos, loops y cualquier otro material sonoro) están sujetos a los siguientes regímenes de titularidad:
+(a) Contenido propiedad de Bandly o de sus licenciantes: Bandly otorga al Usuario acceso a dichos archivos exclusivamente durante el periodo de suscripción activa y para uso en presentaciones en vivo.
+(b) Contenido cargado por el Usuario: Si la aplicación permite al Usuario cargar sus propios archivos de audio, el Usuario declara y garantiza que es el titular de dichos archivos o cuenta con las licencias y autorizaciones necesarias.
+
+4.3 Obligaciones del usuario respecto a derechos de autor
+El Usuario es el único responsable de obtener todas las licencias, permisos y autorizaciones necesarias de las sociedades de gestión colectiva (como SAYCO, ACINPRO u otras entidades equivalentes) para la ejecución pública de obras musicales en conciertos o eventos.
+
+4.4 Secuencias y arreglos musicales
+Las secuencias de reproducción, arreglos, configuraciones de setlist y marcadores de posición creados por el Usuario dentro de la aplicación son de su titularidad. Sin embargo, el Usuario reconoce que dichas secuencias pueden incorporar obras protegidas por derechos de autor de terceros.
+
+5. PLANES DE SUSCRIPCIÓN Y CONDICIONES DE PAGO
+5.1 Modalidades de suscripción
+El acceso a las funcionalidades completas de Bandly está condicionado a la contratación de uno de los planes de suscripción disponibles.
+5.2 Facturación y renovación
+Los planes de suscripción mensual se facturan por anticipado en ciclos de treinta (30) días calendario. La suscripción se renueva automáticamente al vencimiento de cada periodo, salvo que el Usuario la cancele con al menos cuarenta y ocho (48) horas de antelación.
+5.3 Impuestos
+Los precios indicados pueden estar sujetos a impuestos (incluyendo IVA), los cuales serán de cargo exclusivo del Usuario.
+5.4 Política de reembolsos
+Una vez iniciado el periodo de suscripción y habilitado el acceso al servicio, no se realizarán reembolsos por el periodo en curso.
+
+6. RECOLECCIÓN Y TRATAMIENTO DE DATOS PERSONALES
+6.1 Datos recolectados
+En cumplimiento de la Ley 1581 de 2012 de Colombia, Bandly recolecta datos de identificación, datos técnicos del dispositivo (configuración de interfaces de audio, buffers), datos de uso y datos de pago.
+6.2 Finalidad del tratamiento
+Los datos son tratados para: Autenticar identidad, gestionar descargas de audio (R2), personalizar la experiencia, gestionar facturación y mejorar el rendimiento técnico.
+6.3 Almacenamiento local
+La aplicación almacena en el equipo del Usuario archivos de audio descargados y archivos de configuración técnica.
+6.4 Acceso a hardware
+La aplicación accede a las interfaces de audio profesionales instaladas. Dicho acceso es estrictamente necesario para el funcionamiento del servicio.
+6.5 Derechos del titular
+El Usuario tiene derecho a conocer, actualizar y suprimir sus datos escribiendo a: privacidad@bandly.app
+
+7. LIMITACIÓN DE RESPONSABILIDAD EN EVENTOS EN VIVO
+7.1 Servicio prestado "tal como está"
+LA APLICACIÓN BANDLY SE SUMINISTRA "TAL COMO ESTÁ" (AS-IS) Y "SEGÚN DISPONIBILIDAD", SIN GARANTÍAS DE NINGÚN TIPO.
+7.2 Exclusión de responsabilidad en conciertos y eventos
+Bandly no será responsable por fallos técnicos, interrupciones, pérdida de datos ocurridos durante un concierto o evento en vivo, ni por daños indirectos, pérdida de ingresos o daño reputacional. La responsabilidad máxima se limita al valor de la última mensualidad pagada.
+
+8. SEGURIDAD Y ACCESO A LA CUENTA
+El Usuario es responsable de mantener la confidencialidad de sus credenciales de acceso.
+
+9. ACTUALIZACIONES Y MODIFICACIONES DEL SERVICIO
+Bandly se reserva el derecho de modificar o suspender funcionalidades en cualquier momento.
+
+10. TERMINACIÓN
+El presente Contrato estará vigente mientras el Usuario mantenga una suscripción activa. Bandly podrá terminarlo ante incumplimientos o falta de pago.
+
+11. LEY APLICABLE Y RESOLUCIÓN DE DISPUTAS
+El presente Contrato se rige por las leyes de la República de Colombia. Las disputas se someterán a la jurisdicción de los jueces de Bogotá D.C.
+
+12. MISCELÁNEA
+Integralidad, divisibilidad y no renuncia de derechos.
+
+13. CONTACTO
+Soporte: soporte@bandly.app | Privacidad: privacidad@bandly.app | Web: www.bandly.app
+
+Versión 1.0 — 26 de abril de 2026
+© Bandly. Todos los derechos reservados.

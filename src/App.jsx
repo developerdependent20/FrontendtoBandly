@@ -10,6 +10,7 @@ import ResetPassword from './pages/ResetPassword';
 import TermsPage from './pages/legal/TermsPage';
 import PrivacyPage from './pages/legal/PrivacyPage';
 import RefundPage from './pages/legal/RefundPage';
+import { paddleService } from './services/paddleService';
 
 // Components & Layout
 import LoadingScreen from './components/LoadingScreen';
@@ -166,7 +167,6 @@ export default function App() {
     try {
       // 1. Intentar usar caché si no hay internet (Modo Offline)
       if (!navigator.onLine) {
-        console.log('[Offline] Usando perfil en caché');
         const parsed = readCache();
         if (parsed) {
           setProfile(parsed);
@@ -222,6 +222,9 @@ export default function App() {
     if (path === '/terminos') setView('legal_terms');
     else if (path === '/privacidad') setView('legal_privacy');
     else if (path === '/reembolsos') setView('legal_refund');
+    // Pago iniciado desde escritorio: sin sesión hay que pasar por el login, y el
+    // Dashboard retoma el checkout en cuanto cargue el perfil.
+    else if (paddleService.capturePendingCheckout()) setView('auth_login');
     // Enlaces directos con ancla (ej. getbandly.com/#pricing) deben mostrar la
     // landing, no la última vista guardada en localStorage (ej. quedó en 'auth'
     // de una visita anterior) — si no, el visitante ve un login en vez del precio.

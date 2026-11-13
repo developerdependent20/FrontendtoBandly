@@ -1,12 +1,19 @@
 import React from 'react';
 import { Lock, Monitor, Apple } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 import { alertDialog } from '../utils/dialogService';
-import { DOWNLOADS, APPS, planAllows } from '../utils/downloadLinks';
+import { APPS, planAllows } from '../utils/downloadLinks';
+
+const API_URL = import.meta.env.VITE_API_URL || (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3001'
+    : ''
+);
 
 const DESCRIPTIONS = {
   daw: 'La estación de trabajo de audio digital definitiva para tus directos. Reproduce multitracks con latencia cero, controla los volúmenes independientemente y sincroniza a todo tu equipo.',
   presenter: 'Toma el control visual de tus eventos. Proyecta letras, imágenes y videos en pantallas externas de forma instantánea y sincronizada desde el panel de control.',
-  lights: 'Control de luces DMX/Art-Net para tu escenario. Las escenas se disparan solas con los marcadores del DAW, con secuencias, strobo y cabezas móviles.',
+  lights: 'Control de luces DMX/Art-Net para tu escenario. Las escenas se disparan solas con los marcadores del Tracker, con secuencias, strobo y cabezas móviles.',
 };
 
 const OSES = [
@@ -19,9 +26,23 @@ const btnStyle = { flex: 1, display: 'flex', alignItems: 'center', justifyConten
 export default function DownloadsPage({ profile }) {
   const plan = (profile?.organizations?.plan || 'free').toLowerCase();
   const hasAnyAccess = Object.keys(APPS).some(app => planAllows(plan, app));
+  const [downloading, setDownloading] = React.useState(null);
 
-  const handleSoon = (appName, os) => {
-    alertDialog(`El instalador de ${appName} para ${os} estará disponible muy pronto. ¡Estamos afinando los últimos detalles!`);
+  const handleDownload = async (app, os) => {
+    setDownloading(`${app}-${os}`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${API_URL}/api/downloads/${app}/${os}`, {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'No se pudo iniciar la descarga.');
+      window.location.href = body.url;
+    } catch (err) {
+      alertDialog(err.message);
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const handleUpgradePrompt = () => {
@@ -36,7 +57,7 @@ export default function DownloadsPage({ profile }) {
         </div>
         <h2 style={{ fontSize: '2.5rem', fontWeight: '500', marginBottom: '1rem' }}>Herramientas Profesionales</h2>
         <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', maxWidth: '600px', marginBottom: '32px', lineHeight: 1.6 }}>
-          Bandly DAW, Bandly Presenter y Bandly Lights son aplicaciones de escritorio nativas de alto rendimiento. El DAW está disponible desde el plan <strong>Starter</strong>, el Presenter desde <strong>Pro</strong> y Lights con <strong>Elite</strong>.
+          Bandly Tracker, Bandly Presenter y Bandly Lights son aplicaciones de escritorio nativas de alto rendimiento. El Tracker está disponible desde el plan <strong>Starter</strong>, el Presenter desde <strong>Pro</strong> y Lights con <strong>Elite</strong>.
         </p>
         <button
           className="btn-primary"
@@ -80,18 +101,11 @@ export default function DownloadsPage({ profile }) {
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', flex: 1 }}>{DESCRIPTIONS[app]}</p>
                 {allowed ? (
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    {OSES.map(({ key, label, icon }) => {
-                      const url = DOWNLOADS[app][key];
-                      return url ? (
-                        <a key={key} href={url} download className="btn-secondary hover-scale" style={btnStyle}>
-                          {icon} {label}
-                        </a>
-                      ) : (
-                        <button key={key} onClick={() => handleSoon(info.name, key === 'mac' ? 'macOS' : 'Windows')} className="btn-secondary hover-scale" style={btnStyle}>
-                          {icon} {label}
-                        </button>
-                      );
-                    })}
+                    {OSES.map(({ key, label, icon }) => (
+                      <button key={key} onClick={() => handleDownload(app, key)} disabled={downloading === `${app}-${key}`} className="btn-secondary hover-scale" style={btnStyle}>
+                        {icon} {label}
+                      </button>
+                    ))}
                   </div>
                 ) : (
                   <button

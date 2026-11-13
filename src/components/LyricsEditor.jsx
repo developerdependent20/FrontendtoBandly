@@ -142,7 +142,7 @@ export default function LyricsEditor({ song, onClose }) {
             <>
               <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '16px' }}>
                 Prepara las letras ahora — el día del evento, abre Bandly Presenter y ya van a estar cargadas ahí, listas para proyectar.
-                {markers.length === 0 && ' Sube una secuencia con markers de sección en el DAW para poder sincronizar automáticamente.'}
+                {markers.length === 0 && ' Sube una secuencia con markers de sección en el Tracker para poder sincronizar automáticamente.'}
               </p>
 
               {!showPasteMode ? (
@@ -210,7 +210,7 @@ export default function LyricsEditor({ song, onClose }) {
                           value={slide.marker_sync || ''}
                           onChange={(e) => updateSlide(slide.id, 'marker_sync', e.target.value)}
                           disabled={markers.length === 0}
-                          title={markers.length === 0 ? 'No hay markers de sección para esta canción en el DAW' : 'Sincroniza esta diapositiva con un marker del DAW'}
+                          title={markers.length === 0 ? 'No hay markers de sección para esta canción en el Tracker' : 'Sincroniza esta diapositiva con un marker del Tracker'}
                           style={{
                             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                             borderRadius: '6px', padding: '4px 8px', color: 'white', fontSize: '0.7rem', outline: 'none',
@@ -222,7 +222,7 @@ export default function LyricsEditor({ song, onClose }) {
                               no es un marker de sección, pero hay que mostrarlo o el select
                               aparentaría "sin auto-sync" cuando sí dispara. */}
                           {slide.marker_sync && !markers.some(m => m.label === slide.marker_sync) && (
-                            <option value={slide.marker_sync} style={{ background: '#17171a' }}>{slide.marker_sync} (línea de letras del DAW)</option>
+                            <option value={slide.marker_sync} style={{ background: '#17171a' }}>{slide.marker_sync} (línea de letras del Tracker)</option>
                           )}
                           {markers.map((m) => (
                             <option key={m.id} value={m.label} style={{ background: '#17171a' }}>{m.label}</option>

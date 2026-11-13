@@ -5,6 +5,7 @@ import { isSuperAdmin } from '../../utils/permissions';
 import { alertDialog } from '../../utils/dialogService';
 import { supabase } from '../../supabaseClient';
 import { sendNotification } from '../../utils/notifications';
+import { paddleService } from '../../services/paddleService';
 import SubscriptionModal from '../DAW/SubscriptionModal';
 import WelcomeModal from './WelcomeModal';
 import GlobalSearch from './GlobalSearch';
@@ -22,6 +23,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
   const [showNotifications, setShowNotifications] = React.useState(false);
 
   const [notifications, setNotifications] = React.useState([]);
+
+  // Checkout pendiente: el pago se inició desde la app de escritorio. Espera a
+  // que acepte los términos, que se muestran en un bloqueo aparte.
+  React.useEffect(() => {
+    if (isTauri() || !profile?.id || !profile.accepted_terms) return;
+    const pending = paddleService.takePendingCheckout();
+    if (!pending) return;
+    paddleService.openCheckout(pending.planId, pending.billingPeriod, profile.id, profile.email)
+      .catch((err) => alertDialog(`Error al iniciar el pago: ${err.message}`));
+  }, [profile?.id, profile?.accepted_terms, profile?.email]);
 
   React.useEffect(() => {
     if (!profile?.id) return;
@@ -85,7 +96,7 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
         <div
           className={`nav-item ${activeTab === 'live' ? 'active' : ''}`}
           onClick={() => setActiveTab('live')}
-          title="Modo En Vivo (control remoto del DAW)"
+          title="Modo En Vivo (control remoto del Tracker)"
         >
           <Radio size={20} />
           <span className="nav-label">En Vivo</span>
@@ -107,16 +118,16 @@ export default function Dashboard({ profile, children, onLogout, activeTab, setA
               if (isTauri()) {
                 const plan = (profile?.organizations?.plan || 'free').toLowerCase();
                 if (plan === 'free') {
-                  alertDialog("La App de Escritorio (DAW) está incluida desde el plan Starter. Haz upgrade en la versión web para desbloquearla.");
+                  alertDialog("La App de Escritorio (Tracker) está incluida desde el plan Starter. Haz upgrade en la versión web para desbloquearla.");
                   return;
                 }
               }
               setActiveTab('daw');
             }}
-            title="DAW / Multitracks"
+            title="Tracker / Multitracks"
           >
             <Cloud size={20} />
-            <span className="nav-label">DAW</span>
+            <span className="nav-label">Tracker</span>
           </div>
         )}
 

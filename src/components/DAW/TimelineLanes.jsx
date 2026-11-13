@@ -662,7 +662,7 @@ function LaneEditor({ editor, onClose, sections, sectionsEditable, lyricEvents, 
             </div>
             <input
               autoFocus value={text} onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') commitSection(text); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); commitSection(text); } }}
               placeholder={item ? displayName(item.label) : 'Nombre'}
               style={inputStyle}
             />
@@ -734,7 +734,7 @@ function LaneEditor({ editor, onClose, sections, sectionsEditable, lyricEvents, 
           )}
           <input
             autoFocus value={text} onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') commitLight(text); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); commitLight(text); } }}
             placeholder="Nombre de la escena"
             style={inputStyle}
           />

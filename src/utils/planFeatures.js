@@ -17,7 +17,7 @@ export const PLANS = [
     originalMonthly: 19,
     yearly: 59,
     originalYearly: 190,
-    features: ['Bandly DAW (Windows y Mac)', 'Hasta 3 organizaciones', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Reproductor multitrack en web y celular', 'Charts en PDF y recursos por canción'],
+    features: ['Bandly Tracker (Windows y Mac)', 'Hasta 3 organizaciones', 'Hasta 25 usuarios', '10 GB almacenamiento', 'Reproductor multitrack en web y celular', 'Charts en PDF y recursos por canción'],
     promo: true,
     recommended: true
   },

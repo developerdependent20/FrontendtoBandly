@@ -163,7 +163,7 @@ export default function LiveRemote({ orgId, events }) {
         color: daw ? '#10b981' : 'var(--text-muted)'
       }}>
         {daw ? <CheckCircle2 size={18} /> : <WifiOff size={18} />}
-        {daw ? 'Conectado con la computadora' : 'Esperando conexión con la computadora del DAW...'}
+        {daw ? 'Conectado con la computadora' : 'Esperando conexión con la computadora del Tracker...'}
       </div>
 
       {daw && (

@@ -101,9 +101,11 @@ export function markersFromCueStem(cueBuffer, { bpm, beatsPerBar = 4, sampleRate
     markers.push({
       id: crypto.randomUUID(),
       bar,
-      // Sin nombre real: la guía dice "coro" pero no lo transcribimos. Se
-      // numeran para que el director solo tenga que renombrar, no ubicar.
-      label: `Sección ${markers.length + 1}`,
+      // Sin nombre real: aquí no se transcribe lo que dice la guía. Se numeran
+      // y quedan como pendientes (autoLabel): el DAW de escritorio las vuelve a
+      // leer con reconocimiento de voz y les pone el nombre que dice la guía.
+      label: `SECCIÓN ${markers.length + 1}`,
+      autoLabel: true,
       sample: Math.round((bar - 1) * samplesPerBar),
       color: palette[i % palette.length],
       source: 'cue',

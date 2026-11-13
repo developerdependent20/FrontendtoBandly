@@ -3,7 +3,7 @@ import { Volume2, VolumeX, Headphones } from 'lucide-react';
 import AnalogKnob from '../ui/AnalogKnob';
 
 // Constantes físicas del Fader
-const FADER_HEIGHT = 140;
+const FADER_HEIGHT = 120;
 
 const ChannelStrip = memo(({ track, peak = 0, onVolumeChange, onMuteToggle, onSoloToggle, onOutputToggle, onPanModeToggle, onEqChange, onSelect, isSelected, deviceChannels = 2 }) => {
   const [localVol, setLocalVol] = useState(track.volume !== undefined ? Math.round(track.volume * 100) : 100);

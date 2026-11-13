@@ -261,12 +261,12 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
         .maybeSingle();
 
       if (error || !sequence) {
-        alertDialog('Esta canción todavía no tiene una secuencia de audio subida al DAW — sube el audio primero.');
+        alertDialog('Esta canción todavía no tiene una secuencia de audio subida al Tracker — sube el audio primero.');
         setSyncStatus('error');
         return;
       }
       if (!sequence.bpm) {
-        alertDialog('Esta secuencia no tiene tempo (BPM) definido en el DAW. Ponle un tempo primero para poder ubicar los marcadores por compás.');
+        alertDialog('Esta secuencia no tiene tempo (BPM) definido en el Tracker. Ponle un tempo primero para poder ubicar los marcadores por compás.');
         setSyncStatus('error');
         return;
       }
@@ -732,7 +732,7 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
 
                 {detectedSections.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '8px', width: '100%', boxSizing: 'border-box', padding: '0.5rem 0' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '500', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compases por sección (para el DAW)</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '500', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compases por sección (para el Tracker)</span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {detectedSections.map((label, i) => (
                         <div key={`${label}-${i}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontSize: '0.8rem' }}>
@@ -754,9 +754,9 @@ export default function ChartStudio({ song, onClose, onSave, readOnly = false })
                         onClick={handleSyncMarkersToDAW}
                         disabled={syncStatus === 'syncing'}
                         style={{ marginTop: '4px', width: '100%', justifyContent: 'center' }}
-                        title="Genera los marcadores de sección en el DAW usando el tempo real de la secuencia"
+                        title="Genera los marcadores de sección en el Tracker usando el tempo real de la secuencia"
                       >
-                        {syncStatus === 'syncing' ? 'Sincronizando...' : syncStatus === 'done' ? '✓ Sincronizado con el DAW' : syncStatus === 'error' ? 'Reintentar sincronización' : 'Sincronizar con el DAW'}
+                        {syncStatus === 'syncing' ? 'Sincronizando...' : syncStatus === 'done' ? '✓ Sincronizado con el Tracker' : syncStatus === 'error' ? 'Reintentar sincronización' : 'Sincronizar con el Tracker'}
                       </button>
                     )}
                   </div>

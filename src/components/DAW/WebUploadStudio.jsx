@@ -88,7 +88,7 @@ export default function WebUploadStudio({ songs = [], orgId, session, refreshDat
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '500' }}>Almacenamiento</h3>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
-              Todas las secuencias se almacenan de manera segura y estarán disponibles en el <span style={{ color: 'white' }}>ProMixer DAW</span> para tus ensayos.
+              Todas las secuencias se almacenan de manera segura y estarán disponibles en el <span style={{ color: 'white' }}>Bandly Tracker</span> para tus ensayos.
             </p>
           </div>
         </div>
