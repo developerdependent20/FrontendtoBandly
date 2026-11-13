@@ -16,6 +16,7 @@ import { paddleService } from './services/paddleService';
 // Components & Layout
 import LoadingScreen from './components/LoadingScreen';
 import TermsModal from './components/TermsModal';
+import PushPrompt from './components/PushPrompt';
 import Dashboard from './components/layout/Dashboard';
 // Solo lo abre un superadmin — no hay razón para que le llegue a todo el mundo.
 const AdminPanel = lazy(() => import('./components/layout/AdminPanel'));
@@ -59,14 +60,10 @@ export default function App() {
         setOneSignalInitialized(true);
         // If user is already logged in when SDK loads, link and prompt immediately
         supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+          // Solo enlazamos el usuario. El permiso NO se pide aquí: sin un toque del usuario Safari/iPhone
+          // y Firefox lo ignoran. Se pide desde <PushPrompt /> y Ajustes, con un botón.
           if (existingSession?.user?.id) {
             OneSignal.login(existingSession.user.id).catch(() => {});
-            // Small delay so the UI loads first before showing the prompt
-            setTimeout(() => {
-              if (window.OneSignal && window.OneSignal.Notifications) {
-                window.OneSignal.Notifications.requestPermission().catch(() => {});
-              }
-            }, 3000);
           }
         });
       }).catch(e => console.error("OneSignal Init Error:", e));
@@ -112,10 +109,6 @@ export default function App() {
     if (oneSignalInitialized && window.OneSignal) {
       if (session?.user?.id) {
         window.OneSignal.login(session.user.id).catch(e => console.error("OneSignal Login Error:", e));
-        // Pedir permisos de forma nativa (más confiable que Slidedown)
-        if (window.OneSignal.Notifications) {
-          window.OneSignal.Notifications.requestPermission().catch(e => console.error("OneSignal Prompt Error:", e));
-        }
       } else {
         window.OneSignal.logout().catch(e => console.error("OneSignal Logout Error:", e));
       }
@@ -373,6 +366,7 @@ export default function App() {
           <MemberView profile={{...profile, org_id: effectiveOrgId}} session={session} activeTab={activeTab} setActiveTab={setActiveTab} orgData={orgData} />
         )}
       </Dashboard>
+      {!showLegalBlocking && <PushPrompt />}
     </>
   );
 }

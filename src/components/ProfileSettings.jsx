@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Calendar, Save, Trash2, Camera, Loader2, Plus, LogOut, Bell, Mail, Building2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { alertDialog } from '../utils/dialogService';
+import { detectPushEnv, requestPush, copyLink, IOS_INSTALL_STEPS } from '../utils/push';
 
 export default function ProfileSettings({ profile, session, onLogout }) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
@@ -9,7 +10,8 @@ export default function ProfileSettings({ profile, session, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [newDate, setNewDate] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [notifPermission, setNotifPermission] = useState(() => typeof window !== 'undefined' && window.Notification ? Notification.permission : 'default');
+  const [pushEnv, setPushEnv] = useState(() => detectPushEnv());
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,12 +21,6 @@ export default function ProfileSettings({ profile, session, onLogout }) {
 
   const userEmail = session?.user?.email || profile?.email || '';
   const orgName = profile?.organizations?.name || '';
-
-  const checkNotifStatus = () => {
-    if (typeof window !== 'undefined' && window.Notification) {
-      setNotifPermission(Notification.permission);
-    }
-  };
 
   // Sincronizar estado local si el profile cambia, y limpiar fechas que ya
   // pasaron (no tiene sentido seguir bloqueando un día que ya ocurrió).
@@ -281,52 +277,67 @@ export default function ProfileSettings({ profile, session, onLogout }) {
           Activa las notificaciones en este dispositivo para recibir alertas instantáneas cuando el director te asigne a un evento nuevo o envíe el Call-Sheet.
         </p>
 
-        {notifPermission === 'granted' && (
+        {pushEnv.kind === 'granted' && (
           <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} />
-            <span>¡Notificaciones Push <strong>Activadas</strong> en este navegador!</span>
+            <span>¡Notificaciones Push <strong>Activadas</strong> en este dispositivo!</span>
           </div>
         )}
 
-        {notifPermission === 'denied' && (
+        {pushEnv.kind === 'denied' && (
           <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '12px', color: '#ef4444', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Bell size={20} />
-              <span>Notificaciones bloqueadas o no soportadas.</span>
+              <span>Las notificaciones están bloqueadas en este navegador.</span>
             </div>
             <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.8 }}>
-              {typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream 
-                ? "🍎 En iPhone/iPad: Primero debes tocar el ícono de 'Compartir' (cuadro con flecha arriba) en la barra de abajo y seleccionar 'Agregar a la Pantalla de Inicio'. Luego abre Bandly desde tu pantalla de inicio."
-                : "Haz clic en el ícono del candado 🔒 en la barra de direcciones de arriba, busca 'Notificaciones', cámbialo a 'Permitir' y recarga la página."
-              }
+              {pushEnv.isIOS
+                ? 'Ve a Ajustes del iPhone → Notificaciones → Bandly y actívalas.'
+                : "Toca el ícono del candado 🔒 junto a la dirección, busca 'Notificaciones', cámbialo a 'Permitir' y recarga la página."}
             </p>
           </div>
         )}
 
-        {notifPermission === 'default' && (
-          <button 
+        {pushEnv.kind === 'ios-install' && (
+          <div style={{ padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: '12px', color: '#f59e0b' }}>
+            <strong>🍎 En iPhone/iPad hay que instalar Bandly primero</strong>
+            <ol style={{ fontSize: '0.85rem', margin: '8px 0 0', paddingLeft: '1.1rem', opacity: 0.9, lineHeight: 1.6 }}>
+              {IOS_INSTALL_STEPS.map((step) => <li key={step}>{step}</li>)}
+            </ol>
+          </div>
+        )}
+
+        {pushEnv.kind === 'in-app' && (
+          <div style={{ padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', borderRadius: '12px', color: '#f59e0b', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <strong>Estás en el navegador interno de otra app</strong>
+            <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.9, lineHeight: 1.5 }}>
+              Desde WhatsApp, Instagram o similares no se pueden activar las notificaciones. Abre <b>getbandly.com</b> en Chrome o Safari e inicia sesión ahí.
+            </p>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: 'auto', padding: '0.6rem 1.2rem', alignSelf: 'flex-start' }}
+              onClick={async () => { if (await copyLink()) { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2500); } }}
+            >
+              {linkCopied ? 'Enlace copiado ✓' : 'Copiar enlace'}
+            </button>
+          </div>
+        )}
+
+        {pushEnv.kind === 'unsupported' && (
+          <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            Este navegador o dispositivo no admite notificaciones push. Prueba con Chrome, Edge o Firefox actualizados (o Safari en iPhone con Bandly instalado).
+          </div>
+        )}
+
+        {pushEnv.kind === 'default' && (
+          <button
             type="button"
             className="btn-primary"
             style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.8rem 1.5rem', width: 'auto' }}
-            onClick={() => {
-              if ('Notification' in window) {
-                 Notification.requestPermission().then((permission) => {
-                   checkNotifStatus();
-                   if (permission === 'granted' && window.OneSignal) {
-                     window.OneSignal.Notifications.requestPermission().catch(()=>{});
-                   }
-                 });
-              } else {
-                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                 if (isIOS) {
-                   alertDialog("🍎 Para recibir notificaciones en iPhone/iPad, primero debes instalar la app:\n\n1. Toca el botón de 'Compartir' (el cuadrado con la flecha hacia arriba) en la barra de tu navegador.\n2. Selecciona 'Agregar a la Pantalla de Inicio'.\n3. Abre Bandly desde tu pantalla de inicio y vuelve a intentar.");
-                 } else {
-                   alertDialog("Tu navegador actual no soporta Notificaciones Push. Intenta usar Chrome, Firefox o Edge.");
-                 }
-              }
-            }}
+            onClick={async () => setPushEnv(await requestPush())}
           >
-            <Bell size={18} /> Solicitar Permiso de Notificaciones
+            <Bell size={18} /> Activar notificaciones
           </button>
         )}
       </div>
