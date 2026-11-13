@@ -3,6 +3,7 @@ import { landingDict } from './landingDict';
 import { PLANS } from '../utils/planFeatures';
 import { APPS } from '../utils/downloadLinks';
 import { Music, Tv, Lightbulb, Zap, Image as ImageIcon, Smartphone, Piano, FileText, CalendarCheck, Check, Crown, ShieldCheck, ArrowRight, Download, Apple } from 'lucide-react';
+import AssistantChat from '../components/AssistantChat';
 import './landing.css';
 
 const SUPABASE_IMG = 'https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/';
@@ -391,6 +392,8 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
           <p style={{ opacity: 0.7 }}>{t.footRights}</p>
         </div>
       </footer>
+
+      <AssistantChat lang={lang} onGetStarted={onGetStarted} />
     </div>
   );
 }
