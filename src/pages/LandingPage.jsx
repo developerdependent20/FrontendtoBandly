@@ -89,7 +89,6 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
       {/* Hero */}
       <header className="lp-hero">
         <div className="lp-aurora"><i /><i /><i /></div>
-        <div className="lp-grid-bg" />
         <div className="lp-wrap">
           <div className="lp-pill lp-reveal"><span />{t.heroPill}</div>
           <h1 className="lp-h1 lp-reveal" style={{ '--d': '.08s' }}>
