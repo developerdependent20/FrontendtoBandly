@@ -1,42 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { landingDict } from './landingDict';
 import { PLANS } from '../utils/planFeatures';
-import { DOWNLOADS, APPS } from '../utils/downloadLinks';
-import { Music, ShieldCheck, Crown, Zap, Tv, Image as ImageIcon, Lightbulb, Smartphone, Piano, FileText, CalendarCheck } from 'lucide-react';
+import { APPS } from '../utils/downloadLinks';
+import { Music, Tv, Lightbulb, Zap, Image as ImageIcon, Smartphone, Piano, FileText, CalendarCheck, Check, Crown, ShieldCheck, ArrowRight, Download, Apple } from 'lucide-react';
+import './landing.css';
 
 const SUPABASE_IMG = 'https://cctfjcnxlluipgsfrixy.supabase.co/storage/v1/object/public/org-logos/';
 const DAW_IMG = `${SUPABASE_IMG}Captura%20de%20pantalla%202026-09-21%20093312.png`;
 const PRESENTER_IMG = `${SUPABASE_IMG}Captura%20de%20pantalla%202026-09-21%20093656.png`;
-
-const FRAME_STYLE = {
-  position: 'relative',
-  overflow: 'hidden',
-  borderRadius: '20px',
-  boxShadow: '0 40px 80px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1)'
-};
-
-const badgeHover = {
-  onMouseOver: e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.opacity = '1'; },
-  onMouseOut: e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.opacity = '0.7'; }
-};
-const badgeStyle = { height: '42px', width: 'auto', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', opacity: 0.7 };
+const PHONE_IMGS = [
+  `${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM%20(1).jpeg`,
+  `${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM.jpeg`,
+  `${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.19.05%20PM.jpeg`,
+];
 
 const PLAN_ORDER = ['free', 'starter', 'pro', 'elite'];
-const PLAN_ICON_COLOR = { starter: 'var(--primary)', pro: 'var(--accent)', elite: 'var(--accent)' };
+const PLAN_ICON_COLOR = { free: '#3ddc97', starter: '#fd429c', pro: '#7c6cff', elite: '#ffb347' };
+const LANE_META = [
+  { c: '#fd429c', Icon: Music },
+  { c: '#7c6cff', Icon: Tv },
+  { c: '#ffb347', Icon: Lightbulb },
+];
+
+const WinIcon = () => (<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7H3zM11.5 4.3 21 3v8.4h-9.5zM3 12.6h7.5v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z" /></svg>);
+const MacIcon = () => <Apple size={14} aria-hidden="true" />;
+
+// Revela cada bloque al entrar en pantalla (y no hace nada si el navegador no soporta IntersectionObserver)
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.lp-reveal, .lp-stage');
+    if (!('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold: 0.12 });
+    els.forEach(e => io.observe(e));
+    return () => io.disconnect();
+  }, []);
+}
+
+// Luz que sigue al cursor dentro de cada tarjeta
+const spot = (e) => {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+};
 
 export default function LandingPage({ onGetStarted, onNavigate }) {
   const [billingPeriod, setBillingPeriod] = useState('annual');
   const [lang, setLang] = useState('es');
   const t = landingDict[lang];
+  const rootRef = useRef(null);
+  useReveal();
 
   // Mantener <html lang> sincronizado: evita que el traductor del navegador
   // intente traducir contenido ya traducido (y destroce la marca)
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
-  // Scroll a la sección del hash (ej. #pricing) al montar: el auto-scroll nativo
-  // del navegador ya pasó antes de que React termine de renderizar el DOM.
+  // Scroll a la sección del hash (ej. #pricing) al montar
   useEffect(() => {
     const hash = window.location.hash?.replace('#', '');
     if (!hash) return;
@@ -46,372 +66,312 @@ export default function LandingPage({ onGetStarted, onNavigate }) {
 
   const isAnnual = billingPeriod === 'annual';
   const chooseLabel = { starter: t.chooseStarter, pro: t.choosePro, elite: t.chooseElite };
+  const goPricing = () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <div className="landing-container" style={{ position: 'relative', overflow: 'hidden' }}>
-      <div className="hero-decorations" />
-
-      <nav className="landing-nav">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <img
-            src={`${SUPABASE_IMG}Bandly%20nuevo.png`}
-            alt="Bandly"
-            style={{ height: '65px', width: 'auto' }}
-          />
-        </div>
-
-        <div className="landing-nav-center hide-mobile">
+    <div className="lp" ref={rootRef}>
+      <nav className="lp-nav">
+        <img src={`${SUPABASE_IMG}Bandly%20nuevo.png`} alt="Bandly" />
+        <div className="lp-nav-links">
           <a href="#multitrack">{t.navFeatures}</a>
           <a href="#downloads">{t.navDownloads}</a>
           <a href="#pricing">{t.navPricing}</a>
         </div>
-
-        <div className="landing-nav-links">
-          {/* Selector: muestra ambos idiomas, el ACTIVO resaltado (antes mostraba el destino y confundía) */}
-          <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50px', padding: '0.4rem 0.8rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: lang === 'es' ? 'white' : 'rgba(255,255,255,0.35)' }}>ES</span>
-            <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
-            <span style={{ color: lang === 'en' ? 'white' : 'rgba(255,255,255,0.35)' }}>EN</span>
+        <div className="lp-nav-actions">
+          <button className="lp-lang" onClick={() => setLang(lang === 'es' ? 'en' : 'es')} aria-label="Language">
+            {lang === 'es' ? <b>ES</b> : <span>ES</span>}<span>|</span>{lang === 'en' ? <b>EN</b> : <span>EN</span>}
           </button>
-          <button onClick={() => onGetStarted('login')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', border: 'none', fontSize: '0.85rem' }}>{t.btnLogin}</button>
-          <button onClick={() => onGetStarted('signup')} className="btn-secondary" style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}>{t.btnSignup}</button>
+          <button className="lp-btn lp-btn-ghost lp-btn-sm lp-btn-login" onClick={() => onGetStarted('login')}>{t.btnLogin}</button>
+          <button className="lp-btn lp-btn-primary lp-btn-sm" onClick={() => onGetStarted('signup')}>{t.btnSignup}</button>
         </div>
       </nav>
 
       {/* Hero */}
-      <main className="landing-hero-centered">
-        <div className="hero-content-full">
-          <h1 className="hero-main-title-large" style={{ marginTop: '3rem' }}>
-            {t.heroMain} <br />
-            <span className="serif-accent">{t.heroSub}</span>
+      <header className="lp-hero">
+        <div className="lp-aurora"><i /><i /><i /></div>
+        <div className="lp-grid-bg" />
+        <div className="lp-wrap">
+          <div className="lp-pill lp-reveal"><span />{t.heroPill}</div>
+          <h1 className="lp-h1 lp-reveal" style={{ '--d': '.08s' }}>
+            {t.heroMain}
+            <span className="lp-serif lp-grad-text">{t.heroSub}</span>
           </h1>
-          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-muted)', maxWidth: '640px', margin: '1.5rem auto 0 auto', lineHeight: '1.6', fontWeight: '500' }}>
-            {t.heroDesc}
-          </p>
-
-          <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '3rem' }}>
-            <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', width: 'auto', fontWeight: '500' }}>{t.btnStart}</button>
-            <button onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })} className="btn-secondary" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', fontWeight: '500' }}>{t.btnViewPlans}</button>
+          <p className="lp-lead lp-reveal" style={{ '--d': '.16s' }}>{t.heroDesc}</p>
+          <div className="lp-cta-row lp-reveal" style={{ '--d': '.24s' }}>
+            <button className="lp-btn lp-btn-primary" onClick={() => onGetStarted('signup')}>{t.btnStart} <ArrowRight size={18} /></button>
+            <button className="lp-btn lp-btn-ghost" onClick={goPricing}>{t.btnViewPlans}</button>
           </div>
-
-          <div className="compatibility-badges-centered" style={{ marginTop: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
-            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.availableOn}</span>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-              <img src={`${SUPABASE_IMG}BadgeMacOS.png`} alt="macOS" style={badgeStyle} {...badgeHover} />
-              <img src={`${SUPABASE_IMG}images.png`} alt="Windows" style={badgeStyle} {...badgeHover} />
-              <img src={`${SUPABASE_IMG}0w8ONb9ouWJ2GDFdyHnwlzOy90.avif`} alt="Google Play" style={badgeStyle} {...badgeHover} />
-            </div>
+          <div className="lp-os lp-reveal" style={{ '--d': '.32s' }}>
+            <span><WinIcon />{t.dlWindows}</span>
+            <span><MacIcon />{t.dlMac}</span>
           </div>
         </div>
-      </main>
 
-      {/* La diferencia de Bandly: un marcador = audio + letra + luces */}
-      <section className="premium-statement">
-        <div className="statement-content">
-          <p className="statement-mini">{t.premiumMini}</p>
-          <h2 className="statement-main">
-            {t.premiumMain1} <br />
-            {t.premiumMain2} <span className="serif-accent">{t.premiumMain3}</span>
-          </h2>
-          <p className="statement-support">{t.premiumSupport}</p>
+        <div className="lp-stage">
+          <div className="lp-window">
+            <div className="lp-window-bar"><i /><i /><i /></div>
+            <img src={DAW_IMG} alt={t.dawAlt} fetchpriority="high" />
+          </div>
+        </div>
+      </header>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', marginTop: '3.5rem' }}>
-            {[
-              { icon: <Music size={22} color="var(--primary)" />, title: t.syncBadge1, desc: t.syncBadge1Desc },
-              { icon: <Tv size={22} color="var(--primary)" />, title: t.syncBadge2, desc: t.syncBadge2Desc },
-              { icon: <Lightbulb size={22} color="var(--primary)" />, title: t.syncBadge3, desc: t.syncBadge3Desc },
-            ].map((item, i) => (
-              <React.Fragment key={i}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: 'rgba(247, 244, 239, 0.03)', border: '1px solid rgba(247, 244, 239, 0.18)', borderRadius: '12px', padding: '0.9rem 1.4rem', textAlign: 'left' }}>
-                  <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '12px', background: 'rgba(247, 244, 239, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {item.icon}
+      {/* Cifras */}
+      <section className="lp-stats">
+        <div className="lp-wrap lp-stats-grid lp-reveal">
+          {t.stats.map((s, i) => (
+            <div className="lp-stat" key={i}><b>{s.k}</b><span>{s.v}</span></div>
+          ))}
+        </div>
+      </section>
+
+      {/* La diferencia: un marcador mueve todo */}
+      <section className="lp-section" id="multitrack">
+        <div className="lp-wrap">
+          <div className="lp-head" style={{ marginBottom: 0 }}>
+            <p className="lp-eyebrow lp-reveal">{t.premiumMini}</p>
+            <h2 className="lp-h2 lp-reveal" style={{ maxWidth: '22ch' }}>
+              {t.premiumMain1} {t.premiumMain2} <span className="lp-serif lp-grad-text">{t.premiumMain3}</span>
+            </h2>
+            <p className="lp-sub lp-reveal">{t.premiumSupport}</p>
+          </div>
+
+          <div className="lp-flow lp-reveal">
+            <div className="lp-flow-track">
+              <div className="lp-flow-sections">
+                <div />
+                <div>{t.flowSections.map((s, i) => <em key={i}>{s}</em>)}</div>
+              </div>
+              {t.flowLanes.map((name, k) => {
+                const { c, Icon } = { c: LANE_META[k].c, Icon: LANE_META[k].Icon };
+                return (
+                  <div className="lp-lane" data-k={k} style={{ '--c': c }} key={k}>
+                    <div className="lp-lane-name"><Icon />{name}</div>
+                    <div className="lp-lane-body"><span /><span /><span /><span /><span /></div>
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 500, color: '#fff', fontSize: '0.95rem' }}>{item.title}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.desc}</div>
-                  </div>
+                );
+              })}
+              <div className="lp-playhead" />
+            </div>
+            <p className="lp-flow-cap">{t.flowCaption}</p>
+          </div>
+
+          <div className="lp-pillars">
+            {[t.syncBadge1, t.syncBadge2, t.syncBadge3].map((title, i) => {
+              const { c, Icon } = LANE_META[i];
+              const desc = [t.syncBadge1Desc, t.syncBadge2Desc, t.syncBadge3Desc][i];
+              return (
+                <div className="lp-pillar lp-reveal" style={{ '--c': c, '--d': `${i * 0.08}s` }} key={i}>
+                  <div className="lp-pillar-ico"><Icon size={20} /></div>
+                  <div><b>{title}</b><small>{desc}</small></div>
                 </div>
-                {i < 2 && (
-                  <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 500, opacity: 0.6 }}>=</div>
-                )}
-              </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Las cuatro apps */}
+      <section className="lp-section" id="downloads" style={{ paddingTop: 0 }}>
+        <div className="lp-wrap">
+          <div className="lp-head">
+            <p className="lp-eyebrow lp-reveal">{t.downloadsMini}</p>
+            <h2 className="lp-h2 lp-reveal">{t.downloadsTitle1} <span className="lp-serif lp-grad-text">{t.downloadsTitle2}</span></h2>
+            <p className="lp-sub lp-reveal">{t.downloadsDesc}</p>
+          </div>
+
+          <div className="lp-bento">
+            {/* Tracker */}
+            <article className="lp-card lp-c-tracker lp-reveal" onMouseMove={spot}>
+              <div className="lp-card-top">
+                <img src={APPS.daw.logo} alt="" width={52} height={52} loading="lazy" />
+                <h3>{t.downloadApps[1].name}</h3>
+                <span className="lp-tag">{t.downloadApps[1].plan}</span>
+              </div>
+              <div className="lp-tracker-body">
+                <div>
+                  <p style={{ fontSize: '1.05rem', color: 'var(--lp-cream)' }}>{t.dawTitle1} <span className="lp-serif">{t.dawTitle2}</span></p>
+                  <p style={{ marginTop: '.5rem' }}>{t.dawDesc}</p>
+                  <ul className="lp-feats" style={{ marginTop: '1.2rem' }}>
+                    {t.dawFeats.map((f, i) => (
+                      <li key={i}><Check /><span><b>{f.title}</b>{f.desc}</span></li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="lp-card-shot" style={{ marginBottom: '-2rem', alignSelf: 'end' }}>
+                  <img src={DAW_IMG} alt={t.dawAlt} loading="lazy" />
+                </div>
+              </div>
+            </article>
+
+            {/* DAW gratis */}
+            <article className="lp-card lp-c-free lp-reveal" style={{ '--d': '.08s' }} onMouseMove={spot}>
+              <div className="lp-card-top">
+                <img src="/logos/studio.png" alt="" width={52} height={52} loading="lazy" />
+                <span className="lp-tag">{t.downloadApps[0].plan}</span>
+              </div>
+              <h3>{t.downloadApps[0].name}</h3>
+              <p>{t.downloadApps[0].desc}</p>
+              <span className="lp-os-line">{t.dlWindows} · {t.dlMac}</span>
+              <button className="lp-btn lp-btn-primary" onClick={() => onGetStarted('signup')}><Download size={16} /> {t.ctaFree}</button>
+            </article>
+
+            {/* Presenter */}
+            <article className="lp-card lp-c-presenter lp-reveal" onMouseMove={spot}>
+              <div className="lp-card-top">
+                <img src={APPS.presenter.logo} alt="" width={52} height={52} loading="lazy" />
+                <h3>{t.downloadApps[2].name}</h3>
+                <span className="lp-tag">{t.downloadApps[2].plan}</span>
+              </div>
+              <p>{t.presenterDesc}</p>
+              <div className="lp-card-shot">
+                <img src={PRESENTER_IMG} alt={t.presenterAlt} loading="lazy" />
+              </div>
+            </article>
+
+            {/* Lights */}
+            <article className="lp-card lp-c-lights lp-reveal" style={{ '--d': '.08s' }} onMouseMove={spot}>
+              <div className="lp-glow" />
+              <div className="lp-card-top">
+                <img src={APPS.lights.logo} alt="" width={52} height={52} loading="lazy" />
+                <h3>{t.downloadApps[3].name}</h3>
+                <span className="lp-tag">{t.downloadApps[3].plan}</span>
+              </div>
+              <p>{t.downloadApps[3].desc}</p>
+              <div className="lp-beams">
+                {['#ff4d6d', '#ffb347', '#3ddc97', '#4cc9f0', '#7c6cff', '#ff4d6d'].map((b, i) => (
+                  <i key={i} style={{ '--b': b, '--dl': `${i * 0.35}s` }} />
+                ))}
+              </div>
+              <span className="lp-os-line" style={{ marginTop: 'auto' }}>{t.dlWindows} · {t.dlMac}</span>
+            </article>
+          </div>
+
+          {/* Presenter: qué hace */}
+          <div className="lp-stage-display">
+            {[Zap, Tv, ImageIcon].map((Icon, i) => (
+              <div className="lp-sd lp-reveal" style={{ '--c': '#7c6cff', '--d': `${i * 0.08}s` }} key={i}>
+                <Icon />
+                <b>{t.presenterFeats[i].title}</b>
+                <small>{t.presenterFeats[i].desc}</small>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Bandly DAW */}
-      <section id="multitrack" className="pro-player-showcase">
-        <div className="pro-player-flex">
-          <div style={{ flex: '1', minWidth: '300px', order: 2 }}>
-            <h2 className="showcase-title" style={{ textAlign: 'left', marginBottom: '1.5rem', lineHeight: '1.1' }}>
-              {t.dawTitle1} <br className="hide-mobile" />
-              <span className="serif-accent" style={{ fontSize: '1.1em' }}>{t.dawTitle2}</span>
-            </h2>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.7', marginBottom: '2rem' }}>{t.dawDesc}</p>
-            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {t.dawFeats.map((item, i) => (
-                <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                  <div style={{ color: 'var(--primary)', fontWeight: '500' }}>✓</div>
-                  <div>
-                    <strong style={{ display: 'block', color: 'white' }}>{item.title}</strong>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{item.desc}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div style={{ flex: '1.2', minWidth: '300px', order: 1 }}>
-            <div style={FRAME_STYLE}>
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(247, 244, 239, 0.04), rgba(247, 244, 239, 0.04))', zIndex: 2, pointerEvents: 'none' }}></div>
-              <img
-                src={DAW_IMG}
-                alt={t.dawAlt}
-                loading="lazy"
-                style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Bandly Presenter */}
-      <section className="presenter-showcase" style={{ padding: '8rem 2rem', background: 'rgba(247, 244, 239, 0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
-          <p className="statement-mini">{t.presenterMini}</p>
-          <h2 className="section-title-large">{t.presenterTitle1} <span className="serif-accent">{t.presenterTitle2}</span></h2>
-          <p className="section-subtitle">{t.presenterDesc}</p>
-        </div>
-
-        <div style={{ ...FRAME_STYLE, maxWidth: '1100px', margin: '0 auto 4rem' }}>
-          <img src={PRESENTER_IMG} alt={t.presenterAlt} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
-          {[Zap, Tv, ImageIcon].map((Icon, i) => (
-            <div key={i} className="hover-scale" style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'rgba(247, 244, 239, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={28} color="#f7f4ef" />
-              </div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '500', margin: 0, color: '#fff' }}>{t.presenterFeats[i].title}</h3>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.88rem', lineHeight: '1.6' }}>{t.presenterFeats[i].desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Equipo / celular */}
-      <section className="app-virtues-showcase" style={{ padding: '8rem 2rem', background: '#101012', overflow: 'hidden' }}>
-        <style>{`
-          .virtues-gallery {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-          }
-          .virtue-img-wrapper {
-            flex: 1;
-            border-radius: 24px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
-            overflow: hidden; /* Esto asegura que el recorte del zoom funcione */
-            background: #17171a;
-          }
-          .virtue-img-wrapper img {
-            width: 100%;
-            display: block;
-            border-radius: 24px;
-          }
-          .virtue-left {
-            max-width: 280px;
-            opacity: 0.7;
-            transform: scale(0.9);
-          }
-          .virtue-right {
-            max-width: 260px;
-            opacity: 0.7;
-            transform: scale(0.85);
-          }
-          .virtue-center {
-            max-width: 320px;
-            z-index: 10;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(0, 0, 0, 0.35);
-          }
-          .virtue-img-wrapper:hover {
-            transform: translateY(-15px) scale(1.05);
-            opacity: 1;
-            z-index: 20;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.2);
-          }
-          @media (max-width: 1024px) {
-            .virtues-gallery {
-              flex-direction: column;
-              gap: 3rem;
-            }
-            .virtue-left, .virtue-right, .virtue-center {
-              max-width: 80%;
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-        `}</style>
-
-        <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
-          <h2 className="section-title-large">{t.teamTitle1} <span className="serif-accent">{t.teamTitle2}</span></h2>
-          <p className="section-subtitle">{t.teamDesc}</p>
-        </div>
-
-        <div className="virtues-gallery">
-          <div className="virtue-img-wrapper virtue-left">
-            <img src={`${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM%20(1).jpeg`} alt={t.teamAlts[0]} loading="lazy" />
+      <section className="lp-section" style={{ paddingTop: '2rem' }}>
+        <div className="lp-wrap">
+          <div className="lp-head">
+            <h2 className="lp-h2 lp-reveal">{t.teamTitle1} <span className="lp-serif lp-grad-text">{t.teamTitle2}</span></h2>
+            <p className="lp-sub lp-reveal">{t.teamDesc}</p>
           </div>
-          <div className="virtue-img-wrapper virtue-center">
-            <img src={`${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.13.28%20PM.jpeg`} alt={t.teamAlts[1]} loading="lazy" />
+          <div className="lp-phones lp-reveal">
+            {PHONE_IMGS.map((src, i) => (
+              <div className="lp-phone" key={i}><img src={src} alt={t.teamAlts[i]} loading="lazy" /></div>
+            ))}
           </div>
-          <div className="virtue-img-wrapper virtue-right">
-            <img src={`${SUPABASE_IMG}WhatsApp%20Image%202026-04-30%20at%2011.19.05%20PM.jpeg`} alt={t.teamAlts[2]} loading="lazy" />
+          <div className="lp-chips">
+            {[Smartphone, Piano, FileText, CalendarCheck].map((Icon, i) => (
+              <div className="lp-chip lp-reveal" style={{ '--d': `${i * 0.06}s` }} key={i}><Icon />{t.teamChips[i]}</div>
+            ))}
           </div>
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.8rem', maxWidth: '900px', margin: '4rem auto 0' }}>
-          {[Smartphone, Piano, FileText, CalendarCheck].map((Icon, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.1rem', borderRadius: '50px', background: 'rgba(247, 244, 239, 0.03)', border: '1px solid rgba(247, 244, 239, 0.14)', color: '#fff', fontSize: '0.88rem' }}>
-              <Icon size={16} color="var(--primary)" />
-              {t.teamChips[i]}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Descargas: las tres apps de escritorio */}
-      <section id="downloads" style={{ padding: '8rem 2rem', background: 'rgba(247, 244, 239, 0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="section-header-centered" style={{ marginBottom: '4rem' }}>
-          <p className="statement-mini">{t.downloadsMini}</p>
-          <h2 className="section-title-large">{t.downloadsTitle1} <span className="serif-accent">{t.downloadsTitle2}</span></h2>
-          <p className="section-subtitle">{t.downloadsDesc}</p>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
-          {['daw', 'presenter', 'lights'].map((app, i) => (
-            <div key={app} className="hover-scale" style={{ padding: '2.2rem 2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
-              <img src={APPS[app].logo} alt={APPS[app].name} width={96} height={96} loading="lazy" style={{ display: 'block' }} />
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '500', margin: 0, color: '#fff' }}>{t.downloadApps[i].name}</h3>
-              <span style={{ fontSize: '0.7rem', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>{t.downloadApps[i].plan}</span>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', lineHeight: 1.6, flex: 1 }}>{t.downloadApps[i].desc}</p>
-              <div style={{ display: 'flex', gap: '0.6rem', width: '100%' }}>
-                {[['windows', t.dlWindows], ['mac', t.dlMac]].map(([os, label]) => {
-                  const url = DOWNLOADS[app][os];
-                  const base = { flex: 1, padding: '0.75rem 0.5rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 500, textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.12)' };
-                  return url ? (
-                    <a key={os} href={url} download style={{ ...base, background: 'rgba(255,255,255,0.08)', color: '#fff' }}>{label}</a>
-                  ) : (
-                    <span key={os} title={t.dlSoon} style={{ ...base, background: 'transparent', color: 'rgba(255,255,255,0.4)', cursor: 'default' }}>{label} · {t.dlSoon}</span>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
       {/* Planes */}
-      <section id="pricing" className="landing-pricing-section">
-        <div className="section-header-centered">
-          <h2 className="section-title-large">{t.pricingTitle}</h2>
-          <p className="section-subtitle">{t.pricingDesc}</p>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '1rem', marginBottom: '1rem' }}>
-            <span style={{ color: !isAnnual ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem' }}>{t.monthly}</span>
-            <div
-              onClick={() => setBillingPeriod(isAnnual ? 'monthly' : 'annual')}
-              style={{ width: '50px', height: '26px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', position: 'relative', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <div style={{ width: '20px', height: '20px', background: 'var(--primary)', borderRadius: '50%', position: 'absolute', top: '2px', left: isAnnual ? '25px' : '3px', transition: '0.3s ease', boxShadow: '0 0 10px var(--primary)' }} />
+      <section id="pricing" className="lp-pricing">
+        <div className="lp-wrap">
+          <div className="lp-head" style={{ marginBottom: '2rem' }}>
+            <h2 className="lp-h2 lp-reveal" style={{ maxWidth: '20ch' }}>{t.pricingTitle}</h2>
+            <p className="lp-sub lp-reveal">{t.pricingDesc}</p>
+            <div className="lp-toggle lp-reveal">
+              <span style={{ color: !isAnnual ? '#fff' : 'rgba(255,255,255,.45)' }}>{t.monthly}</span>
+              <button className={`lp-switch${isAnnual ? ' on' : ''}`} onClick={() => setBillingPeriod(isAnnual ? 'monthly' : 'annual')} aria-label={`${t.monthly} / ${t.annual}`}><i /></button>
+              <span style={{ color: isAnnual ? '#fff' : 'rgba(255,255,255,.45)' }}>{t.annual}<span className="lp-save">{t.save}</span></span>
             </div>
-            <span style={{ color: isAnnual ? '#fff' : '#666', fontWeight: 500, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {t.annual}
-              <span style={{ background: 'var(--primary)', color: '#000', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 500 }}>{t.save}</span>
-            </span>
           </div>
-        </div>
 
-        <div className="pricing-grid">
-          {PLAN_ORDER.map(id => {
-            const plan = PLANS.find(p => p.id === id);
-            const copy = t.plans[id];
-            const isFree = id === 'free';
-            const featured = id === 'starter';
-            const price = isAnnual ? plan.yearly : plan.monthly;
-            const original = isAnnual ? plan.originalYearly : plan.originalMonthly;
-            const iconColor = PLAN_ICON_COLOR[id];
-            const Icon = isFree ? ShieldCheck : Crown;
+          <div className="pricing-grid">
+            {PLAN_ORDER.map(id => {
+              const plan = PLANS.find(p => p.id === id);
+              const copy = t.plans[id];
+              const isFree = id === 'free';
+              const featured = id === 'starter';
+              const price = isAnnual ? plan.yearly : plan.monthly;
+              const original = isAnnual ? plan.originalYearly : plan.originalMonthly;
+              const iconColor = PLAN_ICON_COLOR[id];
+              const Icon = isFree ? ShieldCheck : Crown;
 
-            return (
-              <div key={id} className={`pricing-card${featured ? ' featured' : ''}`}>
-                {featured && (
-                  <div className="pricing-badge-popular" style={{ background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)', animation: 'pulse 2s infinite' }}>{t.launchOffer}</div>
-                )}
-                <h3>{copy.name}</h3>
-                <p style={{ margin: '0 0 1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', minHeight: '2.6em' }}>{copy.tag}</p>
-
-                <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-                  {original && (
-                    <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>${original}</span>
+              return (
+                <div key={id} className={`pricing-card${featured ? ' featured' : ''}`}>
+                  {featured && (
+                    <div className="pricing-badge-popular" style={{ background: 'linear-gradient(135deg,#fd429c,#ff6a4a)', color: '#fff', boxShadow: '0 0 20px rgba(253, 66, 156, 0.5)' }}>{t.launchOffer}</div>
                   )}
-                  {isFree ? '$0' : `$${price}`}
-                  <span style={{ marginBottom: '6px' }}>{isFree || !isAnnual ? t.monthLabel : t.yearLabel}</span>
+                  <h3>{copy.name}</h3>
+                  <p style={{ margin: '0 0 1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', minHeight: '2.6em' }}>{copy.tag}</p>
+
+                  <div className="price" style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+                    {original && (
+                      <span style={{ textDecoration: 'line-through', fontSize: '1.2rem', color: '#666', fontWeight: 400, marginBottom: '6px' }}>${original}</span>
+                    )}
+                    {isFree ? '$0' : `$${price}`}
+                    <span style={{ marginBottom: '6px' }}>{isFree || !isAnnual ? t.monthLabel : t.yearLabel}</span>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '-1rem', marginBottom: '1.5rem', minHeight: '1.2em' }}>
+                    {!isFree && (isAnnual ? t.equalsPerMonth((plan.yearly / 12).toFixed(1)) : t.billedMonthly)}
+                  </p>
+
+                  <ul className="pricing-features">
+                    {copy.star && (
+                      <li style={{ alignItems: 'flex-start', gap: '10px' }}>
+                        <Crown size={16} color={iconColor} style={{ marginTop: '3px', flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 500, color: '#fff' }}>{copy.star.title}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{copy.star.desc}</div>
+                        </div>
+                      </li>
+                    )}
+                    {copy.features.map((f, i) => (
+                      <li key={i}><Icon size={16} color={iconColor} style={{ flexShrink: 0 }} /> {f}</li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => onGetStarted('signup')}
+                    className={featured ? 'btn-primary' : 'btn-secondary-outline'}
+                    style={{ marginTop: 'auto' }}
+                  >
+                    {isFree ? t.ctaFree : chooseLabel[id]}
+                  </button>
                 </div>
-                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '-1rem', marginBottom: '1.5rem', minHeight: '1.2em' }}>
-                  {!isFree && (isAnnual ? t.equalsPerMonth((plan.yearly / 12).toFixed(1)) : t.billedMonthly)}
-                </p>
-
-                <ul className="pricing-features">
-                  {copy.star && (
-                    <li style={{ alignItems: 'flex-start', gap: '10px' }}>
-                      <Crown size={16} color={iconColor} style={{ marginTop: '3px', flexShrink: 0 }} />
-                      <div>
-                        <div style={{ fontWeight: 500, color: '#fff' }}>{copy.star.title}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, marginTop: '2px' }}>{copy.star.desc}</div>
-                      </div>
-                    </li>
-                  )}
-                  {copy.features.map((f, i) => (
-                    <li key={i}><Icon size={16} color={iconColor} style={{ flexShrink: 0 }} /> {f}</li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => onGetStarted('signup')}
-                  className={featured ? 'btn-primary' : 'btn-secondary-outline'}
-                  style={{ marginTop: 'auto' }}
-                >
-                  {isFree ? t.ctaFree : chooseLabel[id]}
-                </button>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
       {/* CTA final */}
-      <section className="landing-cta-box" style={{ padding: '8rem 2rem' }}>
-        <h2 style={{ fontSize: '3rem', letterSpacing: '-2px' }}>{t.ctaTitle}</h2>
-        <p style={{ fontSize: '1.2rem', marginBottom: '2.5rem' }}>{t.ctaDesc}</p>
-        <button onClick={() => onGetStarted('signup')} className="btn-primary" style={{ padding: '1.2rem 4rem', fontSize: '1.1rem', borderRadius: '50px' }}>{t.ctaBtn}</button>
+      <section className="lp-final">
+        <div className="lp-wrap">
+          <div className="lp-final-box lp-reveal">
+            <h2>{t.ctaTitle}</h2>
+            <p>{t.ctaDesc}</p>
+            <button className="lp-btn lp-btn-primary" style={{ padding: '1.1rem 2.6rem', fontSize: '1.05rem' }} onClick={() => onGetStarted('signup')}>{t.ctaBtn} <ArrowRight size={18} /></button>
+          </div>
+        </div>
       </section>
 
-      <footer className="landing-footer">
-        <div className="footer-content">
-          <div className="footer-links" style={{ fontSize: '0.65rem' }}>
-            <span onClick={() => onNavigate('legal_terms')} style={{ cursor: 'pointer' }}>{t.footTerms}</span>
-            <span onClick={() => onNavigate('legal_privacy')} style={{ cursor: 'pointer' }}>{t.footPriv}</span>
-            <span onClick={() => onNavigate('legal_refund')} style={{ cursor: 'pointer' }}>{t.footRefund}</span>
+      <footer className="lp-footer">
+        <div className="lp-wrap">
+          <div className="lp-footer-links">
+            <span onClick={() => onNavigate('legal_terms')}>{t.footTerms}</span>
+            <span onClick={() => onNavigate('legal_privacy')}>{t.footPriv}</span>
+            <span onClick={() => onNavigate('legal_refund')}>{t.footRefund}</span>
             <a href="mailto:dependent.mix@gmail.com">{t.footContact}</a>
           </div>
-          <p style={{ margin: '0.5rem 0', opacity: 0.8 }}>{t.footOp}</p>
-          <p style={{ opacity: 0.5, fontSize: '0.6rem' }}>{t.footRights}</p>
+          <p>{t.footOp}</p>
+          <p style={{ opacity: 0.7 }}>{t.footRights}</p>
         </div>
       </footer>
     </div>
